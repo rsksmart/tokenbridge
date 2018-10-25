@@ -21,7 +21,20 @@ contract SideToken is DetailedERC20, StandardToken {
         totalSupply_ += amount;
         balances[receiver] += amount;
         
+        emit Transfer(manager, receiver, amount);
+        
         return true;
+    }
+    
+    function transfer(address receiver, uint amount) public returns(bool) {
+        bool result = super.transfer(receiver, amount);
+
+        if (result && receiver == manager) {
+            balances[manager] -= amount;
+            totalSupply_ -= amount;
+        }
+            
+        return result;
     }
 }
 

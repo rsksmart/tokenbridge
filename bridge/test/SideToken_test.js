@@ -95,5 +95,25 @@ contract('SideToken', function (accounts) {
         const totalSupply = await this.token.totalSupply();        
         assert.equal(totalSupply, 1000);
     });
+
+    it('transfer account to manager', async function () {
+        await this.token.acceptTransfer(anAccount, 1000, { from: tokenManager });
+        await this.token.transfer(tokenManager, 400, { from: anAccount });
+        
+        const creatorBalance = await this.token.balanceOf(tokenCreator);
+        assert.equal(creatorBalance, 0);
+
+        const tokenBalance = await this.token.balanceOf(this.token.address);
+        assert.equal(tokenBalance, 0);
+
+        const managerBalance = await this.token.balanceOf(tokenManager);
+        assert.equal(managerBalance, 0);
+
+        const anAccountBalance = await this.token.balanceOf(anAccount);
+        assert.equal(anAccountBalance, 600);
+
+        const totalSupply = await this.token.totalSupply();        
+        assert.equal(totalSupply, 600);
+    });
 });
 
