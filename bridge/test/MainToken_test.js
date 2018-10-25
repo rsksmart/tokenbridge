@@ -6,8 +6,6 @@ contract('MainToken', function (accounts) {
     });
 
     it('initial balances', async function () {
-        this.token = await MainToken.new("MAIN", "MAIN", 18, 10000);
-        
         const balance = await this.token.balanceOf(accounts[0]);
         
         assert.equal(balance, 10000);
