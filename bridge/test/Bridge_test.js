@@ -1,6 +1,16 @@
 const MainToken = artifacts.require('./MainToken');
 const Bridge = artifacts.require('./Bridge');
 
+async function expectThrow (promise) {
+  try {
+    await promise;
+  } catch (error) {
+      return;
+  }
+  
+  assert.fail('Expected throw not received');
+}
+
 contract('Bridge', function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
@@ -29,6 +39,24 @@ contract('Bridge', function (accounts) {
         const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
         assert.equal(newBridgeBalance, 500);
     });
+
+    it('accept transfer only manager', async function () {
+        await this.token.transfer(this.bridge.address, 1000, { from: tokenOwner });
+        
+        const tokenBalance = await this.token.balanceOf(tokenOwner);
+        assert.equal(tokenBalance, 9000);
+        
+        const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+        assert.equal(bridgeBalance, 1000);
+
+        expectThrow(this.bridge.acceptTransfer(anAccount, 500, { from: bridgeOwner }));
+        expectThrow(this.bridge.acceptTransfer(anAccount, 500, { from: anAccount }));
+
+        const anAccountBalance = await this.token.balanceOf(anAccount);
+        assert.equal(anAccountBalance, 0);
+        
+        const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
+        assert.equal(newBridgeBalance, 1000);
+    });
 });
 
-    
