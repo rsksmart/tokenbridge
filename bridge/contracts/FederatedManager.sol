@@ -1,12 +1,25 @@
 pragma solidity ^0.4.24;
 
+import "./Transferable.sol";
+
 contract FederatedManager {
+    address owner;
     address[] public members;
-    
     mapping(bytes32 => address[]) votes;
+    Transferable public transferable;
     
+    modifier onlyOwner() {
+        require(msg.sender == owner);
+        _;
+    }
+
     constructor(address[] _members) public {
         members = _members;
+        owner = msg.sender;
+    }
+    
+    function setTransferable(Transferable _transferable) public onlyOwner {
+        transferable = _transferable;
     }
     
     function isMember(address _account) public view returns(bool) {

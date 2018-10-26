@@ -17,7 +17,7 @@ contract Bridge is Transferable {
         token = _token;
     }
     
-    function acceptTransfer(address receiver, uint amount) public onlyManager returns(bool) {
+    function acceptTransfer(address receiver, uint256 amount) public onlyManager returns(bool) {
         return token.transfer(receiver, amount);
     }
 }

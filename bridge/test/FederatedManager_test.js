@@ -84,4 +84,27 @@ contract('FederatedManager', function (accounts) {
             assert.equal(votes[0], members[0]);
         });
     });
+    
+    describe('transferable', function () {
+        beforeEach(async function () {
+            this.manager = await FederatedManager.new(members);
+        });
+        
+        it('set transferable', async function () {
+            await this.manager.setTransferable(accounts[6]);
+            
+            const transferable = await this.manager.transferable();
+            
+            assert.equal(transferable, accounts[6]);
+        });
+        
+        it('set transferable only owner', async function () {
+            expectThrow(this.manager.setTransferable(accounts[6], { from: accounts[1] }));
+            
+            const transferable = await this.manager.transferable();
+            
+            assert.equal(transferable, 0);
+        });
+    });
 });
+
