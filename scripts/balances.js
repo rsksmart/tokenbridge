@@ -19,12 +19,17 @@ sasync()
 .exec(function (next) {
     host.getAccounts(next);
 })
-.then(function (data, next) {
-    console.log('accounts');
-    console.dir(data);
-    
+.then(function (data, next) {    
     var n = 0;
+    
     accounts = data;
+    
+    if (config.token)
+        accounts.push(config.token);
+    if (config.manager)
+        accounts.push(config.manager);
+    if (config.bridge)
+        accounts.push(config.bridge);
     
     doGetBalance();
     
