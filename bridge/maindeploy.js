@@ -24,7 +24,7 @@ async function run() {
     const manager = await FederatedManager.new(members);
     console.log('Manager deployed at', manager.address);
     
-    const token = await MainToken.new("MAIN", "MAIN", 18, 10000);
+    const token = await MainToken.new("MAIN", "MAIN", 18, 10000000);
     console.log('MainToken deployed at', token.address);
     
     const bridge = await Bridge.new(manager.address, token.address);
