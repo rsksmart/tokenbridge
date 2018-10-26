@@ -19,6 +19,7 @@ contract FederatedManager {
     }
     
     function setTransferable(Transferable _transferable) public onlyOwner {
+        require(transferable == address(0));
         transferable = _transferable;
     }
     

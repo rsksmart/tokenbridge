@@ -105,6 +105,15 @@ contract('FederatedManager', function (accounts) {
             
             assert.equal(transferable, 0);
         });
+        
+        it('set transferable only once', async function () {
+            await this.manager.setTransferable(accounts[6]);
+            expectThrow(this.manager.setTransferable(accounts[7]));
+            
+            const transferable = await this.manager.transferable();
+            
+            assert.equal(transferable, accounts[6]);
+        });
     });
 });
 
