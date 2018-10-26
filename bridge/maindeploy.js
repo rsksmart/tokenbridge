@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 const FederatedManager = artifacts.require('./FederatedManager');
 const MainToken = artifacts.require('./MainToken');
 const Bridge = artifacts.require('./Bridge');
@@ -30,6 +32,16 @@ async function run() {
 
     await manager.setTransferable(bridge.address);
     console.log('Bridge controlled by Manager');
+    
+    const config = {
+        accounts: accounts,
+        bridge: bridge.address,
+        token: token.address,
+        manager: manager.address,
+        members: members
+    };
+    
+    fs.writeFileSync('mainconf.json', JSON.stringify(config, null, 4));
 }
 
 module.exports = function (cb) {
