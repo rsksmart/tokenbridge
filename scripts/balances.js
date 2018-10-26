@@ -12,6 +12,12 @@ const balanceOfHash = '0x70a08231';
 
 console.log('chain', chainname);
 console.log('token', config.token);
+console.log('manager', config.manager);
+if (config.bridge)
+    console.log('bridge', config.bridge);
+
+console.log();
+
 
 var accounts;
 

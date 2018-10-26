@@ -22,6 +22,8 @@ const tohost = rskapi.host(tochain);
 console.log('to chain', tochainname);
 console.log('to token', toconfig.token);
 
+console.log();
+
 sasync()
 .exec(function (next) {
     fromhost.provider().call('eth_getLogs', [{ fromBlock: "0x01", toBlock: "latest",
@@ -44,8 +46,8 @@ function processLogs(logs, bridge, manager) {
     for (var k = 0; k < logs.length; k++) {
         var log = logs[k];
         
-        //if (log.topics[2] !== bridge)
-        //    continue;
+        if (log.topics[2] !== bridge)
+            continue;
         
         console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
     }

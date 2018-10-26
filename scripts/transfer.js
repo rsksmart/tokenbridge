@@ -19,6 +19,11 @@ const balanceOfHash = '0x70a08231';
 
 console.log('chain', chainname);
 console.log('token', config.token);
+console.log('manager', config.manager);
+if (config.bridge)
+    console.log('bridge', config.bridge);
+
+console.log();
 
 var accounts;
 
@@ -27,11 +32,30 @@ sasync()
     host.getAccounts(next);
 })
 .then(function (data, next) {
-    accounts = data;
+    accounts = data;    
+    
     console.log('accounts');
     console.dir(accounts);
+
+    if (config.token)
+        accounts.push(config.token);
+    if (config.manager)
+        accounts.push(config.manager);
+    if (config.bridge)
+        accounts.push(config.bridge);
     
-    const abi = sabi.encodeValues([ accounts[toAccount], amount ]);
+    var toa = toAccount[0].toLowerCase();
+    
+    var toAcc;
+    
+    if (toa === 'm')
+        toAcc = config.manager;
+    else if (toa === 'b')
+        toAcc = config.bridge;
+    else
+        toAcc = accounts[toAccount];
+
+    const abi = sabi.encodeValues([ toAcc, amount ]);
     
     console.log('data', abi);
     host.sendTransaction({
