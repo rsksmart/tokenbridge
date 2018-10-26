@@ -22,7 +22,7 @@ sasync()
 .then(function (data, next) {
     for (var k = 0; k < data.length; k++) {
         var log = data[k];
-        console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
+        console.dir(log);
     }
 })
 .error(function (err) {

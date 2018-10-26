@@ -4,6 +4,7 @@ const sasync = require('simpleasync');
 const sabi = require('simpleabi');
 
 const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
+const voteTransactionHash = '0x6bcab28b';
 
 const fromchainname = process.argv[2];
 const fromchain = process.argv[3];
@@ -50,6 +51,31 @@ function processLogs(logs, bridge, manager) {
             continue;
         
         console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
+        console.log('block number', log.blockNumber);
+        console.log('block hash', log.blockHash);
+        console.log('transaction hash', log.transactionHash);
+        
+        const abi = sabi.encodeValues([
+            log.blockNumber,
+            log.blockHash,
+            log.transactionHash,
+            log.topics[1],
+            log.data
+        ]);
+        
+        console.log(abi);
+        console.log();
+        
+        for (var m = 0; m < toconfig.members.length; m++) {
+            const member = toconfig.members[m];
+            
+            tohost.sendTransaction({
+                from: member,
+                to: toconfig.manager,
+                value: '0x00',
+                data: voteTransactionHash + abi
+            }, function (err, data) { console.log('voted') });
+        }
     }
 }
 
