@@ -22,8 +22,15 @@ contract FederatedManager {
     function voteTransaction(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
         public {
         bytes32 voteId = keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
+
+        address[] storage transactionVotes = votes[voteId];
+        uint n = transactionVotes.length;
         
-        votes[voteId].push(msg.sender);
+        for (uint16 k = 0; k < n; k++)
+            if (transactionVotes[k] == msg.sender)
+                return;
+        
+        transactionVotes.push(msg.sender);
     }
     
     function transactionVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 

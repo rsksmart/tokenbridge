@@ -50,4 +50,16 @@ contract('FederatedManager', function (accounts) {
         assert.equal(votes[0], accounts[0]);
         assert.equal(votes[1], accounts[1]);
     });
+
+    it('two repeated votes for transaction', async function() {
+        await this.manager.voteTransaction(1, 2, 3, 4, 5);
+        await this.manager.voteTransaction(1, 2, 3, 4, 5);
+        
+        const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+
+        assert.ok(votes);
+        assert.ok(Array.isArray(votes));
+        assert.equal(votes.length, 1);
+        assert.equal(votes[0], accounts[0]);
+    });
 });
