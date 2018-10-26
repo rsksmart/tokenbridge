@@ -51,7 +51,8 @@ contract FederatedManager {
         if (transactionVotes.length < members.length / 2 + 1)
             return;
             
-        transferable.acceptTransfer(_receiver, _amount);
+        if (transferable.acceptTransfer(_receiver, _amount))
+            delete votes[voteId];
     }
     
     function transactionVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 

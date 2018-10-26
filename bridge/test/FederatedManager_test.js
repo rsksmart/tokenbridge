@@ -172,6 +172,22 @@ contract('FederatedManager', function (accounts) {
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
         });
+        
+        it('four votes of five only one accept transfer', async function () {
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[3] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 9000);
+
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 900);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 100);
+        });
     });
 });
 
