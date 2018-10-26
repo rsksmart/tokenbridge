@@ -1,5 +1,6 @@
 const FederatedManager = artifacts.require('./FederatedManager');
 const MainToken = artifacts.require('./MainToken');
+const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge');
 
 async function expectThrow (promise) {
@@ -118,7 +119,7 @@ contract('FederatedManager', function (accounts) {
         });
     });
 
-    describe('accept transfer', function () {
+    describe('accept transfer using bridge', function () {
         const managerOwner = accounts[0];
         const tokenOwner = accounts[6];
         const bridgeOwner = accounts[7];
@@ -190,6 +191,87 @@ contract('FederatedManager', function (accounts) {
 
             const bridgeBalance = await this.token.balanceOf(this.bridge.address);
             assert.equal(bridgeBalance, 900);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 100);
+
+            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+
+            assert.ok(votes);
+            assert.ok(Array.isArray(votes));
+            assert.equal(votes.length, 0);
+        });
+    });
+
+    describe('accept transfer using side token', function () {
+        const managerOwner = accounts[0];
+        const tokenOwner = accounts[6];
+        const anAccount = accounts[7];
+        
+        beforeEach(async function () {
+            this.manager = await FederatedManager.new(members, { from: managerOwner });
+            this.token = await SideToken.new("MAIN", "MAIN", 18, this.manager.address, { from: tokenOwner });
+
+            await this.manager.setTransferable(this.token.address);
+        });
+        
+        it('initial state', async function () {
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 0);
+
+            const managerBalance = await this.token.balanceOf(this.manager.address);
+            assert.equal(managerBalance, 0);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 0);
+        });
+        
+        it('two votes of five no accept transfer', async function () {
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 0);
+
+            const managerBalance = await this.token.balanceOf(this.manager.address);
+            assert.equal(managerBalance, 0);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 0);
+        });
+        
+        it('three votes of five then accept transfer', async function () {
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 0);
+
+            const managerBalance = await this.token.balanceOf(this.manager.address);
+            assert.equal(managerBalance, 0);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 100);
+
+            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+
+            assert.ok(votes);
+            assert.ok(Array.isArray(votes));
+            assert.equal(votes.length, 0);
+        });
+        
+        it('four votes of five only one accept transfer', async function () {
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[3] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 0);
+
+            const managerBalance = await this.token.balanceOf(this.manager.address);
+            assert.equal(managerBalance, 0);
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
