@@ -2,8 +2,9 @@ pragma solidity ^0.4.24;
 
 import "./zeppelin/token/ERC20/DetailedERC20.sol";
 import "./zeppelin/token/ERC20/StandardToken.sol";
+import "./Transferable.sol";
 
-contract SideToken is DetailedERC20, StandardToken {
+contract SideToken is DetailedERC20, StandardToken, Transferable {
     address public manager;
     
     modifier onlyManager() {
