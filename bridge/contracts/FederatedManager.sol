@@ -5,7 +5,10 @@ import "./Transferable.sol";
 contract FederatedManager {
     address owner;
     address[] public members;
+    
     mapping(bytes32 => address[]) votes;
+    mapping(bytes32 => bool) processed;
+    
     Transferable public transferable;
     
     modifier onlyOwner() {
@@ -38,6 +41,9 @@ contract FederatedManager {
         require(isMember(msg.sender));
         
         bytes32 voteId = keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
+        
+        if (processed[voteId])
+            return;
 
         address[] storage transactionVotes = votes[voteId];
         uint n = transactionVotes.length;
@@ -51,8 +57,10 @@ contract FederatedManager {
         if (transactionVotes.length < members.length / 2 + 1)
             return;
             
-        if (transferable.acceptTransfer(_receiver, _amount))
+        if (transferable.acceptTransfer(_receiver, _amount)) {
             delete votes[voteId];
+            processed[voteId] = true;
+        }
     }
     
     function transactionVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 

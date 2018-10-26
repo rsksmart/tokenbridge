@@ -171,6 +171,12 @@ contract('FederatedManager', function (accounts) {
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
+
+            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+
+            assert.ok(votes);
+            assert.ok(Array.isArray(votes));
+            assert.equal(votes.length, 0);
         });
         
         it('four votes of five only one accept transfer', async function () {
@@ -187,6 +193,12 @@ contract('FederatedManager', function (accounts) {
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
+
+            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+
+            assert.ok(votes);
+            assert.ok(Array.isArray(votes));
+            assert.equal(votes.length, 0);
         });
     });
 });
