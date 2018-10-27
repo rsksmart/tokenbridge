@@ -22,13 +22,10 @@ console.log();
 var accounts;
 
 sasync()
-.exec(function (next) {
-    host.getAccounts(next);
-})
-.then(function (data, next) {    
+.exec(function (next) {    
     var n = 0;
     
-    accounts = data;
+    accounts = config.accounts;
     
     if (config.token)
         accounts.push(config.token);
@@ -40,8 +37,10 @@ sasync()
     doGetBalance();
     
     function doGetBalance() {
-        if (n >= accounts.length)
+        if (n >= accounts.length) {
+            console.log();
             return next(null, null);
+        }
         
         const account = accounts[n++];
         
@@ -51,10 +50,15 @@ sasync()
             value: '0x00',
             data: balanceOfHash + "000000000000000000000000" + account.substring(2)
         }, function (err, data) {
-            console.log('balance', account, parseInt(data));
+            const balance = parseInt(data);
+            
+            if (balance)
+                console.log('balance', account, balance);
+            
             doGetBalance();
         });
     };
 })
+
 
 
