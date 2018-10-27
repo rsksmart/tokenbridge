@@ -37,10 +37,11 @@ contract FederatedManager {
     }
     
     function voteTransaction(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
-        public {
+        public 
+    {
         require(isMember(msg.sender));
         
-        bytes32 voteId = keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
+        bytes32 voteId = getTransactionVoteId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount);
         
         if (processed[voteId])
             return;
@@ -64,10 +65,17 @@ contract FederatedManager {
     }
     
     function transactionVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
-        public view returns(address[]) {
-        bytes32 voteId = keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
+        public view returns(address[]) 
+    {
+        bytes32 voteId = getTransactionVoteId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount);
         
         return votes[voteId];
+    }
+    
+    function getTransactionVoteId(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount)
+        public pure returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
     }
 }
 
