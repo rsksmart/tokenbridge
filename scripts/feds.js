@@ -87,6 +87,7 @@ function processLogs(logs, bridge, manager, cb) {
                 from: member,
                 to: toconfig.manager,
                 value: '0x00',
+                gas: 6700000,
                 data: voteTransactionHash + abi
             }, function (err, data) { console.log('voted'); setTimeout(processVote, 1000); });
         }

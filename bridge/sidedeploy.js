@@ -27,8 +27,13 @@ async function run() {
     const token = await SideToken.new("SIDE", "SIDE", 18, manager.address);
     console.log('SideToken deployed at', token.address);
 
+    console.log('SideToken controlled by', await token.manager());
+
     await manager.setTransferable(token.address);
     console.log('SideToken controlled by Manager');
+    
+    const transferable = await manager.transferable();
+    console.log('Manager controls', transferable);
     
     const config = {
         accounts: accounts,
