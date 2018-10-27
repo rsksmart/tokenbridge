@@ -1,15 +1,7 @@
 const MainToken = artifacts.require('./MainToken');
 const Bridge = artifacts.require('./Bridge');
 
-async function expectThrow (promise) {
-  try {
-    await promise;
-  } catch (error) {
-      return;
-  }
-  
-  assert.fail('Expected throw not received');
-}
+const expectThrow = require('./utils').expectThrow;
 
 contract('Bridge', function (accounts) {
     const bridgeOwner = accounts[0];

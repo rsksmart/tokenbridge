@@ -1,14 +1,6 @@
 const SideToken = artifacts.require('./SideToken');
 
-async function expectThrow (promise) {
-  try {
-    await promise;
-  } catch (error) {
-      return;
-  }
-  
-  assert.fail('Expected throw not received');
-}
+const expectThrow = require('./utils').expectThrow;
 
 contract('SideToken', function (accounts) {
     const tokenCreator = accounts[0];

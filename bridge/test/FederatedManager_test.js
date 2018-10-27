@@ -3,15 +3,7 @@ const MainToken = artifacts.require('./MainToken');
 const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge');
 
-async function expectThrow (promise) {
-  try {
-    await promise;
-  } catch (error) {
-      return;
-  }
-  
-  assert.fail('Expected throw not received');
-}
+const expectThrow = require('./utils').expectThrow;
 
 contract('FederatedManager', function (accounts) {
     const members = [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
