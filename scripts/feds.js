@@ -33,22 +33,29 @@ sasync()
     }], next);
 })
 .then(function (data, next) {
-    processLogs(data, fromconfig.bridge || fromconfig.manager, toconfig.manager);
+    processLogs(data, fromconfig.bridge || fromconfig.manager, toconfig.manager, next);
 })
 .error(function (err) {
     console.log(err);
 });
 
-function processLogs(logs, bridge, manager) {
+function processLogs(logs, bridge, manager, cb) {
     bridge = '0x' + sabi.encodeValue(bridge);
     
     console.log('bridge', bridge);
     
-    for (var k = 0; k < logs.length; k++) {
-        var log = logs[k];
+    var k = 0;
+    
+    processLog();
+    
+    function processLog() {
+        if (k >= logs.length)
+            return cb(null, null);
+
+        var log = logs[k++];
         
         if (log.topics[2] !== bridge)
-            continue;
+            return setTimeout(processLog, 0);
         
         console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
         console.log('block number', log.blockNumber);
@@ -66,15 +73,22 @@ function processLogs(logs, bridge, manager) {
         console.log(abi);
         console.log();
         
-        for (var m = 0; m < toconfig.members.length; m++) {
-            const member = toconfig.members[m];
+        var m = 0;
+        
+        processVote();
+        
+        function processVote() {
+            if (m >= toconfig.members.length)
+                return processLog();
+        
+            const member = toconfig.members[m++];
             
             tohost.sendTransaction({
                 from: member,
                 to: toconfig.manager,
                 value: '0x00',
                 data: voteTransactionHash + abi
-            }, function (err, data) { console.log('voted') });
+            }, function (err, data) { console.log('voted'); setTimeout(processVote, 1000); });
         }
     }
 }
