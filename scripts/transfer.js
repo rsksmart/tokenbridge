@@ -34,9 +34,6 @@ sasync()
 .then(function (data, next) {
     accounts = data;    
     
-    console.log('accounts');
-    console.dir(accounts);
-
     if (config.token)
         accounts.push(config.token);
     if (config.manager)
