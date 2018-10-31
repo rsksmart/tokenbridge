@@ -16,5 +16,11 @@ Transfer from mainchain to sidechain
 trms <amount>
 ```
 
+Run federation scripts
+
+```
+feds
+```
+
 
  
