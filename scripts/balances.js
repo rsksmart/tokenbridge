@@ -13,8 +13,8 @@ const balanceOfHash = '0x70a08231';
 console.log('chain', chainname);
 console.log('token', config.token);
 console.log('manager', config.manager);
-if (config.bridge)
-    console.log('bridge', config.bridge);
+if (config.custodian)
+    console.log('custodian', config.custodian);
 
 console.log();
 
@@ -31,8 +31,8 @@ sasync()
         accounts.push(config.token);
     if (config.manager)
         accounts.push(config.manager);
-    if (config.bridge)
-        accounts.push(config.bridge);
+    if (config.custodian)
+        accounts.push(config.custodian);
     
     doGetBalance();
     
