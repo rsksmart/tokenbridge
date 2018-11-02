@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import "./zeppelin/token/ERC20/ERC20.sol";
 import "./Transferable.sol";
 
-contract Custodian is Transferable {
+contract Bridge is Transferable {
     address manager;
     ERC20 token;
 
