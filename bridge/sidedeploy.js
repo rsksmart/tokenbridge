@@ -3,7 +3,7 @@ const promisify = require('./test/utils').promisify;
 
 const FederatedManager = artifacts.require('./FederatedManager');
 const SideToken = artifacts.require('./SideToken');
-const Bridge = artifacts.require('./Bridge');
+const Custodian = artifacts.require('./Custodian');
 
 async function run() {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));

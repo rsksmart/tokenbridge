@@ -3,7 +3,7 @@ const promisify = require('./test/utils').promisify;
 
 const FederatedManager = artifacts.require('./FederatedManager');
 const MainToken = artifacts.require('./MainToken');
-const Bridge = artifacts.require('./Bridge');
+const Custodian = artifacts.require('./Custodian');
 
 async function run() {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
@@ -16,15 +16,15 @@ async function run() {
     const token = await MainToken.new("MAIN", "MAIN", 18, 10000000);
     console.log('MainToken deployed at', token.address);
     
-    const bridge = await Bridge.new(manager.address, token.address);
-    console.log('Bridge deployed at', bridge.address);
+    const custodian = await Custodian.new(manager.address, token.address);
+    console.log('Custodian deployed at', custodian.address);
 
-    await manager.setTransferable(bridge.address);
-    console.log('Bridge controlled by Manager');
+    await manager.setTransferable(custodian.address);
+    console.log('Custodian controlled by Manager');
     
     const config = {
         accounts: accounts,
-        bridge: bridge.address,
+        custodian: custodian.address,
         token: token.address,
         manager: manager.address,
         members: members
