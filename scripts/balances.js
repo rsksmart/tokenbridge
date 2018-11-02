@@ -52,8 +52,7 @@ sasync()
         }, function (err, data) {
             const balance = parseInt(data);
             
-            if (balance)
-                console.log('balance', account, balance);
+            console.log('balance', account, balance);
             
             doGetBalance();
         });
