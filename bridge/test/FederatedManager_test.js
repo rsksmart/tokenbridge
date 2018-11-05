@@ -31,6 +31,10 @@ contract('FederatedManager', function (accounts) {
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
             assert.equal(votes.length, 0);
+            
+            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            
+            assert.equal(novotes, 0);
         });
 
         it('one vote for transaction', async function() {
@@ -42,6 +46,10 @@ contract('FederatedManager', function (accounts) {
             assert.ok(Array.isArray(votes));
             assert.equal(votes.length, 1);
             assert.equal(votes[0], members[0]);
+            
+            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            
+            assert.equal(novotes, 1);
         });
 
         it('vote only member', async function() {
@@ -65,6 +73,10 @@ contract('FederatedManager', function (accounts) {
             assert.equal(votes.length, 2);
             assert.equal(votes[0], members[0]);
             assert.equal(votes[1], members[1]);
+            
+            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            
+            assert.equal(novotes, 2);
         });
 
         it('two repeated votes for transaction', async function() {

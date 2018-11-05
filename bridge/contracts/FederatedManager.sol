@@ -72,6 +72,14 @@ contract FederatedManager {
         return votes[voteId];
     }
 
+    function transactionNoVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
+        public view returns(uint) 
+    {
+        bytes32 voteId = getTransactionVoteId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount);
+        
+        return votes[voteId].length;
+    }
+
     function transactionWasProcessed(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
         public view returns(bool) 
     {
