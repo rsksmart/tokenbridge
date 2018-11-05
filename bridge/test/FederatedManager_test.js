@@ -7,6 +7,7 @@ const expectThrow = require('./utils').expectThrow;
 
 contract('FederatedManager', function (accounts) {
     const members = [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
+    const newmember = accounts[6];
     
     describe('members and votes', function () {
         beforeEach(async function () {
@@ -89,6 +90,19 @@ contract('FederatedManager', function (accounts) {
             assert.ok(Array.isArray(votes));
             assert.equal(votes.length, 1);
             assert.equal(votes[0], members[0]);
+        });
+    });
+    
+    describe('add member', function () {
+        beforeEach(async function () {
+            this.manager = await FederatedManager.new(members);
+        });
+
+        it('vote add member', async function() {
+            await this.manager.voteAddMember(newmember);
+            
+            const ismember = await this.manager.isMember(newmember);
+            assert.equal(ismember, false);
         });
     });
     

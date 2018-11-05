@@ -93,5 +93,10 @@ contract FederatedManager {
     {
         return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
     }
+    
+    function voteAddMember(address _newMember) public
+    {
+        
+    }
 }
 
