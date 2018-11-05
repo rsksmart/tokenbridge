@@ -54,8 +54,6 @@ deploy
 ## To Do
 
 - Prevent federator vote transactions that are not processed, filling storage space
-- Federated manager add member using votes
-- Federated manager remove member using votes
 - Federated manager change custodian manager using votes
 
 
