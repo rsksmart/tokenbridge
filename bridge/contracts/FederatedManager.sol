@@ -112,6 +112,12 @@ contract FederatedManager {
                 return;
                 
         memberVotes.push(msg.sender);
+
+        if (memberVotes.length < members.length / 2 + 1)
+            return;
+            
+        members.push(_newMember);
+        delete newMemberVotes[_newMember];
     }
     
     function addMemberVotes(address _newMember) 
