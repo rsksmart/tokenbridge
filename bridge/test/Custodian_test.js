@@ -3,7 +3,7 @@ const Bridge = artifacts.require('./Bridge');
 
 const expectThrow = require('./utils').expectThrow;
 
-contract('Bridge', function (accounts) {
+contract('Custodian', function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
