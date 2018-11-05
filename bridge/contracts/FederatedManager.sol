@@ -10,6 +10,7 @@ contract FederatedManager {
     mapping(bytes32 => bool) processed;
     
     mapping(address => address[]) newMemberVotes;
+    mapping(address => address[]) oldMemberVotes;
     
     Transferable public transferable;
     
@@ -130,6 +131,49 @@ contract FederatedManager {
         public view returns(uint) 
     {
         return newMemberVotes[_newMember].length;
+    }
+
+    function voteRemoveMember(address _oldMember) public onlyMember
+    {
+        if (!isMember(_oldMember))
+            return;
+            
+        address[] storage memberVotes = oldMemberVotes[_oldMember];
+        uint nvotes = memberVotes.length;
+        
+        for (uint k = 0; k < nvotes; k++)
+            if (memberVotes[k] == msg.sender)
+                return;
+                
+        memberVotes.push(msg.sender);
+
+        if (memberVotes.length < members.length / 2 + 1)
+            return;
+            
+        uint nmembers = members.length;
+        
+        for (uint j = 0; j < nmembers; j++) {
+            if (members[j] == _oldMember) {
+                if (j < nmembers - 1)
+                    members[j] = members[nmembers - 1];
+                
+                members.length--;
+            }
+        }
+
+        delete oldMemberVotes[_oldMember];
+    }
+    
+    function removeMemberVotes(address _oldMember) 
+        public view returns(address[]) 
+    {
+        return oldMemberVotes[_oldMember];
+    }
+
+    function removeMemberNoVotes(address _oldMember) 
+        public view returns(uint) 
+    {
+        return oldMemberVotes[_oldMember].length;
     }
 }
 
