@@ -98,6 +98,9 @@ contract FederatedManager {
     
     function voteAddMember(address _newMember) public
     {
+        if (isMember(_newMember))
+            return;
+            
         address[] storage memberVotes = newMemberVotes[_newMember];
         uint nvotes = memberVotes.length;
         

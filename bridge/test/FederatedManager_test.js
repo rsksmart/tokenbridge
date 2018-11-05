@@ -116,6 +116,22 @@ contract('FederatedManager', function (accounts) {
             assert.equal(novotes, 1);
         });
 
+        it('vote add member who is a member', async function() {
+            await this.manager.voteAddMember(members[1], { from: members[0] });
+            
+            const ismember = await this.manager.isMember(members[1]);
+            assert.equal(ismember, true);
+            
+            const votes = await this.manager.addMemberVotes(members[1]);
+            
+            assert.ok(votes);
+            assert.equal(votes.length, 0);
+            
+            const novotes = await this.manager.addMemberNoVotes(members[1]);
+            
+            assert.equal(novotes, 0);
+        });
+
         it('two votes add member', async function() {
             await this.manager.voteAddMember(newmember, { from: members[0] });
             await this.manager.voteAddMember(newmember, { from: members[1] });
