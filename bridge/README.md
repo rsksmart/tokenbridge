@@ -51,6 +51,13 @@ deploy
 
 [TBD]: Explain deploy of other configurations (RSK regtest, symmetric vs asymmetric deploy)
 
+## To Do
+
+- Prevent federator vote transactions that are not processed, filling storage space
+- Federated manager add member using votes
+- Federated manager remove member using votes
+- Federated manager change custodian manager using votes
+
 
 
 
