@@ -135,6 +135,24 @@ contract('FederatedManager', function (accounts) {
             assert.equal(novotes, 2);
         });
 
+        it('two repeated votes add member', async function() {
+            await this.manager.voteAddMember(newmember, { from: members[0] });
+            await this.manager.voteAddMember(newmember, { from: members[0] });
+            
+            const ismember = await this.manager.isMember(newmember);
+            assert.equal(ismember, false);
+            
+            const votes = await this.manager.addMemberVotes(newmember);
+            
+            assert.ok(votes);
+            assert.equal(votes.length, 1);
+            assert.equal(votes[0], members[0]);
+            
+            const novotes = await this.manager.addMemberNoVotes(newmember);
+            
+            assert.equal(novotes, 1);
+        });
+
         it('two votes to add two different members', async function() {
             await this.manager.voteAddMember(newmember, { from: members[0] });
             await this.manager.voteAddMember(newmember2, { from: members[1] });
