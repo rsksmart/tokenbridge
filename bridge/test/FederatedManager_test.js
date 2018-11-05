@@ -8,6 +8,7 @@ const expectThrow = require('./utils').expectThrow;
 contract('FederatedManager', function (accounts) {
     const members = [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
     const newmember = accounts[6];
+    const newmember2 = accounts[7];
     
     describe('members and votes', function () {
         beforeEach(async function () {
@@ -132,6 +133,37 @@ contract('FederatedManager', function (accounts) {
             const novotes = await this.manager.addMemberNoVotes(newmember);
             
             assert.equal(novotes, 2);
+        });
+
+        it('two votes to add two different members', async function() {
+            await this.manager.voteAddMember(newmember, { from: members[0] });
+            await this.manager.voteAddMember(newmember2, { from: members[1] });
+            
+            const ismember = await this.manager.isMember(newmember);
+            assert.equal(ismember, false);
+            
+            const ismember2 = await this.manager.isMember(newmember2);
+            assert.equal(ismember2, false);
+            
+            const votes1 = await this.manager.addMemberVotes(newmember);
+            
+            assert.ok(votes1);
+            assert.equal(votes1.length, 1);
+            assert.equal(votes1[0], members[0]);
+            
+            const votes2 = await this.manager.addMemberVotes(newmember2);
+            
+            assert.ok(votes2);
+            assert.equal(votes2.length, 1);
+            assert.equal(votes2[0], members[1]);
+            
+            const novotes1 = await this.manager.addMemberNoVotes(newmember);
+            
+            assert.equal(novotes1, 1);
+            
+            const novotes2 = await this.manager.addMemberNoVotes(newmember2);
+            
+            assert.equal(novotes2, 1);
         });
     });
     
