@@ -103,6 +103,16 @@ contract('FederatedManager', function (accounts) {
             
             const ismember = await this.manager.isMember(newmember);
             assert.equal(ismember, false);
+            
+            const votes = await this.manager.addMemberVotes(newmember);
+            
+            assert.ok(votes);
+            assert.equal(votes.length, 1);
+            assert.equal(votes[0], accounts[0]);
+            
+            const novotes = await this.manager.addMemberNoVotes(newmember);
+            
+            assert.equal(novotes, 1);
         });
     });
     

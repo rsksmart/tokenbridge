@@ -9,6 +9,8 @@ contract FederatedManager {
     mapping(bytes32 => address[]) votes;
     mapping(bytes32 => bool) processed;
     
+    mapping(address => address[]) newMemberVotes;
+    
     Transferable public transferable;
     
     modifier onlyOwner() {
@@ -96,7 +98,19 @@ contract FederatedManager {
     
     function voteAddMember(address _newMember) public
     {
-        
+        newMemberVotes[_newMember].push(msg.sender);
+    }
+    
+    function addMemberVotes(address _newMember) 
+        public view returns(address[]) 
+    {
+        return newMemberVotes[_newMember];
+    }
+
+    function addMemberNoVotes(address _newMember) 
+        public view returns(uint) 
+    {
+        return newMemberVotes[_newMember].length;
     }
 }
 
