@@ -99,7 +99,7 @@ contract('FederatedManager', function (accounts) {
         });
 
         it('vote add member', async function() {
-            await this.manager.voteAddMember(newmember);
+            await this.manager.voteAddMember(newmember, { from: members[0] });
             
             const ismember = await this.manager.isMember(newmember);
             assert.equal(ismember, false);
@@ -108,11 +108,30 @@ contract('FederatedManager', function (accounts) {
             
             assert.ok(votes);
             assert.equal(votes.length, 1);
-            assert.equal(votes[0], accounts[0]);
+            assert.equal(votes[0], members[0]);
             
             const novotes = await this.manager.addMemberNoVotes(newmember);
             
             assert.equal(novotes, 1);
+        });
+
+        it('two votes add member', async function() {
+            await this.manager.voteAddMember(newmember, { from: members[0] });
+            await this.manager.voteAddMember(newmember, { from: members[1] });
+            
+            const ismember = await this.manager.isMember(newmember);
+            assert.equal(ismember, false);
+            
+            const votes = await this.manager.addMemberVotes(newmember);
+            
+            assert.ok(votes);
+            assert.equal(votes.length, 2);
+            assert.equal(votes[0], members[0]);
+            assert.equal(votes[1], members[1]);
+            
+            const novotes = await this.manager.addMemberNoVotes(newmember);
+            
+            assert.equal(novotes, 2);
         });
     });
     
