@@ -18,6 +18,11 @@ contract FederatedManager {
         _;
     }
 
+    modifier onlyMember() {
+        require(isMember(msg.sender));
+        _;
+    }
+
     constructor(address[] _members) public {
         members = _members;
         owner = msg.sender;
@@ -39,10 +44,8 @@ contract FederatedManager {
     }
     
     function voteTransaction(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 
-        public 
+        public onlyMember
     {
-        require(isMember(msg.sender));
-        
         bytes32 voteId = getTransactionVoteId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount);
         
         if (processed[voteId])
@@ -96,7 +99,7 @@ contract FederatedManager {
         return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount));
     }
     
-    function voteAddMember(address _newMember) public
+    function voteAddMember(address _newMember) public onlyMember
     {
         if (isMember(_newMember))
             return;
