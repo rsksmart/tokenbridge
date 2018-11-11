@@ -1,0 +1,1 @@
+truffle test --network test
