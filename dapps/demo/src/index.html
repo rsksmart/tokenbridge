@@ -18,7 +18,7 @@
       <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
         <div class="navbar-nav">
           <a class="nav-item nav-link active" href="#" onclick="pages.goTo('home')">Home <span class="sr-only">(current)</span></a>
-          <a class="nav-item nav-link" href="#" onclick="pages.goTo('balances')">Balances</a>
+          <a class="nav-item nav-link" href="#" onclick="pages.goTo('balances'); fetchBalances()">Balances</a>
         </div>
       </div>
     </nav>
@@ -43,11 +43,17 @@
     </div>
     
     <div class="container">
+        <a href="#" onclick="distributeTokens()">Distribute</a>
+    </div>
+    
+    <div class="container">
         <table id="balances" class="table table-bordered">
             <thead>
                 <tr>
                     <th>Account</th>
                     <th style="text-align: center">Mainchain</th>
+                    <th></th>
+                    <th></th>
                     <th style="text-align: center">Sidechain</th>
                 </tr>
             </thead>
@@ -75,6 +81,12 @@ function show(accounts) {
                 .text(account.name))
             .append($('<td style="text-align: right">')
                 .attr('id', 'balance0-' + k))
+            .append($('<td style="text-align: center">')
+                .append($('<a href="#" onclick="exportTokens(' + k + ')">')
+                    .text('->')))
+            .append($('<td style="text-align: center">')
+                .append($('<a href="#" onclick="importTokens(' + k + ')">')
+                    .text('<-')))
             .append($('<td style="text-align: right">')
                 .attr('id', 'balance1-' + k));
                 
@@ -82,15 +94,60 @@ function show(accounts) {
     }
 }
 
-app.loadData(function (data) {
-    show(data.accounts);
-    
-    app.fetchBalances(data.accounts, function (n, m, balance) {
+var accounts = [];
+var data = {};
+
+function fetchBalances() {
+    app.fetchBalances(accounts, function (n, m, balance) {
         $('#balance' + m + '-' + n).text(parseInt(balance));
         console.log(n, m, balance);
     });
+}
+
+app.loadData(function (dt) {
+    data = dt;
+    accounts = data.accounts;
+    
+    show(data.accounts);
+
+    refreshBalances();
 });
 
+function distributeTokens() {
+    app.distributeTokens(accounts, function () {
+        fetchBalances();
+    });
+}
+
+function exportTokens(n) {
+    var account = accounts[n];
+    
+    if (account.name.indexOf('ustodian') >= 0)
+        return;
+        
+    if (!account.balance0)
+        return;
+        
+    app.transfer(account.address, data.main.custodian, data.main.token, account.balance0);
+}
+
+function importTokens(n) {
+    var account = accounts[n];
+    
+    if (account.name.indexOf('ustodian') >= 0)
+        return;
+        
+    if (!account.balance1)
+        return;
+        
+    app.transfer(account.address, data.side.custodian, data.side.token, account.balance1);
+}
+
+function refreshBalances() {
+    fetchBalances();
+    
+    setTimeout(refreshBalances, 2000);
+}
     </script>
   </body>
 </html>
