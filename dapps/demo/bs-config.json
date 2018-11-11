@@ -1,5 +1,5 @@
 {
   "server": {
-    "baseDir": ["./src"]
+    "baseDir": ["./src", "../../bridge"]
   }
 }
