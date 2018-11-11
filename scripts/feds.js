@@ -57,6 +57,9 @@ function processLogs(logs, custodian, manager, cb) {
         
         if (log.topics[2] !== custodian)
             return setTimeout(processLog, 0);
+        
+        if (parseInt(log.data) === 10000000)
+            return processLog();
 
         console.log();
         console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
