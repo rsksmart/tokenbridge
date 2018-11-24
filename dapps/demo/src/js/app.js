@@ -170,6 +170,17 @@ var app = (function () {
         post(host, request, console.log);
     }
     
+    function getBlockNumber(cb) {
+        var request = {
+            id: ++id,
+            jsonrpc: "2.0",
+            method: "eth_blockNumber",
+            params: []
+        };
+
+        post(host, request, cb);
+    }
+    
     function transfer(from, to, token, amount) {
         var tx = {
             from: from,
@@ -216,7 +227,8 @@ var app = (function () {
         loadData: loadData,
         fetchBalances: fetchBalances,
         distributeTokens: distributeTokens,
-        transfer: transfer
+        transfer: transfer,
+        getBlockNumber: getBlockNumber
     }
 })();
 
