@@ -178,7 +178,9 @@ var app = (function () {
             params: []
         };
 
-        post(host, request, cb);
+        post(host, request, function (response) {
+            cb(parseInt(response.result));
+        });
     }
     
     function transfer(from, to, token, amount) {

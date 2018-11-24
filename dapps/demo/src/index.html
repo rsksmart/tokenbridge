@@ -118,6 +118,8 @@ var balances = [];
 balances[0] = [];
 balances[1] = [];
 
+var blockBalances = [];
+
 function totalBalances(bals) {
     var total = 0;
     
@@ -137,32 +139,74 @@ function showChart(canvas, title, balances) {
         axisY:{
             includeZero: false
         },
-        data: [{        
-            type: "line",       
-            dataPoints: []
-        }]
+        data: []
     };
     
-    for (var k = 0; k < balances.length; k++)
-        data.data[0].dataPoints.push({ y: balances[k] });
+    for (var k = 0; k < balances.length; k++) {
+        data.data[k] = { type: "line", dataPoints: [] };
+        
+        for (var j = 0; j < balances[k].length; j++)
+            data.data[k].dataPoints.push({ y: balances[k][j] });
+    }
         
     var chart = new CanvasJS.Chart(canvas, data);
     
     chart.render();
 }
 
+var lastProcessedBlock = 0;
+var data1 = [];
+var data2 = [];
+
 function fetchBlockBalances() {
-    var data1 = [];
-    var data2 = [];
-    
-    for (var k = 0; k < 20; k++) {
-        data1.push(Math.floor(Math.random() * 10000000));
-        data2.push(Math.floor(Math.random() * 10000000));
+    /*
+    app.getBlockNumber(function (bn) {
+        if (bn <= lastProcessedBlock)
+            return;
+            
+        var nb = lastProcessedBlock + 1;
+        
+        app.fetchBalances(accounts, nb, (function(nb) { return function (n, m, balance) {
+            balance = parseInt(balance);
+ 
+            if (!blockBalances[m])
+                blockBalances[m] = [];
+                
+            if (!blockBalances[m][n])
+                blockBalances[m][n] = [];
+                
+            blockBalances[m][n][nb] = balance;
+            
+            console.log(m, n, nb, balance);
+        }})(nb));
+        
+        lastProcessedBlock = bn;
+    });
+    */
+        
+    for (var k = 0; k < 10; k++) {
+        if (!data1[k])
+            data1[k] = [];
+        if (!data2[k])
+            data2[k] = [];
+        
+        data1[k].push(Math.floor(Math.random() * 10000000));
+        data2[k].push(Math.floor(Math.random() * 10000000));
     }
     
     showChart('tokenChart1', 'Mainchain Tokens', data1);
-    showChart('tokenChart2', 'Sidechain Tokens', data1);
+    showChart('tokenChart2', 'Sidechain Tokens', data2);
+    
+    /*
+    if (blockBalances[0])
+        showChart('tokenChart1', 'Mainchain Tokens', blockBalances[0]);
+        
+    if (blockBalances[1])
+        showChart('tokenChart2', 'Sidechain Tokens', blockBalances[1]);
+    */
 }
+
+var lastProcessedBlock = 0;
 
 function fetchBalances() {
     app.fetchBalances(accounts, function (n, m, balance) {
@@ -183,8 +227,6 @@ function fetchBalances() {
         }
         else
             $('#balance' + m + '-' + n).attr('bgcolor', '');
-        
-        console.log(n, m, balance);
     });
 }
 
@@ -229,6 +271,7 @@ function importTokens(n) {
 
 function refreshBalances() {
     fetchBalances();
+    fetchBlockBalances();
     
     setTimeout(refreshBalances, 2000);
 }
