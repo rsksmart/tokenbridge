@@ -97,9 +97,39 @@ function show(accounts) {
 var accounts = [];
 var data = {};
 
+var balances = [];
+balances[0] = [];
+balances[1] = [];
+
+function totalBalances(bals) {
+    var total = 0;
+    
+    for (var k = 0; k < bals.length; k++)
+        total += bals[k];
+    
+    return total;
+}
+
 function fetchBalances() {
     app.fetchBalances(accounts, function (n, m, balance) {
-        $('#balance' + m + '-' + n).text(parseInt(balance));
+        balance = parseInt(balance);
+        balances[m][n] = balance;
+        
+        $('#balance' + m + '-' + n).text(balance);
+        
+        if (balance > 0) {
+            var total = totalBalances(balances[m]);
+            var prop = Math.floor(balance / total * 64);
+            var val = (255 - 32 - prop).toString(16);
+            
+            while (val.length < 2)
+                val = '0' + val;
+            
+            $('#balance' + m + '-' + n).attr('bgcolor', '#' + val + 'ff' + val);
+        }
+        else
+            $('#balance' + m + '-' + n).attr('bgcolor', '');
+        
         console.log(n, m, balance);
     });
 }

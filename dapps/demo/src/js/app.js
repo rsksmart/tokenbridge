@@ -88,7 +88,12 @@ var app = (function () {
         });
     }
     
-    function fetchBalances(accounts, bfn) {
+    function fetchBalances(accounts, block, bfn) {
+        if (!bfn) {
+            bfn = block;
+            block = 'latest';
+        }
+        
         for (var k = 0; k < accounts.length; k++) {
             fetchBalance(k, 0);
             fetchBalance(k, 1);
@@ -106,7 +111,7 @@ var app = (function () {
                     gas: 2000000,
                     gasPrice: 0,
                     data: "0x70a08231000000000000000000000000" + accounts[n].address.substring(2)
-                }]
+                }, block]
             };
             
             post(host, request, function (data) {
