@@ -53,9 +53,9 @@ deploy
 
 ## To Do
 
-- Prevent federator vote transactions that are not processed, filling storage space
+- Prevent federator vote transactions that are not accepted/processed, filling storage space
 - Federated manager change custodian manager using votes
-
+- Add tokenFallback to custodian, only to not be rejected as receiver by ERC223/ERC677 tokens
 
 
 
