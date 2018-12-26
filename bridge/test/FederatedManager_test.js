@@ -1,7 +1,7 @@
 const FederatedManager = artifacts.require('./FederatedManager');
 const MainToken = artifacts.require('./MainToken');
 const SideToken = artifacts.require('./SideToken');
-const Custodian = artifacts.require('./Custodian');
+const Bridge = artifacts.require('./Bridge');
 
 const expectThrow = require('./utils').expectThrow;
 
@@ -410,27 +410,27 @@ contract('FederatedManager', function (accounts) {
         });
     });
 
-    describe('accept transfer using custodian', function () {
+    describe('accept transfer using bridge', function () {
         const managerOwner = accounts[0];
         const tokenOwner = accounts[6];
-        const custodianOwner = accounts[7];
+        const bridgeOwner = accounts[7];
         const anAccount = accounts[8];
         
         beforeEach(async function () {
             this.manager = await FederatedManager.new(members, { from: managerOwner });
             this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
-            this.custodian = await Custodian.new(this.manager.address, this.token.address, { from: custodianOwner });
+            this.bridge = await Bridge.new(this.manager.address, this.token.address, { from: bridgeOwner });
 
-            await this.token.transfer(this.custodian.address, 1000, { from: tokenOwner });
-            await this.manager.setTransferable(this.custodian.address);
+            await this.token.transfer(this.bridge.address, 1000, { from: tokenOwner });
+            await this.manager.setTransferable(this.bridge.address);
         });
         
         it('initial state', async function () {
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
 
-            const custodianBalance = await this.token.balanceOf(this.custodian.address);
-            assert.equal(custodianBalance, 1000);
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 1000);
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 0);
@@ -443,8 +443,8 @@ contract('FederatedManager', function (accounts) {
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
 
-            const custodianBalance = await this.token.balanceOf(this.custodian.address);
-            assert.equal(custodianBalance, 1000);
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 1000);
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 0);
@@ -458,8 +458,8 @@ contract('FederatedManager', function (accounts) {
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
 
-            const custodianBalance = await this.token.balanceOf(this.custodian.address);
-            assert.equal(custodianBalance, 900);
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 900);
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
@@ -480,8 +480,8 @@ contract('FederatedManager', function (accounts) {
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
 
-            const custodianBalance = await this.token.balanceOf(this.custodian.address);
-            assert.equal(custodianBalance, 900);
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 900);
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
