@@ -34,16 +34,16 @@ sasync()
     }], next);
 })
 .then(function (data, next) {
-    processLogs(data, fromconfig.custodian || fromconfig.manager, toconfig.manager, next);
+    processLogs(data, fromconfig.bridge || fromconfig.manager, toconfig.manager, next);
 })
 .error(function (err) {
     console.log(err);
 });
 
-function processLogs(logs, custodian, manager, cb) {
-    custodian = '0x' + sabi.encodeValue(custodian);
+function processLogs(logs, bridge, manager, cb) {
+    bridge = '0x' + sabi.encodeValue(bridge);
     
-    console.log('custodian', custodian);
+    console.log('bridge', bridge);
     
     var k = 0;
     
@@ -55,7 +55,7 @@ function processLogs(logs, custodian, manager, cb) {
 
         var log = logs[k++];
         
-        if (log.topics[2] !== custodian)
+        if (log.topics[2] !== bridge)
             return setTimeout(processLog, 0);
         
         if (parseInt(log.data) === 10000000)
