@@ -23,6 +23,12 @@ var app = (function () {
     var host = 'http://127.0.0.1:8545';
 
     function post(host, request, fn) {
+// https://stackoverflow.com/questions/2845459/jquery-how-to-make-post-use-contenttype-application-json
+        
+        $.ajaxSetup({
+            contentType: "application/json; charset=utf-8"
+        });
+        
         $.post(
             host,
             JSON.stringify(request),
@@ -59,28 +65,28 @@ var app = (function () {
                 });
             
             data.main = {
-                custodian: data1.custodian,
+                bridge: data1.bridge,
                 token: data1.token,
                 manager: data1.manager
             };
                         
             $.getJSON('sideconf.json', function (data2) {
                 data.side = {
-                    custodian: data2.custodian,
+                    bridge: data2.bridge,
                     token: data2.token,
                     manager: data2.manager
                 };
                 
-                if (data2.custodian)
+                if (data2.bridge)
                     data.accounts.unshift({
-                        name: 'Sidechain Custodian',
-                        address: data2.custodian
+                        name: 'Sidechain Bridge',
+                        address: data2.bridge
                     });
 
-                if (data1.custodian)
+                if (data1.bridge)
                     data.accounts.unshift({
-                        name: 'Mainchain Custodian',
-                        address: data1.custodian
+                        name: 'Mainchain Bridge',
+                        address: data1.bridge
                     });
                 
                 fn(data);
@@ -115,6 +121,10 @@ var app = (function () {
             };
             
             post(host, request, function (data) {
+                if (typeof data === 'string')
+                    data = JSON.parse(data);
+                console.dir(data);
+                console.dir(data.result);
                 var balance = data.result;
                 accounts[n]["balance" + m] = balance;
                 bfn(n, m, balance);
@@ -126,7 +136,7 @@ var app = (function () {
         while (true) {
             var n = Math.floor(Math.random() * accounts.length);
             
-            if (accounts[n].name.indexOf('ustodian') >= 0)
+            if (accounts[n].name.indexOf('ridge') >= 0)
                 continue;
             
             return accounts[n].address;

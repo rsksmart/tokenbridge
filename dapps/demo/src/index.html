@@ -143,7 +143,7 @@ function showChart(canvas, title, balances) {
     };
     
     for (var k = 0; k < balances.length; k++) {
-        data.data[k] = { type: "line", dataPoints: [] };
+        data.data[k] = { type: "line", lineThickness: 1, dataPoints: [] };
         
         for (var j = 0; j < balances[k].length; j++)
             data.data[k].dataPoints.push({ y: balances[k][j] });
@@ -210,6 +210,7 @@ var lastProcessedBlock = 0;
 
 function fetchBalances() {
     app.fetchBalances(accounts, function (n, m, balance) {
+        console.log(n, m, balance);
         balance = parseInt(balance);
         balances[m][n] = balance;
         
@@ -254,7 +255,7 @@ function exportTokens(n) {
     if (!account.balance0)
         return;
         
-    app.transfer(account.address, data.main.custodian, data.main.token, account.balance0);
+    app.transfer(account.address, data.main.bridge, data.main.token, account.balance0);
 }
 
 function importTokens(n) {
@@ -266,7 +267,7 @@ function importTokens(n) {
     if (!account.balance1)
         return;
         
-    app.transfer(account.address, data.side.custodian, data.side.token, account.balance1);
+    app.transfer(account.address, data.side.bridge, data.side.token, account.balance1);
 }
 
 function refreshBalances() {
