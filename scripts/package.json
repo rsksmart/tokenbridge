@@ -1,0 +1,17 @@
+{
+  "name": "scripts",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "Feds scripts",
+  "dependencies": {
+    "simpleasync": "^0.0.8",
+    "rskapi": "^0.0.9",
+    "simpleabi": "^0.0.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": ""
+}
