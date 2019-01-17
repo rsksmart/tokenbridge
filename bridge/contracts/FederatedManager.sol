@@ -12,6 +12,8 @@ contract FederatedManager {
     mapping(address => address[]) newMemberVotes;
     mapping(address => address[]) oldMemberVotes;
     
+    mapping(address => address[]) managersVotes;
+
     Transferable public transferable;
     
     modifier onlyOwner() {
@@ -174,6 +176,39 @@ contract FederatedManager {
         public view returns(uint) 
     {
         return oldMemberVotes[_oldMember].length;
+    }
+
+    function voteNewManager(address _newManager) public onlyMember
+    {
+        if (_newManager == address(this))
+            return;
+            
+        address[] storage managerVotes = managersVotes[_newManager];
+        uint nvotes = managerVotes.length;
+        
+        for (uint k = 0; k < nvotes; k++)
+            if (managerVotes[k] == msg.sender)
+                return;
+                
+        managerVotes.push(msg.sender);
+
+        if (managerVotes.length < members.length / 2 + 1)
+            return;
+            
+        transferable.changeManager(_newManager);
+        delete managersVotes[_newManager];
+    }
+    
+    function newManagerVotes(address _newManager) 
+        public view returns(address[]) 
+    {
+        return managersVotes[_newManager];
+    }
+
+    function newManagerNoVotes(address _newManager) 
+        public view returns(uint) 
+    {
+        return managersVotes[_newManager].length;
     }
 }
 

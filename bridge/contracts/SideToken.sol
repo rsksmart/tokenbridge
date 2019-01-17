@@ -18,6 +18,12 @@ contract SideToken is DetailedERC20, StandardToken, Transferable {
         manager = _manager;
     }
     
+    function changeManager(address newmanager) public onlyManager {
+        require(newmanager != address(0));
+        
+        manager = newmanager;
+    }
+
     function acceptTransfer(address receiver, uint256 amount) public onlyManager returns(bool) {
         totalSupply_ += amount;
         balances[receiver] += amount;
