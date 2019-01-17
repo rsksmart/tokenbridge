@@ -3,7 +3,7 @@ const Bridge = artifacts.require('./Bridge');
 
 const expectThrow = require('./utils').expectThrow;
 
-contract('Custodian', function (accounts) {
+contract('Bridge', function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
@@ -13,6 +13,12 @@ contract('Custodian', function (accounts) {
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
         this.bridge = await Bridge.new(bridgeManager, this.token.address, { from: bridgeOwner });
+    });
+    
+    it('calling token fallback', async function () {
+        const result = await this.bridge.tokenFallback(anAccount, 100, "0x010203");
+        
+        assert.ok(result);
     });
     
     it('check manager', async function () {

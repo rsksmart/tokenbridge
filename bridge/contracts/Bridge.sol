@@ -26,5 +26,9 @@ contract Bridge is Transferable {
         
         manager = newmanager;
     }
+    
+    function tokenFallback(address from, uint256 amount, bytes data) public returns (bool) {
+        return true;
+    }
 }
 
