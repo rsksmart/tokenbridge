@@ -8,10 +8,39 @@ contract('Custodian', function (accounts) {
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
     const anAccount = accounts[3];
+    const newBridgeManager = accounts[4];
     
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
         this.bridge = await Bridge.new(bridgeManager, this.token.address, { from: bridgeOwner });
+    });
+    
+    it('check manager', async function () {
+        const manager = await this.bridge.manager();
+        
+        assert.equal(manager, bridgeManager);
+    });
+
+    it('check token', async function () {
+        const token = await this.bridge.token();
+        
+        assert.equal(token, this.token.address);
+    });
+
+    it('change manager', async function () {
+        await this.bridge.changeManager(newBridgeManager, { from: bridgeManager });
+        
+        const manager = await this.bridge.manager();
+        
+        assert.equal(manager, newBridgeManager);
+    });
+
+    it('only manager can change manager', async function () {
+        expectThrow(this.bridge.changeManager(newBridgeManager));
+        
+        const manager = await this.bridge.manager();
+        
+        assert.equal(manager, bridgeManager);
     });
 
     it('accept transfer', async function () {
