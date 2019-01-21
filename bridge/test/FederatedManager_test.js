@@ -473,6 +473,46 @@ contract('FederatedManager', function (accounts) {
             assert.equal(lastBlockNumber2, 1);
             assert.equal(lastBlockHash2 , '0x0200000000000000000000000000000000000000000000000000000000000000');
         });
+
+        it('votes two transactions', async function () {
+            await this.manager.voteTransaction(1, '0x03', 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(2, '0x02', 3, anAccount, 100, { from: members[0] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 9000);
+
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 1000);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 0);
+            
+            const lastBlockNumber = await this.manager.getLastBlockNumberByAddress(members[0]);
+            const lastBlockHash = await this.manager.getLastBlockHashByAddress(members[0]);
+            
+            assert.equal(lastBlockNumber, 2);
+            assert.equal(lastBlockHash, '0x0200000000000000000000000000000000000000000000000000000000000000');
+        });
+
+        it('votes two transactions in inverser block order', async function () {
+            await this.manager.voteTransaction(2, '0x03', 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[0] });
+            
+            const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
+            assert.equal(tokenOwnerBalance, 9000);
+
+            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+            assert.equal(bridgeBalance, 1000);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 0);
+            
+            const lastBlockNumber = await this.manager.getLastBlockNumberByAddress(members[0]);
+            const lastBlockHash = await this.manager.getLastBlockHashByAddress(members[0]);
+            
+            assert.equal(lastBlockNumber, 2);
+            assert.equal(lastBlockHash, '0x0300000000000000000000000000000000000000000000000000000000000000');
+        });
         
         it('three votes of five then accept transfer', async function () {
             await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });

@@ -66,8 +66,10 @@ contract FederatedManager {
         
         transactionVotes.push(msg.sender);
 
-        lastBlockHash[msg.sender] = _blockHash;
-        lastBlockNumber[msg.sender] = _blockNumber;
+        if (_blockNumber > lastBlockNumber[msg.sender]) {
+            lastBlockHash[msg.sender] = _blockHash;
+            lastBlockNumber[msg.sender] = _blockNumber;
+        }
         
         if (transactionVotes.length < members.length / 2 + 1)
             return;
