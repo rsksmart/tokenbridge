@@ -9,6 +9,9 @@ contract FederatedManager {
     mapping(bytes32 => address[]) votes;
     mapping(bytes32 => bool) processed;
     
+    mapping(address => uint) lastBlockNumber;
+    mapping(address => bytes32) lastBlockHash;
+    
     mapping(address => address[]) newMemberVotes;
     mapping(address => address[]) oldMemberVotes;
     
@@ -70,6 +73,14 @@ contract FederatedManager {
             delete votes[voteId];
             processed[voteId] = true;
         }
+    }
+    
+    function getLastBlockNumberByAddress(address voter) public view returns (uint) {
+        return lastBlockNumber[voter];
+    }
+    
+    function getLastBlockHashByAddress(address voter) public view returns (bytes32) {
+        return lastBlockHash[voter];
     }
     
     function transactionVotes(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, address _receiver, uint _amount) 

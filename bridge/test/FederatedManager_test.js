@@ -438,6 +438,16 @@ contract('FederatedManager', function (accounts) {
             assert.equal(anAccountBalance, 0);
         });
         
+        if('no block voted yet', async function () {
+            const lastBlockNumber = await this.manager.lastBlockNumber(members[0]);
+            
+            assert.equal(lastBlockNumber, 0);
+            
+            const lastBlockHash = await this.manager.lastBlockHash(members[0]);
+            
+            assert.equals(lastBlockHash, 0);
+        });
+        
         it('two votes of five no accept transfer', async function () {
             await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
             await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
