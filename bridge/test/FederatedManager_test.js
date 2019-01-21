@@ -439,18 +439,18 @@ contract('FederatedManager', function (accounts) {
         });
         
         if('no block voted yet', async function () {
-            const lastBlockNumber = await this.manager.lastBlockNumber(members[0]);
+            const lastBlockNumber = await this.manager.getLastBlockNumberByAddress(members[0]);
             
             assert.equal(lastBlockNumber, 0);
             
-            const lastBlockHash = await this.manager.lastBlockHash(members[0]);
+            const lastBlockHash = await this.manager.getLastBlockHashByAddress(members[0]);
             
             assert.equals(lastBlockHash, 0);
         });
         
         it('two votes of five no accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[1] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -460,6 +460,18 @@ contract('FederatedManager', function (accounts) {
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 0);
+            
+            const lastBlockNumber1 = await this.manager.getLastBlockNumberByAddress(members[0]);
+            const lastBlockHash1 = await this.manager.getLastBlockHashByAddress(members[0]);
+            
+            assert.equal(lastBlockNumber1, 1);
+            assert.equal(lastBlockHash1, '0x0200000000000000000000000000000000000000000000000000000000000000');
+
+            const lastBlockNumber2 = await this.manager.getLastBlockNumberByAddress(members[1]);
+            const lastBlockHash2 = await this.manager.getLastBlockHashByAddress(members[1]);
+
+            assert.equal(lastBlockNumber2, 1);
+            assert.equal(lastBlockHash2 , '0x0200000000000000000000000000000000000000000000000000000000000000');
         });
         
         it('three votes of five then accept transfer', async function () {
