@@ -12,7 +12,7 @@ function getLogs(host, token, options, cb) {
         topics: [ transferEventHash ]
     };
     
-    host.provider.call('eth_getLogs', filter, cb);
+    return host.provider().call('eth_getLogs', [ filter ], cb);
 }
 
 module.exports = {

@@ -27,16 +27,11 @@ console.log('to token', toconfig.token);
 
 console.log();
 
-events.getLogs(fromhost, fromconfig.token, {}, 
-    function (err, logs) {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        
-        processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
-    }
-);
+(async function() { 
+    const logs = await events.getLogs(fromhost, fromconfig.token, {});
+    console.dir(logs);
+    //processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
+})();
 
 function processLogs(logs, bridge, manager) {
     bridge = '0x' + sabi.encodeValue(bridge);

@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "description": "Feds scripts",
   "dependencies": {
-    "simpleasync": "^0.0.8",
-    "rskapi": "^0.0.9",
-    "simpleabi": "^0.0.3"
+    "rskapi": "0.0.10",
+    "simpleabi": "^0.0.3",
+    "simpleasync": "^0.0.8"
   },
   "devDependencies": {},
   "scripts": {
