@@ -32,29 +32,20 @@ if (config.manager)
 if (config.custodian)
     accounts.push(config.custodian);
 
-doGetBalance();
-
-function doGetBalance() {
-    if (n >= accounts.length) {
-        console.log();
-        return;
-    }
-    
-    const account = accounts[n++];
-    
-    host.callTransaction({
-        from: accounts[0],
-        to: config.token,
-        value: '0x00',
-        data: balanceOfHash + "000000000000000000000000" + account.substring(2)
-    }, function (err, data) {
-        const balance = parseInt(data);
+(async function() {
+    for (var n = 0; n < accounts.length; n++) {
+        var account = accounts[n];
+        
+        var result = await host.callTransaction({
+            from: accounts[0],
+            to: config.token,
+            value: '0x00',
+            data: balanceOfHash + "000000000000000000000000" + account.substring(2)            
+        });
+        
+        const balance = parseInt(result);
         
         console.log('balance', account, balance);
-        
-        doGetBalance();
-    });
-}
-
-
+    }
+})();
 
