@@ -1,6 +1,5 @@
 
 const rskapi = require('rskapi');
-const sasync = require('simpleasync');
 const sabi = require('simpleabi');
 
 const transferHash = '0xa9059cbb';
@@ -20,27 +19,21 @@ const balanceOfHash = '0x70a08231';
 console.log('chain', chainname);
 console.log('token', config.token);
 console.log('manager', config.manager);
-if (config.custodian)
-    console.log('custodian', config.custodian);
+if (config.bridge)
+    console.log('bridge', config.bridge);
 
 console.log();
 
-var accounts;
+(async function () {
+    const accounts = await host.getAccounts();
 
-sasync()
-.exec(function (next) {
-    host.getAccounts(next);
-})
-.then(function (data, next) {
-    accounts = data;    
-    
     if (config.token)
         accounts.push(config.token);
     if (config.manager)
         accounts.push(config.manager);
-    if (config.custodian)
-        accounts.push(config.custodian);
-    
+    if (config.bridge)
+        accounts.push(config.bridge);
+
     var toa = toAccount[0].toLowerCase();
     
     var toAcc;
@@ -48,19 +41,20 @@ sasync()
     if (toa === 'm')
         toAcc = config.manager;
     else if (toa === 'b')
-        toAcc = config.custodian;
+        toAcc = config.bridge;
     else
         toAcc = accounts[toAccount];
 
     const abi = sabi.encodeValues([ toAcc, amount ]);
     
     console.log('data', abi);
-    host.sendTransaction({
+    
+    const txhash = await host.sendTransaction({
         from: accounts[fromAccount],
         to: config.token,
         value: '0x00',
         data: transferHash + abi
-    }, next);
-})
-
-
+    });
+    
+    console.log("tx hash", txhash);
+})();
