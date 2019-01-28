@@ -5,8 +5,7 @@
   "description": "Feds scripts",
   "dependencies": {
     "rskapi": "0.0.10",
-    "simpleabi": "^0.0.3",
-    "simpleasync": "^0.0.8"
+    "simpleabi": "^0.0.3"
   },
   "devDependencies": {},
   "scripts": {
