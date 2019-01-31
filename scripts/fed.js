@@ -12,6 +12,7 @@ const fromchainname = process.argv[2];
 const fromchain = process.argv[3];
 const tochainname = process.argv[4];
 const tochain = process.argv[5];
+const nofederator = process.argv[6];
 
 const fromconfig = require('../bridge/' + fromchainname + 'conf.json');
 const fromhost = rskapi.host(fromchain);
@@ -95,10 +96,7 @@ function processLogs(logs, bridge, manager) {
         });
         
         function processVote() {
-            if (m >= toconfig.members.length)
-                return processLog();
-        
-            const member = toconfig.members[m++];
+            const member = toconfig.members[nofederator];
             
             tohost.sendTransaction({
                 from: member,
@@ -106,7 +104,7 @@ function processLogs(logs, bridge, manager) {
                 value: '0x00',
                 gas: 6700000,
                 data: voteTransactionHash + abi
-            }, function (err, data) { console.log('voted'); setTimeout(processVote, 1000); });
+            }, function (err, data) { console.log('voted'); setTimeout(processLog, 1000); });
         }
     }
 }
