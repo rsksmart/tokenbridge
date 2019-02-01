@@ -3,6 +3,7 @@ const rskapi = require('rskapi');
 const sabi = require('simpleabi');
 
 const events = require('./lib/events');
+const config = require('./config.json');
 
 const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const voteTransactionHash = '0x6bcab28b';
@@ -29,8 +30,14 @@ console.log('to token', toconfig.token);
 console.log();
 
 (async function() { 
-    const logs = await events.getLogs(fromhost, fromconfig.token, {});
-    console.dir(logs);
+    const number = await fromhost.getBlockNumber();
+    const toBlock = number - config.confirmations;
+    
+    if (toBlock <= 0)
+        return;
+    
+    const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
+    
     processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
 })();
 
