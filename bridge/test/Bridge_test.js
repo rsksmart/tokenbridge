@@ -10,6 +10,7 @@ contract('Bridge', function (accounts) {
     const anAccount = accounts[3];
     const newBridgeManager = accounts[4];
     const tokenAddress = accounts[5];
+    const anotherAccount = accounts[6];
     
     describe('bridge with token contract', function () {
         beforeEach(async function () {
@@ -96,6 +97,28 @@ contract('Bridge', function (accounts) {
         
         it('only token can call token fallback', async function () {
             expectThrow(this.bridge.tokenFallback(anAccount, 100, "0x010203", { from: anAccount }));
+        });
+    });
+    
+    describe('bridge maps addresses', function () {
+        beforeEach(async function () {
+            this.bridge = await Bridge.new(bridgeManager, tokenAddress, { from: bridgeOwner });
+        });
+        
+        it('not mapped address', async function () {
+            const result = await this.bridge.getMappedAddress(anAccount);
+            
+            assert.ok(result);
+            assert.equal(result, anAccount);
+        });
+        
+        it('map address', async function () {
+            await this.bridge.mapAddress(anotherAccount, { from: anAccount });
+            
+            const result = await this.bridge.getMappedAddress(anAccount);
+            
+            assert.ok(result);
+            assert.equal(result, anotherAccount);
         });
     });
 });
