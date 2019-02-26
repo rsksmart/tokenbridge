@@ -38,41 +38,41 @@ console.log();
     
     const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
     
-    processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
+    await processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
 })();
 
-function processLogs(logs, bridge, manager) {
+async function processLogs(logs, bridge, manager) {
     bridge = '0x' + sabi.encodeValue(bridge);
     
     console.log('bridge', bridge);
     
     var k = 0;
     
-    processLog();
+    for (var k = 0; k < logs.length; k++)
+        await processLog(logs[k]);
     
-    function processLog() {
-        if (k >= logs.length)
+    async function processLog(log) {
+        if (log.topics[2] !== bridge)
             return;
 
-        var log = logs[k++];
-        
-        if (log.topics[2] !== bridge)
-            return setTimeout(processLog, 0);
-        
+        // TODO remove/replace this hack
         if (parseInt(log.data) === 10000000)
-            return processLog();
+            return;
 
         console.log();
         console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
         console.log('block number', log.blockNumber);
         console.log('block hash', log.blockHash);
         console.log('transaction hash', log.transactionHash);
+
+        const originalReceiver = log.topics[1];
+        const receiver = originalReceiver;
         
         const abi = sabi.encodeValues([
             log.blockNumber,
             log.blockHash,
             log.transactionHash,
-            log.topics[1],
+            receiver,
             log.data
         ]);
         
@@ -81,38 +81,29 @@ function processLogs(logs, bridge, manager) {
         
         var m = 0;
 
-        tohost.callTransaction({
+        const data = parseInt(await tohost.callTransaction({
             from: toconfig.accounts[0],
             to: toconfig.manager,
             value: '0x00',
             data: transactionWasProcessedHash + abi
-        }, function (err, data) {
-            if (err)
-                return cb(err, null);
-            
-            data = parseInt(data);
-            
-            if (!data) {
-                console.log('process transaction event');
-                processVote();
-            }
-            else {
-                console.log('transaction event already processed');
-                return processLog();
-            }
+        })); 
+        
+        if (data) {
+            console.log('transaction event already processed');
+            return;
+        }
+        
+        const member = toconfig.members[nofederator];
+        
+        await tohost.sendTransaction({
+            from: member,
+            to: toconfig.manager,
+            value: '0x00',
+            gas: 6700000,
+            data: voteTransactionHash + abi
         });
         
-        function processVote() {
-            const member = toconfig.members[nofederator];
-            
-            tohost.sendTransaction({
-                from: member,
-                to: toconfig.manager,
-                value: '0x00',
-                gas: 6700000,
-                data: voteTransactionHash + abi
-            }, function (err, data) { console.log('voted'); setTimeout(processLog, 1000); });
-        }
+        console.log("voted");
     }
 }
 
