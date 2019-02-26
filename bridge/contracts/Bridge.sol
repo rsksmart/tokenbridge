@@ -6,7 +6,9 @@ import "./Transferable.sol";
 contract Bridge is Transferable {
     address public manager;
     ERC20 public token;
+    
     mapping (address => address) mappedAddresses;
+    mapping (address => address) mappedInverseAddresses;
 
     modifier onlyManager() {
         require(msg.sender == manager);
@@ -35,10 +37,20 @@ contract Bridge is Transferable {
     
     function mapAddress(address to) public {
         mappedAddresses[msg.sender] = to;
+        mappedInverseAddresses[to] = msg.sender;
     }
     
     function getMappedAddress(address account) public view returns (address) {
         address mapped = mappedAddresses[account];
+        
+        if (mapped == address(0))
+            return account;
+            
+        return mapped;
+    }
+    
+    function getMappedInverseAddress(address account) public view returns (address) {
+        address mapped = mappedInverseAddresses[account];
         
         if (mapped == address(0))
             return account;
