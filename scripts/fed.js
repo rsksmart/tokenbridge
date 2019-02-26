@@ -8,6 +8,7 @@ const config = require('./config.json');
 const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const voteTransactionHash = '0x6bcab28b';
 const transactionWasProcessedHash = '0x4228f915';
+const lastBlockNumberHash = '0x941ee20b';
 
 const fromchainname = process.argv[2];
 const fromchain = process.argv[3];
@@ -24,6 +25,8 @@ console.log('from token', fromconfig.token);
 const toconfig = require('../bridge/' + tochainname + 'conf.json');
 const tohost = rskapi.host(tochain);
 
+const federator = toconfig.members[nofederator];
+        
 console.log('to chain', tochainname);
 console.log('to token', toconfig.token);
 
@@ -32,10 +35,24 @@ console.log();
 (async function() { 
     const number = await fromhost.getBlockNumber();
     const toBlock = number - config.confirmations;
-    
+     
     if (toBlock <= 0)
-        return;
+        return; 
     
+    const lastBlockNumberVoted = parseInt(
+        await tohost.callTransaction({
+            from: federator,
+            to: toconfig.manager,
+            value: '0x00',
+            data: lastBlockNumberHash + sabi.encodeValue(federator)
+        })
+        );
+        
+    const options = { to: toBlock };
+        
+    if (lastBlockNumberVoted)
+        options.from = lastBlockNumberVoted - config.confirmations;
+        
     const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
     
     await processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
@@ -93,10 +110,8 @@ async function processLogs(logs, bridge, manager) {
             return;
         }
         
-        const member = toconfig.members[nofederator];
-        
         await tohost.sendTransaction({
-            from: member,
+            from: federator,
             to: toconfig.manager,
             value: '0x00',
             gas: 6700000,
