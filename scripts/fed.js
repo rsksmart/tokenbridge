@@ -9,6 +9,7 @@ const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f
 const voteTransactionHash = '0x6bcab28b';
 const transactionWasProcessedHash = '0x4228f915';
 const lastBlockNumberHash = '0x941ee20b';
+const getMappedAddressHash = '0x96e609f8';
 
 const fromchainname = process.argv[2];
 const fromchain = process.argv[3];
@@ -83,7 +84,13 @@ async function processLogs(logs, bridge, manager) {
         console.log('transaction hash', log.transactionHash);
 
         const originalReceiver = log.topics[1];
-        const receiver = originalReceiver;
+
+        const receiver = await tohost.callTransaction({
+                from: fromconfig.accounts[0],
+                to: fromconfig.bridge,
+                value: '0x00',
+                data: getMappedAddressHash + sabi.encodeValue(originalReceiver)
+            });
         
         const abi = sabi.encodeValues([
             log.blockNumber,
@@ -98,12 +105,13 @@ async function processLogs(logs, bridge, manager) {
         
         var m = 0;
 
-        const data = parseInt(await tohost.callTransaction({
-            from: toconfig.accounts[0],
-            to: toconfig.manager,
-            value: '0x00',
-            data: transactionWasProcessedHash + abi
-        })); 
+        const data = parseInt(
+            await tohost.callTransaction({
+                from: toconfig.accounts[0],
+                to: toconfig.manager,
+                value: '0x00',
+                data: transactionWasProcessedHash + abi
+            })); 
         
         if (data) {
             console.log('transaction event already processed');
