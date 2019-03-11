@@ -1,10 +1,5 @@
-<<<<<<< HEAD
-# Token Bridge
-
-Ethereum/RSK Token Bridge
-
-=======
 # RSK Token Bridge
+
 Ethereum/RSK Token Bridge
 
 ## Components
@@ -42,7 +37,6 @@ The Federation casts votes to the Mainchain Manager and when the Mainchain Manag
 
 At the moment, the RSK Token Bridge is implemented as a Symmetric Bridge. Alternatives to this implementation are being evaluated.
 
->>>>>>> 5f07362cc40f426e8ddfebd9938e2cb52c6d499b
 ## References
 
 - [Retrofitting a two-way peg between blockchains](https://people.cs.uchicago.edu/~teutsch/papers/dogethereum.pdf)
@@ -50,3 +44,6 @@ At the moment, the RSK Token Bridge is implemented as a Symmetric Bridge. Altern
 - [Parity Bridge](https://github.com/paritytech/parity-bridge)
 - [Blockchain Interoperability — The Aion Transwarp Conduit (TWC)](https://blog.aion.network/blockchain-interoperability-the-aion-transwarp-conduit-twc-4f6ac2e79cec)
 - [Transwarp-Conduit: Interoperable Blockchain Application Framework](https://aion.network/media/TWC_Paper_Final.pdf)
+- [UI for TokenBridge, an interoperability solution between Ethereum networks for native and ERC tokens](https://github.com/poanetwork/bridge-ui)
+- [DAI Bridge POA Network](https://dai-bridge.poa.network/)
+- [POA Network partners with MakerDAO on xDai Chain, the first ever USD-Stable Blockchain](https://medium.com/poa-network/poa-network-partners-with-makerdao-on-xdai-chain-the-first-ever-usd-stable-blockchain-65a078c41e6a)
