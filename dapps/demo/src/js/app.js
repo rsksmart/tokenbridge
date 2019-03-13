@@ -20,8 +20,9 @@ var app = (function () {
     var names = [ 'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Fiona', 'Ginger', 'Hanna', 'Ian', 'John', 'Kim', 'Louise' ];
     
     var id = 0;
-    var host = 'http://127.0.0.1:8545';
-
+    var mainhost;
+    var sidehost;
+    
     function post(host, request, fn) {
 // https://stackoverflow.com/questions/2845459/jquery-how-to-make-post-use-contenttype-application-json
         
@@ -39,8 +40,12 @@ var app = (function () {
     function show(data) {
         alert(JSON.stringify(data, null, 4));
     }
+    
+    function getHost(network) {
+        return network ? sidehost : mainhost;
+    }
 
-    function getAccounts(fn) {
+    function getAccounts(network, fn) {
         var request = {
             id: ++id,
             jsonrpc: "2.0",
@@ -48,7 +53,7 @@ var app = (function () {
             params: []
         };
         
-        post(host, request, fn);
+        post(getHost(network), request, fn);
     }
     
     var data = {
@@ -56,6 +61,8 @@ var app = (function () {
     
     function loadData(fn) {
         $.getJSON('mainconf.json', function (data1) {
+            mainhost = data1.host;
+            
             data.accounts = []
 
             for (var k = 0; k < data1.accounts.length; k++)
@@ -71,6 +78,8 @@ var app = (function () {
             };
                         
             $.getJSON('sideconf.json', function (data2) {
+                sidehost = data2.host;
+                
                 data.side = {
                     bridge: data2.bridge,
                     token: data2.token,
@@ -120,7 +129,7 @@ var app = (function () {
                 }, block]
             };
             
-            post(host, request, function (data) {
+            post(getHost(m), request, function (data) {
                 if (typeof data === 'string')
                     data = JSON.parse(data);
                 console.dir(data);
@@ -155,7 +164,7 @@ var app = (function () {
         return text;
     }
     
-    function distributeToken(from, balance, token, accounts) {
+    function distributeToken(network, from, balance, token, accounts) {
         var to = randomAccount(accounts);
         var amount = Math.floor(Math.random() * balance / 2);
         
@@ -177,23 +186,10 @@ var app = (function () {
             params: [ tx ]
         };
         
-        post(host, request, console.log);
+        post(getHost(network), request, console.log);
     }
     
-    function getBlockNumber(cb) {
-        var request = {
-            id: ++id,
-            jsonrpc: "2.0",
-            method: "eth_blockNumber",
-            params: []
-        };
-
-        post(host, request, function (response) {
-            cb(parseInt(response.result));
-        });
-    }
-    
-    function transfer(from, to, token, amount) {
+    function transfer(network, from, to, token, amount) {
         var tx = {
             from: from,
             to: token,
@@ -212,7 +208,7 @@ var app = (function () {
         
         console.dir(request);
         
-        post(host, request, console.log);
+        post(getHost(network), request, console.log);
     }
 
     function distributeTokens(accounts, cb) {
@@ -225,10 +221,10 @@ var app = (function () {
                 continue;
             
             if (accounts[k].balance0)
-                distributeToken(accounts[k].address, accounts[k].balance0, data.main.token, accounts);
+                distributeToken(0, accounts[k].address, accounts[k].balance0, data.main.token, accounts);
 
             if (accounts[k].balance1)
-                distributeToken(accounts[k].address, accounts[k].balance1, data.side.token, accounts);
+                distributeToken(1, accounts[k].address, accounts[k].balance1, data.side.token, accounts);
         }
         
         setTimeout(cb, 2000);
@@ -239,8 +235,7 @@ var app = (function () {
         loadData: loadData,
         fetchBalances: fetchBalances,
         distributeTokens: distributeTokens,
-        transfer: transfer,
-        getBlockNumber: getBlockNumber
+        transfer: transfer
     }
 })();
 

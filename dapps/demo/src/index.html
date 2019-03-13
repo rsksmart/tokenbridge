@@ -159,30 +159,6 @@ var data1 = [];
 var data2 = [];
 
 function fetchBlockBalances() {
-    /*
-    app.getBlockNumber(function (bn) {
-        if (bn <= lastProcessedBlock)
-            return;
-            
-        var nb = lastProcessedBlock + 1;
-        
-        app.fetchBalances(accounts, nb, (function(nb) { return function (n, m, balance) {
-            balance = parseInt(balance);
- 
-            if (!blockBalances[m])
-                blockBalances[m] = [];
-                
-            if (!blockBalances[m][n])
-                blockBalances[m][n] = [];
-                
-            blockBalances[m][n][nb] = balance;
-            
-            console.log(m, n, nb, balance);
-        }})(nb));
-        
-        lastProcessedBlock = bn;
-    });
-    */
         
     for (var k = 0; k < 10; k++) {
         if (!data1[k])
@@ -255,7 +231,7 @@ function exportTokens(n) {
     if (!account.balance0)
         return;
         
-    app.transfer(account.address, data.main.bridge, data.main.token, account.balance0);
+    app.transfer(0, account.address, data.main.bridge, data.main.token, account.balance0);
 }
 
 function importTokens(n) {
@@ -267,7 +243,7 @@ function importTokens(n) {
     if (!account.balance1)
         return;
         
-    app.transfer(account.address, data.side.bridge, data.side.token, account.balance1);
+    app.transfer(1, account.address, data.side.bridge, data.side.token, account.balance1);
 }
 
 function refreshBalances() {
