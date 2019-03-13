@@ -23,6 +23,7 @@ async function run() {
     console.log('Bridge controlled by Manager');
     
     const config = {
+        host: web3.currentProvider.host,
         accounts: accounts,
         bridge: bridge.address,
         token: token.address,

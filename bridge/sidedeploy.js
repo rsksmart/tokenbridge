@@ -25,6 +25,7 @@ async function run() {
     console.log('Manager controls', transferable);
     
     const config = {
+        host: web3.currentProvider.host,
         accounts: accounts,
         token: token.address,
         manager: manager.address,
