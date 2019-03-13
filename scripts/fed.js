@@ -12,23 +12,23 @@ const lastBlockNumberHash = '0x941ee20b';
 const getMappedAddressHash = '0x96e609f8';
 
 const fromchainname = process.argv[2];
-const fromchain = process.argv[3];
-const tochainname = process.argv[4];
-const tochain = process.argv[5];
-const nofederator = process.argv[6];
+const tochainname = process.argv[3];
+const nofederator = process.argv[4];
 
 const fromconfig = require('../bridge/' + fromchainname + 'conf.json');
-const fromhost = rskapi.host(fromchain);
+const fromhost = rskapi.host(fromconfig.host);
 
 console.log('from chain', fromchainname);
+console.log('from host', fromconfig.host);
 console.log('from token', fromconfig.token);
 
 const toconfig = require('../bridge/' + tochainname + 'conf.json');
-const tohost = rskapi.host(tochain);
+const tohost = rskapi.host(toconfig.host);
 
 const federator = toconfig.members[nofederator];
         
 console.log('to chain', tochainname);
+console.log('to host', toconfig.host);
 console.log('to token', toconfig.token);
 
 console.log();
