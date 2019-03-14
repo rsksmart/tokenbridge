@@ -44,6 +44,10 @@ var app = (function () {
     function getHost(network) {
         return network ? sidehost : mainhost;
     }
+    
+    function getToken(network) {
+        return network ? data.side.token : data.main.token;
+    }
 
     function getAccounts(network, fn) {
         var request = {
@@ -63,10 +67,11 @@ var app = (function () {
         $.getJSON('mainconf.json', function (data1) {
             mainhost = data1.host;
             
-            data.accounts = []
+            data.mainaccounts = [];
+            data.sideaccounts = [];
 
             for (var k = 0; k < data1.accounts.length; k++)
-                data.accounts.push({
+                data.mainaccounts.push({
                     name: names[k],
                     address: data1.accounts[k]
                 });
@@ -80,68 +85,78 @@ var app = (function () {
             $.getJSON('sideconf.json', function (data2) {
                 sidehost = data2.host;
                 
+                for (var k = 0; k < data2.accounts.length; k++)
+                    data.sideaccounts.push({
+                        name: names[k],
+                        address: data2.accounts[k]
+                    });
+                    
                 data.side = {
                     bridge: data2.bridge,
                     token: data2.token,
                     manager: data2.manager
                 };
                 
-                if (data2.bridge)
-                    data.accounts.unshift({
+                if (data2.bridge) {
+                    data.mainaccounts.unshift({
                         name: 'Sidechain Bridge',
                         address: data2.bridge
                     });
+                    data.sideaccounts.unshift({
+                        name: 'Sidechain Bridge',
+                        address: data2.bridge
+                    });
+                }
 
-                if (data1.bridge)
-                    data.accounts.unshift({
+                if (data1.bridge) {
+                    data.mainaccounts.unshift({
                         name: 'Mainchain Bridge',
                         address: data1.bridge
                     });
-                
+                    data.sideaccounts.unshift({
+                        name: 'Mainchain Bridge',
+                        address: data1.bridge
+                    });
+                }
                 fn(data);
             }); 
         });
     }
     
-    function fetchBalances(accounts, block, bfn) {
-        if (!bfn) { 
-            bfn = block;
-            block = 'latest';
-        }
+    function fetchBalances(network, accounts, bfn) {
+        for (var k = 0; k < accounts.length; k++)
+            fetchBalance(k);
         
-        for (var k = 0; k < accounts.length; k++) {
-            fetchBalance(k, 0);
-            fetchBalance(k, 1);
-        }
-        
-        function fetchBalance(n, m) {
+        function fetchBalance(naccount) {
+            const account = accounts[naccount];
+            
             var request = {
                 id: ++id,
                 jsonrpc: "2.0",
                 method: "eth_call",
                 params: [{
-                    from: accounts[0].address,
-                    to: m === 0 ? data.main.token : data.side.token,
+                    from: account.address,
+                    to: getToken(network),
                     value: 0,
                     gas: 2000000,
                     gasPrice: 0,
-                    data: "0x70a08231000000000000000000000000" + accounts[n].address.substring(2)
-                }, block]
+                    data: "0x70a08231000000000000000000000000" + account.address.substring(2)
+                }, 'latest']
             };
             
-            post(getHost(m), request, function (data) {
+            post(getHost(network), request, function (data) {
                 if (typeof data === 'string')
                     data = JSON.parse(data);
                 
                 const balance = data.result;
-                accounts[n]["balance" + m] = balance;
-                bfn(n, m, balance);
+                accounts[naccount].balance = balance;
+                bfn(network, naccount, balance);
             });
         }
     }
     
     function randomAccount(accounts) {
-        while (true) {
+        while (true) {            
             var n = Math.floor(Math.random() * accounts.length);
             
             if (accounts[n].name.indexOf('ridge') >= 0)
@@ -176,8 +191,6 @@ var app = (function () {
             data: "0xa9059cbb000000000000000000000000" + to.substring(2) + toHex(amount)
         };
         
-        console.dir(tx);
-        
         var request = {
             id: ++id,
             jsonrpc: "2.0",
@@ -205,12 +218,10 @@ var app = (function () {
             params: [ tx ]
         };
         
-        console.dir(request);
-        
         post(getHost(network), request, console.log);
     }
 
-    function distributeTokens(accounts, cb) {
+    function distributeTokens(network, accounts, cb) {
         var naccounts = accounts.length;
         
         for (var k = 0; k < naccounts; k++) {
@@ -219,11 +230,8 @@ var app = (function () {
             if (name.indexOf('ustodian') >= 0)
                 continue;
             
-            if (accounts[k].balance0)
-                distributeToken(0, accounts[k].address, accounts[k].balance0, data.main.token, accounts);
-
-            if (accounts[k].balance1)
-                distributeToken(1, accounts[k].address, accounts[k].balance1, data.side.token, accounts);
+            if (accounts[k].balance)
+                distributeToken(network, accounts[k].address, accounts[k].balance, getToken(network), accounts);
         }
         
         setTimeout(cb, 2000);

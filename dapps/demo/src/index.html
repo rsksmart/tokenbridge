@@ -19,7 +19,6 @@
         <div class="navbar-nav">
           <a class="nav-item nav-link active" href="#" onclick="pages.goTo('home')">Home <span class="sr-only">(current)</span></a>
           <a class="nav-item nav-link" href="#" onclick="pages.goTo('balances'); fetchBalances()">Balances</a>
-          <a class="nav-item nav-link" href="#" onclick="pages.goTo('charts'); fetchBlockBalances()">Chart</a>
         </div>
       </div>
     </nav>
@@ -64,21 +63,6 @@
     </div>
     </div>
 
-    <div id="page_charts" style="display:none">
-    <div class="container">
-        <h1>Token Balances by Block</h1>
-    </div>
-    
-    <div class="container">
-        <div id="tokenChart1" style="height: 300px; width: 100%;"></div>
-    </div>
-
-    <div class="container">
-        <div id="tokenChart2" style="height: 300px; width: 100%;"></div>
-    </div>
-
-    </div>
-
     <script src="js/jquery-3.3.1.min.js"></script>
     <script src="js/jquery.canvasjs.min.js"></script>
     <script src="js/app.js"></script>
@@ -86,11 +70,11 @@
 
     pages.goTo('home');
     
-function show(accounts) {
-    var naccounts = accounts.length;
+function show(mainaccounts, sideaccounts) {
+    var naccounts = mainaccounts.length;
     
     for (var k = 0; k < naccounts; k++) {
-        var account = accounts[k];
+        var account = mainaccounts[k];
         
         var trow = $('<tr>')
             .append($('<td>')
@@ -111,7 +95,8 @@ function show(accounts) {
     }
 }
 
-var accounts = [];
+var mainaccounts = [];
+var sideaccounts = [];
 var data = {};
 
 var balances = [];
@@ -129,126 +114,83 @@ function totalBalances(bals) {
     return total;
 }
 
-function showChart(canvas, title, balances) {
-    var data = {
-        animationEnabled: false,
-        theme: "light2",
-        title:{
-            text: title
-        },
-        axisY:{
-            includeZero: false
-        },
-        data: []
-    };
-    
-    for (var k = 0; k < balances.length; k++) {
-        data.data[k] = { type: "line", lineThickness: 1, dataPoints: [] };
-        
-        for (var j = 0; j < balances[k].length; j++)
-            data.data[k].dataPoints.push({ y: balances[k][j] });
-    }
-        
-    var chart = new CanvasJS.Chart(canvas, data);
-    
-    chart.render();
-}
-
 var lastProcessedBlock = 0;
 var data1 = [];
 var data2 = [];
 
-function fetchBlockBalances() {
-        
-    for (var k = 0; k < 10; k++) {
-        if (!data1[k])
-            data1[k] = [];
-        if (!data2[k])
-            data2[k] = [];
-        
-        data1[k].push(Math.floor(Math.random() * 10000000));
-        data2[k].push(Math.floor(Math.random() * 10000000));
-    }
-    
-    showChart('tokenChart1', 'Mainchain Tokens', data1);
-    showChart('tokenChart2', 'Sidechain Tokens', data2);
-    
-    /*
-    if (blockBalances[0])
-        showChart('tokenChart1', 'Mainchain Tokens', blockBalances[0]);
-        
-    if (blockBalances[1])
-        showChart('tokenChart2', 'Sidechain Tokens', blockBalances[1]);
-    */
-}
-
 var lastProcessedBlock = 0;
 
 function fetchBalances() {
-    app.fetchBalances(accounts, function (n, m, balance) {
-        console.log(n, m, balance);
+    app.fetchBalances(0, mainaccounts, processBalance);
+    app.fetchBalances(1, sideaccounts, processBalance);
+    
+    function processBalance(network, naccount, balance) {
         balance = parseInt(balance);
-        balances[m][n] = balance;
+        balances[network][naccount] = balance;
         
-        $('#balance' + m + '-' + n).text(balance);
+        $('#balance' + network + '-' + naccount).text(balance);
         
         if (balance > 0) {
-            var total = totalBalances(balances[m]);
+            var total = totalBalances(balances[network]);
             var prop = Math.floor(balance / total * 64);
             var val = (255 - 32 - prop).toString(16);
             
             while (val.length < 2)
                 val = '0' + val;
             
-            $('#balance' + m + '-' + n).attr('bgcolor', '#' + val + 'ff' + val);
+            $('#balance' + network + '-' + naccount).attr('bgcolor', '#' + val + 'ff' + val);
         }
         else
-            $('#balance' + m + '-' + n).attr('bgcolor', '');
-    });
+            $('#balance' + network + '-' + naccount).attr('bgcolor', '');
+    }
 }
 
 app.loadData(function (dt) {
     data = dt;
-    accounts = data.accounts;
+    mainaccounts = data.mainaccounts;
+    sideaccounts = data.sideaccounts;
     
-    show(data.accounts);
+    show(mainaccounts, sideaccounts);
 
     refreshBalances();
 });
 
 function distributeTokens() {
-    app.distributeTokens(accounts, function () {
+    app.distributeTokens(0, mainaccounts, function () {
+        fetchBalances();
+    });
+
+    app.distributeTokens(1, sideaccounts, function () {
         fetchBalances();
     });
 }
 
 function exportTokens(n) {
-    var account = accounts[n];
+    var account = mainaccounts[n];
     
     if (account.name.indexOf('ustodian') >= 0)
         return;
         
-    if (!account.balance0)
+    if (!account.balance)
         return;
         
-    app.transfer(0, account.address, data.main.bridge, data.main.token, account.balance0);
+    app.transfer(0, account.address, data.main.bridge, data.main.token, account.balance);
 }
 
 function importTokens(n) {
-    var account = accounts[n];
+    var account = sideaccounts[n];
     
     if (account.name.indexOf('ustodian') >= 0)
         return;
         
-    if (!account.balance1)
+    if (!account.balance)
         return;
         
-    app.transfer(1, account.address, data.side.bridge, data.side.token, account.balance1);
+    app.transfer(1, account.address, data.side.bridge, data.side.token, account.balance);
 }
 
 function refreshBalances() {
     fetchBalances();
-    fetchBlockBalances();
     
     setTimeout(refreshBalances, 2000);
 }
