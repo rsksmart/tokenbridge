@@ -104,7 +104,7 @@ var app = (function () {
     }
     
     function fetchBalances(accounts, block, bfn) {
-        if (!bfn) {
+        if (!bfn) { 
             bfn = block;
             block = 'latest';
         }
@@ -121,7 +121,7 @@ var app = (function () {
                 method: "eth_call",
                 params: [{
                     from: accounts[0].address,
-                    to: m == 0 ? data.main.token : data.side.token,
+                    to: m === 0 ? data.main.token : data.side.token,
                     value: 0,
                     gas: 2000000,
                     gasPrice: 0,
@@ -132,9 +132,8 @@ var app = (function () {
             post(getHost(m), request, function (data) {
                 if (typeof data === 'string')
                     data = JSON.parse(data);
-                console.dir(data);
-                console.dir(data.result);
-                var balance = data.result;
+                
+                const balance = data.result;
                 accounts[n]["balance" + m] = balance;
                 bfn(n, m, balance);
             });

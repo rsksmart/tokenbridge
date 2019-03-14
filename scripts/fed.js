@@ -85,7 +85,7 @@ async function processLogs(logs, bridge, manager) {
 
         const originalReceiver = log.topics[1];
 
-        const receiver = await tohost.callTransaction({
+        const receiver = await fromhost.callTransaction({
                 from: fromconfig.accounts[0],
                 to: fromconfig.bridge,
                 value: '0x00',
