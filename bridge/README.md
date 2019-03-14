@@ -43,19 +43,25 @@ Launch the local network
 ganache-cli --verbose
 ```
 
-This Windows command deploys the contract to mainchain and sidechain (both points
-to local ganache-cli instance)
+A Windows command deploys the solution to mainchain and sidechain (both points
+to truffle development network, usually a ganache-cli instance)
 ```
-deploy
+deploysymm
 ```
 
-[TBD]: Explain deploy of other configurations (RSK regtest, symmetric vs asymmetric deploy)
+Another Windows command deploys the solution to mainchain using truffle development network, and sidechain using
+truffle regtest network. Usually, there are differente nodes, ie two different ganache-cli instances.
+```
+deploysymm2
+```
+
+TBD: Explain deploy of other configurations (RSK regtest, symmetric vs asymmetric deploy)
 
 ## To Do
 
 - Prevent federator vote transactions that are not accepted/processed, filling storage space
-- Federated manager change custodian manager using votes
-- Add tokenFallback to custodian, only to not be rejected as receiver by ERC223/ERC677 tokens
+- Remove inverse account mapping (no use case)
+
 
 
 
