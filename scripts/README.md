@@ -2,12 +2,11 @@
 
 ## Local demostration
 
-There are some Windows commands to run a simple demostration
+Run the five federators scripts for both chain (mainchain and sidechain):
 
-Show account balances from mainchain and sidechain:
 
 ```
-balances
+feds5
 ```
 
 Transfer from mainchain to sidechain
