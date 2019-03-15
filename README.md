@@ -15,6 +15,8 @@ On the Sidechain three contracts are deployed:
 * The Bridge Contract: acts as a Token Custodian of the Mirror Tokens on the Sidechain. It receives Mirror Tokens from the Sidechan and holds them until the Manager instructs it to release them.
 * The Mirror Token Contract: a representation of the Mainchain token on the Sidecain. This Token is also an ERC20 Token, so it can be managed and used by the Token ecosystem as any other ERC20 Token.
 
+Finally, a set of off-chain scripts known as the Federation listens for transfer events emitted by the ERC20 Tokens. This set of scripts can be seen as a group of Oracles and its main purpose is to cast votes to approve transfers between both chains.
+
 ## Transfer flows
 
 ### Mainchain to Sidechain
