@@ -53,3 +53,4 @@ At the moment, the RSK Token Bridge is implemented as a Symmetric Bridge. Altern
 - [POA Network partners with MakerDAO on xDai Chain, the first ever USD-Stable Blockchain](https://medium.com/poa-network/poa-network-partners-with-makerdao-on-xdai-chain-the-first-ever-usd-stable-blockchain-65a078c41e6a)
 - [How BancorX Works: From Ethereum to EOS and Back Again](https://blog.bancor.network/how-bancorx-works-from-ethereum-to-eos-and-back-again-649336ea1c4)
 - [How do Relay Tokens work?](https://support.bancor.network/hc/en-us/articles/360000471472-How-do-Relay-Tokens-work-)
+- [XCLAIM: Trustless, Interoperable, Cryptocurrency-Backed Assets](https://eprint.iacr.org/2018/643.pdf)
