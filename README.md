@@ -29,6 +29,8 @@ When the Sidechain Manager has enough votes (N-out-of-M) for the Mainchain trans
 
 To avoid undeserible side-effects due to a Blockchain reorganization the Federators only process transfer events that have enough confirmations (K confirmation blocks).
 
+![Mainchain to Sidechain transfer flow](./docs/images/mainchain_to_sidechain_flow.png?raw=true "Mainchain to Sidechain transfer")
+
 ### Sidechain to Mainchain
 
 When an account from the Sidechain wants to transfer Mirror Tokens back to the Mainchain, it transfers them to the Sidechain Bridge. Similar to the Mainchain to Sidechain transfer, the Mirror Tokens emit events that are listened by the Federation (it might be the same group of Oracles as the ones in the Mainchain, but this is not mandatory). 
@@ -36,6 +38,8 @@ When an account from the Sidechain wants to transfer Mirror Tokens back to the M
 The Federation casts votes to the Mainchain Manager and when the Mainchain Manager has enough votes (N-out-of-M) it instructs the Mainchain Bridge to release the transferred amount of Tokens to the specified Mainchain account. As in the previous case, the source account from the Sidechain could be the same as the destination account of the Mainchain or it can be mapped in the Sidechain Bridge to a different account.
 
 At the moment, the RSK Token Bridge is implemented as a Symmetric Bridge. Alternatives to this implementation are being evaluated.
+
+![Sidechain to Mainchain transfer flow](./docs/images/sidechain_to_mainchain_flow.png?raw=true "Sidechain to Mainchain transfer")
 
 ## References
 
