@@ -19,8 +19,10 @@ const toconfig = require('../bridge/' + tochainname + 'conf.json');
 console.log('to chain', tochainname);
 console.log('to host', toconfig.host);
 
+const naccounts = Math.min(fromconfig.accounts.length, toconfig.accounts.length);
+
 (async function() {
-    for (var k = 0; k < fromconfig.accounts.length; k++) {
+    for (var k = 0; k < naccounts; k++) {
         const fromaccount = fromconfig.accounts[k];
         const toaccount = toconfig.accounts[k];
 
