@@ -15,14 +15,14 @@ const fromchainname = process.argv[2];
 const tochainname = process.argv[3];
 const nofederator = process.argv[4];
 
-const fromconfig = require('../bridge/' + fromchainname + 'conf.json');
+const fromconfig = require('../' + fromchainname + 'conf.json');
 const fromhost = rskapi.host(fromconfig.host);
 
 console.log('from chain', fromchainname);
 console.log('from host', fromconfig.host);
 console.log('from token', fromconfig.token);
 
-const toconfig = require('../bridge/' + tochainname + 'conf.json');
+const toconfig = require('../' + tochainname + 'conf.json');
 const tohost = rskapi.host(toconfig.host);
 
 const federator = toconfig.members[nofederator];

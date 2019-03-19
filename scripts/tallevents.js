@@ -6,7 +6,7 @@ const events = require('./lib/allevents');
 const chainname = process.argv[2];
 const chain = process.argv[3];
 
-const config = require('../bridge/' + chainname + 'conf.json');
+const config = require('../' + chainname + 'conf.json');
 const host = rskapi.host(chain);
 
 console.log('chain', chainname);

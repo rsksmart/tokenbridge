@@ -8,13 +8,13 @@ const mapAddressHash = '0x4a270f47';
 const fromchainname = process.argv[2];
 const tochainname = process.argv[3];
 
-const fromconfig = require('../bridge/' + fromchainname + 'conf.json');
+const fromconfig = require('../' + fromchainname + 'conf.json');
 const host = rskapi.host(fromconfig.host);
 
 console.log('from chain', fromchainname);
 console.log('from host', fromconfig.host);
 
-const toconfig = require('../bridge/' + tochainname + 'conf.json');
+const toconfig = require('../' + tochainname + 'conf.json');
 
 console.log('to chain', tochainname);
 console.log('to host', toconfig.host);

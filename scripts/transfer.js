@@ -11,7 +11,7 @@ const fromAccount = process.argv[4];
 const toAccount = process.argv[5];
 const amount = parseInt(process.argv[6]);
 
-const config = require('../bridge/' + chainname + 'conf.json');
+const config = require('../' + chainname + 'conf.json');
 const host = rskapi.host(chain);
 
 const balanceOfHash = '0x70a08231';

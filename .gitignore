@@ -1,2 +1,7 @@
 node_modules
 build
+mainaccs.json
+sideaccs.json
+mainconf.json
+sideconf.json
+

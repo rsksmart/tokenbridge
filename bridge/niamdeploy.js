@@ -34,7 +34,7 @@ async function run() {
         members: members
     };
     
-    fs.writeFileSync('sideconf.json', JSON.stringify(config, null, 4));
+    fs.writeFileSync('../sideconf.json', JSON.stringify(config, null, 4));
 }
 
 module.exports = function (cb) {

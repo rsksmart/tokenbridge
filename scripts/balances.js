@@ -4,7 +4,7 @@ const rskapi = require('rskapi');
 const chainname = process.argv[2];
 const chain = process.argv[3];
 
-const config = require('../bridge/' + chainname + 'conf.json');
+const config = require('../' + chainname + 'conf.json');
 const host = rskapi.host(chain);
 
 const balanceOfHash = '0x70a08231';
