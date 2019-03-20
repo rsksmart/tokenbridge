@@ -7,9 +7,11 @@
     "rskapi": "0.0.10",
     "simpleabi": "^0.0.3"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "simpleunit": "0.0.8"
+  },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "simpleunit ./test -r"
   },
   "keywords": [],
   "author": ""

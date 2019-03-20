@@ -4,6 +4,7 @@ const sabi = require('simpleabi');
 
 const events = require('./lib/events');
 const config = require('./config.json');
+const bridges = require('./lib/contracts/bridge');
 
 const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 const voteTransactionHash = '0x6bcab28b';
@@ -17,6 +18,8 @@ const nofederator = process.argv[4];
 
 const fromconfig = require('../' + fromchainname + 'conf.json');
 const fromhost = rskapi.host(fromconfig.host);
+
+const bridge = bridges.bridge(fromhost, fromconfig.bridge);
 
 console.log('from chain', fromchainname);
 console.log('from host', fromconfig.host);
@@ -56,13 +59,13 @@ console.log();
         
     const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
     
-    await processLogs(logs, fromconfig.bridge || fromconfig.manager, toconfig.manager); 
+    await processLogs(logs, toconfig.manager); 
 })();
 
-async function processLogs(logs, bridge, manager) {
-    bridge = '0x' + sabi.encodeValue(bridge);
+async function processLogs(logs, manager) {
+    bridgeAddress = '0x' + sabi.encodeValue(bridge.address);
     
-    console.log('bridge', bridge);
+    console.log('bridge address', bridgeAddress);
     
     var k = 0;
     
@@ -70,7 +73,7 @@ async function processLogs(logs, bridge, manager) {
         await processLog(logs[k]);
     
     async function processLog(log) {
-        if (log.topics[2] !== bridge)
+        if (log.topics[2] !== bridgeAddress)
             return;
 
         // TODO remove/replace this hack
@@ -85,12 +88,9 @@ async function processLogs(logs, bridge, manager) {
 
         const originalReceiver = log.topics[1];
 
-        const receiver = await fromhost.callTransaction({
-                from: fromconfig.accounts[0],
-                to: fromconfig.bridge,
-                value: '0x00',
-                data: getMappedAddressHash + sabi.encodeValue(originalReceiver)
-            });
+        console.log('get mapped');
+        const receiver = await bridge.getMappedAddress(originalReceiver, { from: fromconfig.accounts[0] });
+        console.log('receiver', receiver);
         
         const abi = sabi.encodeValues([
             log.blockNumber,
