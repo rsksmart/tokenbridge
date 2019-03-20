@@ -1,5 +1,6 @@
 
 const simpleabi = require('simpleabi');
+const txs = require('../txs');
 
 const lastBlockNumberHash = '0x941ee20b';
 const voteTransactionHash = '0x6bcab28b';
@@ -10,36 +11,33 @@ function Manager(host, address) {
     this.address = address;
     
     this.lastBlockNumber = async function (addr, options) {
-        return await host.callTransaction({
-            from: options.from,
-            to: address,
-            value: options.value || 0,
-            gas: options.gas || 1000000,
-            gasPrice: options.gasPrice || 0,
-            data: lastBlockNumberHash + simpleabi.encodeValue(addr)
-        });
+        return await txs.call(
+            host,
+            address,
+            lastBlockNumberHash,
+            [ addr ],
+            options
+        );
     };
 
     this.voteTransaction = async function (noblock, blockhash, txhash, receiver, amount, options) {
-        return await host.sendTransaction({
-            from: options.from,
-            to: address,
-            value: options.value || 0,
-            gas: options.gas || 1000000,
-            gasPrice: options.gasPrice || 0,
-            data: voteTransactionHash + simpleabi.encodeValues([ noblock, blockhash, txhash, receiver, amount ])
-        });
+        return await txs.invoke(
+            host,
+            address,
+            voteTransactionHash,
+            [ noblock, blockhash, txhash, receiver, amount ],
+            options
+        );
     };
 
     this.transactionWasProcessed = async function (noblock, blockhash, txhash, receiver, amount, options) {
-        return await host.callTransaction({
-            from: options.from,
-            to: address,
-            value: options.value || 0,
-            gas: options.gas || 1000000,
-            gasPrice: options.gasPrice || 0,
-            data: transactionWasProcessedHash + simpleabi.encodeValues([ noblock, blockhash, txhash, receiver, amount ])
-        });
+        return await txs.call(
+            host,
+            address,
+            transactionWasProcessedHash,
+            [ noblock, blockhash, txhash, receiver, amount ],
+            options
+        );
     };
 }
 
