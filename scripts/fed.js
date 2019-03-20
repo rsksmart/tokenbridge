@@ -4,13 +4,10 @@ const sabi = require('simpleabi');
 
 const events = require('./lib/events');
 const config = require('./config.json');
-const bridges = require('./lib/contracts/bridge');
+const Bridge = require('./lib/contracts/bridge');
+const Manager = require('./lib/contracts/manager');
 
 const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
-const voteTransactionHash = '0x6bcab28b';
-const transactionWasProcessedHash = '0x4228f915';
-const lastBlockNumberHash = '0x941ee20b';
-const getMappedAddressHash = '0x96e609f8';
 
 const fromchainname = process.argv[2];
 const tochainname = process.argv[3];
@@ -19,7 +16,7 @@ const nofederator = process.argv[4];
 const fromconfig = require('../' + fromchainname + 'conf.json');
 const fromhost = rskapi.host(fromconfig.host);
 
-const bridge = bridges.bridge(fromhost, fromconfig.bridge);
+const bridge = Bridge.bridge(fromhost, fromconfig.bridge);
 
 console.log('from chain', fromchainname);
 console.log('from host', fromconfig.host);
@@ -27,6 +24,8 @@ console.log('from token', fromconfig.token);
 
 const toconfig = require('../' + tochainname + 'conf.json');
 const tohost = rskapi.host(toconfig.host);
+
+const manager = Manager.manager(tohost, toconfig.manager);
 
 const federator = toconfig.members[nofederator];
         
@@ -43,14 +42,7 @@ console.log();
     if (toBlock <= 0)
         return; 
     
-    const lastBlockNumberVoted = parseInt(
-        await tohost.callTransaction({
-            from: federator,
-            to: toconfig.manager,
-            value: '0x00',
-            data: lastBlockNumberHash + sabi.encodeValue(federator)
-        })
-        );
+    const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federator, { from: federator }));
         
     const options = { to: toBlock };
         
@@ -59,10 +51,10 @@ console.log();
         
     const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
     
-    await processLogs(logs, toconfig.manager); 
+    await processLogs(logs); 
 })();
 
-async function processLogs(logs, manager) {
+async function processLogs(logs) {
     bridgeAddress = '0x' + sabi.encodeValue(bridge.address);
     
     console.log('bridge address', bridgeAddress);
@@ -92,39 +84,28 @@ async function processLogs(logs, manager) {
         const receiver = await bridge.getMappedAddress(originalReceiver, { from: fromconfig.accounts[0] });
         console.log('receiver', receiver);
         
-        const abi = sabi.encodeValues([
+        var m = 0;
+
+        const data = parseInt(await manager.transactionWasProcessed(
             log.blockNumber,
             log.blockHash,
             log.transactionHash,
             receiver,
-            log.data
-        ]);
-        
-        console.log(abi);
-        console.log();
-        
-        var m = 0;
-
-        const data = parseInt(
-            await tohost.callTransaction({
-                from: toconfig.accounts[0],
-                to: toconfig.manager,
-                value: '0x00',
-                data: transactionWasProcessedHash + abi
-            })); 
+            log.data,
+            { from: toconfig.accounts[0] }));
         
         if (data) {
             console.log('transaction event already processed');
             return;
         }
-        
-        await tohost.sendTransaction({
-            from: federator,
-            to: toconfig.manager,
-            value: '0x00',
-            gas: 6700000,
-            data: voteTransactionHash + abi
-        });
+
+        await manager.voteTransaction(
+            log.blockNumber,
+            log.blockHash,
+            log.transactionHash,
+            receiver,
+            log.data,
+            { from: federator });
         
         console.log("voted");
     }
