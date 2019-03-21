@@ -5,12 +5,24 @@ const FederatedManager = artifacts.require('./FederatedManager');
 const MainToken = artifacts.require('./MainToken');
 const Bridge = artifacts.require('./Bridge');
 
+let fedaccounts = [];
+
+try {
+    fedaccounts = require('../mainfeds.json');
+}
+catch (ex) {}
+
 async function run() {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
-    const members = [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
+    const members = fedaccounts.length ? fedaccounts : [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
 
-    const manager = await FederatedManager.new(members);
+    const feds = [];
+    
+    for (let k = 0; k < members.length; k++)
+        feds.push(members[k].address ? members[k].address : member[k]);
+    
+    const manager = await FederatedManager.new(feds);
     console.log('Manager deployed at', manager.address);
     
     const token = await MainToken.new("MAIN", "MAIN", 18, 10000000);
