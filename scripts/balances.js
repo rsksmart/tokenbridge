@@ -25,30 +25,20 @@ var n = 0;
 
 accounts = config.accounts;
 
-if (config.token)
-    accounts.push(config.token);
-if (config.manager)
-    accounts.push(config.manager);
-if (config.bridge)
-    accounts.push(config.bridge);
-
-async function getTokenBalance(account) {
+async function getBalance(account) {
     const address = account.address ? account.address : account;
     
-    var result = await host.callTransaction({
-        from: address,
-        to: config.token,
-        value: '0x00',
-        data: balanceOfHash + simpleabi.encodeValue(address)            
-    });
+    const result = await host.getBalance(address);
     
     const balance = parseInt(result);
     
-    console.log('token balance', account, balance);    
+    console.log('value balance', address, balance);    
 }
 
 (async function() {
     for (var n = 0; n < accounts.length; n++)
-        getTokenBalance(accounts[n]);
+        getBalance(accounts[n]);
+    for (var n = 0; n < config.members.length; n++)
+        getBalance(config.members[n]);
 })();
 

@@ -33,7 +33,7 @@ async function transferValue(host, receiver, amount, options) {
         gas: options.gas || 1000000,
         gasPrice: options.gasPrice || 0,
         value: amount || 0,
-        to: address
+        to: receiver
     };
     
     return await host.sendTransaction(tx);
