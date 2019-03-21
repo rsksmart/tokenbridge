@@ -28,6 +28,7 @@ const tohost = rskapi.host(toconfig.host);
 const manager = Manager.manager(tohost, toconfig.manager);
 
 const federator = toconfig.members[nofederator];
+const federatorAddress = federator.address ? federator.address : federator;
         
 console.log('to chain', tochainname);
 console.log('to host', toconfig.host);
@@ -42,7 +43,7 @@ console.log();
     if (toBlock <= 0)
         return; 
     
-    const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federator, { from: federator }));
+    const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federatorAddress, { from: federatorAddress }));
         
     const options = { to: toBlock };
         
