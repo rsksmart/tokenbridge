@@ -27,9 +27,22 @@ async function invokeContract(host, address, fnhash, args, options) {
     return await host.sendTransaction(tx);
 }
 
+async function transferValue(host, receiver, amount, options) {
+    const tx = {
+        from: options.from,
+        gas: options.gas || 1000000,
+        gasPrice: options.gasPrice || 0,
+        value: amount || 0,
+        to: address
+    };
+    
+    return await host.sendTransaction(tx);
+}
+
 module.exports = {
     call: callContract,
-    invoke: invokeContract
+    invoke: invokeContract,
+    transfer: transferValue
 };
 
 

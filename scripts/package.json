@@ -4,6 +4,7 @@
   "version": "1.0.0",
   "description": "Feds scripts",
   "dependencies": {
+    "ethereumjs-tx": "^1.3.7",
     "rskapi": "0.0.10",
     "simpleabi": "^0.0.3"
   },
