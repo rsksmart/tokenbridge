@@ -46,16 +46,14 @@ ganache-cli --verbose
 A Windows command deploys the solution to mainchain and sidechain (both points
 to truffle development network, usually a ganache-cli instance)
 ```
-deploysymm
+deploysymm <mainnetwork> <sidenetwork>
 ```
 
-Another Windows command deploys the solution to mainchain using truffle development network, and sidechain using
-truffle regtest network. Usually, there are differente nodes, ie two different ganache-cli instances.
+Examples
 ```
-deploysymm2
+deploysymm development development
+deploysymm development regtest
 ```
-
-TBD: Explain deploy of other configurations (RSK regtest, symmetric vs asymmetric deploy)
 
 ## To Do
 
