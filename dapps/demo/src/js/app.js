@@ -178,7 +178,60 @@ var app = (function () {
         return text;
     }
     
+    function getNonce(network, address, fn) {
+        var request = {
+            id: ++id,
+            jsonrpc: "2.0",
+            method: "eth_getTransactionCount",
+            params: [ address ]
+        };
+        
+        post(getHost(network), request, fn);
+    }
+
+// https://ethereum.stackexchange.com/questions/8579/how-to-use-ethereumjs-tx-js-in-a-browser
+
+    function distributeTokenWithSignature(network, from, balance, token, accounts, nonce) {
+        let privateKey = from.privateKey;
+        
+        if (privateKey.startsWith('0x'))
+            privateKey = privateKey.substring(2);
+        
+        const privateBuffer = new ethereumjs.Buffer.Buffer(privateKey);
+        
+        var to = randomAccount(accounts);
+        var amount = Math.floor(Math.random() * balance / 2);
+        
+        const transaction = {
+            nonce: nonce,
+            to: token,
+            value: 0,
+            gas: 6000000,
+            gasPrice: 0,
+            data: "0xa9059cbb000000000000000000000000" + to.substring(2) + toHex(amount)
+        };
+        
+        const tx = new ethereumjs.Tx(transaction);
+        tx.sign(privateBuffer);
+        const serializedTx = tx.serialize().toString('hex'); 
+        
+        var request = {
+            id: ++id,
+            jsonrpc: "2.0",
+            method: "eth_sendRawTransaction",
+            params: [ serializedTx ]
+        };
+        
+        post(getHost(network), request, console.log);
+    }
+    
     function distributeToken(network, from, balance, token, accounts) {
+        if (from && from.privateKey) {
+            getNonce(network, from.address, function (nonce) {
+                distributeTokenWithSignature(network, from, balance, token, accounts, nonce);
+            });
+        }
+        
         var to = randomAccount(accounts);
         var amount = Math.floor(Math.random() * balance / 2);
         
