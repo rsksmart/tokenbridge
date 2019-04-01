@@ -1,3 +1,4 @@
+#!/bin/bash
 while true
 do
     node fed.js main side  0
