@@ -14,7 +14,14 @@ async function transferToAccount(host, sender, account, amount) {
     
     console.log('transferring', amount, 'weis to', address);
     
-    await txs.transfer(host, address, amount, { from: sender });
+    const txhash = await txs.transfer(host, address, amount, { from: sender });
+    
+    console.log('tx hash', txhash);
+    
+    let receipt = await host.getTransactionReceiptByHash(txhash);
+    
+    while (!receipt)
+        receipt = await host.getTransactionReceiptByHash(txhash);
 }
 
 (async function() {
