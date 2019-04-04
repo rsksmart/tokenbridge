@@ -17,7 +17,7 @@ var pages = (function () {
 })();
 
 var app = (function () {
-    var names = [ 'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Fiona', 'Ginger', 'Hanna', 'Ian', 'John', 'Kim', 'Louise' ];
+    var names = [ 'Alice', 'Bob', 'Charlie', 'David', 'Eve', 'Fiona', 'Ginger', 'Hanna', 'Ian', 'John', 'Kim', 'Louise', 'Marty', 'Nancy', 'Ophrah', 'Peter', 'Robert', 'Sam', 'Tina', 'Umma', 'Vanessa', 'Wilma' ];
     
     var id = 0;
     var mainhost;
@@ -49,17 +49,6 @@ var app = (function () {
         return network ? data.side.token : data.main.token;
     }
 
-    function getAccounts(network, fn) {
-        var request = {
-            id: ++id,
-            jsonrpc: "2.0",
-            method: "eth_accounts",
-            params: []
-        };
-        
-        post(getHost(network), request, fn);
-    }
-    
     var data = {
     };
     
@@ -118,6 +107,7 @@ var app = (function () {
                         address: data1.bridge
                     });
                 }
+                
                 fn(data);
             }); 
         });
@@ -129,18 +119,19 @@ var app = (function () {
         
         function fetchBalance(naccount) {
             const account = accounts[naccount];
+            const address = account.address.address ? account.address.address : account.address;
             
             var request = {
                 id: ++id,
                 jsonrpc: "2.0",
                 method: "eth_call",
                 params: [{
-                    from: account.address,
+                    from: address,
                     to: getToken(network),
                     value: 0,
                     gas: 2000000,
                     gasPrice: 0,
-                    data: "0x70a08231000000000000000000000000" + account.address.substring(2)
+                    data: "0x70a08231000000000000000000000000" + address.substring(2)
                 }, 'latest']
             };
             
@@ -161,6 +152,9 @@ var app = (function () {
             
             if (accounts[n].name.indexOf('ridge') >= 0)
                 continue;
+            
+            if (accounts[n].address.address)
+                return accounts[n].address.address;
             
             return accounts[n].address;
         }
@@ -197,7 +191,7 @@ var app = (function () {
         if (privateKey.startsWith('0x'))
             privateKey = privateKey.substring(2);
         
-        const privateBuffer = new ethereumjs.Buffer.Buffer(privateKey);
+        const privateBuffer = new ethereumjs.Buffer.Buffer(privateKey, 'hex');
         
         var to = randomAccount(accounts);
         var amount = Math.floor(Math.random() * balance / 2);
@@ -227,8 +221,8 @@ var app = (function () {
     
     function distributeToken(network, from, balance, token, accounts) {
         if (from && from.privateKey) {
-            getNonce(network, from.address, function (nonce) {
-                distributeTokenWithSignature(network, from, balance, token, accounts, nonce);
+            getNonce(network, from.address, function (data) {
+                distributeTokenWithSignature(network, from, balance, token, accounts, data.result);
             });
         }
         
@@ -254,7 +248,46 @@ var app = (function () {
         post(getHost(network), request, console.log);
     }
     
+    function transferWithSignature(network, from, to, token, amount, nonce) {
+        let privateKey = from.privateKey;
+        
+        if (privateKey.startsWith('0x'))
+            privateKey = privateKey.substring(2);
+        
+        const privateBuffer = new ethereumjs.Buffer.Buffer(privateKey, 'hex');
+
+        const toaddress = to.address ? to.address : to;
+        
+        var transaction = {
+            nonce: nonce,
+            to: token,
+            value: 0,
+            gas: 6000000,
+            gasPrice: 0,
+            data: "0xa9059cbb000000000000000000000000" + toaddress.substring(2) + toHex(amount)
+        };
+        
+        const tx = new ethereumjs.Tx(transaction);
+        tx.sign(privateBuffer);
+        const serializedTx = tx.serialize().toString('hex'); 
+        
+        var request = {
+            id: ++id,
+            jsonrpc: "2.0",
+            method: "eth_sendRawTransaction",
+            params: [ serializedTx ]
+        };
+        
+        post(getHost(network), request, console.log);
+    }
+
     function transfer(network, from, to, token, amount) {
+        if (from && from.privateKey) {
+            getNonce(network, from.address, function (data) {
+                transferWithSignature(network, from, to, token, amount, data.result);
+            });
+        }
+
         var tx = {
             from: from,
             to: token,
@@ -291,7 +324,6 @@ var app = (function () {
     }
     
     return {
-        getAccounts: getAccounts,
         loadData: loadData,
         fetchBalances: fetchBalances,
         distributeTokens: distributeTokens,
