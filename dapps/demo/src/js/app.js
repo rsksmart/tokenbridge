@@ -177,7 +177,7 @@ var app = (function () {
             id: ++id,
             jsonrpc: "2.0",
             method: "eth_getTransactionCount",
-            params: [ address ]
+            params: [ address, "latest" ]
         };
         
         post(getHost(network), request, fn);
@@ -222,8 +222,13 @@ var app = (function () {
     function distributeToken(network, from, balance, token, accounts) {
         if (from && from.privateKey) {
             getNonce(network, from.address, function (data) {
+                if (typeof data === 'string')
+                    data = JSON.parse(data);
+                
                 distributeTokenWithSignature(network, from, balance, token, accounts, data.result);
             });
+            
+            return;
         }
         
         var to = randomAccount(accounts);
@@ -284,8 +289,12 @@ var app = (function () {
     function transfer(network, from, to, token, amount) {
         if (from && from.privateKey) {
             getNonce(network, from.address, function (data) {
+                if (typeof data === 'string')
+                    data = JSON.parse(data);
                 transferWithSignature(network, from, to, token, amount, data.result);
             });
+            
+            return;
         }
 
         var tx = {
@@ -313,7 +322,7 @@ var app = (function () {
         for (var k = 0; k < naccounts; k++) {
             var name = accounts[k].name;
             
-            if (name.indexOf('ustodian') >= 0)
+            if (name.indexOf('ridge') >= 0)
                 continue;
             
             if (accounts[k].balance)
