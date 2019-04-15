@@ -4,7 +4,7 @@ const Tx = require('ethereumjs-tx');
 
 async function callContract(host, address, fnhash, args, options) {
     const tx = {
-        from: options.from,
+        from: options.from.address ? options.from.address : options.from,
         gas: options.gas || 1000000,
         gasPrice: options.gasPrice || 0,
         value: options.value || 0,
@@ -17,7 +17,7 @@ async function callContract(host, address, fnhash, args, options) {
 
 async function invokeContract(host, address, fnhash, args, options) {
     if (options.from.privateKey) {
-        const nonce = await host.getTransactionCount(options.from.address);
+        const nonce = await host.getTransactionCount(options.from.address, 'latest');
         
         const tx = {
             gas: options.gas || 1000000,

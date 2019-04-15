@@ -44,13 +44,14 @@ console.log();
         return; 
     
     const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federatorAddress, { from: federatorAddress }));
-        
+
+    
     const options = { to: toBlock };
         
     if (lastBlockNumberVoted)
         options.from = lastBlockNumberVoted - config.confirmations;
         
-    const logs = await events.getLogs(fromhost, fromconfig.token, { to: toBlock });
+    const logs = await events.getLogs(fromhost, fromconfig.token, options);
     
     await processLogs(logs); 
 })();
