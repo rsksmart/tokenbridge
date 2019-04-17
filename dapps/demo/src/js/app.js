@@ -177,7 +177,7 @@ var app = (function () {
             id: ++id,
             jsonrpc: "2.0",
             method: "eth_getTransactionCount",
-            params: [ address, "latest" ]
+            params: [ address, "pending" ]
         };
         
         post(getHost(network), request, fn);
