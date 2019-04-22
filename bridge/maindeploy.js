@@ -14,6 +14,7 @@ catch (ex) {}
 
 async function run() {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
+    const blockNumber = await promisify(cb => web3.eth.getBlockNumber(cb));
 
     const members = fedaccounts.length ? fedaccounts : [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
 
@@ -36,6 +37,7 @@ async function run() {
     
     const config = {
         host: web3.currentProvider.host,
+        block: blockNumber,
         accounts: accounts,
         bridge: bridge.address,
         token: token.address,

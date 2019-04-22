@@ -50,6 +50,8 @@ console.log();
         
     if (lastBlockNumberVoted)
         options.from = lastBlockNumberVoted - config.confirmations;
+    else if (fromconfig.block)
+        options.from = fromconfig.block;
         
     const logs = await events.getLogs(fromhost, fromconfig.token, options);
     
