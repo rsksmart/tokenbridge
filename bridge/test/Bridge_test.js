@@ -110,11 +110,6 @@ contract('Bridge', function (accounts) {
             
             assert.ok(result);
             assert.equal(result, anAccount);
-            
-            const result2 = await this.bridge.getMappedInverseAddress(anAccount);
-            
-            assert.ok(result2);
-            assert.equal(result2, anAccount);
         });
         
         it('map address', async function () {
@@ -124,11 +119,6 @@ contract('Bridge', function (accounts) {
             
             assert.ok(result);
             assert.equal(result, anotherAccount);
-            
-            const result2 = await this.bridge.getMappedInverseAddress(anotherAccount);
-            
-            assert.ok(result2);
-            assert.equal(result2, anAccount);
         });
     });
 });

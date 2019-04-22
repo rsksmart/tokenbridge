@@ -8,8 +8,7 @@ contract Bridge is Transferable {
     ERC20 public token;
     
     mapping (address => address) mappedAddresses;
-    mapping (address => address) mappedInverseAddresses;
-
+    
     modifier onlyManager() {
         require(msg.sender == manager);
         _;
@@ -37,7 +36,6 @@ contract Bridge is Transferable {
     
     function mapAddress(address to) public {
         mappedAddresses[msg.sender] = to;
-        mappedInverseAddresses[to] = msg.sender;
     }
     
     function getMappedAddress(address account) public view returns (address) {
@@ -47,15 +45,6 @@ contract Bridge is Transferable {
             return account;
             
         return mapped;
-    }
-    
-    function getMappedInverseAddress(address account) public view returns (address) {
-        address mapped = mappedInverseAddresses[account];
-        
-        if (mapped == address(0))
-            return account;
-            
-        return mapped;
-    }
+    }    
 }
 
