@@ -26,5 +26,10 @@ module.exports = {
       port: 4444,
       network_id: "*" // Match any network id
     },
+  },
+  compilers: {
+      solc: {
+          version: "0.4.24"
+      }
   }
 };

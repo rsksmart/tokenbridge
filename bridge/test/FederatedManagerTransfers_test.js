@@ -27,36 +27,36 @@ contract('FederatedManager', function (accounts) {
         });
 
         it('no votes for unknown transaction', async function() {
-            const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", accounts[4], 5);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
             assert.equal(votes.length, 0);
             
-            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            const novotes = await this.manager.transactionNoVotes(1, "0x02", "0x03", accounts[4], 5);
             
             assert.equal(novotes, 0);
         });
 
         it('one vote for transaction', async function() {
-            await this.manager.voteTransaction(1, 2, 3, 4, 5, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5, { from: members[0] });
             
-            const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", accounts[4], 5);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
             assert.equal(votes.length, 1);
             assert.equal(votes[0], members[0]);
             
-            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            const novotes = await this.manager.transactionNoVotes(1, "0x02", "0x03", accounts[4], 5);
             
             assert.equal(novotes, 1);
         });
 
         it('vote only member', async function() {
-            expectThrow(this.manager.voteTransaction(1, 2, 3, 4, 5));
+            expectThrow(this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5));
             
-            const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", accounts[4], 5);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -64,10 +64,10 @@ contract('FederatedManager', function (accounts) {
         });
 
         it('two votes for transaction', async function() {
-            await this.manager.voteTransaction(1, 2, 3, 4, 5, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, 4, 5, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5, { from: members[1] });
             
-            const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", accounts[4], 5);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -75,16 +75,16 @@ contract('FederatedManager', function (accounts) {
             assert.equal(votes[0], members[0]);
             assert.equal(votes[1], members[1]);
             
-            const novotes = await this.manager.transactionNoVotes(1, 2, 3, 4, 5);
+            const novotes = await this.manager.transactionNoVotes(1, "0x02", "0x03", accounts[4], 5);
             
             assert.equal(novotes, 2);
         });
 
         it('two repeated votes for transaction', async function() {
-            await this.manager.voteTransaction(1, 2, 3, 4, 5, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, 4, 5, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", accounts[4], 5, { from: members[0] });
             
-            const votes = await this.manager.transactionVotes(1, 2, 3, 4, 5);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", accounts[4], 5);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -161,8 +161,8 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('two votes of five no accept transfer', async function () {
-            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, '0x02', '0x03', anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, '0x02', '0x03', anAccount, 100, { from: members[1] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -187,8 +187,8 @@ contract('FederatedManager', function (accounts) {
         });
 
         it('votes two transactions', async function () {
-            await this.manager.voteTransaction(1, '0x03', 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(2, '0x02', 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, '0x03', '0x03', anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(2, '0x02', '0x03', anAccount, 100, { from: members[0] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -207,8 +207,8 @@ contract('FederatedManager', function (accounts) {
         });
 
         it('votes two transactions in inverser block order', async function () {
-            await this.manager.voteTransaction(2, '0x03', 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, '0x02', 3, anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(2, '0x03', '0x03', anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, '0x02', '0x03', anAccount, 100, { from: members[0] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -227,9 +227,9 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('three votes of five then accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[2] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -240,7 +240,7 @@ contract('FederatedManager', function (accounts) {
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
 
-            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", anAccount, 100);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -248,10 +248,10 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('four votes of five only one accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[3] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[3] });
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
             assert.equal(tokenOwnerBalance, 9000);
@@ -262,7 +262,7 @@ contract('FederatedManager', function (accounts) {
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
 
-            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", anAccount, 100);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -294,10 +294,10 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('two votes of five no accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[1] });
 
-            const processed = await this.manager.transactionWasProcessed(1, 2, 3, anAccount, 100);
+            const processed = await this.manager.transactionWasProcessed(1, "0x02", "0x03", anAccount, 100);
             assert.equal(processed, false);
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
@@ -311,11 +311,11 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('three votes of five then accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[2] });
             
-            const processed = await this.manager.transactionWasProcessed(1, 2, 3, anAccount, 100);
+            const processed = await this.manager.transactionWasProcessed(1, "0x02", "0x03", anAccount, 100);
             assert.equal(processed, true);
             
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
@@ -327,7 +327,7 @@ contract('FederatedManager', function (accounts) {
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
 
-            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", anAccount, 100);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));
@@ -335,12 +335,12 @@ contract('FederatedManager', function (accounts) {
         });
         
         it('four votes of five only one accept transfer', async function () {
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[0] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[1] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[2] });
-            await this.manager.voteTransaction(1, 2, 3, anAccount, 100, { from: members[3] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[0] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[1] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[2] });
+            await this.manager.voteTransaction(1, "0x02", "0x03", anAccount, 100, { from: members[3] });
             
-            const processed = await this.manager.transactionWasProcessed(1, 2, 3, anAccount, 100);
+            const processed = await this.manager.transactionWasProcessed(1, "0x02", "0x03", anAccount, 100);
             assert.equal(processed, true);
 
             const tokenOwnerBalance = await this.token.balanceOf(tokenOwner);
@@ -352,7 +352,7 @@ contract('FederatedManager', function (accounts) {
             const anAccountBalance = await this.token.balanceOf(anAccount);
             assert.equal(anAccountBalance, 100);
 
-            const votes = await this.manager.transactionVotes(1, 2, 3, anAccount, 100);
+            const votes = await this.manager.transactionVotes(1, "0x02", "0x03", anAccount, 100);
 
             assert.ok(votes);
             assert.ok(Array.isArray(votes));

@@ -29,7 +29,7 @@ contract Bridge is Transferable {
         manager = newmanager;
     }
     
-    function tokenFallback(address from, uint256 amount, bytes data) public returns (bool) {
+    function tokenFallback(address from, uint256 amount, bytes data) public view returns (bool) {
         require(msg.sender == address(token));
         return true;
     }
