@@ -32,12 +32,6 @@ async function run() {
     
     const bridge = await Bridge.new(manager.address, token.address);
     console.log('Bridge deployed at', bridge.address);
-
-    await manager.setTransferable(bridge.address);
-    console.log('Bridge controlled by Manager');
-    
-    await token.transfer(bridge.address, 10000000);
-    console.log('Bridge has token total supply');
     
     const config = {
         host: web3.currentProvider.host,
@@ -50,6 +44,12 @@ async function run() {
     };
     
     fs.writeFileSync('../sideconf.json', JSON.stringify(config, null, 4));
+
+    await manager.setTransferable(bridge.address);
+    console.log('Bridge controlled by Manager');
+    
+    await token.transfer(bridge.address, 10000000);
+    console.log('Bridge has token total supply');
 }
 
 module.exports = function (cb) {
