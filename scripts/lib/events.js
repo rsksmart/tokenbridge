@@ -16,6 +16,8 @@ function toHex(number) {
 }
 
 function getLogs(host, token, options, cb) {
+    console.log('get logs');
+    
     if (typeof options.from === 'number')
         options.from = toHex(options.from);
     
@@ -28,6 +30,8 @@ function getLogs(host, token, options, cb) {
         address: token,
         topics: [ transferEventHash ]
     };
+    
+    console.dir(filter);
     
     return host.provider().call('eth_getLogs', [ filter ], cb);
 }
