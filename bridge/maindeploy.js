@@ -36,9 +36,9 @@ async function run() {
         host: web3.currentProvider.host,
         block: blockNumber,
         accounts: accounts,
-        bridge: bridge.address,
-        token: token.address,
-        manager: manager.address,
+        bridge: bridge.address.toLowerCase(),
+        token: token.address.toLowerCase(),
+        manager: manager.address.toLowerCase(),
         members: members
     };
     

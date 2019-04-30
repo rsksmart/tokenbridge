@@ -45,11 +45,11 @@ async function run() {
     
     fs.writeFileSync('../sideconf.json', JSON.stringify(config, null, 4));
 
-    await manager.setTransferable(bridge.address);
-    console.log('Bridge controlled by Manager');
+    //await manager.setTransferable(bridge.address);
+    //console.log('Bridge controlled by Manager');
     
-    await token.transfer(bridge.address, 10000000);
-    console.log('Bridge has token total supply');
+    //await token.transfer(bridge.address, 10000000);
+    //console.log('Bridge has token total supply');
 }
 
 module.exports = function (cb) {

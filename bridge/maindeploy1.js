@@ -24,10 +24,9 @@ async function run() {
         feds.push(members[k].address ? members[k].address : member[k]);
     
     const manager = await FederatedManager.new(feds);
-    
     console.log('Manager deployed at', manager.address);
     
-    const token = await MainToken.new("NIAM", "NIAM", 18, 10000000);
+    const token = await MainToken.new("MAIN", "MAIN", 18, 10000000);
     console.log('MainToken deployed at', token.address);
     
     const bridge = await Bridge.new(manager.address, token.address);
@@ -43,13 +42,10 @@ async function run() {
         members: members
     };
     
-    fs.writeFileSync('../sideconf.json', JSON.stringify(config, null, 4));
+    fs.writeFileSync('../mainconf.json', JSON.stringify(config, null, 4));
 
-    await manager.setTransferable(bridge.address);
-    console.log('Bridge controlled by Manager');
-    
-    await token.transfer(bridge.address, 10000000);
-    console.log('Bridge has token total supply');
+    //await manager.setTransferable(bridge.address);
+    //console.log('Bridge controlled by Manager');
 }
 
 module.exports = function (cb) {
