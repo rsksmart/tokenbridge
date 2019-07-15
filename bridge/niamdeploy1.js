@@ -21,7 +21,7 @@ async function run() {
     const feds = [];
     
     for (let k = 0; k < members.length; k++)
-        feds.push(members[k].address ? members[k].address : member[k]);
+        feds.push(members[k].address ? members[k].address : members[k]);
     
     const manager = await FederatedManager.new(feds);
     
