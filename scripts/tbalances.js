@@ -38,7 +38,7 @@ async function getTokenBalance(account) {
     var result = await host.callTransaction({
         from: address,
         to: config.token,
-        value: '0x00',
+        value: 0,
         data: balanceOfHash + simpleabi.encodeValue(address)            
     });
     
