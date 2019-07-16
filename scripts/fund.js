@@ -11,27 +11,27 @@ const host = rskapi.host(config.host);
 
 async function transferToAccount(host, sender, account, amount) {
     const address = account.address ? account.address : account;
-    
+
     console.log('transferring', amount, 'weis to', address);
-    
-    const txhash = await txs.transfer(host, address, amount, { from: sender });
-    
+
+    //const txhash = await txs.transfer(host, address, amount, { from: sender });
+    const txhash = await txs.txEther(host, address, amount, {from: config.from, gasPrice: config.gasPrice});
+
     console.log('tx hash', txhash);
-    
+
     let receipt = await host.getTransactionReceiptByHash(txhash);
-    
+
     while (!receipt)
         receipt = await host.getTransactionReceiptByHash(txhash);
 }
 
 (async function() {
-    const accounts = await host.getAccounts();
-    const sender = accounts[0];
-    
+    //const accounts = await host.getAccounts();
+    const sender = config.from.address;
+
     for (let k = 0; k < config.accounts.length; k++)
         await transferToAccount(host, sender, config.accounts[k], amount);
-    
+
     for (let k = 0; k < config.members.length; k++)
         await transferToAccount(host, sender, config.members[k], amount);
 })();
-
