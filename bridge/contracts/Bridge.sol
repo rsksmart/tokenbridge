@@ -46,5 +46,14 @@ contract Bridge is Transferable {
             
         return mapped;
     }    
+
+    function receiveTokens(ERC20 tokentouse, uint256 amount) public returns (bool) {
+        require(address(token) == address(tokentouse));
+        
+        if (!token.transferFrom(msg.sender, address(this), amount))
+            return false;
+        
+        return true;
+    }
 }
 
