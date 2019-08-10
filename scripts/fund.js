@@ -11,7 +11,9 @@ const host = rskapi.host(config.host);
 async function transferToAccount(host, sender, account, amount) {
     const address = account.address ? account.address : account;
     
-    console.log('transferring', amount, 'weis to', address);
+    console.log('transferring', amount, 'weis')
+    console.log('from', sender.address ? sender.address : sender);
+    console.log('to', address);
     
     const txhash = await txs.transfer(host, address, amount, 
         { from: sender, gas: config.gas, gasPrice: config.gasPrice });
