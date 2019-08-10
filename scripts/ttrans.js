@@ -4,8 +4,6 @@ const sabi = require('simpleabi');
 const txs = require('./lib/txs');
 
 const transferHash = '0xa9059cbb';
-const approveHash = '0x095ea7b3';
-const transferFromHash = '0x23b872dd';
 
 const chainname = process.argv[2];
 
