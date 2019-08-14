@@ -1,6 +1,9 @@
 
 const rskapi = require('rskapi');
 const txs = require('./lib/txs');
+const conf = require('./config.json');
+
+conf.gasPrice = conf.gasPrice == null ? 0 : conf.gasPrice;
 
 const chainname = process.argv[2];
 const amount = parseInt(process.argv[3]);
