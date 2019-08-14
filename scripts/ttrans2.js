@@ -3,15 +3,19 @@ const rskapi = require('rskapi');
 const sabi = require('simpleabi');
 const txs = require('./lib/txs');
 
+const conf = require('./config.json');
+
+conf.gasPrice = conf.gasPrice == null ? 0 : conf.gasPrice;
+
 const transferHash = '0xa9059cbb';
 const approveHash = '0x095ea7b3';
 const transferFromHash = '0x23b872dd';
+const receiveTokensHash = '0x35729130';
 
 const chainname = process.argv[2];
 
 const fromAccount = process.argv[3];
-const toAccount = process.argv[4];
-const amount = parseInt(process.argv[5]);
+const amount = parseInt(process.argv[4]);
 
 const config = require('../' + chainname + 'conf.json');
 const host = rskapi.host(config.host);
@@ -37,29 +41,15 @@ console.log();
     if (config.bridge)
         accounts.push(config.bridge);
 
-    var toa = toAccount[0].toLowerCase();
-    
-    var toAcc;
-    
-    if (toa === 'm')
-        toAcc = config.manager;
-    else if (toa === 'b')
-        toAcc = config.bridge;
-    else
-        toAcc = accounts[toAccount];
-
-    const abi = sabi.encodeValues([ toAcc.address ? toAcc.address : toAcc, amount ]);
-    
-    console.log('data', abi);
-    
     const txhash = await txs.invoke(
         host,
         config.token,
-        transferHash,
-        [ toAcc.address ? toAcc.address : toAcc, amount ],
+        approveHash,
+        [ config.bridge, amount ],
         {
              from: accounts[fromAccount],
-             gasPrice: 60000000        
+             gas: 100000,
+             gasPrice: conf.gasPrice        
         }
     );
     
@@ -69,4 +59,27 @@ console.log();
     
     while (!receipt)
         receipt = await host.getTransactionReceiptByHash(txhash);    
+    
+    console.log(receipt);
+    
+    const txhash2 = await txs.invoke(
+        host,
+        config.bridge,
+        receiveTokensHash,
+        [ config.token, amount ],
+        {
+             from: accounts[fromAccount],
+             gas: 100000,
+             gasPrice: conf.gasPrice
+        }
+    );
+    
+    console.log("tx hash", txhash2);
+    
+    let receipt2 = await host.getTransactionReceiptByHash(txhash2);
+    
+    while (!receipt2)
+        receipt2 = await host.getTransactionReceiptByHash(txhash2);  
+    
+    console.log(receipt2);
 })();
