@@ -46,7 +46,7 @@ console.log();
     else
         toAcc = accounts[toAccount];
 
-    const abi = sabi.encodeValues([ toAcc, amount ]);
+    const abi = sabi.encodeValues([ toAcc.address ? toAcc.address : toAcc, amount ]);
     
     console.log('data', abi);
     
@@ -56,7 +56,8 @@ console.log();
         transferHash,
         [ toAcc.address ? toAcc.address : toAcc, amount ],
         {
-             from: accounts[fromAccount]
+             from: accounts[fromAccount],
+             gasPrice: 60000000        
         }
     );
     
