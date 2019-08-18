@@ -35,7 +35,7 @@ async function run() {
     console.log('Bridge deployed at', bridge.address);
     
     const block = await web3.eth.getBlock('latest');
-    const gasPrice = await web3.eth.getGasPrice();
+    const gasPrice = parseInt(await web3.eth.getGasPrice());
     const config = {
         host: web3.currentProvider.host,
         block: blockNumber,
@@ -46,7 +46,8 @@ async function run() {
         members: members,
         gas: block.gasLimit,
         gasPrice: gasPrice,
-        totalTokens: daiconfig.totalTokens
+        totalTokens: totalTokens,
+        confirmations: 0
     };
     
     fs.writeFileSync('../mainconf.json', JSON.stringify(config, null, 4));

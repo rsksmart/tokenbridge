@@ -35,7 +35,7 @@ console.log('to token', toconfig.token);
 (async function() { 
     try {
         const number = await fromhost.getBlockNumber();
-        const toBlock = number - fromconfig.confirmations;
+        const toBlock = number - fromconfig.confirmations || 0;
         console.log(`to Block: ${toBlock}`);
         if (toBlock <= 0)
             return; 
@@ -111,7 +111,7 @@ async function processLogs(logs) {
             log.transactionHash,
             receiver,
             parseInt(log.data),
-            { from: federator, gasPrice: toconfig.gasPrice  });
+            { from: federator, gas: toconfig.gas, gasPrice: toconfig.gasPrice  });
         
         console.log("voted");
     }
