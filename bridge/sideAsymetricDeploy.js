@@ -3,7 +3,6 @@ const promisify = require('./test/utils').promisify;
 
 const FederatedManager = artifacts.require('./FederatedManager');
 const SideToken = artifacts.require('./SideToken');
-const Custodian = artifacts.require('./Custodian');
 
 let fedaccounts = [];
 
@@ -15,7 +14,7 @@ catch (ex) {}
 async function run() {
     const accounts = await promisify(cb => web3.eth.getAccounts(cb));
 
-    const members = fedaccounts.length ? fedaccounts : [ accounts[1], accounts[2], accounts[3], accounts[4], accounts[5] ];
+    const members = fedaccounts.length ? fedaccounts : [ accounts[1] ];
 
     const manager = await FederatedManager.new(members);
     console.log('Manager deployed at', manager.address);
@@ -46,6 +45,6 @@ module.exports = function (cb) {
     run().then(function () {
         console.log('done');
         cb(null, null);
-    });
+    }).catch(console.error);
 }
 

@@ -1,5 +1,3 @@
-
-const simpleabi = require('simpleabi');
 const txs = require('../txs');
 
 const lastBlockNumberHash = '0x941ee20b';

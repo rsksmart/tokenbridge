@@ -3,11 +3,8 @@ const rskapi = require('rskapi');
 const sabi = require('simpleabi');
 
 const events = require('./lib/events');
-const config = require('./config.json');
 const Bridge = require('./lib/contracts/bridge');
 const Manager = require('./lib/contracts/manager');
-
-const transferEventHash = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
 const fromchainname = process.argv[2];
 const tochainname = process.argv[3];
@@ -34,28 +31,31 @@ console.log('to chain', tochainname);
 console.log('to host', toconfig.host);
 console.log('to token', toconfig.token);
 
-console.log();
 
 (async function() { 
-    const number = await fromhost.getBlockNumber();
-    const toBlock = number - config.confirmations;
-     
-    if (toBlock <= 0)
-        return; 
-    
-    const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federatorAddress, { from: federatorAddress }));
-
-    
-    const options = { to: toBlock };
+    try {
+        const number = await fromhost.getBlockNumber();
+        const toBlock = number - fromconfig.confirmations;
+        console.log(`to Block: ${toBlock}`);
+        if (toBlock <= 0)
+            return; 
         
-    if (lastBlockNumberVoted)
-        options.from = lastBlockNumberVoted - config.confirmations;
-    else if (fromconfig.block)
-        options.from = fromconfig.block;
-        
-    const logs = await events.getLogs(fromhost, fromconfig.token, options);
-    
-    await processLogs(logs); 
+        const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federatorAddress, 
+            { from: federatorAddress, gas: toconfig.gas, gasPrice: toconfig.gasPrice }));
+        console.log(`last Block Number voted: ${lastBlockNumberVoted}`);
+        const options = { to: toBlock };
+            
+        if (lastBlockNumberVoted)
+            options.from = lastBlockNumberVoted - toconfig.confirmations;
+        else if (fromconfig.block)
+            options.from = fromconfig.block;
+        const logs = await events.getLogs(fromhost, fromconfig.token, options);
+        console.log('logs',logs);
+        await processLogs(logs); 
+    } catch (err) {
+        console.error(`[ERROR]`, err);
+        process.exit(1);
+    }
 })();
 
 async function processLogs(logs) {
@@ -72,8 +72,9 @@ async function processLogs(logs) {
         if (log.topics[2] !== bridgeAddress)
             return;
 
-        // TODO remove/replace this hack
-        if (parseInt(log.data) === 10000000)
+        // TODO remove/replace this hack 
+        // this number is equal to the one in naimdeploy.js transfer from token to bridge
+        if (log.data == fromconfig.totalTokens)
             return;
 
         console.log();
@@ -88,7 +89,7 @@ async function processLogs(logs) {
         const receiver = await bridge.getMappedAddress(originalReceiver, { from: fromconfig.accounts[0] });
         console.log('receiver', receiver);
         
-        var m = 0;
+        console.log('Check if already procesed')
 
         const data = parseInt(await manager.transactionWasProcessed(
             log.blockNumber,
@@ -102,14 +103,15 @@ async function processLogs(logs) {
             console.log('transaction event already processed');
             return;
         }
-
+        console.log('Vote Transaction');
+        console.log(federator);
         await manager.voteTransaction(
             log.blockNumber,
             log.blockHash,
             log.transactionHash,
             receiver,
-            log.data,
-            { from: federator });
+            parseInt(log.data),
+            { from: federator, gasPrice: toconfig.gasPrice  });
         
         console.log("voted");
     }
