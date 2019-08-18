@@ -1,0 +1,14 @@
+{
+    "name": "token-bridge-deploy",
+    "private": true,
+    "version": "1.0.0",
+    "description": "Bridge, Manager and Example contract deploy to use in the token bridge proyect",
+    "main": "sendRawTx.js",
+    "scripts": {},
+    "author": "RSK",
+    "license": "MIT",
+    "dependencies": {
+        "fs": "0.0.1-security",
+        "truffle-hdwallet-provider": "^1.0.16"
+    }
+}
