@@ -1,1 +1,1 @@
-node transfer.js main http://localhost:8545 0 b %1
+node transfer.js main 0 b %1
