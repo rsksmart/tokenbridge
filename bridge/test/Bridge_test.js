@@ -11,6 +11,7 @@ contract('Bridge', function (accounts) {
     const newBridgeManager = accounts[4];
     const tokenAddress = accounts[5];
     const anotherAccount = accounts[6];
+    const anotherToken = accounts[7];
     
     describe('bridge with token contract', function () {
         beforeEach(async function () {
@@ -119,6 +120,43 @@ contract('Bridge', function (accounts) {
             
             assert.ok(result);
             assert.equal(result, anotherAccount);
+        });
+    });
+    
+    describe('bridge receives tokens', function () {
+        beforeEach(async function () {
+            this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
+            this.bridge = await Bridge.new(bridgeManager, this.token.address, { from: bridgeOwner });
+        });
+        
+        it('receive tokens', async function () {
+            await this.token.approve(this.bridge.address, 1000, { from: tokenOwner });
+            await this.bridge.receiveTokens(this.token.address, 1000, { from: tokenOwner });
+            
+            const balance = await this.token.balanceOf(this.bridge.address);
+            
+            assert.ok(balance);
+            assert.equal(balance, 1000);
+        });
+        
+        it('cannot receive tokens if not enough balance', async function () {
+            await this.token.approve(this.bridge.address, 500, { from: tokenOwner });
+            expectThrow(this.bridge.receiveTokens(this.token.address, 1000, { from: tokenOwner }));
+            
+            const balance = await this.token.balanceOf(this.bridge.address);
+            
+            assert.ok(balance);
+            assert.equal(balance, 0);
+        });
+        
+        it('cannot receive tokens from another token', async function () {
+            await this.token.approve(this.bridge.address, 1000, { from: tokenOwner });
+            expectThrow(this.bridge.receiveTokens(anotherToken, 1000, { from: tokenOwner }));
+            
+            const balance = await this.token.balanceOf(this.bridge.address);
+            
+            assert.ok(balance);
+            assert.equal(balance, 0);
         });
     });
 });

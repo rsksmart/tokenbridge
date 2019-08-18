@@ -44,7 +44,7 @@ async function getTokenBalance(account) {
     
     const balance = parseInt(result);
     
-    console.log('token balance', account, balance);    
+    console.log('token balance', account.address ? account.address : account, balance);    
 }
 
 (async function() {

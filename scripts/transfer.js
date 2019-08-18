@@ -1,18 +1,16 @@
 
 const rskapi = require('rskapi');
-const sabi = require('simpleabi');
+const txs = require('./lib/txs');
 
 const transferHash = '0xa9059cbb';
 
 const chainname = process.argv[2];
-const chain = process.argv[3];
-
-const fromAccount = process.argv[4];
-const toAccount = process.argv[5];
-const amount = parseInt(process.argv[6]);
+const fromAccount = process.argv[3];
+const toAccount = process.argv[4];
+const amount = parseInt(process.argv[5]);
 
 const config = require('../' + chainname + 'conf.json');
-const host = rskapi.host(chain);
+const host = rskapi.host(condig.host);
 
 const balanceOfHash = '0x70a08231';
 
@@ -25,36 +23,32 @@ if (config.bridge)
 console.log();
 
 (async function () {
-    const accounts = await host.getAccounts();
+    try {
+        let accounts = config.accounts;
 
-    if (config.token)
-        accounts.push(config.token);
-    if (config.manager)
-        accounts.push(config.manager);
-    if (config.bridge)
-        accounts.push(config.bridge);
+        if (config.token)
+            accounts.push(config.token);
+        if (config.manager)
+            accounts.push(config.manager);
+        if (config.bridge)
+            accounts.push(config.bridge);
 
-    var toa = toAccount[0].toLowerCase();
-    
-    var toAcc;
-    
-    if (toa === 'm')
-        toAcc = config.manager;
-    else if (toa === 'b')
-        toAcc = config.bridge;
-    else
-        toAcc = accounts[toAccount];
+        var toa = toAccount[0].toLowerCase();
+        
+        var toAcc;
+        if (toa === 'm')
+            toAcc = config.manager;
+        else if (toa === 'b')
+            toAcc = config.bridge;
+        else
+            toAcc = accounts[toAccount];
 
-    const abi = sabi.encodeValues([ toAcc, amount ]);
-    
-    console.log('data', abi);
-    
-    const txhash = await host.sendTransaction({
-        from: accounts[fromAccount],
-        to: config.token,
-        value: '0x00',
-        data: transferHash + abi
-    });
-    
-    console.log("tx hash", txhash);
+        const transferArgs = [ toAcc, amount ];
+        const txhash = await txs.invokeContract(host, config.token, transferHash, transferArgs,
+            { from:accounts[fromAccount] });
+
+        console.log("tx hash", txhash);
+    } catch (err) {
+        console.error('ERROR', err);
+    }
 })();
