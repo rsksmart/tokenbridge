@@ -1,6 +1,7 @@
-
 const rskapi = require('rskapi');
 const sabi = require('simpleabi');
+const Web3EthAbi = require('web3-eth-abi');
+const BN = require('bn.js');
 
 const events = require('./lib/events');
 const Bridge = require('./lib/contracts/bridge');
@@ -26,7 +27,8 @@ const manager = Manager.manager(tohost, toconfig.manager);
 
 const federator = toconfig.members[nofederator];
 const federatorAddress = federator.address ? federator.address : federator;
-        
+
+console.log('federator address', federatorAddress);
 console.log('to chain', tochainname);
 console.log('to host', toconfig.host);
 console.log('to token', toconfig.token);
@@ -41,7 +43,7 @@ console.log('to token', toconfig.token);
             return; 
         
         const lastBlockNumberVoted = parseInt(await manager.lastBlockNumber(federatorAddress, 
-            { from: federatorAddress, gas: toconfig.gas, gasPrice: toconfig.gasPrice }));
+            { from: federator }));
         console.log(`last Block Number voted: ${lastBlockNumberVoted}`);
         const options = { to: toBlock };
             
@@ -50,7 +52,7 @@ console.log('to token', toconfig.token);
         else if (fromconfig.block)
             options.from = fromconfig.block;
         const logs = await events.getLogs(fromhost, fromconfig.token, options);
-        console.log('logs',logs);
+        
         await processLogs(logs); 
     } catch (err) {
         console.error(`[ERROR]`, err);
@@ -62,9 +64,7 @@ async function processLogs(logs) {
     bridgeAddress = '0x' + sabi.encodeValue(bridge.address);
     
     console.log('bridge address', bridgeAddress);
-    
-    var k = 0;
-    
+        
     for (var k = 0; k < logs.length; k++)
         await processLog(logs[k]);
     
@@ -74,11 +74,14 @@ async function processLogs(logs) {
 
         // TODO remove/replace this hack 
         // this number is equal to the one in naimdeploy.js transfer from token to bridge
-        if (log.data == fromconfig.totalTokens)
+        const tokens = new BN(Web3EthAbi.decodeParameter('uint256', log.data));
+        if (tokens == fromconfig.totalTokens)
             return;
 
         console.log();
-        console.log('transfer', log.topics[1], log.topics[2], parseInt(log.data));
+        console.log('transfer from', log.topics[1]);
+        console.log('transfer to', log.topics[2]);
+        console.log('amount', tokens.toString());
         console.log('block number', log.blockNumber);
         console.log('block hash', log.blockHash);
         console.log('transaction hash', log.transactionHash);
@@ -96,24 +99,32 @@ async function processLogs(logs) {
             log.blockHash,
             log.transactionHash,
             receiver,
-            log.data,
-            { from: toconfig.accounts[0] }));
-        
+            tokens,
+            { from: federator }));
+
         if (data) {
             console.log('transaction event already processed');
             return;
         }
         console.log('Vote Transaction');
-        console.log(federator);
-        await manager.voteTransaction(
+        
+        //Do a call before the send transaction so it throws and error if something is wrong
+        await manager.voteTransactionTest(
             log.blockNumber,
             log.blockHash,
             log.transactionHash,
             receiver,
-            parseInt(log.data),
+            tokens,
+            { from: federator });
+
+        let txHash = await manager.voteTransaction(
+            log.blockNumber,
+            log.blockHash,
+            log.transactionHash,
+            receiver,
+            tokens,
             { from: federator, gas: toconfig.gas, gasPrice: toconfig.gasPrice  });
-        
-        console.log("voted");
+        console.log('voted on tx hash:',txHash);
     }
 }
 
