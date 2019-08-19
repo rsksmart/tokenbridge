@@ -10,7 +10,7 @@ const toAccount = process.argv[4];
 const amount = parseInt(process.argv[5]);
 
 const config = require('../' + chainname + 'conf.json');
-const host = rskapi.host(condig.host);
+const host = rskapi.host(config.host);
 
 const balanceOfHash = '0x70a08231';
 
@@ -43,9 +43,12 @@ console.log();
         else
             toAcc = accounts[toAccount];
 
-        const transferArgs = [ toAcc, amount ];
-        const txhash = await txs.invokeContract(host, config.token, transferHash, transferArgs,
-            { from:accounts[fromAccount] });
+        const txhash = await txs.invoke(
+            host,
+            config.token,
+            transferHash,
+            [ toAcc.address ? toAcc.address : toAcc, amount ],
+            { from:accounts[fromAccount], gas:config.gas, gasPrice: config.gasPrice });
 
         console.log("tx hash", txhash);
     } catch (err) {

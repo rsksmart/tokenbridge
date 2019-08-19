@@ -54,6 +54,9 @@ async function run() {
 
     await manager.setTransferable(bridge.address);
     console.log('Bridge controlled by Manager');
+
+    await token.transfer(accounts[0], 10);
+    console.log('Set 10 tokens to the first account for testing purposes');
 }
 
 module.exports = function (cb) {

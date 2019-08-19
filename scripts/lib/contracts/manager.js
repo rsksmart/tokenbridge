@@ -18,6 +18,16 @@ function Manager(host, address) {
         );
     };
 
+    this.voteTransactionTest = async function (noblock, blockhash, txhash, receiver, amount, options) {
+        return await txs.call(
+            host,
+            address,
+            voteTransactionHash,
+            [ noblock, blockhash, txhash, receiver, amount ],
+            options
+        );
+    };
+
     this.voteTransaction = async function (noblock, blockhash, txhash, receiver, amount, options) {
         return await txs.invoke(
             host,
