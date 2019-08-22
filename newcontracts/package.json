@@ -1,0 +1,20 @@
+{
+  "name": "newcontracts",
+  "private": true,
+  "description": "Bridge contracts, WIP",
+  "keywords": [
+    "rlp",
+    "ethereum",
+    "rsk",
+    "solidity"
+  ],
+  "version": "0.0.1alpha",
+  "engines": {
+    "node": ">= 8.0.0"
+  },
+  "scripts": {},
+  "dependencies": {},
+  "devDependencies": {
+    "rlp": "^2.2.3"
+  }
+}
