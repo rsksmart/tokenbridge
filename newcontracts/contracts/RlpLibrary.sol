@@ -25,8 +25,8 @@ library RlpLibrary {
             return 1 + nbytes + length; 
         }
 
-        if (first > 0xc0)
-            return uint8(first) - 0xc0 + 1;
+        if (first > 0xbf)
+            return uint8(first) - 0xbf;
 
         if (first > 0xb7) {
             uint nbytes = uint8(first) - 0xb7;
@@ -61,8 +61,8 @@ library RlpLibrary {
             return length;
         }
         
-        if (first > 0xc0)
-            return uint8(first) - 0xc0;
+        if (first > 0xbf)
+            return uint8(first) - 0xbf - 1;
             
         if (first > 0xb7) {
             uint nbytes = uint8(first) - 0xb7;
