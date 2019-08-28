@@ -124,5 +124,38 @@ library RlpLibrary {
             itemOffset = item.offset + item.length;
         }
     }
+    
+    function rlpItemToBytes(bytes memory data, uint offset, uint length) internal pure returns (bytes memory) {
+        bytes memory result = new bytes(length);
+        
+        uint source;
+        uint target;
+        
+        assembly {
+            source := add(add(data, 0x20), offset)
+            target := add(result, 0x20)
+        }
+        
+        for (; length >= 32; length -= 0x20) {
+            assembly {
+                mstore(target, mload(source))
+                target := add(target, 0x20)
+                source := add(source, 0x20)
+            }
+        }
+        
+        if (length == 0)
+            return result;
+
+        uint mask = 256 ** (0x20 - length) - 1;
+        
+        assembly {
+            let sourcePart := and(mload(source), not(mask))
+            let targetPart := and(mload(target), mask)
+            mstore(target, or(sourcePart, targetPart))
+        }
+        
+        return result;
+    }
 }
 

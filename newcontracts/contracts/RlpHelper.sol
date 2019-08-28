@@ -38,5 +38,9 @@ contract RlpHelper {
             lengths[k] = items[k].length;
         }
     }
+    
+    function rlpItemToBytes(bytes memory data, uint offset, uint length) public pure returns (bytes memory) {
+        return RlpLibrary.rlpItemToBytes(data, offset, length);
+    }
 }
 

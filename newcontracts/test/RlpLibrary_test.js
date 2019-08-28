@@ -509,6 +509,18 @@ contract('RlpLibrary', function (accounts) {
 
         dumpItems(items2, nitems2, str);
     });
+    
+    it('get two bytes', async function () {
+        const result = await this.helper.rlpItemToBytes('0x0102030405060708', 3, 2);
+        
+        assert.equal(result, '0x0405');
+    });
+    
+    it('get forty bytes', async function () {
+        const result = await this.helper.rlpItemToBytes('0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f', 3, 40);
+        
+        assert.equal(result, '0x030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a');
+    });
 });
 
 function dumpItems(items, nitems, str) {
