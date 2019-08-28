@@ -18,7 +18,7 @@ library SafeERC20 {
   )
     internal
   {
-    require(_token.transfer(_to, _value));
+    require(_token.transfer(_to, _value), "SafeERC20 transfer failed");
   }
 
   function safeTransferFrom(
@@ -29,7 +29,7 @@ library SafeERC20 {
   )
     internal
   {
-    require(_token.transferFrom(_from, _to, _value));
+    require(_token.transferFrom(_from, _to, _value), "SafeERC20 transferFrom failed");
   }
 
   function safeApprove(
@@ -39,6 +39,6 @@ library SafeERC20 {
   )
     internal
   {
-    require(_token.approve(_spender, _value));
+    require(_token.approve(_spender, _value), "SafeERC20 approve failed");
   }
 }

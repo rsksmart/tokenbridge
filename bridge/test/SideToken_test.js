@@ -2,7 +2,7 @@ const SideToken = artifacts.require('./SideToken');
 
 const expectThrow = require('./utils').expectThrow;
 
-contract('SideToken', function (accounts) {
+contract('SideToken', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];

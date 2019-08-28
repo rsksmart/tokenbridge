@@ -17,12 +17,12 @@ contract MintableToken is StandardToken, Ownable {
 
 
   modifier canMint() {
-    require(!mintingFinished);
+    require(!mintingFinished, "Minting isn't finished");
     _;
   }
 
   modifier hasMintPermission() {
-    require(msg.sender == owner);
+    require(msg.sender == owner, "Sender can't mint");
     _;
   }
 

@@ -1,6 +1,6 @@
 const MainToken = artifacts.require('./MainToken');
 
-contract('MainToken', function (accounts) {
+contract('MainToken', async function (accounts) {
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000);
     });
