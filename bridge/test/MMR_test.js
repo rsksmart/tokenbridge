@@ -1,6 +1,6 @@
 const MMR = artifacts.require('./MMR.sol');
 
-contract('MMR', function (accounts) {
+contract('MMR', async function (accounts) {
     beforeEach(async function () {
         this.mmr = await MMR.new();
     });

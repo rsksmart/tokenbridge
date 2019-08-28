@@ -1,6 +1,7 @@
 pragma solidity ^0.4.24;
 
 import "./Transferable.sol";
+import "./Verifier.sol";
 
 contract Manager {
     address owner;
@@ -12,6 +13,13 @@ contract Manager {
 
 
     Transferable public transferable;
+    Verifier public verifier;
+
+    constructor(address _verifier) public {
+        require(_verifier != address(0), "Empty verifier");
+        verifier = Verifier(_verifier);
+        owner = msg.sender;
+    }
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Sender is not the owner");
@@ -23,33 +31,41 @@ contract Manager {
         transferable = _transferable;
     }
 
-    function getTransactionId(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, bytes _encodedLogs)
+    function getTransactionId(uint blockNumber, bytes32 blockHash, bytes32 txReceiptHash)
         public pure returns(bytes32)
     {
-        return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _encodedLogs));
+        return keccak256(abi.encodePacked(blockNumber, blockHash, txReceiptHash));
     }
 
-    function processCrossEvent(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, bytes _encodedLogs) public
+    function processCrossEvent(bytes memory rawBlockHeader, bytes memory rawTxReceipt, bytes memory rawTxReceiptTrieBranch)
+    public returns(bool)
     {
-        bytes32 voteId = getTransactionId(_blockNumber, _blockHash, _transactionHash, _encodedLogs);
+        require(address(transferable) != address(0), "Transferable is not set");
+        (bool result, uint256 blockNumber, bytes32 blockHash, bytes32 txReceiptHash,
+        address tokenAddress, address to, uint256 amount, string memory symbol) = verifier.verifyEvent(
+            rawBlockHeader, rawTxReceipt, rawTxReceiptTrieBranch);
+        require(result, "Failed event verification");
+
+        bytes32 voteId = getTransactionId(blockNumber, blockHash, txReceiptHash);
 
         if (processed[voteId])
-            return;
+            return false;
 
-        if (_blockNumber > lastBlockNumber[msg.sender]) {
-            lastBlockHash[msg.sender] = _blockHash;
-            lastBlockNumber[msg.sender] = _blockNumber;
+        if (blockNumber > lastBlockNumber[msg.sender]) {
+            lastBlockHash[msg.sender] = blockHash;
+            lastBlockNumber[msg.sender] = blockNumber;
         }
         //Process the _encodedLogs
-        //if (transferable.acceptTransfer(_receiver, _amount)) {
+        if (transferable.acceptTransfer(tokenAddress, to, amount, symbol)) {
             processed[voteId] = true;
-        //}
+        }
+        return true;
     }
 
-    function transactionWasProcessed(uint _blockNumber, bytes32 _blockHash, bytes32 _transactionHash, bytes _encodedLogs)
-    public view returns(bool) 
+    function transactionWasProcessed(uint blockNumber, bytes32 blockHash, bytes32 txReceiptHash)
+    public view returns(bool)
     {
-        bytes32 voteId = getTransactionId(_blockNumber, _blockHash, _transactionHash,  _encodedLogs);
+        bytes32 voteId = getTransactionId(blockNumber, blockHash, txReceiptHash);
         return processed[voteId];
     }
 
