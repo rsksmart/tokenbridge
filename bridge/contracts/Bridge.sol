@@ -1,6 +1,6 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
-import "./zeppelin/token/ERC20/DetailedERC20.sol";
+import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/math/SafeMath.sol";
 import "./ERC677TransferReceiver.sol";
@@ -9,7 +9,7 @@ import "./SideToken.sol";
 
 contract Bridge is Transferable, ERC677TransferReceiver {
     using SafeMath for uint256;
-    using SafeERC20 for DetailedERC20;
+    using SafeERC20 for ERC20Detailed;
 
     address public manager;
     uint8 symbolPrefix;
@@ -20,7 +20,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
     mapping (address => uint256) public lockedTokens;
 
     struct TransferStruct {
-        DetailedERC20 from;
+        ERC20Detailed from;
         address to;
         uint256 amount;
         string symbol;
@@ -46,7 +46,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         return tokenFallback(to, amount, data);
     }
 
-    function addPendingTransfer(DetailedERC20 fromToken, address to, uint256 amount) private returns (bool success) {
+    function addPendingTransfer(ERC20Detailed fromToken, address to, uint256 amount) private returns (bool success) {
         validateToken(fromToken);
         //TODO should group by address and sender
         pendingTransferStruct.push(TransferStruct(fromToken, to, amount, fromToken.symbol()));
@@ -58,9 +58,10 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         //TODO add timelock and validations
         for(uint256 i = 0; i < pendingTransfersCount; i++) {
             TransferStruct memory transfer = pendingTransferStruct[i];
-            emit Cross(transfer.from, transfer.to, transfer.amount, transfer.symbol);
+            address tokenFromAddress = address(transfer.from);
+            emit Cross(tokenFromAddress, transfer.to, transfer.amount, transfer.symbol);
             delete pendingTransferStruct[i];
-            lockedTokens[transfer.from] = lockedTokens[transfer.from].add(transfer.amount);
+            lockedTokens[tokenFromAddress] = lockedTokens[tokenFromAddress].add(transfer.amount);
         }
         pendingTransfersCount = 0;
     }
@@ -76,7 +77,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
             SideToken sideTokenContract = mappedTokens[tokenAddress];
             if(address(sideTokenContract) == address(0)) {
                 string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-                sideTokenContract = new SideToken(newSymbol,newSymbol, 18, 0);
+                sideTokenContract = new SideToken(newSymbol,newSymbol);
                 mappedTokens[tokenAddress] = sideTokenContract;
                 sideTokens[address(sideTokenContract)] = tokenAddress;
             }
@@ -84,7 +85,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         } else {
             //Crossing Back
             require(amount <= totalAmount, "Amount bigger than actual tokens in the bridge");
-            DetailedERC20 tokenContract = DetailedERC20(tokenAddress);
+            ERC20Detailed tokenContract = ERC20Detailed(tokenAddress);
             tokenContract.safeTransfer(to, amount);
             lockedTokens[tokenAddress] = totalAmount.sub(amount);
         }
@@ -101,7 +102,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         address originalTokenAddress = sideTokens[msg.sender];
         require(originalTokenAddress != address(0), "Sender is not one of the crossed token contracts");
         SideToken sideToken = SideToken(msg.sender);
-        addPendingTransfer(DetailedERC20(originalTokenAddress), from, amount);
+        addPendingTransfer(ERC20Detailed(originalTokenAddress), from, amount);
         sideToken.burn(amount);
         return true;
     }
@@ -119,12 +120,12 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         return mapped;
     }
 
-    function validateToken(DetailedERC20 tokenToUse) private view {
+    function validateToken(ERC20Detailed tokenToUse) private view {
         require(tokenToUse.decimals() == 18, "Token has decimals other than 18");
         require(bytes(tokenToUse.symbol()).length != 0, "Token doesn't have symbol");
     }
 
-    function receiveTokens(DetailedERC20 tokenToUse, uint256 amount) public returns (bool) {
+    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public returns (bool) {
         //TODO should we accept  that people call receiveTokens with the SideToken???
         validateToken(tokenToUse);
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);

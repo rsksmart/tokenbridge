@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
 import "./Transferable.sol";
 import "./Verifier.sol";
@@ -7,7 +7,6 @@ contract Manager {
     address owner;
 
     mapping(bytes32 => bool) processed;
-
     mapping(address => uint) public lastBlockNumber;
     mapping(address => bytes32) public lastBlockHash;
 
@@ -27,7 +26,7 @@ contract Manager {
     }
 
     function setTransferable(Transferable _transferable) public onlyOwner {
-        require(transferable == address(0), "Empty transferable");
+        require(address(transferable) == address(0), "Empty transferable");
         transferable = _transferable;
     }
 
