@@ -1,47 +1,37 @@
 pragma solidity ^0.4.24;
 
+import "./zeppelin/token/ERC20/BurnableToken.sol";
+import "./zeppelin/token/ERC20/MintableToken.sol";
 import "./zeppelin/token/ERC20/DetailedERC20.sol";
 import "./zeppelin/token/ERC20/StandardToken.sol";
+import "./ERC677TransferReceiver.sol";
 import "./Transferable.sol";
 
-contract SideToken is DetailedERC20, StandardToken, Transferable {
-    address public manager;
-    
-    modifier onlyManager() {
-        require(msg.sender == manager);
-        _;
-    }
+contract SideToken is DetailedERC20, MintableToken, BurnableToken {
+    /**
+     * Transfer event as described in ERC-677
+     * See https://github.com/ethereum/EIPs/issues/677 for details
+     */
+    event Transfer(address indexed from, address indexed to, uint256 value, bytes data);
 
-    constructor(string _name, string _symbol, uint8 _decimals, address _manager) 
-        DetailedERC20(_name, _symbol, _decimals)
+    constructor(string _name, string _symbol, uint8 _decimals, uint _totalSupply) DetailedERC20(_name, _symbol, _decimals)
         public {
-        manager = _manager;
-    }
-    
-    function changeManager(address newmanager) public onlyManager {
-        require(newmanager != address(0));
-        
-        manager = newmanager;
-    }
+            totalSupply_ = _totalSupply;
+            balances[msg.sender] = _totalSupply;
+        }
 
-    function acceptTransfer(address receiver, uint256 amount) public onlyManager returns(bool) {
-        totalSupply_ += amount;
-        balances[receiver] += amount;
-        
-        emit Transfer(manager, receiver, amount);
-        
+    /**
+     * ERC-677's only method implementation
+     * See https://github.com/ethereum/EIPs/issues/677 for details
+     */
+    function transferAndCall(address _to, uint _value, bytes memory _data) public returns (bool) {
+        bool result = transfer(_to, _value);
+        if (!result) return false;
+
+        emit Transfer(msg.sender, _to, _value, _data);
+
+        ERC677TransferReceiver receiver = ERC677TransferReceiver(_to);
+        receiver.tokenFallback(msg.sender, _value, _data);
         return true;
     }
-    
-    function transfer(address receiver, uint amount) public returns(bool) {
-        bool result = super.transfer(receiver, amount);
-
-        if (result && receiver == manager) {
-            balances[manager] -= amount;
-            totalSupply_ -= amount;
-        }
-            
-        return result;
-    }
 }
-
