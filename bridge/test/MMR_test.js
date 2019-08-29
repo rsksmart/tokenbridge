@@ -1,5 +1,7 @@
 const MMR = artifacts.require('./MMR.sol');
 
+const utils = require('./utils');
+
 contract('MMR', async function (accounts) {
     beforeEach(async function () {
         this.mmr = await MMR.new();
@@ -17,7 +19,8 @@ contract('MMR', async function (accounts) {
     
     it('calculate one block', async function() {
         const initialBlock = await this.mmr.nblock();
-        await this.mmr.calculate();
+        const tx = await this.mmr.calculate();
+        utils.checkRcpt(tx);
         const newBlock = await this.mmr.nblock();
         
         assert.equal(newBlock.toNumber(), initialBlock.toNumber() + 1);
@@ -39,8 +42,10 @@ contract('MMR', async function (accounts) {
     
     it('calculate two blocks', async function() {
         const initialBlock = await this.mmr.nblock();
-        await this.mmr.calculate();
-        await this.mmr.calculate();
+        let tx = await this.mmr.calculate();
+        utils.checkRcpt(tx);
+        tx = await this.mmr.calculate();
+        utils.checkRcpt(tx);
         const newBlock = await this.mmr.nblock();
         
         assert.equal(newBlock.toNumber(), initialBlock.toNumber() + 2);
