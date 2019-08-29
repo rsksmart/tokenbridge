@@ -500,29 +500,41 @@ contract('RlpLibrary', function (accounts) {
     it('get items from receipt2', async function () {
         const str = receipt2;
         
+        console.log('receipt 2');
         const nitems = (await this.helper.getRlpNumItems(str, 0)).toNumber();
         const items = await this.helper.getRlpItems(str, 0);
 
         dumpItems(items, nitems, str);
+        
+        assert.equal(nitems, 6);
 
-        const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[3])).toNumber();
-        const items2 = await this.helper.getRlpItems(str, items.offsets[3]);
+        console.log('logs');
+        const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber())).toNumber();
+        const items2 = await this.helper.getRlpItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber());
 
         dumpItems(items2, nitems2, str);
+        
+        assert.equal(nitems2, 1);
     });
     
     it('get items from receipt3', async function () {
         const str = receipt3;
         
+        console.log('receipt 3');
         const nitems = (await this.helper.getRlpNumItems(str, 0)).toNumber();
         const items = await this.helper.getRlpItems(str, 0);
-
+        
         dumpItems(items, nitems, str);
-
-        const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[3])).toNumber();
-        const items2 = await this.helper.getRlpItems(str, items.offsets[3]);
+        
+        assert.equal(nitems, 6);
+        
+        console.log('logs');
+        const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber())).toNumber();
+        const items2 = await this.helper.getRlpItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber());
 
         dumpItems(items2, nitems2, str);
+        
+        assert.equal(nitems2, 5);
     });
     
     it('get two bytes', async function () {
