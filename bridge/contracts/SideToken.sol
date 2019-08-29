@@ -1,24 +1,20 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
-import "./zeppelin/token/ERC20/BurnableToken.sol";
-import "./zeppelin/token/ERC20/MintableToken.sol";
-import "./zeppelin/token/ERC20/DetailedERC20.sol";
-import "./zeppelin/token/ERC20/StandardToken.sol";
+import "./zeppelin/token/ERC20/ERC20Burnable.sol";
+import "./zeppelin/token/ERC20/ERC20Mintable.sol";
+import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./ERC677TransferReceiver.sol";
 import "./Transferable.sol";
 
-contract SideToken is DetailedERC20, MintableToken, BurnableToken {
+contract SideToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     /**
      * Transfer event as described in ERC-677
      * See https://github.com/ethereum/EIPs/issues/677 for details
      */
     event Transfer(address indexed from, address indexed to, uint256 value, bytes data);
 
-    constructor(string _name, string _symbol, uint8 _decimals, uint _totalSupply) DetailedERC20(_name, _symbol, _decimals)
-        public {
-            totalSupply_ = _totalSupply;
-            balances[msg.sender] = _totalSupply;
-        }
+    constructor(string memory name, string memory symbol)
+        ERC20Detailed(name, symbol, 18) public {}
 
     /**
      * ERC-677's only method implementation
