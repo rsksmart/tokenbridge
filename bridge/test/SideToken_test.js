@@ -8,7 +8,7 @@ contract('SideToken', async function (accounts) {
     const anotherAccount = accounts[2];
     
     beforeEach(async function () {
-        this.token = await SideToken.new("SIDE", "SIDE", 18, 0);
+        this.token = await SideToken.new("SIDE", "SIDE");
     });
 
     it('initial state', async function () {

@@ -1,13 +1,13 @@
-pragma solidity ^0.4.24;
+pragma solidity >=0.4.21 <0.6.0;
 
-import "./zeppelin/token/ERC20/DetailedERC20.sol";
-import "./zeppelin/token/ERC20/StandardToken.sol";
+import "./zeppelin/token/ERC20/ERC20Detailed.sol";
+import "./zeppelin/token/ERC20/ERC20.sol";
 
-contract MainToken is DetailedERC20, StandardToken {
-    constructor(string memory _name, string memory _symbol, uint8 _decimals, uint _totalSupply) DetailedERC20(_name, _symbol, _decimals)
-        public {
-        totalSupply_ = _totalSupply;
-        balances[msg.sender] = _totalSupply;
+contract MainToken is ERC20Detailed, ERC20 {
+    constructor(string memory name, string memory symbol, uint8 decimals, uint totalSupply)
+        ERC20Detailed(name, symbol, decimals) public
+    {
+        _mint(msg.sender, totalSupply);
     }
 }
 
