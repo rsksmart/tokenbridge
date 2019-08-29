@@ -20,7 +20,14 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       gasPrice: 0,
-      gas: 50000000,
+      gas: 5000000,
+      network_id: "*" // Match any network id
+    },
+    regtest: {
+      host: "127.0.0.1",
+      port: 4444,
+      gasPrice: 0,
+      gas: 5000000,
       network_id: "*" // Match any network id
     }
   }
