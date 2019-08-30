@@ -535,6 +535,18 @@ contract('RlpLibrary', function (accounts) {
         dumpItems(items2, nitems2, str);
         
         assert.equal(nitems2, 5);
+        
+        for (let k = 0; k < nitems2; k++) {
+            const offset = k === 0 ? items.offsets[3].toNumber() : items2.offsets[k - 1].toNumber() + items2.lengths[k - 1].toNumber();
+            
+            console.log('log', k);
+            const nitemslog = (await this.helper.getRlpNumItems(str, offset)).toNumber();
+            const itemslog = await this.helper.getRlpItems(str, offset);
+
+            dumpItems(itemslog, nitemslog, str);
+        
+            assert.equal(nitemslog, 3);
+        }
     });
     
     it('get two bytes', async function () {
