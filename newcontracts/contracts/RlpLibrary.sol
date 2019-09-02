@@ -157,5 +157,18 @@ library RlpLibrary {
         
         return result;
     }
+    
+    function rlpItemToAddress(bytes memory data, uint offset) internal pure returns (address result) {
+        // TODO consider shr instead of div
+        assembly {
+            result := div(mload(add(add(data, 0x20), offset)), 0x1000000000000000000000000)
+        }
+    }
+    
+    function rlpItemToBytes32(bytes memory data, uint offset) internal pure returns (bytes32 result) {
+        assembly {
+            result := mload(add(add(data, 0x20), offset))
+        }
+    }
 }
 

@@ -560,6 +560,18 @@ contract('RlpLibrary', function (accounts) {
         
         assert.equal(result, '0x030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a');
     });
+    
+    it('get address from bytes', async function () {
+        const result = await this.helper.rlpItemToAddress('0xa00000000000000000000000000a3aa774752ec2042c46548456c094a76c7f3a79', 1 + 12);
+        
+        assert.equal(result.toLowerCase(), '0x0a3aa774752ec2042c46548456c094a76c7f3a79');
+    });
+    
+    it('get bytes32 from bytes', async function () {
+        const result = await this.helper.rlpItemToBytes32('0xa0ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', 1);
+        
+        assert.equal(result.toLowerCase(), '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+    });
 });
 
 function dumpItems(items, nitems, str) {
