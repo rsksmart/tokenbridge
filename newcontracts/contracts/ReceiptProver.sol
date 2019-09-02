@@ -4,6 +4,8 @@ pragma experimental ABIEncoderV2;
 import "./BlockRecorder.sol";
 import "./ProofLibrary.sol";
 
+import "./RlpLibrary.sol";
+
 contract ReceiptProver {
     BlockRecorder public blockRecorder;
     
