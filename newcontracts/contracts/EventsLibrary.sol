@@ -3,15 +3,19 @@ pragma solidity 0.5.0;
 import "./RlpLibrary.sol";
 
 library EventsLibrary {
-    function getEvents(bytes memory receipt, address origin, bytes32 topic) internal pure returns(address[] memory tokens, address[] memory receivers, uint256[] memory amounts) {
+    struct TransferEvent {
+        address token;
+        address receiver;
+        uint amount;
+    }
+    
+    function getTransferEvents(bytes memory receipt, address origin, bytes32 topic) internal pure returns(TransferEvent[] memory tevents) {
         RlpLibrary.RlpItem[] memory items = RlpLibrary.getRlpItems(receipt, 0);        
         RlpLibrary.RlpItem[] memory events = RlpLibrary.getRlpItems(receipt, items[2].offset + items[2].length);
     
         uint nevents = events.length;
         
-        tokens = new address[](nevents);
-        receivers = new address[](nevents);
-        amounts = new uint256[](nevents);
+        tevents = new TransferEvent[](nevents);
 
         uint j = 0;
         
@@ -27,9 +31,11 @@ library EventsLibrary {
             if (RlpLibrary.rlpItemToBytes32(receipt, evtopics[0].offset) != topic)
                 continue;
                 
-            tokens[j] = RlpLibrary.rlpItemToAddress(receipt, evtopics[1].offset + 12);
-            receivers[j] = RlpLibrary.rlpItemToAddress(receipt, evtopics[2].offset + 12);
-            amounts[j] = uint256(RlpLibrary.rlpItemToBytes32(receipt, evitems[2].offset));
+            tevents[j] = TransferEvent(
+                RlpLibrary.rlpItemToAddress(receipt, evtopics[1].offset + 12),
+                RlpLibrary.rlpItemToAddress(receipt, evtopics[2].offset + 12),
+                uint256(RlpLibrary.rlpItemToBytes32(receipt, evitems[2].offset))
+            );
             
             j++;
         }

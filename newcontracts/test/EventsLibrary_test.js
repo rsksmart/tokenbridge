@@ -9,7 +9,7 @@ contract('EventsLibrary', function (accounts) {
     });
     
     it('get no events', async function () {
-        const result = await this.helper.getEvents(receipt, accounts[0], '0x01');
+        const result = await this.helper.getTransferEvents(receipt, accounts[0], '0x01');
         
         assert.equal(result.tokens.length, 5);
         assert.equal(result.receivers.length, 5);
@@ -23,7 +23,7 @@ contract('EventsLibrary', function (accounts) {
     });
     
     it('get three events', async function () {
-        const result = await this.helper.getEvents(receipt, '0x03f23ae1917722d5a27a2ea0bcc98725a2a2a49a', '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
+        const result = await this.helper.getTransferEvents(receipt, '0x03f23ae1917722d5a27a2ea0bcc98725a2a2a49a', '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
         
         assert.equal(result.tokens.length, 5);
         assert.equal(result.receivers.length, 5);
