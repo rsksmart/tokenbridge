@@ -1,8 +1,8 @@
 pragma solidity 0.5.0;
 pragma experimental ABIEncoderV2;
 
-import "./EventsLibrary.sol";
 import "./ReceiptProver.sol";
+import "./EventsLibrary.sol";
 import "./Transferable.sol";
 
 contract EventsProcessor {
@@ -27,6 +27,14 @@ contract EventsProcessor {
         require(prover.receiptIsValid(blkhash, receipt, prefixes, suffixes));
         
         EventsLibrary.TransferEvent[] memory tevents = EventsLibrary.getTransferEvents(receipt, origin, topic);
+        uint nevents = tevents.length;
+        
+        for (uint k = 0; k < nevents; k++) {
+            EventsLibrary.TransferEvent memory tevent = tevents[k];
+            
+            if (tevent.amount != 0)
+                transferable.acceptTransfer(tevent.token, tevent.receiver, tevent.amount);
+        }
         
         processed[hash] = true;
     }
