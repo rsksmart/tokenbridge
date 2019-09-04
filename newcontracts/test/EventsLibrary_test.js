@@ -46,9 +46,19 @@ contract('EventsLibrary', function (accounts) {
     });
     
     it('get three token events', async function () {
-        const result = await this.helper.getTokenEvents(receipt4, '0x03f23ae1917722d5a27a2ea0bcc98725a2a2a49a', '0xe10e7fce45693f4d605d212ac900b44fa162e7b2d4c7a475cc2f4e63c6987fed');
+        const result = await this.helper.getTokenEvents(receipt4, '0x73ec81da0c72dd112e06c09a6ec03b5544d26f05', '0xe10e7fce45693f4d605d212ac900b44fa162e7b2d4c7a475cc2f4e63c6987fed');
         
-        console.dir(result);
+        assert.equal(result.symbols[0], "TOK1");
+        assert.equal(result.symbols[1], "TOK2");
+        assert.equal(result.symbols[2], "TOK3");
+        assert.equal(result.symbols[3], "");
+        assert.equal(result.symbols[4], "");
+        
+        assert.equal(result.tokens[0].toLowerCase(), '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826');
+        assert.equal(result.tokens[1].toLowerCase(), '0x7986b3df570230288501eea3d890bd66948c9b79');
+        assert.equal(result.tokens[2].toLowerCase(), '0x0a3aa774752ec2042c46548456c094a76c7f3a79');
+        assert.equal(result.tokens[3].toLowerCase(), '0x0000000000000000000000000000000000000000');
+        assert.equal(result.tokens[4].toLowerCase(), '0x0000000000000000000000000000000000000000');
     });
 });
 

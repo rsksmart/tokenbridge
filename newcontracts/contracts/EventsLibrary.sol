@@ -28,11 +28,11 @@ library EventsLibrary {
             uint offset = (k == 0) ? items[3].offset : events[k - 1].offset + events[k - 1].length;
             RlpLibrary.RlpItem[] memory evitems = RlpLibrary.getRlpItems(receipt, offset);
             
-            if (RlpLibrary.rlpItemToAddress(receipt, evitems[0].offset) != origin)
-                continue;
+            //if (RlpLibrary.rlpItemToAddress(receipt, evitems[0].offset) != origin)
+            //    continue;
                 
             RlpLibrary.RlpItem[] memory evtopics = RlpLibrary.getRlpItems(receipt, evitems[0].offset + evitems[0].length);
-           
+
             if (RlpLibrary.rlpItemToBytes32(receipt, evtopics[0].offset) != topic)
                 continue;
                 
