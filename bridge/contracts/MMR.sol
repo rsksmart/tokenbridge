@@ -31,7 +31,7 @@ contract MMR {
         bytes32 newhash;
         for (k = 0; k < nhashes; k++) {
             if (hashes[k] == 0x0)
-                continue;  
+                continue;
             newhash = keccak256(abi.encodePacked(hashes[k], newhash));
         }
         nhash = newhash;

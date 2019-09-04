@@ -2,17 +2,21 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
+import "./zeppelin/lifecycle/Pausable.sol";
 import "./zeppelin/math/SafeMath.sol";
 import "./ERC677TransferReceiver.sol";
 import "./Transferable.sol";
 import "./SideToken.sol";
 
-contract Bridge is Transferable, ERC677TransferReceiver {
+contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
     address public manager;
     uint8 symbolPrefix;
+    uint256 public lastCrossEventBlock;
+    uint256 public blocksBetweenCrossEvents;
+    uint256 public minimumPedingTransfersCount;
 
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public sideTokens;
@@ -34,19 +38,21 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         _;
     }
 
-    constructor(address _manager, uint8 _symbolPrefix) public {
+    constructor(address _manager, uint8 _symbolPrefix, uint256 _blocksBetweenCrossEvents, uint256 _minimumPedingTransfersCount) public {
         require(_manager != address(0), "Empty manager");
         require(_symbolPrefix != 0, "Empty symbol prefix");
         manager = _manager;
         symbolPrefix = _symbolPrefix;
         pendingTransfersCount = 0;
+        blocksBetweenCrossEvents = _blocksBetweenCrossEvents;
+        minimumPedingTransfersCount = _minimumPedingTransfersCount;
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public returns (bool success) {
+    function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
         return tokenFallback(to, amount, data);
     }
 
-    function addPendingTransfer(ERC20Detailed fromToken, address to, uint256 amount) private returns (bool success) {
+    function addPendingTransfer(ERC20Detailed fromToken, address to, uint256 amount) private whenNotPaused returns (bool success) {
         validateToken(fromToken);
         //TODO should group by address and sender
         pendingTransferStruct.push(TransferStruct(fromToken, to, amount, fromToken.symbol()));
@@ -54,20 +60,25 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         return true;
     }
 
-    function emmitEvent() public {
-        //TODO add timelock and validations
-        for(uint256 i = 0; i < pendingTransfersCount; i++) {
-            TransferStruct memory transfer = pendingTransferStruct[i];
-            address tokenFromAddress = address(transfer.from);
-            emit Cross(tokenFromAddress, transfer.to, transfer.amount, transfer.symbol);
-            delete pendingTransferStruct[i];
-            lockedTokens[tokenFromAddress] = lockedTokens[tokenFromAddress].add(transfer.amount);
+    function emmitEvent() public whenNotPaused returns (bool success) {
+        //TODO add validations
+        if(block.number > lastCrossEventBlock + blocksBetweenCrossEvents || pendingTransfersCount > minimumPedingTransfersCount ) {
+            for(uint256 i = 0; i < pendingTransfersCount; i++) {
+                TransferStruct memory transfer = pendingTransferStruct[i];
+                address tokenFromAddress = address(transfer.from);
+                emit Cross(tokenFromAddress, transfer.to, transfer.amount, transfer.symbol);
+                delete pendingTransferStruct[i];
+                lockedTokens[tokenFromAddress] = lockedTokens[tokenFromAddress].add(transfer.amount);
+            }
+            pendingTransfersCount = 0;
+            lastCrossEventBlock = block.number;
+            return true;
         }
-        pendingTransfersCount = 0;
+        return false;
     }
 
     function acceptTransfer(address tokenAddress, address receiver, uint256 amount, string memory symbol)
-    public onlyManager returns(bool) {
+    public onlyManager whenNotPaused returns(bool) {
         address to = getMappedAddress(receiver);
         uint256 totalAmount = lockedTokens[tokenAddress];
         //TODO find a bettr way to check if they are comming from main or side chain
@@ -91,12 +102,12 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         }
     }
 
-    function changeManager(address newmanager) public onlyManager {
+    function changeManager(address newmanager) public onlyManager whenNotPaused {
         require(newmanager != address(0), "New manager address is empty");
         manager = newmanager;
     }
 
-    function tokenFallback(address from, uint256 amount, bytes memory) public returns (bool) {
+    function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
         //TODO add validations and manage callback from contracts correctly
         //TODO If its a mirror contract created by us we should brun the tokens and sent then back. If not we shoulld add it to the pending trasnfer
         address originalTokenAddress = sideTokens[msg.sender];
@@ -107,7 +118,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         return true;
     }
 
-    function mapAddress(address to) public {
+    function mapAddress(address to) public whenNotPaused {
         mappedAddresses[msg.sender] = to;
     }
 
@@ -125,7 +136,7 @@ contract Bridge is Transferable, ERC677TransferReceiver {
         require(bytes(tokenToUse.symbol()).length != 0, "Token doesn't have symbol");
     }
 
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public returns (bool) {
+    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public whenNotPaused returns (bool) {
         //TODO should we accept  that people call receiveTokens with the SideToken???
         validateToken(tokenToUse);
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);

@@ -13,8 +13,10 @@ contract('Bridge', async function (accounts) {
     const anotherAccount = accounts[6];
     
     beforeEach(async function () {
+        this.blocksBetweenCrossEvents = 0, 
+        this.minimumPedingTransfersCount = 0;
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
-        this.bridge = await Bridge.new(bridgeManager, 'e'.charCodeAt(), { from: bridgeOwner });
+        this.bridge = await Bridge.new(bridgeManager, 'e'.charCodeAt(), this.blocksBetweenCrossEvents, this.minimumPedingTransfersCount, { from: bridgeOwner });
     });
 
     describe('Main Side', async function () {
@@ -93,7 +95,7 @@ contract('Bridge', async function (accounts) {
 
     describe('Mirror Side', async function () {
         beforeEach(async function () {;
-            this.mirrorBridge = await Bridge.new(bridgeManager, 'r'.charCodeAt(), { from: bridgeOwner });
+            this.mirrorBridge = await Bridge.new(bridgeManager, 'r'.charCodeAt(), this.blocksBetweenCrossEvents, this.minimumPedingTransfersCount, { from: bridgeOwner });
 
             this.amount = 1000;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });

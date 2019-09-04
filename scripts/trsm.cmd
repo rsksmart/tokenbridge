@@ -1,1 +1,0 @@
-node transfer.js side http://localhost:8545 0 b %1
