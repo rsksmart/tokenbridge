@@ -27,6 +27,16 @@ contract EventsProcessor {
         
         require(processed[hash] == false);
         require(prover.receiptIsValid(blkhash, receipt, prefixes, suffixes));
+
+        EventsLibrary.TokenEvent[] memory tkevents = EventsLibrary.getTokenEvents(receipt, origin, tokenTopic);
+        uint ntkevents = tkevents.length;
+        
+        for (uint k = 0; k < ntkevents; k++) {
+            EventsLibrary.TokenEvent memory tkevent = tkevents[k];
+            
+            if (tkevent.token != address(0))
+                transferable.processToken(tkevent.token, tkevent.symbol);
+        }
         
         EventsLibrary.TransferEvent[] memory tevents = EventsLibrary.getTransferEvents(receipt, origin, transferTopic);
         uint nevents = tevents.length;
