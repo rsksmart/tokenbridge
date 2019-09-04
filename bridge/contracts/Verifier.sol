@@ -14,9 +14,10 @@ contract Verifier {
     }
 
     function verifyEvent(bytes memory rawBlockHeader, bytes memory rawTxReceipt,
-    bytes memory rawTxReceiptTrieBranch) public returns(bool result, uint256 blockNumber,
-    bytes32 blockHash, bytes32 txReceiptHash, address tokenAddress, address to, uint256 amount,
-    string memory symbol) {
+    bytes memory rawTxReceiptTrieBranch) public returns(bool result, uint256 blockNumber, bytes32 blockHash,
+    bytes32 txReceiptHash, address tokenAddress, address to, uint256 amount, string memory symbol) {
+        //require(_blockNumber == blockNumber && _blockHash == blockHash && _txReceiptHash == txReceiptHash,
+        // "Block Number, Hash or Tx Receipt Hash distinct than obtained in raw data");
         result = true;
         blockNumber = 131925;
         blockHash = 0x79c54f2563c22ff3673415087a7679adfa2c5f15a216e71e90601e1ca753f219;
