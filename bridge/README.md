@@ -43,22 +43,19 @@ Launch the local network
 ganache-cli --verbose
 ```
 
-A Windows command deploys the solution to mainchain and sidechain (both points
-to truffle development network, usually a ganache-cli instance)
+Deploy using truffle to the desire network
 ```
-deploysymm <mainnetwork> <sidenetwork>
+truffle migrate --network <network>
 ```
 
 Examples
 ```
-deploysymm development development
-deploysymm development regtest
+truffle migrate --network development
+truffle migrate --network regtest
 ```
 
-## To Do
+This will also generate the json files for that network with the addresses of the deployed contracts that will be called by the submitter.
 
-- Prevent federator vote transactions that are not accepted/processed, filling storage space
-- Remove inverse account mapping (no use case)
 
 
 

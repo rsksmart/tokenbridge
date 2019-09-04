@@ -40,13 +40,12 @@ contract Manager {
     public returns(bool)
     {
         require(address(transferable) != address(0), "Transferable is not set");
-        (bool result, uint256 blockNumber, bytes32 blockHash, bytes32 txReceiptHash,
-        address tokenAddress, address to, uint256 amount, string memory symbol) = verifier.verifyEvent(
-            rawBlockHeader, rawTxReceipt, rawTxReceiptTrieBranch);
+
+        (bool result, uint256 blockNumber, bytes32 blockHash, bytes32 txReceiptHash, address tokenAddress,
+        address to, uint256 amount, string memory symbol) = verifier.verifyEvent(rawBlockHeader, rawTxReceipt, rawTxReceiptTrieBranch);
         require(result, "Failed event verification");
 
         bytes32 voteId = getTransactionId(blockNumber, blockHash, txReceiptHash);
-
         if (processed[voteId])
             return false;
 

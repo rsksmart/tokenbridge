@@ -5,24 +5,24 @@ library RlpLibrary {
         uint offset;
         uint length;
     }
-    
+
     function isRlpList(bytes memory data, uint offset) pure internal returns (bool) {
         return data[offset] > 0xc0;
     }
-    
+
     function getRlpTotalLength(bytes memory data, uint offset) pure internal returns (uint) {
         byte first = data[offset];
-        
+
         if (first > 0xf7) {
             uint nbytes = uint8(first) - 0xf7;
             uint length;
-            
+
             for (uint k = 0; k < nbytes; k++) {
                 length <<= 8;
                 length += uint8(data[1 + k + offset]);
             }
-            
-            return 1 + nbytes + length; 
+
+            return 1 + nbytes + length;
         }
 
         if (first > 0xbf)
