@@ -104,6 +104,29 @@ contract('Bridge', async function (accounts) {
         });
 
         describe('Cross the tokens', async function () {
+            it('process token', async function () {
+                await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "rMAIN");
+            });
+                
+            it('process token transfer only manager', async function () {
+                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: bridgeOwner }));
+                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: anAccount }));
+
+                const anAccountBalance = await this.token.balanceOf(anAccount);
+                assert.equal(anAccountBalance, 0);
+                
+                const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(newBridgeBalance, 1000);
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                assert.equal(sideTokenAddress, 0);
+            });
+
             it('accept transfer', async function () {
                 await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
 
@@ -122,20 +145,6 @@ contract('Bridge', async function (accounts) {
                 assert.equal(mirrorBridgeBalance, 0);
                 const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                 assert.equal(mirrorAnAccountBalance, this.amount);                
-            });
-
-            it('process token transfer only manager', async function () {
-                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: bridgeOwner }));
-                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: anAccount }));
-
-                const anAccountBalance = await this.token.balanceOf(anAccount);
-                assert.equal(anAccountBalance, 0);
-                
-                const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
-                assert.equal(newBridgeBalance, 1000);
-
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                assert.equal(sideTokenAddress, 0);
             });
 
             it('accept transfer only manager', async function () {
@@ -225,7 +234,6 @@ contract('Bridge', async function (accounts) {
 
                 it('main Bridge should relealse the tokens', async function () {
                     //The submitter sends the event to the manager, once the manager validates it, it calls the bridge that release the tokens
-                    //await this.bridge.processToken(this.token.address, "SIDE", { from: bridgeManager });
                     let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, this.amountToCrossBack, { from: bridgeManager });
                     utils.checkRcpt(tx);
 

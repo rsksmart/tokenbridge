@@ -94,7 +94,7 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     function processToken(address token, string memory symbol) public onlyManager whenNotPaused returns (bool) {
         SideToken sideToken = mappedTokens[token];
         
-        if(address(sideToken) == address(0)) {
+        if (address(sideToken) == address(0)) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
             sideToken = new SideToken(newSymbol, newSymbol);
             mappedTokens[token] = sideToken;
@@ -116,6 +116,8 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
+        
+        return true;
     }
 
     function changeManager(address newmanager) public onlyManager whenNotPaused {
