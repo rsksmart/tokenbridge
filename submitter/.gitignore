@@ -1,4 +1,5 @@
 config.js
 regtest.json
 development.json
+test.json
 submitter.log

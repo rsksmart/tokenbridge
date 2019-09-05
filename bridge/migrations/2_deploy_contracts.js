@@ -35,10 +35,7 @@ module.exports = function(deployer, network) {
     .then(async () => {
         const blockNumber = await web3.eth.getBlockNumber();
         const currentProvider = deployer.networks[network];
-        let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
-        host += currentProvider.host + ((currentProvider.port) ? `:${currentProvider.port}` : '');
         const config = {
-            host: host,
             mmr: MMR.address,
             bridge: Bridge.address,
             manager: Manager.address,
@@ -46,6 +43,13 @@ module.exports = function(deployer, network) {
             privateKey: "",
             testToken: MainToken.address,
         };
+        
+        if (currentProvider.host) {
+            let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
+            host += currentProvider.host + ((currentProvider.port) ? `:${currentProvider.port}` : '');
+            config.host = host;
+        }
+        
         fs.writeFileSync(`../submitter/${network}.json`, JSON.stringify(config, null, 4));
     });
     

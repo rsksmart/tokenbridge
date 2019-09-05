@@ -76,6 +76,10 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         }
         return false;
     }
+    
+    function processToken(address token, string memory symbol) public returns (bool) {
+        return true;
+    }
 
     function acceptTransfer(address tokenAddress, address receiver, uint256 amount, string memory symbol)
     public onlyManager whenNotPaused returns(bool) {
