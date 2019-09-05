@@ -56,8 +56,7 @@ contract('Manager', async function (accounts) {
         });
 
         it('should be sucessful', async function () {
-            let tx = await this.manager.processCrossEvent(this.blockNumber, this.blockHash, this.txReceiptHash, 
-                this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
+            let tx = await this.manager.processCrossEvent(this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
             utils.checkRcpt(tx);
 
             let hash = await this.manager.lastBlockHash(anAccount);
@@ -71,15 +70,13 @@ contract('Manager', async function (accounts) {
         });
 
         it('should return false on already processed', async function () {
-            let tx = await this.manager.processCrossEvent(this.blockNumber, this.blockHash, this.txReceiptHash, 
-                this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
+            let tx = await this.manager.processCrossEvent(this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
             assert.ok(tx);
 
             let result = await this.manager.transactionWasProcessed(this.blockNumber, this.blockHash, this.txReceiptHash);
             assert.ok(result);
 
-            result = await this.manager.processCrossEvent.call(this.blockNumber, this.blockHash, this.txReceiptHash,
-                this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
+            result = await this.manager.processCrossEvent.call(this.rawBlockHeader, this.rawTxReceipt, this.rawTxReceiptNodes, { from: anAccount });
             assert.isNotOk(result);
         });
 
