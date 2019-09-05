@@ -12,7 +12,7 @@ contract SimpleTransferable is Transferable {
     address[] public newtokens;
     string[] public symbols;
     
-    function acceptTransfer(address token, address receiver, uint256 amount, string memory symbol) public returns(bool) {
+    function acceptTransfer(address token, address receiver, uint256 amount) public returns(bool) {
         tokens.push(token);
         receivers.push(receiver);
         amounts.push(amount);

@@ -45,7 +45,7 @@ contract EventsProcessor {
             EventsLibrary.TransferEvent memory tevent = tevents[k];
             
             if (tevent.amount != 0)
-                transferable.acceptTransfer(tevent.token, tevent.receiver, tevent.amount, "");
+                transferable.acceptTransfer(tevent.token, tevent.receiver, tevent.amount);
         }
         
         processed[hash] = true;

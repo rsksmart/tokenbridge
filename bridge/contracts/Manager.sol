@@ -54,7 +54,7 @@ contract Manager {
             lastBlockNumber[msg.sender] = blockNumber;
         }
         //Process the _encodedLogs
-        if (transferable.acceptTransfer(tokenAddress, to, amount, symbol)) {
+        if (transferable.processToken(tokenAddress, symbol) && transferable.acceptTransfer(tokenAddress, to, amount)) {
             processed[voteId] = true;
         }
         return true;
