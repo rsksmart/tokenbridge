@@ -3,6 +3,9 @@ const Manager = artifacts.require("Manager");
 const Verifier = artifacts.require("Verifier");
 const MMR = artifacts.require("MMR");
 const MainToken = artifacts.require('MainToken');
+const BlockRecorder = artifacts.require('BlockRecorder');
+const ReceiptProver = artifacts.require('ReceiptProver');
+const EventsProcessor = artifacts.require('EventsProcessor');
 
 const fs = require('fs');
 
@@ -12,6 +15,11 @@ const minimumPedingTransfersCount = 0;
 module.exports = function(deployer, network) {
     deployer.deploy(MMR)
     .then(() => MMR.deployed())
+    .then(() => deployer.deploy(BlockRecorder))
+    .then(() => BlockRecorder.deployed())
+    .then(() => deployer.deploy(ReceiptProver, BlockRecorder.address))
+    .then(() => ReceiptProver.deployed())
+    .then(() => BlockRecorder.deployed())
     .then(() => deployer.deploy(Verifier))
     .then(() => Verifier.deployed())
     .then(() => deployer.deploy(Manager, Verifier.address))
@@ -19,6 +27,7 @@ module.exports = function(deployer, network) {
         let symbol = 'e';
         if(network == 'regtest' || network.toLowerCase().indexOf('rsk') == 0)
             symbol = 'r';
+        
         return deployer.deploy(Bridge, Manager.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount);
     })
     .then(() => Bridge.deployed())
@@ -42,6 +51,8 @@ module.exports = function(deployer, network) {
             fromBlock: blockNumber,
             privateKey: "",
             testToken: MainToken.address,
+            blockRecorder: BlockRecorder.address,
+            receiptProver: ReceiptProver.address,
         };
         
         if (currentProvider.host) {
