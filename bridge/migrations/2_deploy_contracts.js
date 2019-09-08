@@ -13,6 +13,9 @@ const blocksBetweenCrossEvents = 0;
 const minimumPedingTransfersCount = 0;
 
 module.exports = function(deployer, network) {
+    const crossTopic = web3.utils.sha3('Cross(address,address,uint256)');
+    const tokenTopic = web3.utils.sha3('Token(address,string)');
+    
     deployer.deploy(MMR)
     .then(() => MMR.deployed())
     .then(() => deployer.deploy(BlockRecorder))
@@ -20,6 +23,8 @@ module.exports = function(deployer, network) {
     .then(() => deployer.deploy(ReceiptProver, BlockRecorder.address))
     .then(() => ReceiptProver.deployed())
     .then(() => BlockRecorder.deployed())
+    .then(() => deployer.deploy(EventsProcessor, ReceiptProver.address, crossTopic, tokenTopic))
+    .then(() => EventsProcessor.deployed())
     .then(() => deployer.deploy(Verifier))
     .then(() => Verifier.deployed())
     .then(() => deployer.deploy(Manager, Verifier.address))
@@ -28,12 +33,12 @@ module.exports = function(deployer, network) {
         if(network == 'regtest' || network.toLowerCase().indexOf('rsk') == 0)
             symbol = 'r';
         
-        return deployer.deploy(Bridge, Manager.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount);
+        return deployer.deploy(Bridge, EventsProcessor.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount);
     })
     .then(() => Bridge.deployed())
-    .then(() => Manager.deployed())
-    .then((managerInstance) => {
-        managerInstance.setTransferable(Bridge.address)
+    .then(() => EventsProcessor.deployed())
+    .then((processorInstance) => {
+        processorInstance.setTransferable(Bridge.address)
     })
     .then( () => {
         if(!network.toLowerCase().includes('mainnet')) {
@@ -53,6 +58,7 @@ module.exports = function(deployer, network) {
             testToken: MainToken.address,
             blockRecorder: BlockRecorder.address,
             receiptProver: ReceiptProver.address,
+            eventsProcessor: EventsProcessor.address
         };
         
         if (currentProvider.host) {

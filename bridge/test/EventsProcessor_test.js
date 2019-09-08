@@ -23,8 +23,9 @@ contract('EventsProcessor', function (accounts) {
         await this.recorder.recordBlock(data);
         this.prover = await ReceiptProver.new(this.recorder.address);
         this.transferable = await SimpleTransferable.new();
-        this.processor = await EventsProcessor.new(this.prover.address, '0x03f23ae1917722d5a27a2ea0bcc98725a2a2a49a', '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', '0xe10e7fce45693f4d605d212ac900b44fa162e7b2d4c7a475cc2f4e63c6987fed');
+        this.processor = await EventsProcessor.new(this.prover.address, '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef', '0xe10e7fce45693f4d605d212ac900b44fa162e7b2d4c7a475cc2f4e63c6987fed');
         await this.processor.setTransferable(this.transferable.address);
+        await this.processor.setOrigin('0x03f23ae1917722d5a27a2ea0bcc98725a2a2a49a');
     });
     
     it('no transfers in transferable', async function () {

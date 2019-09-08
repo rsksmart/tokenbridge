@@ -16,10 +16,9 @@ contract EventsProcessor {
     
     mapping (bytes32 => bool) public processed;
     
-    constructor(ReceiptProver _prover, address _origin, bytes32 _transferTopic, bytes32 _tokenTopic) public {
+    constructor(ReceiptProver _prover, bytes32 _transferTopic, bytes32 _tokenTopic) public {
         owner = msg.sender;
         prover = _prover;
-        origin = _origin;
         transferTopic = _transferTopic;
         tokenTopic = _tokenTopic;
     }
@@ -30,10 +29,15 @@ contract EventsProcessor {
     }
 
     function setTransferable(Transferable _transferable) public onlyOwner {
-        require(address(transferable) == address(0), "Empty transferable");
+        require(address(transferable) == address(0), "Try to reset transferable");
         transferable = _transferable;
     }
 
+    function setOrigin(address _origin) public onlyOwner {
+        require(address(origin) == address(0), "Try to reset origin");
+        origin = _origin;
+    }
+    
     function processReceipt(bytes32 blkhash, bytes memory receipt, bytes[] memory prefixes, bytes[] memory suffixes) public {
         bytes32 hash = keccak256(abi.encodePacked(blkhash, receipt));
         
