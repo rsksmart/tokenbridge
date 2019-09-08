@@ -6,6 +6,8 @@ import "./EventsLibrary.sol";
 import "./Transferable.sol";
 
 contract EventsProcessor {
+    address owner;
+
     ReceiptProver public prover;
     Transferable public transferable;
     address public origin;
@@ -14,14 +16,24 @@ contract EventsProcessor {
     
     mapping (bytes32 => bool) public processed;
     
-    constructor(Transferable _transferable, ReceiptProver _prover, address _origin, bytes32 _transferTopic, bytes32 _tokenTopic) public {
+    constructor(ReceiptProver _prover, address _origin, bytes32 _transferTopic, bytes32 _tokenTopic) public {
+        owner = msg.sender;
         prover = _prover;
-        transferable = _transferable;
         origin = _origin;
         transferTopic = _transferTopic;
         tokenTopic = _tokenTopic;
     }
     
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Sender is not the owner");
+        _;
+    }
+
+    function setTransferable(Transferable _transferable) public onlyOwner {
+        require(address(transferable) == address(0), "Empty transferable");
+        transferable = _transferable;
+    }
+
     function processReceipt(bytes32 blkhash, bytes memory receipt, bytes[] memory prefixes, bytes[] memory suffixes) public {
         bytes32 hash = keccak256(abi.encodePacked(blkhash, receipt));
         
