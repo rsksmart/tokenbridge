@@ -37,7 +37,7 @@ contract Manager {
     }
 
     function processCrossEvent(bytes memory rawBlockHeader, bytes memory rawTxReceipt, bytes memory rawTxReceiptTrieBranch)
-    public returns(bool)
+        public returns(bool)
     {
         require(address(transferable) != address(0), "Transferable is not set");
 
@@ -53,8 +53,11 @@ contract Manager {
             lastBlockHash[msg.sender] = blockHash;
             lastBlockNumber[msg.sender] = blockNumber;
         }
+        
         //Process the _encodedLogs
-        if (transferable.acceptTransfer(tokenAddress, to, amount, symbol)) {
+        // TODO it presumes the token is should be mapped, so it calls processToken
+        // this is not the expected behavior in production, but Manager is only a helper contract
+        if (transferable.processToken(tokenAddress, symbol) && transferable.acceptTransfer(tokenAddress, to, amount)) {
             processed[voteId] = true;
         }
         return true;
