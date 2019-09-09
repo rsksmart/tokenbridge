@@ -54,7 +54,7 @@ module.exports = class TransactionSender {
 
     async getAddress(privateKey) {
         let address = null;
-        if (privateKey) {
+        if (privateKey && privateKey.length) {
             address = utils.privateToAddress(privateKey);
         } else {
             //If no private key provided we use personal (personal is only for testing)
@@ -70,12 +70,15 @@ module.exports = class TransactionSender {
         this.client.eth.transactionConfirmationBlocks = 1;
         const rawTx = await this.createRawTransaction(from, to, data, value);
         let sendTransactionPromise = null;
-        if (privateKey) {            
+        if (privateKey && privateKey.length) {            
             let signedTx = this.signRawTransaction(rawTx, privateKey);
             sendTransactionPromise = this.sendSignedTransaction(signedTx);
         } else {
             //If no private key provided we use personal (personal is only for testing)
-            await this.client.eth.personal.unlockAccount(from);
+            //await this.client.eth.personal.unlockAccount(from);
+            delete rawTx.r;
+            delete rawTx.s;
+            delete rawTx.v;
             sendTransactionPromise = this.client.eth.sendTransaction(rawTx);
         }
         return sendTransactionPromise.then((receipt) => {

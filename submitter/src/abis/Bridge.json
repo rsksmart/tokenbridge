@@ -290,11 +290,6 @@
         "indexed": false,
         "name": "_amount",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "name": "_symbol",
-        "type": "string"
       }
     ],
     "name": "Cross",
@@ -378,7 +373,7 @@
   {
     "constant": false,
     "inputs": [],
-    "name": "emmitEvent",
+    "name": "emitEvent",
     "outputs": [
       {
         "name": "success",

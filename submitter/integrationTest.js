@@ -16,8 +16,8 @@ const TransactionSender = require('./src/lib/TransactionSender.js');
 
 
 const logger = log4js.getLogger('test');
-logger.info('RSK Host', config.rskHost);
-logger.info('ETH Host', config.ethHost);
+logger.info('RSK Host', config.rsk.host);
+logger.info('ETH Host', config.eth.host);
 
 const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'));
 const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'));
@@ -50,8 +50,8 @@ async function run() {
         logger.info('bridge create event');
         let isEventCreated = await rskCreateEvent.run();
 
-        logger.info('update MMR');
-        await rskMMR.run();
+        //logger.info('update MMR');
+        //await rskMMR.run();
 
         logger.info('cross the token');
         await rskCrossToEth.run(isEventCreated);
