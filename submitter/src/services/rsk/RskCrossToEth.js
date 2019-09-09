@@ -87,18 +87,42 @@ module.exports = class RskCrossToEth {
       });
       
       this.logger.info(`Found ${logs.length} logs`);
+      
+      let origin = await sideEventsProcessorContract.methods.origin().call();
+      
+      this.logger.info('origin', origin);
 
+      if (origin == 0) {
+        let data = sideEventsProcessorContract.methods.setOrigin(this.config.rsk.bridge).encodeABI();
+        await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data, 0, this.config.eth.privateKey);
+        let origin2 = await sideEventsProcessorContract.methods.origin().call();
+        this.logger.info('origin', origin2);
+      }
+      
+      let transferable = await sideEventsProcessorContract.methods.transferable().call();
+      
+      this.logger.info('transferable', transferable);
+
+      if (transferable == 0) {
+        let data = sideEventsProcessorContract.methods.setTransferable(this.config.eth.bridge).encodeABI();
+        await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data, 0, this.config.eth.privateKey);
+        let transferable2 = await sideEventsProcessorContract.methods.transferable().call();
+        this.logger.info('transferable', transferable2);
+      }
+      
       for(let log of logs) {
         this.logger.info('log', log);
         let rawBlockHeader = await rskWeb3.extended.getRawBlockHeaderByHash(log.blockHash);
         let rawTxReceipt = await rskWeb3.extended.getRawTransactionReceiptByHash(log.transactionHash);
         let txReceiptNode = await rskWeb3.extended.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
+        txReceiptNode.unshift(rawTxReceipt);
+        this.logger.info('nodes', txReceiptNode);
         let prefsuf = calculatePrefixesSuffixes(txReceiptNode);
+        this.logger.info('prefixes', prefsuf.prefixes);
+        this.logger.info('suffixes', prefsuf.suffixes);
         let rawTxReceiptNode = ethUtils.bufferToHex(RLP.encode(txReceiptNode));
         
         let txReceiptHash = Web3.utils.keccak256(rawTxReceipt);
-        
-        //let result = await sideBlockRecorderContract.methods.processCrossEvent(rawBlockHeader, rawTxReceipt, rawTxReceiptNode).call();
         
         this.logger.info(`Start recordBlock for blockHash:${log.blockHash}, blockHash:${log.blockHash}`);
         let data = sideBlockRecorderContract.methods.recordBlock('0x' + rawBlockHeader).encodeABI();
