@@ -378,7 +378,7 @@
   {
     "constant": false,
     "inputs": [],
-    "name": "emmitEvent",
+    "name": "emitEvent",
     "outputs": [
       {
         "name": "success",

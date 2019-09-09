@@ -15,10 +15,10 @@ module.exports = class RskToEth {
         let transactionSender = new TransactionSender(rskWeb3, this.logger);
         let bridgeAddress = this.config.rsk.bridge;
         let bridgeContract = new rskWeb3.eth.Contract(abiBridge, bridgeAddress);
-        let result = await bridgeContract.methods.emmitEvent().call();
+        let result = await bridgeContract.methods.emitEvent().call();
         if(result) {
-          this.logger.info('Preparing to emmit the cross event');
-          let data = bridgeContract.methods.emmitEvent().encodeABI();
+          this.logger.info('Preparing to emit the cross event');
+          let data = bridgeContract.methods.emitEvent().encodeABI();
           await transactionSender.sendTransaction(bridgeAddress, data, 0, this.config.rsk.privateKey);
           return true;
         } else {
