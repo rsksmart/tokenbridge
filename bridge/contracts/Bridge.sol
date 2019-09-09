@@ -85,6 +85,8 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             pendingTransfersCount = 0;
             lastCrossEventBlock = block.number;
             
+            pendingTransferStruct.length = 0;
+            
             return true;
         }
         
