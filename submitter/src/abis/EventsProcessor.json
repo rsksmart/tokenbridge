@@ -1,0 +1,174 @@
+[
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "tokenTopic",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0x328df9b0"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "prover",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0x32a8f30f"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "transferable",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0x92ff0d31"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "origin",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0x938b5f32"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "transferTopic",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0x9d3340b7"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "processed",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0xc1f0808a"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_prover",
+          "type": "address"
+        },
+        {
+          "name": "_transferTopic",
+          "type": "bytes32"
+        },
+        {
+          "name": "_tokenTopic",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor",
+      "signature": "constructor"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_transferable",
+          "type": "address"
+        }
+      ],
+      "name": "setTransferable",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function",
+      "signature": "0xf5e1c4de"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "_origin",
+          "type": "address"
+        }
+      ],
+      "name": "setOrigin",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function",
+      "signature": "0x47c484e9"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "blkhash",
+          "type": "bytes32"
+        },
+        {
+          "name": "receipt",
+          "type": "bytes"
+        },
+        {
+          "name": "prefixes",
+          "type": "bytes[]"
+        },
+        {
+          "name": "suffixes",
+          "type": "bytes[]"
+        }
+      ],
+      "name": "processReceipt",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function",
+      "signature": "0x9854b00d"
+    }
+]

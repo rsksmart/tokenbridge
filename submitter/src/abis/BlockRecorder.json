@@ -1,0 +1,37 @@
+[
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "blockData",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function",
+      "signature": "0xb4468d33"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "blk",
+          "type": "bytes"
+        }
+      ],
+      "name": "recordBlock",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function",
+      "signature": "0xb9dc9da4"
+    }
+]
