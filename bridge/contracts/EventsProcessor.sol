@@ -41,7 +41,10 @@ contract EventsProcessor {
     function processReceipt(bytes32 blkhash, bytes memory receipt, bytes[] memory prefixes, bytes[] memory suffixes) public {
         bytes32 hash = keccak256(abi.encodePacked(blkhash, receipt));
         
-        require(processed[hash] == false);
+        // TODO consider require
+        if (processed[hash])
+            return;
+            
         require(prover.receiptIsValid(blkhash, receipt, prefixes, suffixes));
 
         EventsLibrary.TokenEvent[] memory tkevents = EventsLibrary.getTokenEvents(receipt, origin, tokenTopic);
