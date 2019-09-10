@@ -112,9 +112,9 @@ module.exports = class RskCrossToEth {
       
       for(let log of logs) {
         this.logger.info('log', log);
-        let rawBlockHeader = await rskWeb3.extended.getRawBlockHeaderByHash(log.blockHash);
-        let rawTxReceipt = await rskWeb3.extended.getRawTransactionReceiptByHash(log.transactionHash);
-        let txReceiptNode = await rskWeb3.extended.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
+        let rawBlockHeader = await rskWeb3.rsk.getRawBlockHeaderByHash(log.blockHash);
+        let rawTxReceipt = await rskWeb3.rsk.getRawTransactionReceiptByHash(log.transactionHash);
+        let txReceiptNode = await rskWeb3.rsk.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
         txReceiptNode.unshift(rawTxReceipt);
         this.logger.info('nodes', txReceiptNode);
         let prefsuf = calculatePrefixesSuffixes(txReceiptNode);
@@ -146,26 +146,26 @@ module.exports = class RskCrossToEth {
   getRskWeb3Extended() {
     let rskWeb3 = new Web3(this.config.rsk.host);
     rskWeb3.extend({
-      property: 'extended',
+      property: 'rsk',
       methods: [
         {
           name: 'getTransactionReceiptNodesByHash',
-          call: 'eth_getTransactionReceiptNodesByHash',
+          call: 'rsk_getTransactionReceiptNodesByHash',
           params: 2
         },
         {
           name: 'getRawTransactionReceiptByHash',
-          call: 'eth_getRawTransactionReceiptByHash',
+          call: 'rsk_getRawTransactionReceiptByHash',
           params: 1
         },
         {
           name: 'getRawBlockHeaderByHash',
-          call: 'eth_getRawBlockHeaderByHash',
+          call: 'rsk_getRawBlockHeaderByHash',
           params: 1
         },
         {
           name: 'getRawBlockHeaderByNumber',
-          call: 'eth_getRawBlockHeaderByNumber',
+          call: 'rsk_getRawBlockHeaderByNumber',
           params: 1,
           inputFormatter: [rskWeb3.extend.formatters.inputDefaultBlockNumberFormatter]
         }
