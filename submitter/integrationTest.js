@@ -50,8 +50,8 @@ async function run() {
         logger.info('bridge create event');
         let isEventCreated = await rskCreateEvent.run();
 
-        //logger.info('update MMR');
-        //await rskMMR.run();
+        logger.info('update MMR');
+        await rskMMR.run();
 
         logger.info('cross the token');
         await rskCrossToEth.run(isEventCreated);
