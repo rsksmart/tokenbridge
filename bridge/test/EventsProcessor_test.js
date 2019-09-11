@@ -102,7 +102,16 @@ contract('EventsProcessor', function (accounts) {
         const hash = web3.utils.sha3(data);
         
         await this.processor.processReceipt(hash, receipt, prefsuf.prefixes, prefsuf.suffixes);
-        await expectThrow(this.processor.processReceipt(hash, receipt, prefsuf.prefixes, prefsuf.suffixes));
+        
+        const ntransfers = await this.transferable.ntransfers();
+        
+        assert.equal(ntransfers, 3);
+        
+        await this.processor.processReceipt(hash, receipt, prefsuf.prefixes, prefsuf.suffixes);
+        
+        const ntransfers2 = await this.transferable.ntransfers();
+        
+        assert.equal(ntransfers2, 3);
     });
 });
 

@@ -1,6 +1,4 @@
 const Bridge = artifacts.require("Bridge");
-const Manager = artifacts.require("Manager");
-const Verifier = artifacts.require("Verifier");
 const MMR = artifacts.require("MMR");
 const MainToken = artifacts.require('MainToken');
 const BlockRecorder = artifacts.require('BlockRecorder');
@@ -25,9 +23,6 @@ module.exports = function(deployer, network) {
     .then(() => BlockRecorder.deployed())
     .then(() => deployer.deploy(EventsProcessor, ReceiptProver.address, crossTopic, tokenTopic))
     .then(() => EventsProcessor.deployed())
-    .then(() => deployer.deploy(Verifier))
-    .then(() => Verifier.deployed())
-    .then(() => deployer.deploy(Manager, Verifier.address))
     .then(() => { 
         let symbol = 'e';
         if(network == 'regtest' || network.toLowerCase().indexOf('rsk') == 0)
@@ -52,7 +47,6 @@ module.exports = function(deployer, network) {
         const config = {
             mmr: MMR.address,
             bridge: Bridge.address,
-            manager: Manager.address,
             fromBlock: blockNumber,
             privateKey: "",
             testToken: MainToken.address,
