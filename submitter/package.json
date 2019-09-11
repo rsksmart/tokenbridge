@@ -15,7 +15,8 @@
   },
   "scripts": {
     "start": "node ./src/main.js",
-    "test": "mocha --recursive"
+    "test": "mocha --recursive",
+    "mmrsync": "node ./src/mmrSync.js"
   },
   "keywords": [
     "rsk",
