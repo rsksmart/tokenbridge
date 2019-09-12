@@ -1,5 +1,4 @@
 const expect = require('chai').expect;
-const Web3 = require('web3');
 const ethUtils = require('ethereumjs-util');
 
 const rskJsonToRaw = require('../../src/lib/jsonToRaw/rskJsonToRaw.js');
@@ -37,7 +36,7 @@ describe('rskJsonToRaw tests', () => {
             paidFees: '0x61a6025b400'
         };
         const rlpEncodedBlockHeader = rskJsonToRaw.getRawBlockHeader(BlockHeader);
-        expect(Web3.utils.keccak256(rlpEncodedBlockHeader)).to.equal(BlockHeader.hash);
+        expect(ethUtils.bufferToHex(ethUtils.keccak256(rlpEncodedBlockHeader))).to.equal(BlockHeader.hash);
     });
 
     it('creates Raw rlp encoded Tx', async () => {
@@ -58,7 +57,7 @@ describe('rskJsonToRaw tests', () => {
             s: '0x7f38f855ea9768bc22d8c87abda6b4093d2d3e3e8f0d055ead43b0878e8b9e45' 
         };
         const rlpEncodedTx = rskJsonToRaw.getRawTransaction(tx);
-        expect(Web3.utils.keccak256(rlpEncodedTx)).to.equal(tx.hash);
+        expect(ethUtils.bufferToHex(ethUtils.keccak256(rlpEncodedTx))).to.equal(tx.hash);
     });
 
     it('creates Raw rlp encoded Tx Receipt', async () => {
