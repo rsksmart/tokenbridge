@@ -21,6 +21,10 @@ function hexStringToBuffer(hexString) {
     return ethUtils.toBuffer(ethUtils.addHexPrefix(hexString));
 }  
 
+function stripHexPrefix(str) {
+    return (str.indexOf('0x') == 0) ? str.slice(2) : str;
+  }
+
 function privateToAddress(privateKey) {
     return ethUtils.bufferToHex(ethUtils.privateToAddress(this.hexStringToBuffer(privateKey)));
 }
@@ -29,5 +33,6 @@ module.exports = {
     waitBlocks: waitBlocks,
     sleep: sleep,
     hexStringToBuffer: hexStringToBuffer,
-    privateToAddress: privateToAddress
+    privateToAddress: privateToAddress,
+    stripHexPrefix: stripHexPrefix
 }
