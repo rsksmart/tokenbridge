@@ -9,7 +9,12 @@ module.exports = class MMRTree {
         return this.root;
     }
 
-    appendLeaf(leaf) {
+    appendBlock(block) {
+        let leaf = MMRNode.fromBlock(block);
+        this._appendLeaf(leaf);
+    }
+
+    _appendLeaf(leaf) {
         if(this.root == null) {
             this.root = leaf;
         } else {
