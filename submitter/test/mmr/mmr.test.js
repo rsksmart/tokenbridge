@@ -61,11 +61,22 @@ describe('MMR tests', () => {
     });
 
     describe('Adding Blocks', () => {
+        it('appendBlock MMR', () => {
+            let mmr = new MMRTree();
+
+            mmr.appendBlock(block0);
+
+            let mmrRoot = mmr.getRoot();
+            expect(mmrRoot.hash).to.equals(block0.hash);
+            expect(mmrRoot.start_height).to.equals(block0.number);
+            expect(mmrRoot.end_height).to.equals(block0.number);
+        });
+
         it('Single Block (1 node) MMR', () => {
             let mmr = new MMRTree();
 
             let node0 = MMRNode.fromBlock(block0);
-            mmr.appendLeaf(node0);
+            mmr._appendLeaf(node0);
 
             let mmrRoot = mmr.getRoot();
             expect(mmrRoot.hash).to.exist;
@@ -78,10 +89,10 @@ describe('MMR tests', () => {
             let mmr = new MMRTree();
 
             let node0 = MMRNode.fromBlock(block0);
-            mmr.appendLeaf(node0);
+            mmr._appendLeaf(node0);
 
             let node1 = MMRNode.fromBlock(block1);
-            mmr.appendLeaf(node1);
+            mmr._appendLeaf(node1);
 
             let mmrRoot = mmr.getRoot();
             expect(mmrRoot.hash).to.exist;
@@ -97,11 +108,11 @@ describe('MMR tests', () => {
             let mmr = new MMRTree();
 
             let node0 = MMRNode.fromBlock(block0);
-            mmr.appendLeaf(node0);
+            mmr._appendLeaf(node0);
             let node1 = MMRNode.fromBlock(block1);
-            mmr.appendLeaf(node1);
+            mmr._appendLeaf(node1);
             let node3 = MMRNode.fromBlock(block2);
-            mmr.appendLeaf(node3);
+            mmr._appendLeaf(node3);
 
             let mmrRoot = mmr.getRoot();
             expect(mmrRoot.hash).to.exist;
@@ -126,13 +137,13 @@ describe('MMR tests', () => {
             let mmr = new MMRTree();
 
             let node0 = MMRNode.fromBlock(block0);
-            mmr.appendLeaf(node0);
+            mmr._appendLeaf(node0);
             let node1 = MMRNode.fromBlock(block1);
-            mmr.appendLeaf(node1);
+            mmr._appendLeaf(node1);
             let node3 = MMRNode.fromBlock(block2);
-            mmr.appendLeaf(node3);
+            mmr._appendLeaf(node3);
             let node4 = MMRNode.fromBlock(block3);
-            mmr.appendLeaf(node4);
+            mmr._appendLeaf(node4);
 
             let mmrRoot = mmr.getRoot();
             expect(mmrRoot.hash).to.exist;
@@ -147,15 +158,15 @@ describe('MMR tests', () => {
             let mmr = new MMRTree();
 
             let node0 = MMRNode.fromBlock(block0);
-            mmr.appendLeaf(node0);
+            mmr._appendLeaf(node0);
             let node1 = MMRNode.fromBlock(block1);
-            mmr.appendLeaf(node1);
+            mmr._appendLeaf(node1);
             let node3 = MMRNode.fromBlock(block2);
-            mmr.appendLeaf(node3);
+            mmr._appendLeaf(node3);
             let node4 = MMRNode.fromBlock(block3);
-            mmr.appendLeaf(node4);
+            mmr._appendLeaf(node4);
             let node7 = MMRNode.fromBlock(block4);
-            mmr.appendLeaf(node7);
+            mmr._appendLeaf(node7);
 
             let mmrRoot = mmr.getRoot();
             expect(mmrRoot.hash).to.exist;
@@ -175,15 +186,15 @@ describe('MMR tests', () => {
             this.mmr = new MMRTree();
 
             this.node0 = MMRNode.fromBlock(block0);
-            this.mmr.appendLeaf(this.node0);
+            this.mmr._appendLeaf(this.node0);
             this.node1 = MMRNode.fromBlock(block1);
-            this.mmr.appendLeaf(this.node1);
+            this.mmr._appendLeaf(this.node1);
             this.node3 = MMRNode.fromBlock(block2);
-            this.mmr.appendLeaf(this.node3);
+            this.mmr._appendLeaf(this.node3);
             this.node4 = MMRNode.fromBlock(block3);
-            this.mmr.appendLeaf(this.node4);
+            this.mmr._appendLeaf(this.node4);
             this.node7 = MMRNode.fromBlock(block4);
-            this.mmr.appendLeaf(this.node7);
+            this.mmr._appendLeaf(this.node7);
 
             this.node2Hash = MMRNode.H(this.node0.hash, this.node1.hash);
             this.node5Hash = MMRNode.H(this.node3.hash, this.node4.hash);
