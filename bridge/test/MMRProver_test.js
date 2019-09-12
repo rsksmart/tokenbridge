@@ -54,6 +54,60 @@ function makeProof(nodes) {
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
+function makeTree(leafs) {
+    const l = leafs.length;
+    
+    if (l === 1)
+        return leafs[0];
+    
+    const newleafs = [];
+    
+    for (let k = 0; k < l - 1; k += 2)
+        newleafs.push(calculateNode(leafs[k], leafs[k + 1]));
+    
+    if (l % 2)
+        newleafs.push(leafs[l - 1]);
+
+    return makeTree(newleafs);
+}
+
+function makePaths(tree, paths, path) {
+    if (!tree.left) {
+        path.push(tree);
+        paths.push(path);
+        
+        return;
+    }
+
+    path.push(tree);
+    
+    const lpath = path.slice();
+    makePaths(tree.left, paths, lpath);
+    
+    const rpath = path.slice();
+    makePaths(tree.right, paths, rpath);
+}
+
+async function processTree(nnodes, prover) {
+    const nodes = [];
+    
+    for (let k = 0; k < nnodes; k++)
+        nodes.push(generateRandomHash());
+    
+    const tree = makeTree(nodes);
+
+    const paths = [];
+    makePaths(tree, paths, []);
+    
+    assert.equal(paths.length, nnodes);
+    
+    for (let k = 0; k < nnodes; k++) {
+        const proof = makeProof(paths[k]);
+        const result = await prover.mmrIsValid(tree.hash, nodes[k], proof.prefixes, proof.suffixes); 
+        assert.ok(result);
+    }
+}
+
 contract('MMRProver', function (accounts) {
     beforeEach(async function () {
         this.prover = await MMRProver.new();
@@ -112,5 +166,21 @@ contract('MMRProver', function (accounts) {
         const proof4 = makeProof([inode3, inode2, node4]);
         const result4 = await this.prover.mmrIsValid(inode3.hash, node4, proof4.prefixes, proof4.suffixes);        
         assert.ok(result4);
+    });
+    
+    it('generate and process tree with 5 terminal nodes', async function () {
+        await processTree(5, this.prover);
+    });
+    
+    it('generate and process tree with 7 terminal nodes', async function () {
+        await processTree(7, this.prover);
+    });
+    
+    it('generate and process tree with 8 terminal nodes', async function () {
+        await processTree(8, this.prover);
+    });
+    
+    it('generate and process tree with 32 terminal nodes', async function () {
+        await processTree(32, this.prover);
     });
 });
