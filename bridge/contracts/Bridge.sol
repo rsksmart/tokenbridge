@@ -112,9 +112,9 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            require(sideToken.mint(to, amount));
+            require(sideToken.mint(to, amount), "Error minting on side token");
         }
-        else {        
+        else {
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
@@ -169,11 +169,11 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         return true;
     }
     
-    function isSideToken(address token) private returns (bool) {
+    function isSideToken(address token) private view returns (bool) {
         return originalTokens[token] != address(0);
     }
     
-    function isMappedToken(address token) private returns (bool) {
+    function isMappedToken(address token) private view returns (bool) {
         return address(mappedTokens[token]) != address(0);
     }
 }
