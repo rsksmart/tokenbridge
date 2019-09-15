@@ -605,6 +605,14 @@ contract('RlpLibrary', function (accounts) {
         
         assert.equal(result.toLowerCase(), '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef');
     });
+    
+    it('get uint256 from bytes', async function () {
+        const result = await this.helper.rlpItemToUint256('0x01', 0, 1);
+        assert.equal(result, 1);
+        
+        const result2 = await this.helper.rlpItemToUint256('0x010203040506', 1, 5);
+        assert.equal(result2, 0x0203040506);
+    });
 });
 
 function dumpItems(items, nitems, str) {
