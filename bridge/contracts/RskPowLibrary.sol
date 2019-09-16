@@ -2,16 +2,16 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./zeppelin/math/SafeMath.sol";
 
-contract RskPow {
+library RskPowLibrary {
     using SafeMath for uint256;
 
-    function getBitcoinBlockHash(bytes memory bitcoinMergedMiningHeader) public pure returns (bytes32 blockHash) {
+    function getBitcoinBlockHash(bytes memory bitcoinMergedMiningHeader) internal pure returns (bytes32 blockHash) {
         bytes memory reversedHash = abi.encodePacked(sha256(abi.encodePacked(sha256(bitcoinMergedMiningHeader))));
         blockHash = toBytes32(reverse(reversedHash,0,32), 0);
         return blockHash;
     }
 
-    function difficultyToTarget(uint256 _difficulty) public pure returns (bytes32 target) {
+    function difficultyToTarget(uint256 _difficulty) internal pure returns (bytes32 target) {
         uint256 max = ~uint256(0);
         uint256 difficulty = _difficulty;
         if(difficulty < 3) {
@@ -23,7 +23,7 @@ contract RskPow {
         return target;
     }
 
-    function isValid(uint256 difficulty, bytes memory bitcoinMergedMiningHeader) public pure returns (bool) {
+    function isValid(uint256 difficulty, bytes memory bitcoinMergedMiningHeader) internal pure returns (bool) {
         require(bitcoinMergedMiningHeader.length == 80, "BitcoinMergedMiningHeader must be 80 bytes");
         bytes32 blockHash = getBitcoinBlockHash(bitcoinMergedMiningHeader);
         bytes32 target = difficultyToTarget(difficulty);
