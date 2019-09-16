@@ -30,5 +30,15 @@ contract('RskPow', async function () {
         const gas = await this.rskPow.isValid.estimateGas(difficulty,bitcoinMergedMiningHeader);
         utils.checkGas(gas);
     });
+    
+    it('second isValid', async function () {
+        const bitcoinMergedMiningHeader = '0x711101000000000000000000000000000000000000000000000000000000000000000000403ac00d7ab9e50ae959b7fb5e7f6d6962ea1bc360d56b10e73ea005d1a2795d11485c5dffff7f2133080000';
+        const difficulty = '01';
+        const isValid = await this.rskPow.isValid(difficulty,bitcoinMergedMiningHeader);
+        assert.equal(isValid, true);
+        
+        const gas = await this.rskPow.isValid.estimateGas(difficulty,bitcoinMergedMiningHeader);
+        utils.checkGas(gas);
+    });
 
 });
