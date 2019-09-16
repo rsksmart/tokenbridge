@@ -1,9 +1,10 @@
 const expect = require('chai').expect;
 const Web3 = require('web3');
 const fs = require('fs');
-const RskMMR = require('../../src/services/rsk/RskMMR');
-const MMRNode = require('../../src/lib/mmr/MMRNode.js');
-const config = require('../../config');
+const RskMMR = require('../../../src/services/rsk/RskMMR');
+const MMRNode = require('../../../src/lib/mmr/MMRNode.js');
+const config = require('../../../config');
+const testHelper = require('../../testHelper');
 
 const rskWeb3 = new Web3(config.rsk.host);
 const requiredConfirmations = config.mmrBlockConfirmations || 10;
@@ -46,6 +47,7 @@ describe('RskMMR tests', () => {
     it('Returns a list of promises from batch', async () => {
         let rskMMR = new RskMMR(testConfig, console);
         let calls = [];
+        testHelper.advanceBlock(rskWeb3);
         for (let i = 0; i < 2; i++) {
             calls.push({ fn: rskWeb3.eth.getBlock, blockNumber: i });
         }
@@ -59,8 +61,8 @@ describe('RskMMR tests', () => {
     });
 
     it('Gets the last block from mmr tree', () => {
-        let rskMMR = new RskMMR({ ...testConfig, rskMMRStoragePath: '' }, console);
-        let empty = rskMMR._getLastMMRBlock();
+        let rskMMR = new RskMMR({ ...testConfig, rskMMRStoragePath: ' ' }, console);
+        let empty = rskMMR._getNextMMRBlock();
 
         expect(empty).to.eq(0);
 
@@ -70,8 +72,8 @@ describe('RskMMR tests', () => {
         let node1 = MMRNode.fromBlock(block1);
         rskMMR.mmrTree._appendLeaf(node1);
 
-        let last = rskMMR._getLastMMRBlock();
-        expect(last).to.eq(block1.number);
+        let last = rskMMR._getNextMMRBlock();
+        expect(last).to.eq(block1.number + 1);
     });
 
     it('Saves the current mmr tree', async () => {

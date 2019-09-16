@@ -53,22 +53,22 @@ module.exports = class RskMMR {
 
     async _updateMRRTree() {
         try {
-            let lastMRRBlock = this._getLastMMRBlock();
+            let nextMRRBlock = this._getNextMMRBlock();
             let lastBlock = await this.rskWeb3.eth.getBlockNumber();
             let blockAcceptance = lastBlock - this.requiredConfirmations;
 
             let series = initialSeries;
 
-            this.logger.debug(`Available blocks from ${lastMRRBlock} to ${blockAcceptance}`);
+            this.logger.debug(`Available blocks from ${nextMRRBlock} to ${blockAcceptance}`);
 
-            while (lastMRRBlock < blockAcceptance) {
-                if (lastMRRBlock + series > blockAcceptance) {
-                    series = blockAcceptance  - lastMRRBlock;
+            while (nextMRRBlock < blockAcceptance) {
+                if (nextMRRBlock + series > blockAcceptance) {
+                    series = blockAcceptance  - nextMRRBlock;
                 }
 
                 let calls = [];
                 for (let i = 0; i < series; i++) {
-                    calls.push({ fn: this.rskWeb3.eth.getBlock, blockNumber: lastMRRBlock + i });
+                    calls.push({ fn: this.rskWeb3.eth.getBlock, blockNumber: nextMRRBlock + i });
                 }
 
                 let blockSeries = await this._makeBatchRequest(calls);
@@ -77,9 +77,9 @@ module.exports = class RskMMR {
                     await this.mmrTree.appendBlock(block);
                 });
 
-                this.logger.debug(`Added blocks from ${lastMRRBlock} to ${lastMRRBlock + series}`);
+                this.logger.debug(`Added blocks from ${nextMRRBlock} to ${nextMRRBlock + series}`);
 
-                lastMRRBlock = lastMRRBlock + series;
+                nextMRRBlock = nextMRRBlock + series;
             }
 
         } catch (err) {
@@ -107,10 +107,10 @@ module.exports = class RskMMR {
         return Promise.all(promises);
     }
 
-    _getLastMMRBlock() {
+    _getNextMMRBlock() {
         let root = this.mmrTree.getRoot();
         if (root) {
-            return root.end_height;
+            return root.end_height + 1;
         }
         return 0;
     }

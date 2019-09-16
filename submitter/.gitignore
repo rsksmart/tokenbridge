@@ -4,4 +4,4 @@ development.json
 test.json
 submitter.log
 src/services/rsk/RskMMR.json
-test/rsk/RskMMR.json
+test/services/rsk/RskMMR.json
