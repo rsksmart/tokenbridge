@@ -235,22 +235,12 @@ describe('MMR tests', () => {
             //    /   \
             //   1     2
             //
-            // Serializes to: [3, 1, -1, -1, 2, -1, -1]
+            // Serializes to: [1, 2]
             //
 
-            expect(serialized.length).to.eq(7);
-            expect(serialized[0].hash).to.exist;
-            expect(serialized[0].left.hash).to.equals(node0.hash);
-            expect(serialized[0].right.hash).to.equals(node1.hash);
-            expect(serialized[1].hash).to.eq(node0.hash);
-            expect(serialized[1].left).to.be.null;
-            expect(serialized[1].right).to.be.null;
-            expect(serialized[2]).to.eq(-1);
-            expect(serialized[3]).to.eq(-1);
-            expect(serialized[4].left).to.be.null;
-            expect(serialized[4].right).to.be.null;
-            expect(serialized[5]).to.eq(-1);
-            expect(serialized[6]).to.eq(-1);
+            expect(serialized.length).to.eq(2);
+            expect(serialized[0].hash).to.eq(node0.hash);
+            expect(serialized[1].hash).to.eq(node1.hash);
         });
 
         it('Deserializes from list to tree', () => {
@@ -263,6 +253,7 @@ describe('MMR tests', () => {
 
             let serialized = mmr.serialize();
 
+            mmr = new MMRTree();
             mmr.deserialize(serialized);
 
             let mmrRoot = mmr.getRoot();

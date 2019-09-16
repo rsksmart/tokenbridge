@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node ./src/main.js",
     "test": "mocha test/**/*.test.js --recursive",
-    "mmrsync": "node ./src/mmrSync.js"
+    "mmrsync": "node --max-old-space-size=2048 ./src/mmrSync.js"
   },
   "keywords": [
     "rsk",

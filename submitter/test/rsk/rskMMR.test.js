@@ -27,7 +27,7 @@ const block1 = {
 
 describe('RskMMR tests', () => {
 
-    it('Creates the mmr tree from rsk blocks', async () => {
+    it.skip('Creates the mmr tree from rsk blocks', async (done) => { // Long process runing, skipped by default
         let rskMMR = new RskMMR(testConfig, console);
         let lastBlock = await rskWeb3.eth.getBlockNumber();
 
@@ -39,6 +39,8 @@ describe('RskMMR tests', () => {
         expect(mmrRoot).to.exist;
         expect(mmrRoot.end_height).to.be.greaterThan(0);
         expect(mmrRoot.end_height).to.be.lte(lastBlock - requiredConfirmations);
+
+        done();
     });
 
     it('Returns a list of promises from batch', async () => {
@@ -57,7 +59,7 @@ describe('RskMMR tests', () => {
     });
 
     it('Gets the last block from mmr tree', () => {
-        let rskMMR = new RskMMR(testConfig, console);
+        let rskMMR = new RskMMR({ ...testConfig, rskMMRStoragePath: '' }, console);
         let empty = rskMMR._getLastMMRBlock();
 
         expect(empty).to.eq(0);
@@ -87,7 +89,13 @@ describe('RskMMR tests', () => {
         expect(fs.existsSync(path)).to.eq(true);
     });
 
-    it('Restores the stored mmr tree', () => {
+    it('Restores the stored mmr tree', async () => {
+        // Clear for next run
+        let bakFile = `${testConfig.rskMMRStoragePath}/RskMMR.json`;
+        if (fs.existsSync(bakFile)) {
+            fs.truncateSync(bakFile, 0);
+        }
+
         let rskMMR = new RskMMR(testConfig, console);
 
         let node0 = MMRNode.fromBlock(block0);
@@ -96,12 +104,12 @@ describe('RskMMR tests', () => {
         let node1 = MMRNode.fromBlock(block1);
         rskMMR.mmrTree._appendLeaf(node1);
 
-        rskMMR.exitHandler();
-        rskMMR._restoreMMRTree();
+        await rskMMR.exitHandler();
+        let mmrTree = rskMMR._restoreMMRTree();
 
-        let mmrRoot = rskMMR.mmrTree.getRoot();
+        let mmrRoot = mmrTree.getRoot();
         expect(mmrRoot.hash).to.exist;
-        expect(mmrRoot.left).to.equals(node0);
-        expect(mmrRoot.right).to.equals(node1);
+        expect(mmrRoot.left.hash).to.equals(node0.hash);
+        expect(mmrRoot.right.hash).to.equals(node1.hash);
     });
 });

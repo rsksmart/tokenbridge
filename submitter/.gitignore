@@ -3,5 +3,5 @@ regtest.json
 development.json
 test.json
 submitter.log
-lib/services/rsk/RskMMR.json
+src/services/rsk/RskMMR.json
 test/rsk/RskMMR.json

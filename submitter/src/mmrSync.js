@@ -36,7 +36,7 @@ async function run() {
 process.stdin.resume(); // so the program will not close instantly
 
 async function exitHandler() {
-    rskMMR.exitHandler();
+    await rskMMR.exitHandler();
 
     process.exit();
 }
