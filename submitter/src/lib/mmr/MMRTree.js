@@ -85,6 +85,49 @@ module.exports = class MMRTree {
         if(hashValue == rootHash) {
             return true;
         }
-        return false;        
+        return false;
+    }
+
+    serialize() {
+        let root = this.getRoot();
+        let tree = [];
+
+        this._serializeTree(root, tree);
+        return tree;
+    }
+
+    deserialize(serialized) {
+        this.root = this._deserializeTree(serialized);
+    }
+
+    // Recursive function to get the MMRTree as a list of nodes
+    _serializeTree(root, list) {
+        if (root === null) {
+            list.push(-1);
+            return;
+        }
+
+        list.push(root);
+
+        this._serializeTree(root.left, list);
+        this._serializeTree(root.right, list);
+    }
+
+    // Recursive function to restore a serialized list into a tree of MMRNode leaves
+    _deserializeTree(serialized = []) {
+        if (!serialized.length) {
+            return null;
+        }
+
+        let node = serialized.shift();
+        if (node === -1) {
+            return null;
+        }
+        let root = MMRNode.fromValues(node);
+
+        root.left = this._deserializeTree(serialized)
+        root.right = this._deserializeTree(serialized)
+
+        return root;
     }
 }

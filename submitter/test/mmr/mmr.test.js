@@ -5,35 +5,35 @@ const MMRTree = require('../../src/lib/mmr/MMRTree.js');
 const MMRNode = require('../../src/lib/mmr/MMRNode.js');
 const utils = require('../../src/lib/utils.js');
 
-const block0 = { 
+const block0 = {
     number: 131925,
     hash: '0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347',
     difficulty: '423484912534602',
     totalDifficulty: '11761856316565426264',
     timestamp: 1566252081
 };
-const block1 = { 
+const block1 = {
     number: 131926,
     hash: '0xa636cbd79d6c94cd0c68ad90b6a90df0dbe610f0ad1fe643c8f07a12f332137d',
     difficulty: '423484912534603',
     totalDifficulty: '11761856316565426265',
     timestamp: 1566252082
 };
-const block2 = { 
+const block2 = {
     number: 131927,
     hash: '0x4942664dda4ec02400fe22cf42ceca48fd732e58da60138683d8aaff3a25873c',
     difficulty: '423484912534604',
     totalDifficulty: '11761856316565426266',
     timestamp: 1566252083
 };
-const block3 = { 
+const block3 = {
     number: 131928,
     hash: '0x79c54f2563c22ff3673415087a7679adfa2c5f15a216e71e90601e1ca753f219',
     difficulty: '423484912534605',
     totalDifficulty: '11761856316565426267',
     timestamp: 1566252084
 };
-const block4 = { 
+const block4 = {
     number: 131929,
     hash: '0x3334efbd514c274bce5fc5be95215ba259e47c67d85193367315e32f6a4056e2',
     difficulty: '423484912534606',
@@ -49,9 +49,9 @@ describe('MMR tests', () => {
     //            /     \
     //           /       \
     // 2        6         \
-    //        /   \        \  
-    // 1     2     5        \ 
-    //      / \   / \        \  
+    //        /   \        \
+    // 1     2     5        \
+    //      / \   / \        \
     // 0   0   1 3   4        7
 
     it('Hash correctly', () => {
@@ -119,10 +119,10 @@ describe('MMR tests', () => {
             let block0And2Hash = MMRNode.H(node0.hash, node1.hash);
             expect(mmrRoot.left.hash).to.equals(block0And2Hash);
             expect(mmrRoot.right).to.equals(node3);
-            
+
             expect(calculateNodeHeight(mmrRoot)).to.equals(2);
         });
-        
+
         function calculateNodeHeight(node) {
             let height = 0;
             let aux = node;
@@ -151,7 +151,7 @@ describe('MMR tests', () => {
             let block0And2Hash = MMRNode.H(node0.hash, node1.hash);
             let block2And5Hash = MMRNode.H(node3.hash, node4.hash);
             expect(mmrRoot.left.hash).to.equals(block0And2Hash);
-            expect(mmrRoot.right.hash).to.equals(block2And5Hash); 
+            expect(mmrRoot.right.hash).to.equals(block2And5Hash);
         });
 
         it('Five Blocks (8 nodes) MMR', () => {
@@ -175,8 +175,8 @@ describe('MMR tests', () => {
             let block2And5Hash = MMRNode.H(node3.hash, node4.hash);
             let node6Hash = MMRNode.H(block0And2Hash, block2And5Hash);
             expect(mmrRoot.left.hash).to.equals(node6Hash);
-            expect(mmrRoot.right).to.equals(node7); 
-            expect(mmrRoot.hash).to.equals(MMRNode.H(node6Hash, node7.hash)); 
+            expect(mmrRoot.right).to.equals(node7);
+            expect(mmrRoot.hash).to.equals(MMRNode.H(node6Hash, node7.hash));
         });
 
     });
@@ -203,7 +203,7 @@ describe('MMR tests', () => {
 
         it('Create Merkle Proof', () => {
             let merkleProof = this.mmr.getMerkleProof(block2.number);
-            expect(merkleProof.length).to.equals(3);            
+            expect(merkleProof.length).to.equals(3);
             expect(merkleProof[0]).to.equals(this.node4);
             expect(merkleProof[1].hash).to.equals(this.node2Hash);
             expect(merkleProof[2]).to.equals(this.node7);
@@ -213,11 +213,62 @@ describe('MMR tests', () => {
             let merkleProof = this.mmr.getMerkleProof(block2.number);
             let root = this.mmr.getRoot();
             let leafNumber = block2.number - root.start_height +1;
-            let result = MMRTree.verifyMerkleProof(root.hash, root.leavesCount(), leafNumber, 
+            let result = MMRTree.verifyMerkleProof(root.hash, root.leavesCount(), leafNumber,
                 block2, merkleProof);
             expect(result).to.equals(true);
         });
     });
 
-    
+    describe('Serialization', () => {
+        it('Serializes to list', () => {
+            let mmr = new MMRTree();
+
+            node0 = MMRNode.fromBlock(block0);
+            mmr._appendLeaf(node0);
+            node1 = MMRNode.fromBlock(block1);
+            mmr._appendLeaf(node1);
+
+            let serialized = mmr.serialize();
+
+            //
+            //      3
+            //    /   \
+            //   1     2
+            //
+            // Serializes to: [3, 1, -1, -1, 2, -1, -1]
+            //
+
+            expect(serialized.length).to.eq(7);
+            expect(serialized[0].hash).to.exist;
+            expect(serialized[0].left.hash).to.equals(node0.hash);
+            expect(serialized[0].right.hash).to.equals(node1.hash);
+            expect(serialized[1].hash).to.eq(node0.hash);
+            expect(serialized[1].left).to.be.null;
+            expect(serialized[1].right).to.be.null;
+            expect(serialized[2]).to.eq(-1);
+            expect(serialized[3]).to.eq(-1);
+            expect(serialized[4].left).to.be.null;
+            expect(serialized[4].right).to.be.null;
+            expect(serialized[5]).to.eq(-1);
+            expect(serialized[6]).to.eq(-1);
+        });
+
+        it('Deserializes from list to tree', () => {
+            let mmr = new MMRTree();
+
+            node0 = MMRNode.fromBlock(block0);
+            mmr._appendLeaf(node0);
+            node1 = MMRNode.fromBlock(block1);
+            mmr._appendLeaf(node1);
+
+            let serialized = mmr.serialize();
+
+            mmr.deserialize(serialized);
+
+            let mmrRoot = mmr.getRoot();
+            expect(mmrRoot.hash).to.exist;
+            expect(mmrRoot.left.hash).to.equals(node0.hash);
+            expect(mmrRoot.right.hash).to.equals(node1.hash);
+        })
+    });
 });
