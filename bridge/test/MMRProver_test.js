@@ -1,5 +1,6 @@
 
 const MMRProver = artifacts.require('./MMRProver.sol');
+const utils = require('./utils');
 
 function generateRandomHexaByte() {
     let n = Math.floor(Math.random() * 255).toString(16);
@@ -182,5 +183,22 @@ contract('MMRProver', function (accounts) {
     
     it('generate and process tree with 32 terminal nodes', async function () {
         await processTree(32, this.prover);
+    });
+
+    it('getBlocksToProve', async function () {
+        const blockHash = "0x79c54f2563c22ff3673415087a7679adfa2c5f15a216e71e90601e1ca753f219";
+        const blockNumber = 123456789;
+        const gas = await this.prover.getBlocksToProve.estimateGas(blockHash, blockNumber);
+        utils.checkGas(gas);
+        const blocksToProve = await this.prover.getBlocksToProve(blockHash, blockNumber);   
+        assert.equal(27, blocksToProve.length);
+        const firstBlock = blocksToProve[0];
+        const latestBlock = blocksToProve[26];
+        assert.ok(firstBlock.toNumber() > 0);
+        assert.ok(firstBlock.toNumber() < 4572473);
+        assert.equal(4069584, firstBlock.toNumber());
+        assert.ok(latestBlock.toNumber() > 26 * 4572473);
+        assert.ok(latestBlock.toNumber() < blockNumber);
+        assert.equal(122953882, blocksToProve[26].toNumber());
     });
 });
