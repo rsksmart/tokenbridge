@@ -37,6 +37,39 @@ module.exports = class MMRTree {
         let newRight = this._append(root.right, leaf);
         return MMRNode.makeParent(root.left, newRight)
     }
+    
+    getPrefixesSuffixesProof(blockNumber) {
+        return this._createPrefixesSuffixesProof(this.root, blockNumber);
+    }
+    
+    _createPrefixesSuffixesProof(root, blockNumber) {
+        let proof = {
+            prefixes: [],
+            suffixes: []
+        };
+        
+        //if its a leaf we found the block, return empty array to start appending on recursion
+        if (root.isLeaf()) {
+            return proof;
+        }
+        
+        //If its on the left side of the peak
+        if(blockNumber <= root.left.end_height) {
+            //call recursively to get the other complements to the left
+            proof = this._createPrefixesSuffixesProof(root.left, blockNumber);
+            //add the right node as its a complement to get the peak
+            proof.suffixes.push(root.right.hash);
+            proof.prefixes.push('0x');
+        } else {
+            //call recursively to get the other complements to the right
+            proof = this._createPrefixesSuffixesProof(root.right, blockNumber);
+            //add the left node as its a complement to get the peak
+            proof.prefixes.push(root.left.hash);
+            proof.suffixes.push('0x');
+        }
+        
+        return proof;
+    }
 
     getMerkleProof(blockNumber) {
         return this._createMerkleProof(this.root, blockNumber);
@@ -64,6 +97,21 @@ module.exports = class MMRTree {
         return proof;
     }
 
+    static verifyPrefixesSuffixesProof(rootHash, block, prefixes, suffixes) {
+        let hashValue = block.hash;
+        const deep = prefixes.length;
+        
+        for (let k = 0; k < deep; k++) {
+            if (prefixes[k] === '0x') {
+                hashValue = MMRNode.H(hashValue, suffixes[k]);
+            } else {
+                hashValue = MMRNode.H(prefixes[k], hashValue);
+            }
+        }
+        
+        return hashValue == rootHash;
+    }
+    
     static verifyMerkleProof(rootHash, mmrTotalLeaves, leafNumber, block, merkleProof) {
         let leafNumberToCheck = leafNumber -1;
         let remainingLeaves = mmrTotalLeaves;

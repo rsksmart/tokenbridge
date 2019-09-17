@@ -217,6 +217,19 @@ describe('MMR tests', () => {
                 block2, merkleProof);
             expect(result).to.equals(true);
         });
+
+        it('Create and Verify Proof with Prefixes and Suffixes', () => {
+            let proof = this.mmr.getPrefixesSuffixesProof(block2.number);
+            
+            expect(proof.prefixes.length).to.equals(3);
+            expect(proof.suffixes.length).to.equals(3);
+            
+            let root = this.mmr.getRoot();
+            
+            expect(MMRTree.verifyPrefixesSuffixesProof(root.hash, block2,
+                proof.prefixes, proof.suffixes))
+                .to.equals(true);
+            });
     });
 
     describe('Serialization', () => {
