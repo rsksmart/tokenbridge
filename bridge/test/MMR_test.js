@@ -1,6 +1,9 @@
 
 const MMR = artifacts.require('./MMR.sol');
 
+const utils = require('./utils');
+const MMRTree = require('../../submitter/src/lib/mmr/MMRTree');
+
 let jsonrpcid = new Date().getTime();
 
 // from https://ethereum.stackexchange.com/questions/11444/web3-js-with-promisified-api
@@ -42,8 +45,7 @@ contract('MMR', function (accounts) {
     it('calculate one block', async function() {
         const initialBlock = await this.mmr.nblock();
         const result = await this.mmr.calculate();
-        
-        assert.ok(result);
+        utils.checkRcpt(result);
         assert.ok(result.logs);
         assert.equal(result.logs.length, 1);
         assert.equal(result.logs[0].event, "MerkleMountainRange");
@@ -51,7 +53,6 @@ contract('MMR', function (accounts) {
         assert.equal(result.logs[0].args.noblock.toNumber(), initialBlock.toNumber() + 1);
         
         const newBlock = await this.mmr.nblock();
-        
         assert.equal(newBlock.toNumber(), initialBlock.toNumber() + 1);
         
         const nhashes = await this.mmr.nhashes();
@@ -76,7 +77,7 @@ contract('MMR', function (accounts) {
         await this.mmr.calculate();
 
         const result = await this.mmr.calculate();
-        assert.ok(result);
+        utils.checkRcpt(result);
         assert.ok(result.logs);
         assert.equal(result.logs.length, 1);
         assert.equal(result.logs[0].event, "MerkleMountainRange");
@@ -113,8 +114,7 @@ contract('MMR', function (accounts) {
         await mineOneBlock();
 
         const result = await this.mmr.calculate();
-        
-        assert.ok(result);
+        utils.checkRcpt(result);
         assert.ok(result.logs);
         assert.equal(result.logs.length, 4);
         
@@ -122,6 +122,53 @@ contract('MMR', function (accounts) {
             assert.equal(result.logs[k].event, "MerkleMountainRange");
             assert.equal(result.logs[k].address, this.mmr.address);
             assert.equal(result.logs[k].args.noblock.toNumber(), initialBlock.toNumber() + k + 1);
+        }
+    });
+
+    it('compare with submitter MMR', async function() {        
+        const mmrTree = new MMRTree();
+        const initialBlock = await this.mmr.nblock();
+        await mineOneBlock();
+        await mineOneBlock();
+        await mineOneBlock();
+
+        const result = await this.mmr.calculate();
+        utils.checkRcpt(result);
+        assert.ok(result.logs);
+        assert.equal(result.logs.length, 4);
+
+        for (let k = 0; k < 4; k++) {
+            assert.equal(result.logs[k].event, "MerkleMountainRange");
+            assert.equal(result.logs[k].address, this.mmr.address);
+            assert.equal(result.logs[k].args.noblock.toNumber(), initialBlock.toNumber() + k + 1);
+            
+            var block = await web3.eth.getBlock(initialBlock.toNumber() + k);
+            mmrTree.appendBlock(block);
+            assert.equal(mmrTree.getRoot().hash, result.logs[k].args.mmr);
+        }
+    });
+
+    it('More than 64 blocks (80)', async function() {        
+        const mmrTree = new MMRTree();
+        const initialBlock = await this.mmr.nblock();
+        const minedBlocks = 80;
+        for(var i = 0; i < minedBlocks; i++) {
+            await mineOneBlock();
+        }
+
+        const result = await this.mmr.calculate();
+        utils.checkRcpt(result);
+        assert.ok(result.logs);
+        assert.equal(result.logs.length, minedBlocks + 1);
+
+        for (let k = 0; k < minedBlocks +1; k++) {
+            assert.equal(result.logs[k].event, "MerkleMountainRange");
+            assert.equal(result.logs[k].address, this.mmr.address);
+            assert.equal(result.logs[k].args.noblock.toNumber(), initialBlock.toNumber() + k + 1);
+            
+            var block = await web3.eth.getBlock(initialBlock.toNumber() + k);
+            mmrTree.appendBlock(block);
+            assert.equal(mmrTree.getRoot().hash, result.logs[k].args.mmr);
         }
     });
 });

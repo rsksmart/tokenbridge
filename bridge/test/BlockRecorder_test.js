@@ -23,7 +23,6 @@ contract('BlockRecorder', function (accounts) {
     it('record block', async function () {
         const data1 = Buffer.from(block1.substring(2), 'hex');
         const hash1b = web3.utils.sha3(data1);
-        console.log(hash1b);
         
         assert.equal(hash1b, hash1);
         
@@ -37,7 +36,6 @@ contract('BlockRecorder', function (accounts) {
     it('record block 2', async function () {
         const data2 = Buffer.from(block2.substring(2), 'hex');
         const hash2b = web3.utils.sha3(data2);
-        console.log(hash2b);
         
         assert.equal(hash2b, hash2);
         
