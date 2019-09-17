@@ -472,7 +472,7 @@ contract('RlpLibrary', function (accounts) {
             const p = offset * 2 + 2;
             const l = p + length * 2;
             
-            console.log(k, ':', str.substring(p, l));
+            //console.log(k, ':', str.substring(p, l));
         }
     });
     
@@ -501,7 +501,7 @@ contract('RlpLibrary', function (accounts) {
     it('get items from receipt2', async function () {
         const str = receipt2;
         
-        console.log('receipt 2');
+        //console.log('receipt 2');
         const nitems = (await this.helper.getRlpNumItems(str, 0)).toNumber();
         const items = await this.helper.getRlpItems(str, 0);
 
@@ -509,7 +509,7 @@ contract('RlpLibrary', function (accounts) {
         
         assert.equal(nitems, 6);
 
-        console.log('logs');
+        //console.log('logs');
         const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber())).toNumber();
         const items2 = await this.helper.getRlpItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber());
 
@@ -521,7 +521,7 @@ contract('RlpLibrary', function (accounts) {
     it('get items from receipt3', async function () {
         const str = receipt3;
         
-        console.log('receipt 3');
+        //console.log('receipt 3');
         const nitems = (await this.helper.getRlpNumItems(str, 0)).toNumber();
         const items = await this.helper.getRlpItems(str, 0);
         
@@ -529,7 +529,7 @@ contract('RlpLibrary', function (accounts) {
         
         assert.equal(nitems, 6);
         
-        console.log('logs');
+        //console.log('logs');
         const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber())).toNumber();
         const items2 = await this.helper.getRlpItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber());
 
@@ -540,7 +540,7 @@ contract('RlpLibrary', function (accounts) {
         for (let k = 0; k < nitems2; k++) {
             const offset = k === 0 ? items.offsets[3].toNumber() : items2.offsets[k - 1].toNumber() + items2.lengths[k - 1].toNumber();
             
-            console.log('log', k);
+            //console.log('log', k);
             const nitemslog = (await this.helper.getRlpNumItems(str, offset)).toNumber();
             const itemslog = await this.helper.getRlpItems(str, offset);
 
@@ -553,7 +553,7 @@ contract('RlpLibrary', function (accounts) {
     it('get items from receipt4', async function () {
         const str = receipt4;
         
-        console.log('receipt 4');
+        //console.log('receipt 4');
         const nitems = (await this.helper.getRlpNumItems(str, 0)).toNumber();
         const items = await this.helper.getRlpItems(str, 0);
         
@@ -561,7 +561,7 @@ contract('RlpLibrary', function (accounts) {
         
         assert.equal(nitems, 6);
         
-        console.log('logs');
+        //console.log('logs');
         const nitems2 = (await this.helper.getRlpNumItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber())).toNumber();
         const items2 = await this.helper.getRlpItems(str, items.offsets[2].toNumber() + items.lengths[2].toNumber());
 
@@ -572,7 +572,7 @@ contract('RlpLibrary', function (accounts) {
         for (let k = 0; k < nitems2; k++) {
             const offset = k === 0 ? items.offsets[3].toNumber() : items2.offsets[k - 1].toNumber() + items2.lengths[k - 1].toNumber();
             
-            console.log('log', k);
+            //console.log('log', k);
             const nitemslog = (await this.helper.getRlpNumItems(str, offset)).toNumber();
             const itemslog = await this.helper.getRlpItems(str, offset);
 
@@ -623,6 +623,6 @@ function dumpItems(items, nitems, str) {
         const p = offset * 2 + 2;
         const l = p + length * 2;
         
-        console.log(k, ':', str.substring(p, l));
+        //console.log(k, ':', str.substring(p, l));
     }
 }
