@@ -1,0 +1,20 @@
+{
+  "name": "bridge",
+  "private": "true",
+  "version": "1.0.0",
+  "description": "Decentralized Bridge Contracts",
+  "dependencies": {
+    "rlp": "^2.2.3"
+  },
+  "scripts": {
+    "start": "truffle migrate",
+    "test": "truffle test"
+  },
+  "keywords": [
+    "rsk",
+    "decentralized",
+    "bridge",
+    "ethereum"
+  ],
+  "author": "IOVLabs"
+}

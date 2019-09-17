@@ -51,7 +51,9 @@ Note: To make it work both ways you'll need all of the contracts deployed in bot
 ![Components Diagram](./docs/images/components_diagram.jpg?raw=true "Components Diagram")
 
 ## References
-
+- [FlyClient: Super-Light Clients for Cryptocurrencies](https://eprint.iacr.org/2019/226.pdf)
+- [Mimblewimble Grin](https://github.com/mimblewimble/grin/blob/master/doc/mmr.md)
+- [The Tari Project](https://docs.rs/merklemountainrange/0.0.1/src/merklemountainrange/lib.rs.html#23-183)
 - [Retrofitting a two-way peg between blockchains](https://people.cs.uchicago.edu/~teutsch/papers/dogethereum.pdf)
 - [Sentinel Bridge RSK](https://github.com/InfoCorp-Technologies/sentinel-bridge-rsk)
 - [Parity Bridge](https://github.com/paritytech/parity-bridge)
@@ -63,5 +65,4 @@ Note: To make it work both ways you'll need all of the contracts deployed in bot
 - [How BancorX Works: From Ethereum to EOS and Back Again](https://blog.bancor.network/how-bancorx-works-from-ethereum-to-eos-and-back-again-649336ea1c4)
 - [How do Relay Tokens work?](https://support.bancor.network/hc/en-us/articles/360000471472-How-do-Relay-Tokens-work-)
 - [XCLAIM: Trustless, Interoperable, Cryptocurrency-Backed Assets](https://eprint.iacr.org/2018/643.pdf)
-- [Mimblewimble Grin](https://github.com/mimblewimble/grin/blob/master/doc/mmr.md)
-- [The Tari Project](https://docs.rs/merklemountainrange/0.0.1/src/merklemountainrange/lib.rs.html#23-183)
+

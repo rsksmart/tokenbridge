@@ -15,7 +15,7 @@
   },
   "scripts": {
     "start": "node ./src/main.js",
-    "test": "mocha test/**/*.test.js --recursive",
+    "test": "mocha --recursive \"test/**/*.test.js\" ",
     "mmrsync": "node --max-old-space-size=2048 ./src/mmrSync.js"
   },
   "keywords": [

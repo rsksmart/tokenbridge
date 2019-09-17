@@ -3,7 +3,8 @@
 ## Install Truffle
 
 ```
-npm install -g truffle@4.1.14
+npm install -g truffle@5.0.33
+npm install
 ```
 
 ## Running test
