@@ -4,4 +4,6 @@ module.exports = {
     runEvery: 1, // In minutes,
     mmrSyncInterval: 30, // In minutes
     confirmations: 0,
+    mmrBlockConfirmations: 10,
+    rskMMRStoragePath: './src/services/rsk'
 }

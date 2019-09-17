@@ -53,6 +53,21 @@ module.exports = class MMRNode {
         return newNode;
     }
 
+    static fromValues(block) {
+        let newNode = new MMRNode();
+        newNode.hash = block.hash;
+        newNode.left = null;
+        newNode.right = null;
+        newNode.start_height = block.start_height;
+        newNode.end_height = block.end_height;
+        newNode.start_time = block.start_time;
+        newNode.end_time = block.end_time;
+        newNode.start_difficulty = new BN(block.start_difficulty);
+        newNode.end_difficulty = new BN(block.end_difficulty);
+        newNode.total_difficulty = new BN(block.total_difficulty);
+        return newNode;
+    }
+
     isLeaf() {
         return this.left == null;
     }
@@ -80,6 +95,6 @@ module.exports = class MMRNode {
 
     toString() {
         return `{ hash:${this.hash}, start_height:${this.start_height}, end_height:${this.end_height}, ` +
-        `left:${this.left.hash}, right:${this.right.hash} }`;
+        `left:${this.left ? this.left.hash : null}, right:${this.right ? this.right.hash : null} }`;
     }
 }

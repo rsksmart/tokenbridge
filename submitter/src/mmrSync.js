@@ -31,5 +31,23 @@ async function run() {
     }
 }
 
+process.stdin.resume(); // so the program will not close instantly
+
+async function exitHandler() {
+    await rskMMR.exitHandler();
+
+    process.exit();
+}
+
+// catches ctrl+c event
+process.on('SIGINT', exitHandler);
+
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler);
+process.on('SIGUSR2', exitHandler);
+
+//catches uncaught exceptions
+process.on('uncaughtException', exitHandler);
+
 // export so we can test it
 module.exports = { scheduler };

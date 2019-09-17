@@ -19,7 +19,7 @@ async function sleep(ms) {
 
 function hexStringToBuffer(hexString) {
     return ethUtils.toBuffer(ethUtils.addHexPrefix(hexString));
-}  
+}
 
 function stripHexPrefix(str) {
     return (str.indexOf('0x') == 0) ? str.slice(2) : str;
@@ -29,10 +29,17 @@ function privateToAddress(privateKey) {
     return ethUtils.bufferToHex(ethUtils.privateToAddress(this.hexStringToBuffer(privateKey)));
 }
 
-module.exports = { 
+// Returns current memory allocated in MB
+function memoryUsage() {
+    let { heapUsed } = process.memoryUsage();
+    return Math.round(heapUsed / (1024 * 1024));
+}
+
+module.exports = {
     waitBlocks: waitBlocks,
     sleep: sleep,
     hexStringToBuffer: hexStringToBuffer,
     privateToAddress: privateToAddress,
-    stripHexPrefix: stripHexPrefix
+    stripHexPrefix: stripHexPrefix,
+    memoryUsage: memoryUsage
 }
