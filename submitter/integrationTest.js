@@ -16,6 +16,7 @@ const TransactionSender = require('./src/lib/TransactionSender.js');
 
 
 const logger = log4js.getLogger('test');
+logger.info('----------- Integration Test ---------------------');
 logger.info('RSK Host', config.rsk.host);
 logger.info('ETH Host', config.eth.host);
 

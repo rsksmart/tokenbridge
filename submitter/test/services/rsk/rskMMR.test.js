@@ -26,7 +26,7 @@ const block1 = {
     timestamp: 1566252082
 };
 
-describe('RskMMR tests', () => {
+describe('Service RskMMR tests', () => {
 
     it.skip('Creates the mmr tree from rsk blocks', async (done) => { // Long process runing, skipped by default
         let rskMMR = new RskMMR(testConfig, console);
