@@ -1,7 +1,7 @@
 pragma solidity >=0.4.21 <0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "./EventsLibrary.sol";
+import "../EventsLibrary.sol";
 
 contract EventsHelper {
     function getTokenEvents(bytes memory receipt, address origin, bytes32 topic) public pure returns(address[] memory tokens, string[] memory symbols) {
