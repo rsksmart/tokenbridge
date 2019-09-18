@@ -1,6 +1,7 @@
 
 const MMRProver = artifacts.require('./MMRProver.sol');
 const BlockRecorder = artifacts.require('./BlockRecorder.sol');
+
 const utils = require('./utils');
 
 function generateRandomHexaByte() {
@@ -255,6 +256,14 @@ contract('MMRProver', function (accounts) {
                 assert.equal(mmr, 0);
             }
         }
+    });
+    
+    it('only owner can set block recorder', async function () {
+        await utils.expectThrow(this.prover.setBlockRecorder(accounts[1], { from: accounts[2] }));
+        
+        const recorder = await this.prover.blockRecorder();
+        
+        assert.equal(recorder, this.recorder.address);
     });
 
     it('getBlocksToProve', async function () {
