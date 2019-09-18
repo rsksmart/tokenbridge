@@ -18,8 +18,10 @@ const nodes = [
 ];
 
 contract('EventsProcessor', function (accounts) {
+    const mmrProver = accounts[1];
+    
     beforeEach(async function () {
-        this.recorder = await BlockRecorder.new();
+        this.recorder = await BlockRecorder.new(mmrProver);
         const data = Buffer.from(block.substring(2), 'hex');
         await this.recorder.recordBlock(data);
         this.prover = await ReceiptProver.new(this.recorder.address);

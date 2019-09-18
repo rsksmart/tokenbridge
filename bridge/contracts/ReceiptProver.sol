@@ -16,7 +16,7 @@ contract ReceiptProver {
     function receiptIsValid(bytes32 blkhash, bytes memory receipt, bytes[] memory prefixes, bytes[] memory suffixes) public view returns (bool) {
         bytes32 receiptRoot = ProofLibrary.calculateRoot(receipt, prefixes, suffixes);
         
-        return blockRecorder.blockData(blkhash) == receiptRoot;
+        return blockRecorder.getBlockReceiptRoot(blkhash) == receiptRoot;
     }
 }
 

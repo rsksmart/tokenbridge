@@ -15,8 +15,10 @@ const nodes1 = [
 ];
 
 contract('ReceiptProver', function (accounts) {
+    const mmrProver = accounts[1];
+    
     beforeEach(async function () {
-        this.recorder = await BlockRecorder.new();
+        this.recorder = await BlockRecorder.new(mmrProver);
         this.prover = await ReceiptProver.new(this.recorder.address);
     });
     
