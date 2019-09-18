@@ -1,5 +1,6 @@
 const Bridge = artifacts.require("Bridge");
 const MMR = artifacts.require("MMR");
+const MMRProver = artifacts.require("MMRProver");
 const MainToken = artifacts.require('MainToken');
 const BlockRecorder = artifacts.require('BlockRecorder');
 const ReceiptProver = artifacts.require('ReceiptProver');
@@ -16,7 +17,9 @@ module.exports = function(deployer, network) {
     
     deployer.deploy(MMR)
     .then(() => MMR.deployed())
-    .then(() => deployer.deploy(BlockRecorder))
+    .then(() => deployer.deploy(MMRProver))
+    .then(() => MMRProver.deployed())
+    .then(() => deployer.deploy(BlockRecorder, MMRProver.address))
     .then(() => BlockRecorder.deployed())
     .then(() => deployer.deploy(ReceiptProver, BlockRecorder.address))
     .then(() => ReceiptProver.deployed())
@@ -46,6 +49,7 @@ module.exports = function(deployer, network) {
         const currentProvider = deployer.networks[network];
         const config = {
             mmr: MMR.address,
+            mmrProver: MMRProver.address,
             bridge: Bridge.address,
             fromBlock: blockNumber,
             privateKey: "",
@@ -63,5 +67,4 @@ module.exports = function(deployer, network) {
         
         fs.writeFileSync(`../submitter/${network}.json`, JSON.stringify(config, null, 4));
     });
-    
 };
