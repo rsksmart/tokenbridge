@@ -4,6 +4,64 @@ pragma experimental ABIEncoderV2;
 import "./ProofLibrary.sol";
 
 contract MMRProver {
+    struct ProofData {
+        uint blockNumber;
+        bytes32 blockHash;
+        bytes32 mmrRoot;
+        uint[] blocksToProve;
+        bool[] proved;
+    }
+    
+    mapping (bytes32 => ProofData) public proofs;
+    
+    function getProofId(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked(blockNumber, blockHash, mmrRoot));
+    }
+    
+    function processProof(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot, uint otherBlockNumber, bytes memory initial, bytes[] memory prefixes, bytes[] memory suffixes) public returns (bool) {
+        bytes32 proofId = getProofId(blockNumber, blockHash, mmrRoot);
+        
+        ProofData storage proof = proofs[proofId];
+        
+        if (alreadyProved(proof, otherBlockNumber))
+            return true;
+            
+        if (!mmrIsValid(mmrRoot, initial, prefixes, suffixes))
+            return false;
+            
+        if (proof.blockNumber == 0) {
+            proof.blockNumber = blockNumber;
+            proof.blockHash = blockHash;
+            proof.mmrRoot = mmrRoot;
+            proof.blocksToProve = getBlocksToProve(blockHash, blockNumber);
+            
+            uint ntoprove = proof.blocksToProve.length;
+            
+            for (uint k = 0; k < ntoprove; k++)
+                proof.proved.push(false);
+        }
+            
+        uint ntoprove = proof.blocksToProve.length;
+        
+        for (uint k = 0; k < ntoprove; k++)
+            if (proof.blocksToProve[k] == otherBlockNumber) {
+                proof.proved[k] = true;
+                break;
+            }
+    }
+    
+    function alreadyProved(ProofData storage proof, uint otherBlockNumber) private returns (bool) {
+        if (proof.blockNumber == 0)
+            return false;
+            
+        uint ntoprove = proof.blocksToProve.length;
+            
+        for (uint k = 0; k < ntoprove; k++)
+            if (proof.blocksToProve[k] == otherBlockNumber)
+                return proof.proved[k];
+                
+        return false;
+    }
 
     function mmrIsValid(bytes32 finalmmr, bytes memory initial, bytes[] memory prefixes, bytes[] memory suffixes) public pure returns (bool) {
         bytes32 root = ProofLibrary.calculateRoot(initial, prefixes, suffixes);

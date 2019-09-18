@@ -184,6 +184,34 @@ contract('MMRProver', function (accounts) {
     it('generate and process tree with 32 terminal nodes', async function () {
         await processTree(32, this.prover);
     });
+    
+    it('process first proof', async function () {
+        const nodes = [];
+        const nnodes = 32;
+        
+        for (let k = 0; k < nnodes; k++)
+            nodes.push(generateRandomHash());
+    
+        const tree = makeTree(nodes);
+
+        const blockHash = generateRandomHash();
+        const blockNumber = nnodes + 1;
+        
+        const paths = [];
+        makePaths(tree, paths, []);
+
+        const proof = makeProof(paths[nnodes - 1]);
+        await this.prover.processProof(blockNumber, blockHash, tree.hash, blockNumber - 1, nodes[nnodes - 1], proof.prefixes, proof.suffixes);
+        
+        console.log('tree hash', tree.hash);
+        const proofId = await this.prover.getProofId(blockNumber, blockHash, tree.hash);
+        
+        console.log(proofId);
+        
+        const newproof = await this.prover.proofs(proofId);
+        
+        console.dir(newproof);
+    });
 
     it('getBlocksToProve', async function () {
         const blockHash = "0x79c54f2563c22ff3673415087a7679adfa2c5f15a216e71e90601e1ca753f219";
