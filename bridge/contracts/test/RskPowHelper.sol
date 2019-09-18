@@ -1,6 +1,6 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "./RskPowLibrary.sol";
+import "../RskPowLibrary.sol";
 
 contract RskPowHelper {
     function isValid(uint256 difficulty, bytes memory bitcoinMergedMiningHeader) public pure returns (bool) {

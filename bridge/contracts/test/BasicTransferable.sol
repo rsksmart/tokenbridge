@@ -1,6 +1,6 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "./Transferable.sol";
+import "../Transferable.sol";
 
 contract SimpleTransferable is Transferable {
     uint public ntransfers;
