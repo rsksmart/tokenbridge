@@ -1,6 +1,6 @@
 pragma solidity >=0.4.21 <0.6.0;
 
-import "./RlpLibrary.sol";
+import "../RlpLibrary.sol";
 
 contract RlpHelper {
     function getRlpTotalLength(bytes memory data, uint offset) public pure returns (uint) {
