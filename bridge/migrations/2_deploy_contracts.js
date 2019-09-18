@@ -38,6 +38,10 @@ module.exports = function(deployer, network) {
     .then((processorInstance) => {
         processorInstance.setTransferable(Bridge.address)
     })
+    .then(() => MMRProver.deployed())
+    .then((mmrProverInstance) => {
+        mmrProverInstance.setBlockRecorder(BlockRecorder.address)
+    })
     .then( () => {
         if(!network.toLowerCase().includes('mainnet')) {
             return deployer.deploy(MainToken, 'MAIN', 'MAIN', 18, web3.utils.toWei('1000'))

@@ -1,5 +1,6 @@
 
 const MMRProver = artifacts.require('./MMRProver.sol');
+const BlockRecorder = artifacts.require('./BlockRecorder.sol');
 const utils = require('./utils');
 
 function generateRandomHexaByte() {
@@ -112,6 +113,9 @@ async function processTree(nnodes, prover) {
 contract('MMRProver', function (accounts) {
     beforeEach(async function () {
         this.prover = await MMRProver.new();
+        this.recorder = await BlockRecorder.new(this.prover.address);
+        
+        await this.prover.setBlockRecorder(this.recorder.address);
     });
     
     it('prove tree with two nodes', async function () {
@@ -185,7 +189,7 @@ contract('MMRProver', function (accounts) {
         await processTree(32, this.prover);
     });
     
-    it('process first proof', async function () {
+    it('process proof', async function () {
         const nodes = [];
         const nnodes = 32;
         
@@ -194,23 +198,63 @@ contract('MMRProver', function (accounts) {
     
         const tree = makeTree(nodes);
 
-        const blockHash = generateRandomHash();
-        const blockNumber = nnodes + 1;
+        const blockHash = '0x' + generateRandomHash().toString('hex');
+        const blockNumber = nnodes;
         
         const paths = [];
         makePaths(tree, paths, []);
 
         const proof = makeProof(paths[nnodes - 1]);
-        await this.prover.processProof(blockNumber, blockHash, tree.hash, blockNumber - 1, nodes[nnodes - 1], proof.prefixes, proof.suffixes);
         
-        console.log('tree hash', tree.hash);
-        const proofId = await this.prover.getProofId(blockNumber, blockHash, tree.hash);
+        const mmrRoot = '0x' + tree.hash.toString('hex');
         
-        console.log(proofId);
+        await this.prover.initProcessProof(blockNumber, blockHash, mmrRoot);
+        
+        const proofId = await this.prover.getProofId(blockNumber, blockHash, mmrRoot);
         
         const newproof = await this.prover.proofs(proofId);
         
-        console.dir(newproof);
+        assert.equal(newproof.blockNumber, blockNumber);
+        assert.equal(newproof.blockHash, blockHash);
+        assert.equal(newproof.mmrRoot, mmrRoot);
+        
+        const status = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
+        
+        assert.equal(status.blocksToProve.length, 5);
+        assert.equal(status.proved.length, 5);
+        
+        for (let k = 0; k < status.proved.length; k++)
+            assert.equal(status.proved[k], false);
+        
+        for (let k = 0; k < status.proved.length; k++) {
+            const nblock = status.blocksToProve[k];            
+            const proof = makeProof(paths[nblock]);
+            
+            await this.prover.processBlockProof(blockNumber, blockHash, mmrRoot, nblock, nodes[nblock], proof.prefixes, proof.suffixes);
+            
+            const newstatus = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
+            
+            assert.equal(newstatus.blocksToProve.length, 5);
+            assert.equal(newstatus.proved.length, 5);
+            
+            for (let j = 0; j <= k; j++)
+                assert.equal(newstatus.proved[j], true);
+            
+            for (let j = k + 1; j < status.blocksToProve.length; j++)
+                assert.equal(newstatus.proved[j], false);
+            
+            const proved = await this.prover.isProved(blockNumber, blockHash, mmrRoot);
+            const mmr = await this.recorder.getBlockMMRRoot(blockHash);       
+            
+            if (k == status.blocksToProve.length - 1) {
+                assert.ok(proved);
+                assert.equal(mmr, mmrRoot);
+            }
+            else {
+                assert.ok(!proved);
+                assert.equal(mmr, 0);
+            }
+        }
     });
 
     it('getBlocksToProve', async function () {

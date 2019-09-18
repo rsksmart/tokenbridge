@@ -2,8 +2,12 @@ pragma solidity >=0.4.21 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "./ProofLibrary.sol";
+import "./BlockRecorder.sol";
 
 contract MMRProver {
+    address public owner;
+    BlockRecorder public blockRecorder;
+    
     struct ProofData {
         uint blockNumber;
         bytes32 blockHash;
@@ -14,33 +18,56 @@ contract MMRProver {
     
     mapping (bytes32 => ProofData) public proofs;
     
+    modifier onlyOwner() {
+        require(owner == msg.sender);
+        _;
+    }
+    
+    constructor() public {
+        owner = msg.sender;
+    }
+    
+    function setBlockRecorder(BlockRecorder recorder) public onlyOwner {
+        blockRecorder = recorder;
+    }
+    
     function getProofId(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(blockNumber, blockHash, mmrRoot));
     }
     
-    function processProof(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot, uint otherBlockNumber, bytes memory initial, bytes[] memory prefixes, bytes[] memory suffixes) public returns (bool) {
+    function initProcessProof(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public {
         bytes32 proofId = getProofId(blockNumber, blockHash, mmrRoot);
         
         ProofData storage proof = proofs[proofId];
         
+        if (proof.blockNumber != 0)
+            return;
+            
+        proof.blockNumber = blockNumber;
+        proof.blockHash = blockHash;
+        proof.mmrRoot = mmrRoot;
+        proof.blocksToProve = getBlocksToProve(blockHash, blockNumber);
+        
+        uint ntoprove = proof.blocksToProve.length;
+        
+        for (uint k = 0; k < ntoprove; k++)
+            proof.proved.push(false);
+    }
+    
+    function processBlockProof(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot, uint otherBlockNumber, bytes memory initial, bytes[] memory prefixes, bytes[] memory suffixes) public returns (bool) {
+        bytes32 proofId = getProofId(blockNumber, blockHash, mmrRoot);
+        
+        ProofData storage proof = proofs[proofId];
+        
+        if (proof.blockNumber == 0)
+            return false;
+            
         if (alreadyProved(proof, otherBlockNumber))
             return true;
             
         if (!mmrIsValid(mmrRoot, initial, prefixes, suffixes))
             return false;
-            
-        if (proof.blockNumber == 0) {
-            proof.blockNumber = blockNumber;
-            proof.blockHash = blockHash;
-            proof.mmrRoot = mmrRoot;
-            proof.blocksToProve = getBlocksToProve(blockHash, blockNumber);
-            
-            uint ntoprove = proof.blocksToProve.length;
-            
-            for (uint k = 0; k < ntoprove; k++)
-                proof.proved.push(false);
-        }
-            
+                        
         uint ntoprove = proof.blocksToProve.length;
         
         for (uint k = 0; k < ntoprove; k++)
@@ -48,6 +75,46 @@ contract MMRProver {
                 proof.proved[k] = true;
                 break;
             }
+            
+        if (allBlocksProved(proof))
+            blockRecorder.recordMMR(proof.blockHash, proof.mmrRoot);
+    }
+    
+    function allBlocksProved(ProofData storage proof) private view returns (bool) {
+        if (proof.blockNumber == 0)
+            return false;
+            
+        uint nblocks = proof.blocksToProve.length;
+        
+        for (uint k = 0; k < nblocks; k++)
+            if (proof.proved[k] == false)
+                return false;
+                
+        return true;
+    }
+    
+    function isProved(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public view returns (bool) {
+        bytes32 proofId = getProofId(blockNumber, blockHash, mmrRoot);
+        
+        ProofData storage proof = proofs[proofId];
+
+        return allBlocksProved(proof);
+    }
+    
+    function getProofStatus(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public view returns (uint[] memory blocksToProve, bool[] memory proved) {
+        bytes32 proofId = getProofId(blockNumber, blockHash, mmrRoot);
+        
+        ProofData storage proof = proofs[proofId];
+        
+        uint nblocks = proof.blocksToProve.length;
+        
+        blocksToProve = new uint[](nblocks);
+        proved = new bool[](nblocks);
+        
+        for (uint k = 0; k < nblocks; k++) {
+            blocksToProve[k] = proof.blocksToProve[k];
+            proved[k] = proof.proved[k];
+        }
     }
     
     function alreadyProved(ProofData storage proof, uint otherBlockNumber) private returns (bool) {
