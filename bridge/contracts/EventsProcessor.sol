@@ -45,7 +45,7 @@ contract EventsProcessor {
         if (processed[hash])
             return;
             
-        require(prover.receiptIsValid(blkhash, receipt, prefixes, suffixes));
+        require(prover.receiptIsValid(blkhash, receipt, prefixes, suffixes), "Invalid receipt");
 
         EventsLibrary.TokenEvent[] memory tkevents = EventsLibrary.getTokenEvents(receipt, origin, tokenTopic);
         uint ntkevents = tkevents.length;

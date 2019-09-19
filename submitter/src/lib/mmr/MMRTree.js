@@ -164,4 +164,25 @@ module.exports = class MMRTree {
         this._serializeTree(root.left, list);
         this._serializeTree(root.right, list);
     }
+
+    getLeaf(blockNumber) {
+        return this._getLeaf(this.root, blockNumber);
+    }
+
+    _getLeaf(root, blockNumber) {
+        //if its a leaf we found the block, return empty array to start appending on recursion
+        if (root.isLeaf()) {
+            return root;
+        }
+        let result = null;
+        //If its on the left side of the peak
+        if(blockNumber <= root.left.end_height){
+            //call recursively to get the leaf
+            result =  this._getLeaf(root.left, blockNumber);
+        } else {
+            //call recursively to get the leaf
+            result =  this._getLeaf(root.right, blockNumber);
+        }
+        return result;
+    }
 }

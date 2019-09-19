@@ -5,6 +5,7 @@ const logConfig = require('../log-config.json');
 log4js.configure(logConfig);
 //Services
 const Scheduler = require('./services/Scheduler.js');
+const MMRController = require('./lib/mmr/MMRController.js');
 const RskMMR = require('./services/rsk/RskMMR.js');
 const RskCrossToEth = require('./services/rsk/RskCrossToEth.js');
 const RskCreateEvent = require('./services/rsk/RskCreateEvent.js');
@@ -14,8 +15,9 @@ const logger = log4js.getLogger('main');
 logger.info('RSK Host', config.rskHost);
 logger.info('ETH Host', config.ethHost);
 
-const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'));
-const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'));
+const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
+const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
+const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'), mmrController);
 const rskCreateEvent = new RskCreateEvent(config, log4js.getLogger('RSK-CREATE-EVENT'));
 
 let pollingInterval = config.runEvery *1000*60; //In Minutes

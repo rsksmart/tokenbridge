@@ -11,6 +11,10 @@ const fs = require('fs');
 const blocksBetweenCrossEvents = 0;
 const minimumPedingTransfersCount = 0;
 
+function shouldDeployToken(network) {
+    return !network.toLowerCase().includes('mainnet');
+}
+
 module.exports = function(deployer, network) {
     const crossTopic = web3.utils.sha3('Cross(address,address,uint256)');
     const tokenTopic = web3.utils.sha3('Token(address,string)');
@@ -43,7 +47,7 @@ module.exports = function(deployer, network) {
         mmrProverInstance.setBlockRecorder(BlockRecorder.address)
     })
     .then( () => {
-        if(!network.toLowerCase().includes('mainnet')) {
+        if(shouldDeployToken(network)) {
             return deployer.deploy(MainToken, 'MAIN', 'MAIN', 18, web3.utils.toWei('1000'))
                 .then(() => MainToken.deployed());
         }
@@ -57,12 +61,13 @@ module.exports = function(deployer, network) {
             bridge: Bridge.address,
             fromBlock: blockNumber,
             privateKey: "",
-            testToken: MainToken.address,
             blockRecorder: BlockRecorder.address,
             receiptProver: ReceiptProver.address,
             eventsProcessor: EventsProcessor.address
         };
-        
+        if(shouldDeployToken(network)) {
+            config.testToken = MainToken.address;
+        }
         if (currentProvider.host) {
             let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
             host += currentProvider.host + ((currentProvider.port) ? `:${currentProvider.port}` : '');

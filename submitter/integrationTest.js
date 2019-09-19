@@ -8,6 +8,7 @@ log4js.configure(logConfig);
 const RskMMR = require('./src/services/rsk/RskMMR.js');
 const RskCrossToEth = require('./src/services/rsk/RskCrossToEth.js');
 const RskCreateEvent = require('./src/services/rsk/RskCreateEvent.js');
+const MMRController = require('./src/lib/mmr/MMRController.js');
 //abis
 const abiBridge = require('./src/abis/Bridge.json');
 const abiMainToken = require('./src/abis/MainToken.json');
@@ -20,8 +21,9 @@ logger.info('----------- Integration Test ---------------------');
 logger.info('RSK Host', config.rsk.host);
 logger.info('ETH Host', config.eth.host);
 
-const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'));
-const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'));
+const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
+const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
+const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'), mmrController);
 const rskCreateEvent = new RskCreateEvent(config, log4js.getLogger('RSK-CREATE-EVENT'));
 
 run();
@@ -36,11 +38,12 @@ async function run() {
 
         const bridgeAddress = config.rsk.bridge;
         let amount = rskWeb3.utils.toWei('1');
-        logger.info('aprove token transfer');
         const senderAddress = await transactionSender.getAddress(config.rsk.privateKey);
-        let data = mainTokenContract.methods.approve(bridgeAddress, amount).encodeABI();
-        console.log(mainTokenContract.options.address);
         const mainTokenAddress = mainTokenContract.options.address;
+        logger.info('Main token addres' + mainTokenAddress + 'Sender Address:' + senderAddress);
+
+        logger.info('aprove token transfer');
+        let data = mainTokenContract.methods.approve(bridgeAddress, amount).encodeABI();
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.rsk.privateKey);
 
         logger.info('bridge receiveTokens (transferFrom)');

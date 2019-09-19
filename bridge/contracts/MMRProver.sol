@@ -117,7 +117,7 @@ contract MMRProver {
         }
     }
     
-    function alreadyProved(ProofData storage proof, uint otherBlockNumber) private returns (bool) {
+    function alreadyProved(ProofData storage proof, uint otherBlockNumber) private view returns (bool) {
         if (proof.blockNumber == 0)
             return false;
             

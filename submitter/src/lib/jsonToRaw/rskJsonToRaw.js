@@ -74,7 +74,7 @@ function getRawBlockHeader(blockHeader, chainId) {
     }
     dataToEncode.push(dataLogList);
     dataToEncode.push(toHex(txReceipt.gasUsed));
-    dataToEncode.push(toHex(txReceipt.status))
+    dataToEncode.push(toHex(txReceipt.status));
     dataToEncode = fixHexCeros(dataToEncode);
 
     return RLP.encode(dataToEncode);
