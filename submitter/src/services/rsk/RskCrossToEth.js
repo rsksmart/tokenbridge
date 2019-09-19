@@ -14,8 +14,12 @@ function calculatePrefixesSuffixes(nodes) {
     const suffixes = [];
     const ns = [];
     
+    for (let k = 0, l = nodes.length; k < l; k++)
+        if (nodes[k].toLowerCase().startsWith('0x'))
+            nodes[k] = nodes[k].substring(2);
+
     for (let k = 0, l = nodes.length; k < l; k++) {
-        if (k + 1 < l && nodes[k+1].indexOf(nodes[k]) >= 0)
+        if (k + 1 < l && nodes[k + 1].indexOf(nodes[k]) >= 0)
             continue;
         
         ns.push(nodes[k]);
@@ -125,11 +129,11 @@ module.exports = class RskCrossToEth {
         let txReceiptHash = Web3.utils.keccak256(rawTxReceipt);
         
         this.logger.info(`Start recordBlock for blockHash:${log.blockHash}, blockHash:${log.blockHash}`);
-        let data = sideBlockRecorderContract.methods.recordBlock('0x' + rawBlockHeader).encodeABI();
+        let data = sideBlockRecorderContract.methods.recordBlock(rawBlockHeader).encodeABI();
         await transactionSender.sendTransaction(sideBlockRecorderContract.options.address, data, 0, this.config.eth.privateKey);
 
         this.logger.info(`Start processReceipt for transactionHash:${log.transactionHash}`);
-        let data2 = sideEventsProcessorContract.methods.processReceipt(log.blockHash, '0x' + rawTxReceipt, prefsuf.prefixes, prefsuf.suffixes).encodeABI();
+        let data2 = sideEventsProcessorContract.methods.processReceipt(log.blockHash, rawTxReceipt, prefsuf.prefixes, prefsuf.suffixes).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data2, 0, this.config.eth.privateKey);
 
         return true;
