@@ -1,10 +1,15 @@
 const expect = require('chai').expect;
 const Web3 = require('web3');
 const fs = require('fs');
-const RskMMR = require('../../../src/services/rsk/RskMMR');
-const MMRNode = require('../../../src/lib/mmr/MMRNode.js');
-const config = require('../../../config');
-const testHelper = require('../../testHelper');
+const log4js = require('log4js');
+
+const MMRController = require('../../src/lib/mmr/MMRController');
+const MMRNode = require('../../src/lib/mmr/MMRNode.js');
+const config = require('../../config');
+const testHelper = require('../testHelper');
+
+const logger = log4js.getLogger('test');
+logger.level = 'info';
 
 const rskWeb3 = new Web3(config.rsk.host);
 const requiredConfirmations = config.mmrBlockConfirmations || 10;
@@ -26,17 +31,17 @@ const block1 = {
     timestamp: 1566252082
 };
 
-describe('Service RskMMR tests', () => {
+describe('MMR Controller tests', () => {
 
     it.skip('Creates the mmr tree from rsk blocks', async (done) => { // Long process runing, skipped by default
-        let rskMMR = new RskMMR(testConfig, console);
+        let mmrController = new MMRController(testConfig, logger);
         let lastBlock = await rskWeb3.eth.getBlockNumber();
 
-        await rskMMR._updateMRRTree();
+        await mmrController.updateMMRTree();
 
-        expect(rskMMR.mmrTree).to.exist;
+        expect(mmrController.mmrTree).to.exist;
 
-        let mmrRoot = rskMMR.mmrTree.getRoot();
+        let mmrRoot = mmrController.mmrTree.getRoot();
         expect(mmrRoot).to.exist;
         expect(mmrRoot.end_height).to.be.greaterThan(0);
         expect(mmrRoot.end_height).to.be.lte(lastBlock - requiredConfirmations);
@@ -45,14 +50,14 @@ describe('Service RskMMR tests', () => {
     });
 
     it('Returns a list of promises from batch', async () => {
-        let rskMMR = new RskMMR(testConfig, console);
+        let mmrController = new MMRController(testConfig, logger);
         let calls = [];
         testHelper.advanceBlock(rskWeb3);
         for (let i = 0; i < 2; i++) {
             calls.push({ fn: rskWeb3.eth.getBlock, blockNumber: i });
         }
 
-        let batchResult = await rskMMR._makeBatchRequest(calls);
+        let batchResult = await mmrController._makeBatchRequest(calls);
 
         expect(batchResult.length).to.eq(2);
         batchResult.forEach((b, i) => {
@@ -61,53 +66,53 @@ describe('Service RskMMR tests', () => {
     });
 
     it('Gets the last block from mmr tree', () => {
-        let rskMMR = new RskMMR({ ...testConfig, rskMMRStoragePath: ' ' }, console);
-        let empty = rskMMR._getNextMMRBlock();
+        let mmrController = new MMRController({ ...testConfig, rskMMRStoragePath: ' ' }, logger);
+        let empty = mmrController._getNextMMRBlock();
 
         expect(empty).to.eq(0);
 
         let node0 = MMRNode.fromBlock(block0);
-        rskMMR.mmrTree._appendLeaf(node0);
+        mmrController.mmrTree._appendLeaf(node0);
 
         let node1 = MMRNode.fromBlock(block1);
-        rskMMR.mmrTree._appendLeaf(node1);
+        mmrController.mmrTree._appendLeaf(node1);
 
-        let last = rskMMR._getNextMMRBlock();
+        let last = mmrController._getNextMMRBlock();
         expect(last).to.eq(block1.number + 1);
     });
 
     it('Saves the current mmr tree', async () => {
-        let rskMMR = new RskMMR(testConfig, console);
-        let path = `${rskMMRStoragePath}/RskMMR.json`;
+        let mmrController = new MMRController(testConfig, logger);
+        let path = `${rskMMRStoragePath}/mmrDB.json`;
 
         let node0 = MMRNode.fromBlock(block0);
-        rskMMR.mmrTree._appendLeaf(node0);
+        mmrController.mmrTree._appendLeaf(node0);
 
         let node1 = MMRNode.fromBlock(block1);
-        rskMMR.mmrTree._appendLeaf(node1);
+        mmrController.mmrTree._appendLeaf(node1);
 
-        rskMMR.exitHandler();
+        await mmrController._save();
 
         expect(fs.existsSync(path)).to.eq(true);
     });
 
     it('Restores the stored mmr tree', async () => {
         // Clear for next run
-        let bakFile = `${testConfig.rskMMRStoragePath}/RskMMR.json`;
+        let bakFile = `${testConfig.rskMMRStoragePath}/mmrDB.json`;
         if (fs.existsSync(bakFile)) {
             fs.truncateSync(bakFile, 0);
         }
 
-        let rskMMR = new RskMMR(testConfig, console);
+        let mmrController = new MMRController(testConfig, logger);
 
         let node0 = MMRNode.fromBlock(block0);
-        rskMMR.mmrTree._appendLeaf(node0);
+        mmrController.mmrTree._appendLeaf(node0);
 
         let node1 = MMRNode.fromBlock(block1);
-        rskMMR.mmrTree._appendLeaf(node1);
+        mmrController.mmrTree._appendLeaf(node1);
 
-        await rskMMR.exitHandler();
-        let mmrTree = rskMMR._restoreMMRTree();
+        await mmrController._save();
+        let mmrTree = mmrController._restoreMMRTree();
 
         let mmrRoot = mmrTree.getRoot();
         expect(mmrRoot.hash).to.exist;

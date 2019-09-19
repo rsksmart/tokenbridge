@@ -65,36 +65,46 @@ module.exports = class TransactionSender {
     }
 
     async sendTransaction(to, data, value, privateKey) {
-        const from = await this.getAddress(privateKey);
-        const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
-        this.client.eth.transactionConfirmationBlocks = 1;
-        const rawTx = await this.createRawTransaction(from, to, data, value);
-        let sendTransactionPromise = null;
-        if (privateKey && privateKey.length) {            
-            let signedTx = this.signRawTransaction(rawTx, privateKey);
-            sendTransactionPromise = this.sendSignedTransaction(signedTx);
-        } else {
-            //If no private key provided we use personal (personal is only for testing)
-            //await this.client.eth.personal.unlockAccount(from);
-            delete rawTx.r;
-            delete rawTx.s;
-            delete rawTx.v;
-            sendTransactionPromise = this.client.eth.sendTransaction(rawTx);
+        var from = null;
+        const stack = new Error().stack;
+        try {
+            from = await this.getAddress(privateKey);
+            //Dry run to check for errores before sending the actual transaction
+            await this.client.eth.call({from:from, to:to, data:data});
+            const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
+            this.client.eth.transactionConfirmationBlocks = 1;
+            const rawTx = await this.createRawTransaction(from, to, data, value);
+            let sendTransactionPromise = null;
+            if (privateKey && privateKey.length) {            
+                let signedTx = this.signRawTransaction(rawTx, privateKey);
+                sendTransactionPromise = this.sendSignedTransaction(signedTx);
+            } else {
+                //If no private key provided we use personal (personal is only for testing)
+                //await this.client.eth.personal.unlockAccount(from);
+                delete rawTx.r;
+                delete rawTx.s;
+                delete rawTx.v;
+                sendTransactionPromise = this.client.eth.sendTransaction(rawTx);
+            }
+            return sendTransactionPromise.then((receipt) => {
+                    this.client.eth.transactionConfirmationBlocks = prevConfirmations;
+                    if(receipt.status == 1) {
+                        this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
+                        return receipt;    
+                    }
+                    this.logger.error('Transaction Failed', receipt);
+                    this.logger.error('RawTx that failed', rawTx);
+                    throw new Error('Transaction Failed:' + stack);                
+                }).catch((err) => {
+                    this.logger.error('sendTransaction Exception', err);
+                    this.logger.error('RawTx that failed', rawTx);
+                    throw new Error('Transaction Failed:' + stack);
+                });
+        } catch(err) {
+            this.logger.error('sendTransaction call Exception', err);
+            this.logger.error('data that failed', {from:from, to:to, data:data});
+            throw new Error('Call Failed:' + stack);
         }
-        return sendTransactionPromise.then((receipt) => {
-                this.client.eth.transactionConfirmationBlocks = prevConfirmations;
-                if(receipt.status == 1) {
-                    this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                    return receipt;    
-                }
-                this.logger.error('Transaction Failed', receipt);
-                this.logger.error('RawTx that failed', rawTx);
-                throw new Error('Transaction Failed');                
-            }).catch((err) => {
-                this.logger.error('sendTransaction Exception', err);
-                this.logger.error('RawTx that failed', rawTx);
-                throw new Error('Transaction Failed');
-            });
     }
 
 }
