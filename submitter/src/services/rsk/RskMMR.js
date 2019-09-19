@@ -30,7 +30,7 @@ module.exports = class RskMMR {
             return true;
         } catch(err) {
             this.logger.error('Exception calling MMR.calculate()', err);
-            process.exit();
+            //process.exit();
         }
     }
 
