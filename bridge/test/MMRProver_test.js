@@ -258,6 +258,80 @@ contract('MMRProver', function (accounts) {
         }
     });
     
+    it('process proof with initial block number', async function () {
+        const nodes = [];
+        const nnodes = 32;
+        const initial = 16;
+        
+        await this.prover.setInitialBlock(initial);
+        
+        for (let k = 0; k < nnodes; k++)
+            nodes.push(generateRandomHash());
+    
+        const tree = makeTree(nodes);
+
+        const blockHash = '0x' + generateRandomHash().toString('hex');
+        const blockNumber = nnodes;
+        
+        const paths = [];
+        makePaths(tree, paths, []);
+
+        const proof = makeProof(paths[nnodes - 1]);
+        
+        const mmrRoot = '0x' + tree.hash.toString('hex');
+        
+        await this.prover.initProcessProof(blockNumber, blockHash, mmrRoot);
+        
+        const proofId = await this.prover.getProofId(blockNumber, blockHash, mmrRoot);
+        
+        const newproof = await this.prover.proofs(proofId);
+        
+        assert.equal(newproof.blockNumber, blockNumber);
+        assert.equal(newproof.blockHash, blockHash);
+        assert.equal(newproof.mmrRoot, mmrRoot);
+        
+        const status = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
+        
+        assert.equal(status.blocksToProve.length, 4);
+        assert.equal(status.proved.length, 4);
+        
+        for (let k = 0; k < status.proved.length; k++)
+            assert.ok(status.blocksToProve[k] >= initial);
+        
+        for (let k = 0; k < status.proved.length; k++)
+            assert.equal(status.proved[k], false);
+        
+        for (let k = 0; k < status.proved.length; k++) {
+            const nblock = status.blocksToProve[k];
+            const proof = makeProof(paths[nblock]);
+            
+            await this.prover.processBlockProof(blockNumber, blockHash, mmrRoot, nblock, nodes[nblock], proof.prefixes, proof.suffixes);
+            
+            const newstatus = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
+            
+            assert.equal(newstatus.blocksToProve.length, 4);
+            assert.equal(newstatus.proved.length, 4);
+            
+            for (let j = 0; j <= k; j++)
+                assert.equal(newstatus.proved[j], true);
+            
+            for (let j = k + 1; j < status.blocksToProve.length; j++)
+                assert.equal(newstatus.proved[j], false);
+            
+            const proved = await this.prover.isProved(blockNumber, blockHash, mmrRoot);
+            const mmr = await this.recorder.getBlockMMRRoot(blockHash);       
+            
+            if (k == status.blocksToProve.length - 1) {
+                assert.ok(proved);
+                assert.equal(mmr, mmrRoot);
+            }
+            else {
+                assert.ok(!proved);
+                assert.equal(mmr, 0);
+            }
+        }
+    });
+    
     it('only owner can set block recorder', async function () {
         await utils.expectThrow(this.prover.setBlockRecorder(accounts[1], { from: accounts[2] }));
         
@@ -266,6 +340,14 @@ contract('MMRProver', function (accounts) {
         assert.equal(recorder, this.recorder.address);
     });
 
+    it('only owner can set initial block number', async function () {
+        await utils.expectThrow(this.prover.setInitialBlock(10, { from: accounts[2] }));
+        
+        const initial = await this.prover.initialBlock();
+        
+        assert.equal(initial, 0);
+    });
+    
     it('getBlocksToProve', async function () {
         const blockHash = "0x79c54f2563c22ff3673415087a7679adfa2c5f15a216e71e90601e1ca753f219";
         const blockNumber = 123456789;
