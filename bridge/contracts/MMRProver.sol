@@ -6,6 +6,7 @@ import "./BlockRecorder.sol";
 
 contract MMRProver {
     address public owner;
+    uint public initialBlock;
     BlockRecorder public blockRecorder;
     
     struct ProofData {
@@ -29,6 +30,10 @@ contract MMRProver {
     
     function setBlockRecorder(BlockRecorder recorder) public onlyOwner {
         blockRecorder = recorder;
+    }
+    
+    function setInitialBlock(uint initial) public onlyOwner {
+        initialBlock = initial;
     }
     
     function getProofId(uint blockNumber, bytes32 blockHash, bytes32 mmrRoot) public pure returns (bytes32) {
@@ -135,14 +140,16 @@ contract MMRProver {
         return root == finalmmr;
     }
 
-    function getBlocksToProve(bytes32 blockHash, uint256 blockNumber) public pure returns (uint256[] memory blocksToProve) {
+    function getBlocksToProve(bytes32 blockHash, uint256 blockNumber) public view returns (uint256[] memory blocksToProve) {
         //TODO this is an example, implement actual fiat-shamir transform to get the blocks
-        uint blocksCount = log_2(blockNumber);
+        uint blocksCount = log_2(blockNumber - initialBlock);
         blocksToProve = new uint256[](blocksCount);
-        uint256 jump = blockNumber / blocksCount;
+        uint256 jump = (blockNumber - initialBlock) / blocksCount;
+        
         for(uint i = 0; i < blocksCount; i++){
-            blocksToProve[i] = jump * i + uint256(blockHash) % jump;
+            blocksToProve[i] = initialBlock + (jump * i + uint256(blockHash) % jump);
         }
+        
         return blocksToProve;
     }
 
