@@ -27,7 +27,7 @@ module.exports = class RskToEth {
         }
     } catch(err) {
         this.logger.error('Exception Creating RSK Event', err);
-        process.exit()
+        process.exit();
     }
   }
 

@@ -7,13 +7,15 @@ log4js.configure(logConfig);
 
 // Services
 const Scheduler = require('./services/Scheduler.js');
+const MMRController = require('./lib/mmr/MMRController.js');
 const RskMMR = require('./services/rsk/RskMMR.js');
 
 const logger = log4js.getLogger('main');
 logger.info('RSK Host', config.rsk.host);
 logger.info('ETH Host', config.eth.host);
 
-const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'));
+const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
+const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
 
 let pollingInterval = config.mmrSyncInterval * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () =>  run() });

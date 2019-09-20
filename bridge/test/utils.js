@@ -52,11 +52,22 @@ let evm_mine = async (iterations) => {
     };
 };
 
+function stripHexPrefix(hexString) {
+    if (hexString.substring(0, 2).toLowerCase() === '0x'){
+        hexString = hexString.substring(2);
+    }
+    return hexString;
+}
+
 function calculatePrefixesSuffixes(nodes) {
     const prefixes = [];
     const suffixes = [];
     const ns = [];
     
+    for (let i = 0; i < nodes.length; i++) {
+        nodes[i] = stripHexPrefix(nodes[i]);
+    }
+
     for (let k = 0, l = nodes.length; k < l; k++) {
         if (k + 1 < l && nodes[k+1].indexOf(nodes[k]) >= 0)
             continue;
@@ -65,9 +76,7 @@ function calculatePrefixesSuffixes(nodes) {
     }
     
     let hash = web3.utils.sha3(Buffer.from(ns[0], 'hex'));
-    
-    if (hash.substring(0, 2).toLowerCase() === '0x')
-        hash = hash.substring(2);
+    hash = stripHexPrefix(hash);
     
     prefixes.push('0x');
     suffixes.push('0x');
@@ -79,9 +88,7 @@ function calculatePrefixesSuffixes(nodes) {
         suffixes.push('0x' + ns[k].substring(p + hash.length));
         
         hash = web3.utils.sha3(Buffer.from(ns[k], 'hex'));
-        
-        if (hash.substring(0, 2).toLowerCase() === '0x')
-            hash = hash.substring(2);
+        hash = stripHexPrefix(hash);
     }
     
     return { prefixes: prefixes, suffixes: suffixes };

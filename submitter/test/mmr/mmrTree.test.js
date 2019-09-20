@@ -41,7 +41,7 @@ const block4 = {
     timestamp: 1566252081
 };
 
-describe('MMR tests', () => {
+describe('MMR Tree tests', () => {
     // Height
     // 3             8
     //              / \
@@ -229,7 +229,13 @@ describe('MMR tests', () => {
             expect(MMRTree.verifyPrefixesSuffixesProof(root.hash, block2,
                 proof.prefixes, proof.suffixes))
                 .to.equals(true);
-            });
+        });
+
+        it('Get Leaf', () => {
+            let root = this.mmr.getRoot();
+            let node = this.mmr.getLeaf(this.node7.number);
+            expect(node).to.equals(this.node7);
+        });
     });
 
     describe('Serialization', () => {
