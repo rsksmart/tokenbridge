@@ -5,5 +5,5 @@ module.exports = {
     mmrSyncInterval: 30, // In minutes
     confirmations: 0,
     mmrBlockConfirmations: 10,
-    rskMMRStoragePath: './src/services/rsk'
+    rskMMRStoragePath: '/home/user/tokenbridge/src/services/rsk'
 }

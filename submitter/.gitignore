@@ -3,5 +3,4 @@ regtest.json
 development.json
 test.json
 submitter.log
-src/lib/mmr/mmrDB.json
-test/mmr/mmrDB.json
+mmrDB.json
