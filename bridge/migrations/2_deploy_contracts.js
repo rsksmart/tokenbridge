@@ -32,7 +32,7 @@ module.exports = function(deployer, network) {
     .then(() => EventsProcessor.deployed())
     .then(() => { 
         let symbol = 'e';
-        if(network == 'regtest' || network.toLowerCase().indexOf('rsk') == 0)
+        if(network == 'regtest' || network == 'testnet')
             symbol = 'r';
         
         return deployer.deploy(Bridge, EventsProcessor.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount);

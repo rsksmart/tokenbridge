@@ -7,6 +7,7 @@ const abiMMRProver = require('../../abis/MMRProver.json');
 //lib
 const utils = require('../../lib/utils.js');
 const TransactionSender = require('../../lib/TransactionSender.js');
+const CustomError = require('../../lib/CustomError.js');
 
 module.exports = class RskCrossToEth {
   constructor(config, logger, mmrController) {
@@ -56,25 +57,23 @@ module.exports = class RskCrossToEth {
       this.logger.info(`Found ${logs.length} logs`);
       
       let origin = await sideEventsProcessorContract.methods.origin().call();
-      
       this.logger.info('origin', origin);
-
       if (origin == 0) {
+        //TODO this should be made at deploy
         let data = sideEventsProcessorContract.methods.setOrigin(this.config.rsk.bridge).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data, 0, this.config.eth.privateKey);
         let origin2 = await sideEventsProcessorContract.methods.origin().call();
-        this.logger.info('origin', origin2);
+        this.logger.info('setted new origin', origin2);
       }
       
       let transferable = await sideEventsProcessorContract.methods.transferable().call();
-      
       this.logger.info('transferable', transferable);
-
       if (transferable == 0) {
+        //TODO this should be made at deploy
         let data = sideEventsProcessorContract.methods.setTransferable(this.config.eth.bridge).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data, 0, this.config.eth.privateKey);
         let transferable2 = await sideEventsProcessorContract.methods.transferable().call();
-        this.logger.info('transferable', transferable2);
+        this.logger.info('setted new transferable', transferable2);
       }
 
       var previousBlockNumber = null;
@@ -108,9 +107,8 @@ module.exports = class RskCrossToEth {
             let data = sideMMRProverContract.methods.processBlockProof(log.blockNumber, log.blockHash, mmrRoot.hash, blockToProve, mmrLeaf.hash, mmrPrefsuf.prefixes, mmrPrefsuf.suffixes).encodeABI();
             await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
           }
-
-          previousBlockNumber = log.blockNumber;
         }
+        previousBlockNumber = log.blockNumber;
 
         let rawTxReceipt = await rskWeb3.rsk.getRawTransactionReceiptByHash(log.transactionHash);
         let txReceiptNode = await rskWeb3.rsk.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
@@ -123,11 +121,10 @@ module.exports = class RskCrossToEth {
         this.logger.info(`Start processReceipt for transactionHash:${log.transactionHash} blockNumber:${log.blockNumber} blockHash:${log.blockHash}`);
         let data2 = sideEventsProcessorContract.methods.processReceipt(log.blockHash, rawTxReceipt, prefsuf.prefixes, prefsuf.suffixes).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data2, 0, this.config.eth.privateKey);
-
-        return true;
       }
+      return true;
     } catch (err) {
-        this.logger.error('Exception Crossing RSK Event', err);
+        this.logger.error(new CustomError('Exception Crossing RSK Event', err));
         process.exit();
     }
 

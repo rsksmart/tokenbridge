@@ -2,6 +2,7 @@ const Web3 = require('web3');
 
 const abiBridge = require('../../abis/Bridge.json');
 const TransactionSender = require('../../lib/TransactionSender.js');
+const CustomError = require('../../lib/CustomError.js');
 
 module.exports = class RskToEth {
   constructor(config, logger) {
@@ -26,7 +27,7 @@ module.exports = class RskToEth {
           return false;
         }
     } catch(err) {
-        this.logger.error('Exception Creating RSK Event', err);
+        this.logger.error(new CustomError('Exception Creating RSK Event', err));
         process.exit();
     }
   }

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const Web3 = require('web3');
-
 const MMRTree = require('./MMRTree');
+const CustomError = require('../CustomError');
 
 const initialSeries = 1000;
 
@@ -30,7 +30,7 @@ module.exports = class MMRController {
 
             return mmrTree;
         } catch (err) {
-            this.logger.error('Error retrieving mmr backup file', err);
+            throw new CustomError('Error retrieving mmr backup file', err);
         }
     }
 
@@ -66,7 +66,7 @@ module.exports = class MMRController {
             }
             await this._save();
         } catch (err) {
-            this.logger.error('Exception updating MRRTree ', err);
+            throw new CustomError('Exception updating MRRTree', err);
         }
     }
 
@@ -105,7 +105,7 @@ module.exports = class MMRController {
 
             this.logger.debug('MMRTree saved');
         } catch (err) {
-            this.logger.error('Failed to save mmr tree', err);
+            throw new CustomError('Failed to save mmr tree', err);
         }
     }
 
@@ -115,9 +115,9 @@ module.exports = class MMRController {
             for (const row of arr) {
                 file.write(JSON.stringify(row) + '\n');
             }
-            file.end();
             file.on('finish', () => { resolve(true); });
             file.on('error', reject);
+            file.end();
         });
     }
 
