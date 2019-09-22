@@ -16,7 +16,8 @@
   "scripts": {
     "start": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
-    "mmrsync": "node --max-old-space-size=2048 ./src/mmrSync.js"
+    "mmrsync": "node --max-old-space-size=2048 ./src/mmrSync.js",
+    "integrationTest": "cd ../bridge && truffle migrate --network development && truffle migrate --network regtest && cd - && node integrationTest.js"
   },
   "keywords": [
     "rsk",

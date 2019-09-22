@@ -1,6 +1,7 @@
 const Web3 = require('web3');
 const abiMMR = require('../../abis/MMR.json');
 const TransactionSender = require('../../lib/TransactionSender.js');
+const CustomError = require('../../lib/CustomError.js');
 
 module.exports = class RskMMR {
     constructor(config, logger, mmrController) {
@@ -22,8 +23,8 @@ module.exports = class RskMMR {
             await this.mmrController.updateMMRTree();
             return true;
         } catch(err) {
-            this.logger.error('Exception calling MMR.calculate()', err);
-            process.exit();
+            this.logger.error(new CustomError('Exception calculating MMR', err));
+            process.exit()
         }
     }
 
