@@ -13,8 +13,10 @@ logger.level = 'info';
 
 const rskWeb3 = new Web3(config.rsk.host);
 const requiredConfirmations = config.mmrBlockConfirmations || 10;
-const rskMMRStoragePath = `${__dirname}`;
-let testConfig = { ...config, rskMMRStoragePath };
+const storagePath = `${__dirname}`;
+let testConfig = { ...config, storagePath };
+testConfig.eth.fromBlock = 0;
+testConfig.rsk.fromBlock = 0;
 
 const block0 = {
     number: 131925,
@@ -66,7 +68,7 @@ describe('MMR Controller tests', () => {
     });
 
     it('Gets the last block from mmr tree', () => {
-        let mmrController = new MMRController({ ...testConfig, rskMMRStoragePath: ' ' }, logger);
+        let mmrController = new MMRController({ ...testConfig, storagePath: ' ' }, logger);
         let empty = mmrController._getNextMMRBlock();
 
         expect(empty).to.eq(0);
@@ -83,7 +85,7 @@ describe('MMR Controller tests', () => {
 
     it('Saves the current mmr tree', async () => {
         let mmrController = new MMRController(testConfig, logger);
-        let path = `${rskMMRStoragePath}/mmrDB.json`;
+        let path = `${storagePath}/mmrDB.json`;
 
         let node0 = MMRNode.fromBlock(block0);
         mmrController.mmrTree._appendLeaf(node0);
@@ -91,14 +93,14 @@ describe('MMR Controller tests', () => {
         let node1 = MMRNode.fromBlock(block1);
         mmrController.mmrTree._appendLeaf(node1);
 
-        await mmrController._save();
+        await mmrController.save();
 
         expect(fs.existsSync(path)).to.eq(true);
     });
 
     it('Restores the stored mmr tree', async () => {
         // Clear for next run
-        let bakFile = `${testConfig.rskMMRStoragePath}/mmrDB.json`;
+        let bakFile = `${testConfig.storagePath}/mmrDB.json`;
         if (fs.existsSync(bakFile)) {
             fs.truncateSync(bakFile, 0);
         }
@@ -111,7 +113,7 @@ describe('MMR Controller tests', () => {
         let node1 = MMRNode.fromBlock(block1);
         mmrController.mmrTree._appendLeaf(node1);
 
-        await mmrController._save();
+        await mmrController.save();
         let mmrTree = mmrController._restoreMMRTree();
 
         let mmrRoot = mmrTree.getRoot();

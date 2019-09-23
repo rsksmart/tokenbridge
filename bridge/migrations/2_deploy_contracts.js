@@ -18,9 +18,11 @@ function shouldDeployToken(network) {
 module.exports = function(deployer, network) {
     const crossTopic = web3.utils.sha3('Cross(address,address,uint256)');
     const tokenTopic = web3.utils.sha3('Token(address,string)');
-    
+    let mmrInstance = null;
+
     deployer.deploy(MMR)
     .then(() => MMR.deployed())
+    .then((mmr)=>{ mmrInstance = mmr; })
     .then(() => deployer.deploy(MMRProver))
     .then(() => MMRProver.deployed())
     .then(() => deployer.deploy(BlockRecorder, MMRProver.address))
@@ -53,7 +55,7 @@ module.exports = function(deployer, network) {
         }
     })
     .then(async () => {
-        const blockNumber = await web3.eth.getBlockNumber();
+        const blockNumber = await mmrInstance.initialBlock();
         const currentProvider = deployer.networks[network];
         const config = {
             mmr: MMR.address,

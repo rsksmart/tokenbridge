@@ -9,9 +9,10 @@ module.exports = class MMRController {
     constructor(config, logger) {
         this.config = config;
         this.logger = logger;
-        //TODO this class should not be glued to rsk as we will use it for ethereum as well
-        this.rskMMRPath = `${config.rskMMRStoragePath || __dirname}/mmrDB.json`;
+        //TODO this class should not be acoupled to rsk as we will use it for ethereum as well
+        this.rskMMRPath = `${config.storagePath || __dirname}/mmrDB.json`;
         this.requiredConfirmations = config.mmrBlockConfirmations || 10;
+        this.startBlock = parseInt(this.config.eth.fromBlock);
 
         this.web3 = new Web3(this.config.rsk.host);
         this.mmrTree = this._restoreMMRTree();
@@ -37,7 +38,7 @@ module.exports = class MMRController {
     async updateMMRTree() {
         try {
             let nextMRRBlock = this._getNextMMRBlock();
-            let lastBlock = await this.web3.eth.getBlockNumber();
+            let lastBlock = parseInt(await this.web3.eth.getBlockNumber());
             let blockAcceptance = lastBlock - this.requiredConfirmations;
 
             let series = initialSeries;
@@ -48,23 +49,22 @@ module.exports = class MMRController {
                 if (nextMRRBlock + series > blockAcceptance) {
                     series = blockAcceptance  - nextMRRBlock;
                 }
-
                 let calls = [];
                 for (let i = 0; i < series; i++) {
-                    calls.push({ fn: this.web3.eth.getBlock, blockNumber: nextMRRBlock + i });
+                    this.logger.debug(`block number`, nextMRRBlock + i);
+                    calls.push({ fn: this.web3.eth.getBlock, blockNumber:nextMRRBlock + i });
                 }
 
                 let blockSeries = await this._makeBatchRequest(calls);
-
-                blockSeries.forEach(async block => {
-                    await this.mmrTree.appendBlock(block);
-                });
+                for(let block of blockSeries) {
+                    this.mmrTree.appendBlock(block);
+                }
 
                 this.logger.debug(`Added blocks from ${nextMRRBlock} to ${nextMRRBlock + series}`);
 
                 nextMRRBlock = nextMRRBlock + series;
             }
-            await this._save();
+            await this.save();
         } catch (err) {
             throw new CustomError('Exception updating MRRTree', err);
         }
@@ -86,19 +86,19 @@ module.exports = class MMRController {
             })
         })
         batch.execute();
-
+        
         return Promise.all(promises);
     }
 
     _getNextMMRBlock() {
         let root = this.mmrTree.getRoot();
         if (root) {
-            return root.end_height + 1;
+            return root.end_height.toNumber() + 1;
         }
-        return 0;
+        return this.startBlock;
     }
 
-    async  _save() {
+    async  save() {
         try {
             let serializedTree = this.mmrTree.serialize();
             await this._writeToFile(this.rskMMRPath, serializedTree); // TODO append new blocks only
