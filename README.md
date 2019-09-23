@@ -1,6 +1,6 @@
-# RSK Token Bridge
+# RSK Decentralized Token Bridge POC
 
-Ethereum/RSK Token Bridge.
+Proof of concept Ethereum/RSK Decentralized Token Bridge.
 
 
 ## Transfer flows

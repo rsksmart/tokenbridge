@@ -2,6 +2,7 @@ pragma solidity >=0.4.21 <0.6.0;
 
 contract MMR {
     uint constant NHASHES = 64;
+    uint public initialBlock;
     
     uint public nblock;
     bytes32 public nhash;
@@ -13,6 +14,7 @@ contract MMR {
     
     constructor() public {
         nblock = block.number;
+        initialBlock = block.number;
     }
     
     function calculate() public {
