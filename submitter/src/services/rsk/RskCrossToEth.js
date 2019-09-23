@@ -1,4 +1,5 @@
 const Web3 = require('web3');
+const fs = require('fs');
 //abi
 const abiBridge = require('../../abis/Bridge.json');
 const abiBlockRecorder = require('../../abis/BlockRecorder.json');
@@ -14,6 +15,7 @@ module.exports = class RskCrossToEth {
     this.config = config;
     this.logger = logger;
     this.mmrController = mmrController;
+    this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
   }
 
   async run(waitForConfirmations) {
@@ -39,21 +41,25 @@ module.exports = class RskCrossToEth {
       const sideBlockRecorderContract = new ethWeb3.eth.Contract(abiBlockRecorder, this.config.eth.blockRecorder);
       const sideMMRProverContract = new ethWeb3.eth.Contract(abiMMRProver, this.config.eth.mmrProver);
       const sideEventsProcessorContract = new ethWeb3.eth.Contract(abiEventsProcessor, this.config.eth.eventsProcessor);
-      
+      const bridgeContract = new rskWeb3.eth.Contract(abiBridge, this.config.rsk.bridge);
+
       const transactionSender = new TransactionSender(ethWeb3, this.logger);
       const from = await transactionSender.getAddress(this.config.eth.privateKey);
       this.logger.debug('use sender address', from);
-      let fromBlock = this.config.rsk.fromBlock;
       
+      let fromBlock = null;
+      try {
+        fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
+      } catch(err) {
+        fromBlock = this.config.rsk.fromBlock;
+      }
+      fromBlock++;
       this.logger.debug('run from Block', fromBlock);
 
-      const bridgeContract = new rskWeb3.eth.Contract(abiBridge, this.config.rsk.bridge);
-      
       const logs = await bridgeContract.getPastEvents( "Cross", {
         fromBlock: fromBlock || "0x01",
         toBlock: toBlock || "latest"
       });
-      
       this.logger.info(`Found ${logs.length} logs`);
       
       let origin = await sideEventsProcessorContract.methods.origin().call();
@@ -107,8 +113,15 @@ module.exports = class RskCrossToEth {
             let data = sideMMRProverContract.methods.processBlockProof(log.blockNumber, log.blockHash, mmrRoot.hash, blockToProve, mmrLeaf.hash, mmrPrefsuf.prefixes, mmrPrefsuf.suffixes).encodeABI();
             await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
           }
+
+          let blockData = await sideBlockRecorderContract.methods.blockData(log.blockHash).call();
+          if(blockData.receiptRoot == utils.zeroHash || blockData.mmrRoot == utils.zeroHash) {
+            this.logger.error('Block without mmrRoot or receiptRoot', blockData);
+            process.exit();
+          }
+
+          previousBlockNumber = log.blockNumber;
         }
-        previousBlockNumber = log.blockNumber;
 
         let rawTxReceipt = await rskWeb3.rsk.getRawTransactionReceiptByHash(log.transactionHash);
         let txReceiptNode = await rskWeb3.rsk.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
@@ -122,6 +135,8 @@ module.exports = class RskCrossToEth {
         let data2 = sideEventsProcessorContract.methods.processReceipt(log.blockHash, rawTxReceipt, prefsuf.prefixes, prefsuf.suffixes).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data2, 0, this.config.eth.privateKey);
       }
+
+      fs.writeFileSync(this.lastBlockPath, previousBlockNumber);
       return true;
     } catch (err) {
         this.logger.error(new CustomError('Exception Crossing RSK Event', err));

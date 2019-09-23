@@ -81,5 +81,6 @@ module.exports = {
     privateToAddress: privateToAddress,
     stripHexPrefix: stripHexPrefix,
     memoryUsage: memoryUsage,
-    calculatePrefixesSuffixes: calculatePrefixesSuffixes
+    calculatePrefixesSuffixes: calculatePrefixesSuffixes,
+    zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000'
 }

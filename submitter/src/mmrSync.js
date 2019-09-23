@@ -33,11 +33,8 @@ async function run() {
     }
 }
 
-process.stdin.resume(); // so the program will not close instantly
-
 async function exitHandler() {
     await rskMMR.exitHandler();
-
     process.exit();
 }
 
@@ -48,8 +45,6 @@ process.on('SIGINT', exitHandler);
 process.on('SIGUSR1', exitHandler);
 process.on('SIGUSR2', exitHandler);
 
-//catches uncaught exceptions
-process.on('uncaughtException', exitHandler);
 
 // export so we can test it
 module.exports = { scheduler };

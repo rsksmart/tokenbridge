@@ -23,8 +23,16 @@ module.exports = class RskMMR {
             await this.mmrController.updateMMRTree();
             return true;
         } catch(err) {
-            this.logger.error(new CustomError('Exception calculating MMR', err));
+            this.logger.error(new CustomError('Exception on calculating MMR', err));
             process.exit()
+        }
+    }
+
+    async exitHandler() {
+        try {
+            this.mmrController.save();
+        } catch(err) {
+            this.logger.error(new CustomError('Exception on exitHandler', err));
         }
     }
 
