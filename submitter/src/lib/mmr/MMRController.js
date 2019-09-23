@@ -50,8 +50,7 @@ module.exports = class MMRController {
                     series = blockAcceptance  - nextMRRBlock;
                 }
                 let calls = [];
-                for (let i = 0; i < series; i++) {
-                    this.logger.debug(`block number`, nextMRRBlock + i);
+                for (let i = 0; i <= series; i++) {
                     calls.push({ fn: this.web3.eth.getBlock, blockNumber:nextMRRBlock + i });
                 }
 
@@ -93,7 +92,7 @@ module.exports = class MMRController {
     _getNextMMRBlock() {
         let root = this.mmrTree.getRoot();
         if (root) {
-            return root.end_height.toNumber() + 1;
+            return root.end_height + 1;
         }
         return this.startBlock;
     }
