@@ -3,6 +3,7 @@ pragma experimental ABIEncoderV2;
 
 import "./ProofLibrary.sol";
 import "./BlockRecorder.sol";
+import "./RlpLibrary.sol";
 
 contract MMRProver {
     address public owner;
@@ -70,6 +71,9 @@ contract MMRProver {
         if (alreadyProved(proof, otherBlockNumber))
             return true;
             
+        if (otherBlockNumber == blockNumber)
+            require(blockHash == RlpLibrary.rlpItemToBytes32(initial, 0));
+            
         if (!mmrIsValid(mmrRoot, initial, prefixes, suffixes))
             return false;
                         
@@ -82,7 +86,7 @@ contract MMRProver {
             }
             
         if (allBlocksProved(proof))
-            blockRecorder.recordMMR(proof.blockHash, proof.mmrRoot);
+            blockRecorder.mmrProved(proof.blockHash);
     }
     
     function allBlocksProved(ProofData storage proof) private view returns (bool) {
@@ -143,12 +147,14 @@ contract MMRProver {
     function getBlocksToProve(bytes32 blockHash, uint256 blockNumber) public view returns (uint256[] memory blocksToProve) {
         //TODO this is an example, implement actual fiat-shamir transform to get the blocks
         uint blocksCount = log_2(blockNumber - initialBlock);
-        blocksToProve = new uint256[](blocksCount);
+        blocksToProve = new uint256[](blocksCount + 1);
         uint256 jump = (blockNumber - initialBlock) / blocksCount;
         
         for(uint i = 0; i < blocksCount; i++){
             blocksToProve[i] = initialBlock + (jump * i + uint256(blockHash) % jump);
         }
+        
+        blocksToProve[blocksCount] = blockNumber;
         
         return blocksToProve;
     }
