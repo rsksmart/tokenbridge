@@ -10,7 +10,7 @@ contract BlockRecorder {
         uint number;
         uint difficulty;
         bytes32 receiptRoot;
-        bytes32 mmrRoot;
+        bool mmrProved;
     }
     
     mapping(bytes32 => BlockData) public blockData;
@@ -48,16 +48,16 @@ contract BlockRecorder {
         blockData[hash].receiptRoot = trrhash;
     }
     
-    function recordMMR(bytes32 blockHash, bytes32 mmrRoot) public onlyMMRProvider() {
-        blockData[blockHash].mmrRoot = mmrRoot;
+    function mmrProved(bytes32 blockHash) public onlyMMRProvider {
+        blockData[blockHash].mmrProved = true;
     }
     
     function getBlockReceiptRoot(bytes32 blockHash) public view returns (bytes32) {
         return blockData[blockHash].receiptRoot;
     }
     
-    function getBlockMMRRoot(bytes32 blockHash) public view returns (bytes32) {
-        return blockData[blockHash].mmrRoot;
+    function getBlockMMRProved(bytes32 blockHash) public view returns (bool) {
+        return blockData[blockHash].mmrProved;
     }
 }
 
