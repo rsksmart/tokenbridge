@@ -96,7 +96,6 @@ module.exports = class RskCrossToEth {
           this.logger.info(`Start initProcessProof for blockNumber:${log.blockNumber} blockHash:${log.blockHash} mmrRoot:${mmrRoot}`);
           data = sideMMRProverContract.methods.initProcessProof(log.blockNumber, log.blockHash, mmrRoot.hash).encodeABI();
           await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
-          await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
 
           let blocksToProve = await sideMMRProverContract.methods.getBlocksToProve(log.blockHash, log.blockNumber).call();
           for(var blockToProve of blocksToProve) {
@@ -105,14 +104,20 @@ module.exports = class RskCrossToEth {
 
             let result = sideMMRProverContract.methods.mmrIsValid(mmrRoot.hash, mmrLeaf.hash, mmrPrefsuf.prefixes, mmrPrefsuf.suffixes).call();            
             if(!result) {
-              this.logger.error(`MMR Root is not valid blockToProve:${blockToProve} mmrRoot${mmrRoot.hash} initial:${mmrLeaf.hash} prefixes:${mmrPrefsuf.prefixes} suffixes:${mmrPrefsuf.suffixes}`);
+              this.logger.error(`MMR Root is not valid blockToProve:${blockToProve} mmrRoot:${mmrRoot.hash} initial:${mmrLeaf.hash} prefixes:${mmrPrefsuf.prefixes} suffixes:${mmrPrefsuf.suffixes}`);
               throw new Error('MMR Root is not valid');
             }
 
-            this.logger.info(`Start processBlockProof blockToProve:${blockToProve} mmrRoot${mmrRoot.hash} initial:${mmrLeaf.hash} prefixes:${mmrPrefsuf.prefixes} suffixes:${mmrPrefsuf.suffixes} for blockNumber:${log.blockNumber} blockHash:${log.blockHash}`);
+            this.logger.info(`Start processBlockProof blockToProve:${blockToProve} mmrRoot:${mmrRoot.hash} initial:${mmrLeaf.hash} prefixes:${mmrPrefsuf.prefixes} suffixes:${mmrPrefsuf.suffixes} for blockNumber:${log.blockNumber} blockHash:${log.blockHash}`);
             let data = sideMMRProverContract.methods.processBlockProof(log.blockNumber, log.blockHash, mmrRoot.hash, blockToProve, mmrLeaf.hash, mmrPrefsuf.prefixes, mmrPrefsuf.suffixes).encodeABI();
             await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
           }
+          
+          // let status = await sideMMRProverContract.methods.getProofStatus(log.blockNumber, log.blockHash, mmrRoot.hash);
+          // if(status.blocksToProve.length != status.proved.length) {
+          //   this.logger.error(`Not all blocks where proved, expected ${status.blocksToProve.lenght} but got ${status.proved.length}`);
+          //   process.exit();
+          // }
 
           let blockData = await sideBlockRecorderContract.methods.blockData(log.blockHash).call();
           if(blockData.receiptRoot == utils.zeroHash || blockData.mmrRoot == utils.zeroHash) {

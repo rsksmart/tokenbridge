@@ -204,8 +204,6 @@ contract('MMRProver', function (accounts) {
         
         const paths = [];
         makePaths(tree, paths, []);
-
-        const proof = makeProof(paths[nnodes - 1]);
         
         const mmrRoot = '0x' + tree.hash.toString('hex');
         
@@ -231,8 +229,9 @@ contract('MMRProver', function (accounts) {
             const nblock = status.blocksToProve[k];            
             const proof = makeProof(paths[nblock]);
             
-            await this.prover.processBlockProof(blockNumber, blockHash, mmrRoot, nblock, nodes[nblock], proof.prefixes, proof.suffixes);
-            
+            let tx = await this.prover.processBlockProof(blockNumber, blockHash, mmrRoot, nblock, nodes[nblock], proof.prefixes, proof.suffixes);
+            utils.checkRcpt(tx);
+
             const newstatus = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
             
             assert.equal(newstatus.blocksToProve.length, 5);
@@ -275,13 +274,12 @@ contract('MMRProver', function (accounts) {
         
         const paths = [];
         makePaths(tree, paths, []);
-
-        const proof = makeProof(paths[nnodes - 1]);
         
         const mmrRoot = '0x' + tree.hash.toString('hex');
         
-        await this.prover.initProcessProof(blockNumber, blockHash, mmrRoot);
-        
+        let tx = await this.prover.initProcessProof(blockNumber, blockHash, mmrRoot);
+        utils.checkRcpt(tx);
+
         const proofId = await this.prover.getProofId(blockNumber, blockHash, mmrRoot);
         
         const newproof = await this.prover.proofs(proofId);
@@ -364,4 +362,10 @@ contract('MMRProver', function (accounts) {
         assert.ok(latestBlock.toNumber() < blockNumber);
         assert.equal(122953882, blocksToProve[26].toNumber());
     });
+
+    it('log_2', async function () {
+        const gas = await this.prover.log_2.estimateGas(123456789);
+        utils.checkGas(gas);
+    });
+
 });

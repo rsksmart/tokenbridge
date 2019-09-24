@@ -20,7 +20,7 @@ module.exports = class TransactionSender {
         if (!number) {
             return '0x0';
         }
-        return `0x${number.toString(16)}`;
+        return `0x${parseInt(number).toString(16)}`;
     }
 
     async createRawTransaction(from, to, data, value) { 
