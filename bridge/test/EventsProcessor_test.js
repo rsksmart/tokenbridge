@@ -105,8 +105,9 @@ contract('EventsProcessor', function (accounts) {
         const data = Buffer.from(block.substring(2), 'hex');
         const hash = web3.utils.sha3(data);
         
-        await this.processor.processReceipt(hash, receipt, prefsuf.prefixes, prefsuf.suffixes);
-        
+        let tx = await this.processor.processReceipt(hash, receipt, prefsuf.prefixes, prefsuf.suffixes);
+        utils.checkRcpt(tx);
+
         const ntransfers = await this.transferable.ntransfers();
         
         assert.equal(ntransfers, 3);
