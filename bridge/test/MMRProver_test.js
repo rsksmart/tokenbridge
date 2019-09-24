@@ -199,8 +199,8 @@ contract('MMRProver', function (accounts) {
     
         const tree = makeTree(nodes);
 
-        const blockHash = '0x' + generateRandomHash().toString('hex');
-        const blockNumber = nnodes;
+        const blockHash = '0x' + nodes[nnodes - 1].toString('hex');
+        const blockNumber = nnodes - 1;
         
         const paths = [];
         makePaths(tree, paths, []);
@@ -219,8 +219,8 @@ contract('MMRProver', function (accounts) {
         
         const status = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
         
-        assert.equal(status.blocksToProve.length, 5);
-        assert.equal(status.proved.length, 5);
+        assert.equal(status.blocksToProve.length, 6);
+        assert.equal(status.proved.length, 6);
         
         for (let k = 0; k < status.proved.length; k++)
             assert.equal(status.proved[k], false);
@@ -234,8 +234,8 @@ contract('MMRProver', function (accounts) {
 
             const newstatus = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
             
-            assert.equal(newstatus.blocksToProve.length, 5);
-            assert.equal(newstatus.proved.length, 5);
+            assert.equal(newstatus.blocksToProve.length, 6);
+            assert.equal(newstatus.proved.length, 6);
             
             for (let j = 0; j <= k; j++)
                 assert.equal(newstatus.proved[j], true);
@@ -244,15 +244,15 @@ contract('MMRProver', function (accounts) {
                 assert.equal(newstatus.proved[j], false);
             
             const proved = await this.prover.isProved(blockNumber, blockHash, mmrRoot);
-            const mmr = await this.recorder.getBlockMMRRoot(blockHash);       
+            const mmr = await this.recorder.getBlockMMRProved(blockHash);       
             
             if (k == status.blocksToProve.length - 1) {
                 assert.ok(proved);
-                assert.equal(mmr, mmrRoot);
+                assert.ok(mmr);
             }
             else {
                 assert.ok(!proved);
-                assert.equal(mmr, 0);
+                assert.ok(!mmr);
             }
         }
     });
@@ -269,8 +269,8 @@ contract('MMRProver', function (accounts) {
     
         const tree = makeTree(nodes);
 
-        const blockHash = '0x' + generateRandomHash().toString('hex');
-        const blockNumber = nnodes;
+        const blockHash = '0x' + nodes[nnodes - 1].toString('hex');
+        const blockNumber = nnodes - 1;
         
         const paths = [];
         makePaths(tree, paths, []);
@@ -290,8 +290,8 @@ contract('MMRProver', function (accounts) {
         
         const status = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
         
-        assert.equal(status.blocksToProve.length, 4);
-        assert.equal(status.proved.length, 4);
+        assert.equal(status.blocksToProve.length, 5);
+        assert.equal(status.proved.length, 5);
         
         for (let k = 0; k < status.proved.length; k++)
             assert.ok(status.blocksToProve[k] >= initial);
@@ -307,8 +307,8 @@ contract('MMRProver', function (accounts) {
             
             const newstatus = await this.prover.getProofStatus(blockNumber, blockHash, mmrRoot);
             
-            assert.equal(newstatus.blocksToProve.length, 4);
-            assert.equal(newstatus.proved.length, 4);
+            assert.equal(newstatus.blocksToProve.length, 5);
+            assert.equal(newstatus.proved.length, 5);
             
             for (let j = 0; j <= k; j++)
                 assert.equal(newstatus.proved[j], true);
@@ -317,15 +317,15 @@ contract('MMRProver', function (accounts) {
                 assert.equal(newstatus.proved[j], false);
             
             const proved = await this.prover.isProved(blockNumber, blockHash, mmrRoot);
-            const mmr = await this.recorder.getBlockMMRRoot(blockHash);       
+            const mmr = await this.recorder.getBlockMMRProved(blockHash);       
             
             if (k == status.blocksToProve.length - 1) {
                 assert.ok(proved);
-                assert.equal(mmr, mmrRoot);
+                assert.ok(mmr);
             }
             else {
                 assert.ok(!proved);
-                assert.equal(mmr, 0);
+                assert.ok(!mmr);
             }
         }
     });
@@ -352,15 +352,14 @@ contract('MMRProver', function (accounts) {
         const gas = await this.prover.getBlocksToProve.estimateGas(blockHash, blockNumber);
         utils.checkGas(gas);
         const blocksToProve = await this.prover.getBlocksToProve(blockHash, blockNumber);   
-        assert.equal(27, blocksToProve.length);
+        assert.equal(blocksToProve.length, 28);
         const firstBlock = blocksToProve[0];
-        const latestBlock = blocksToProve[26];
+        const latestBlock = blocksToProve[27];
         assert.ok(firstBlock.toNumber() > 0);
         assert.ok(firstBlock.toNumber() < 4572473);
-        assert.equal(4069584, firstBlock.toNumber());
-        assert.ok(latestBlock.toNumber() > 26 * 4572473);
-        assert.ok(latestBlock.toNumber() < blockNumber);
-        assert.equal(122953882, blocksToProve[26].toNumber());
+        assert.equal(firstBlock.toNumber(), 4069584);
+        assert.equal(latestBlock.toNumber(), 123456789);
+        assert.equal(blocksToProve[26].toNumber(), 122953882);
     });
 
     it('log_2', async function () {
