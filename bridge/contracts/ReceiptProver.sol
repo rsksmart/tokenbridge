@@ -14,6 +14,8 @@ contract ReceiptProver {
     }
     
     function receiptIsValid(bytes32 blkhash, bytes memory receipt, bytes[] memory prefixes, bytes[] memory suffixes) public view returns (bool) {
+        require(blockRecorder.getBlockMMRProved(blkhash));
+        
         bytes32 receiptRoot = ProofLibrary.calculateRoot(receipt, prefixes, suffixes);
         
         return blockRecorder.getBlockReceiptRoot(blkhash) == receiptRoot;
