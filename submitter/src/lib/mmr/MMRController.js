@@ -1,4 +1,5 @@
 const fs = require('fs');
+const path = require('path');
 const Web3 = require('web3');
 const MMRTree = require('./MMRTree');
 const CustomError = require('../CustomError');
@@ -10,7 +11,8 @@ module.exports = class MMRController {
         this.config = config;
         this.logger = logger;
         //TODO this class should not be acoupled to rsk as we will use it for ethereum as well
-        this.rskMMRPath = `${config.storagePath || __dirname}/mmrDB.json`;
+        this.rskMMRPath = path.join(`${config.storagePath || __dirname}`, 'mmrDB.json');
+        console.log('rskMMRPath', this.rskMMRPath);
         this.requiredConfirmations = config.mmrBlockConfirmations || 10;
         this.startBlock = parseInt(this.config.eth.fromBlock);
 
