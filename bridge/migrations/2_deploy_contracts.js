@@ -61,7 +61,7 @@ module.exports = function(deployer, network) {
             mmr: MMR.address,
             mmrProver: MMRProver.address,
             bridge: Bridge.address,
-            fromBlock: blockNumber,
+            fromBlock: '0x' + blockNumber,
             privateKey: "",
             blockRecorder: BlockRecorder.address,
             receiptProver: ReceiptProver.address,

@@ -41,7 +41,7 @@ contract('BlockRecorder', function (accounts) {
         assert.equal(result.number, number1);
         assert.equal(result.difficulty, difficulty1);
         assert.equal(result.receiptRoot, trr1);
-        assert.equal(result.mmrRoot, 0);
+        assert.equal(result.mmrProved, false);
     });
     
     it('record block 2', async function () {
@@ -57,29 +57,29 @@ contract('BlockRecorder', function (accounts) {
         assert.equal(result.number, number2);
         assert.equal(result.difficulty, difficulty2);
         assert.equal(result.receiptRoot, trr2);
-        assert.equal(result.mmrRoot, 0);
+        assert.equal(result.mmrProved, false);
     });
     
-    it('record mmr root', async function () {
-        await this.recorder.recordMMR(hash1, mmr1, { from: mmrProver });
+    it('mmr proved', async function () {
+        await this.recorder.mmrProved(hash1, { from: mmrProver });
         
         const result = await this.recorder.blockData(hash1);
         
         assert.equal(result.number, 0);
         assert.equal(result.difficulty, 0);
         assert.equal(result.receiptRoot, 0);
-        assert.equal(result.mmrRoot, mmr1);
+        assert.equal(result.mmrProved, true);
     });
     
-    it('only mmr prover can record mmr root', async function () {
-        await expectThrow(this.recorder.recordMMR(hash1, mmr1));
+    it('only mmr prover can prove mmr', async function () {
+        await expectThrow(this.recorder.mmrProved(hash1));
         
         const result = await this.recorder.blockData(hash1);
         
         assert.equal(result.number, 0);
         assert.equal(result.difficulty, 0);
         assert.equal(result.receiptRoot, 0);
-        assert.equal(result.mmrRoot, 0);
+        assert.equal(result.mmrProved, false);
     });
 });
 

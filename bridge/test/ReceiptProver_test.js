@@ -24,9 +24,14 @@ contract('ReceiptProver', function (accounts) {
     
     it('prove receipt in block', async function () {
         await this.recorder.recordBlock(block1);
+        await this.recorder.mmrProved(hash1, { from: mmrProver });
+        
+        const proved = await this.recorder.getBlockMMRProved(hash1);
+        
+        assert.ok(proved);
         
         const prefsuf = calculatePrefixesSuffixes(nodes1);
-        const result = await this.prover.receiptIsValid(hash1, '0x'+nodes1[0], prefsuf.prefixes, prefsuf.suffixes);
+        const result = await this.prover.receiptIsValid(hash1, '0x' + nodes1[0], prefsuf.prefixes, prefsuf.suffixes);
         
         assert.equal(result, true);
     });
