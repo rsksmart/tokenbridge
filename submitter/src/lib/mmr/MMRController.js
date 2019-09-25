@@ -13,7 +13,7 @@ module.exports = class MMRController {
         //TODO this class should not be acoupled to rsk as we will use it for ethereum as well
         this.rskMMRPath = path.join(`${config.storagePath || __dirname}`, 'mmrDB.json');
         console.log('rskMMRPath', this.rskMMRPath);
-        this.requiredConfirmations = config.mmrBlockConfirmations || 10;
+        this.requiredConfirmations = config.mmrBlockConfirmations == null ? 10 : config.mmrBlockConfirmations;
         this.startBlock = parseInt(this.config.eth.fromBlock);
 
         this.web3 = new Web3(this.config.rsk.host);
