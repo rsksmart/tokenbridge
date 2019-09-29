@@ -42,7 +42,7 @@ On the Sidechain seven contracts are deployed:
 * The MMRProver Contract: Verifies the MMR root and MMR Proof are valid.
 * The ReceiptProver Contract: Verifies the Tx Receipt given and Merkle Proof hash up to the Tx Receipt root of a block.
 * The RskPow/EthPow Contract: Verifies the block Proof of Work.
-* The Bridge Contract: Verifies the Croos tokens event and releases the transfered tokens from the mainchain, also acts as a Token Custodian of the Mirror Tokens on the Sidechain.
+* The Bridge Contract: Verifies the Cross tokens event and releases the transfered tokens from the mainchain, also acts as a Token Custodian of the Mirror Tokens on the Sidechain.
 
 Finally, a set of off-chain scripts known as the Submitter listens for transfer events emitted by the Bridge. This set of scripts can be seen as a group of Oracles and its main purpose is to inform the events between both chains.
 
