@@ -23,10 +23,16 @@ module.exports = class TransactionSender {
         return `0x${parseInt(number).toString(16)}`;
     }
 
+    async getGasPrice() {
+        const block = await this.client.eth.getBlock("latest");
+        return block.minimumGasPrice <= 1 ? 1: block.minimumGasPrice * 1.01;
+    }
+
     async createRawTransaction(from, to, data, value) { 
         const nonce = await this.getNonce(from);
         const chainId =  this.chainId || await this.client.eth.net.getId();
-        const gasPrice = await this.client.eth.getGasPrice();
+        const gasPrice = await this.getGasPrice();
+        console.log(gasPrice);
         let rawTx = {
             gasPrice: this.numberToHexString(gasPrice),
             gas: this.gasLimit,

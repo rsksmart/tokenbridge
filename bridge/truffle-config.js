@@ -26,37 +26,39 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "*" // Match any network id
+      network_id: "*", // Match any network id
+      gas: 6721975
     },
     //RSK
     regtest: {
       host: "127.0.0.1",
       port: 4444,
-      network_id: "*" // Match any network id
+      network_id: "*", // Match any network id
+      gas: 6800000
     },
     testnet: {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://public-node.testnet.rsk.co'),
       network_id: 31, // Match chain id
-      gas: 2500000,
+      gas: 6800000,
       gasPrice: 59240000
     },
      //Ethereum
      ropsten: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://ropsten.infura.io/v3/" + INFURA_API_KEY),
       network_id: 3,
-      gas: 3000000,
+      gas: 4700000,
       gasPrice: 10000000000
     },
     kovan: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
       network_id: 42,
-      gas: 3000000,
+      gas: 7000000,
       gasPrice: 10000000000
     },
     rinkeby: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
       network_id: 4,
-      gas: 3000000,
+      gas: 7000000,
       gasPrice: 10000000000
     },
   },
