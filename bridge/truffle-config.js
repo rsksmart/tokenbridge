@@ -11,13 +11,6 @@
  *     gasPrice: 10000000000,
  *   },
  */
-const HDWalletProvider = require('truffle-hdwallet-provider');
-const fs = require('fs');
-
-//resulting address 0x170346689cC312D8E19959Bc68c3AD03E72C9850
-const MNEMONIC = fs.readFileSync('./mnemonic.key', { encoding: 'utf8' });// Your metamask's recovery words
-const INFURA_API_KEY = fs.readFileSync('./infura.key',{ encoding: 'utf8' });// Your Infura API Key after its registration
-
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
   // to customize your Truffle configuration!met
