@@ -21,7 +21,7 @@ contract MMRProver {
     mapping (bytes32 => ProofData) public proofs;
     
     modifier onlyOwner() {
-        require(owner == msg.sender);
+        require(owner == msg.sender, "Only owner can call this function");
         _;
     }
     
@@ -72,7 +72,7 @@ contract MMRProver {
             return true;
             
         if (otherBlockNumber == blockNumber)
-            require(blockHash == RlpLibrary.rlpItemToBytes32(initial, 0));
+            require(blockHash == RlpLibrary.rlpItemToBytes32(initial, 0), "Given Block Hash is not the same as the Hash obtained from the raw Block");
             
         if (!mmrIsValid(mmrRoot, initial, prefixes, suffixes))
             return false;

@@ -22,17 +22,21 @@ module.exports = class TransactionSender {
         }
         return `0x${parseInt(number).toString(16)}`;
     }
+    async getEthGasPrice() {
+        const gasPrice = await this.client.eth.getGasPrice();
+        return gasPrice;
+    }
 
-    async getGasPrice() {
+    async getRskGasPrice() {
         const block = await this.client.eth.getBlock("latest");
-        return block.minimumGasPrice <= 1 ? 1: block.minimumGasPrice * 1.01;
+        let gasPrice = parseInt(block.minimumGasPrice);
+        return gasPrice <= 1 ? 1: gasPrice * 1.01;
     }
 
     async createRawTransaction(from, to, data, value) { 
         const nonce = await this.getNonce(from);
         const chainId =  this.chainId || await this.client.eth.net.getId();
-        const gasPrice = await this.getGasPrice();
-        console.log(gasPrice);
+        const gasPrice = await this.getEthGasPrice();
         let rawTx = {
             gasPrice: this.numberToHexString(gasPrice),
             gas: this.gasLimit,
