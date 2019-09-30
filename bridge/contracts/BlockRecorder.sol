@@ -16,7 +16,7 @@ contract BlockRecorder {
     mapping(bytes32 => BlockData) public blockData;
     
     modifier onlyMMRProvider() {
-        require(msg.sender == mmrProvider);
+        require(msg.sender == mmrProvider, "Only MMR Provider can call this function");
         _;
     }
     
