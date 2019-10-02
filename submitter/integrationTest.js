@@ -20,6 +20,8 @@ const logger = log4js.getLogger('test');
 logger.info('----------- Integration Test ---------------------');
 logger.info('RSK Host', config.rsk.host);
 logger.info('ETH Host', config.eth.host);
+logger.info('Confirmations', config.confirmations);
+logger.info('mmrBlockConfirmations', config.mmrBlockConfirmations);
 
 const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
 const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
@@ -40,7 +42,7 @@ async function run() {
         let amount = rskWeb3.utils.toWei('1');
         const senderAddress = await transactionSender.getAddress(config.rsk.privateKey);
         const mainTokenAddress = mainTokenContract.options.address;
-        logger.info('Main token addres' + mainTokenAddress + 'Sender Address:' + senderAddress);
+        logger.info('Main token addres:' + mainTokenAddress + ' Sender Address:' + senderAddress);
 
         logger.info('aprove token transfer');
         let data = mainTokenContract.methods.approve(bridgeAddress, amount).encodeABI();

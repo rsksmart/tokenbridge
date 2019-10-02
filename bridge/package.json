@@ -11,7 +11,7 @@
   "scripts": {
     "start": "truffle migrate",
     "test": "truffle test",
-    "deploy": "rm -rf ./build && truffle migrate --network regtest && truffle migrate --network development"
+    "deploy": "truffle migrate --reset --network regtest && truffle migrate --reset --network development"
   },
   "keywords": [
     "rsk",

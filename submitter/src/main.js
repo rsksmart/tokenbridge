@@ -14,6 +14,8 @@ const RskCreateEvent = require('./services/rsk/RskCreateEvent.js');
 const logger = log4js.getLogger('main');
 logger.info('RSK Host', config.rskHost);
 logger.info('ETH Host', config.ethHost);
+logger.info('Confirmations', config.confirmations);
+logger.info('mmrBlockConfirmations', config.mmrBlockConfirmations);
 
 const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
 const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
