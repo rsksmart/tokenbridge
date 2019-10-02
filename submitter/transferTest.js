@@ -3,7 +3,7 @@ var log4js = require('log4js');
 //configurations
 const config = require('./config.js');
 const abiBridge = require('./src/abis/Bridge.json');
-const abiMainToken = require('./src/abis/MainToken.json');
+const abiMainToken = require('./src/abis/IERC20.json');
 //utils
 const TransactionSender = require('./src/lib/TransactionSender.js');
 const utils = require('./src/lib/utils.js');
