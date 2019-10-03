@@ -32,7 +32,7 @@ async function run() {
         const mainTokenAddress = mainTokenContract.options.address;
         logger.info('Main token addres' + mainTokenAddress + 'Sender Address:' + senderAddress);
 
-        logger.debug('aprove token transfer');
+        logger.debug('approve token transfer');
         let data = mainTokenContract.methods.approve(bridgeAddress, amount).encodeABI();
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.rsk.privateKey);
 

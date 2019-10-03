@@ -22,6 +22,7 @@ module.exports = class Scheduler {
         if (this.running) {
             this.pollingTimeout = null;
             await this.service.run();
+            this.logger.info("scheduler poll run succesful, trigger next poll in ", this.pollingInterval);
             // Trigger next poll
             this.pollingTimeout = setTimeout(() => this.poll(), this.pollingInterval); 
         } else {
