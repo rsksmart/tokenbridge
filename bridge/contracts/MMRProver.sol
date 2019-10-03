@@ -146,6 +146,7 @@ contract MMRProver {
 
     function getBlocksToProve(bytes32 blockHash, uint256 blockNumber) public view returns (uint256[] memory blocksToProve) {
         //TODO this is an example, implement actual fiat-shamir transform to get the blocks
+        require(blockNumber >= initialBlock, "Block Number can be lower than the Initial Block");
         uint blocksCount = log_2(blockNumber - initialBlock);
         blocksToProve = new uint256[](blocksCount + 1);
         uint256 jump = (blockNumber - initialBlock) / blocksCount;

@@ -86,7 +86,7 @@ module.exports = class RskCrossToEth {
       this.logger.debug('initialBlock', initialBlock);
       if (initialBlock == 0) {
         //TODO this should be made at deploy
-        let data = sideMMRProverContract.methods.setInitialBlock(this.config.eth.fromBlock).encodeABI();
+        let data = sideMMRProverContract.methods.setInitialBlock(this.config.rsk.fromBlock).encodeABI();
         await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
         initialBlock = await sideMMRProverContract.methods.initialBlock().call();
         this.logger.info('setted new initialBlock', initialBlock);

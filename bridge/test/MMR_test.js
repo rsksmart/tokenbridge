@@ -143,7 +143,7 @@ contract('MMR', function (accounts) {
         await calculateAndCheckNBlocks(128, this.mmr);
     });
 
-    it.only('Max blocks to calculate (150)', async function() {  
+    it('Max blocks to calculate (150)', async function() {  
         await calculateAndCheckNBlocks(150, this.mmr);
     });
 
