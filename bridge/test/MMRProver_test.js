@@ -330,14 +330,14 @@ contract('MMRProver', function (accounts) {
         }
     });
     
-    it.only('process proof out of gas', async function () {
+    it('process proof only block bigger than initialBlock', async function () {
 
+        this.prover.setInitialBlock(52);
         const blockHash = '0xbb044e8fa46e55284663825d0054cb10dfc9e43342aa2139e9f3c65b2c80fa34';
         const blockNumber = 36;
         const mmrRoot = '0x26f01f18b12ea7fe1736f7297f2e826ea4b2a261234ed31c71bc5042ccf86713';
 
-        //Start initProcessProof for blockNumber:36 blockHash:0xbb044e8fa46e55284663825d0054cb10dfc9e43342aa2139e9f3c65b2c80fa34 mmrRoot:{ hash:0x26f01f18b12ea7fe1736f7297f2e826ea4b2a261234ed31c71bc5042ccf86713, start_height:52, end_height:61, left:0xd1b5a98a4cf750a44c93ce3fca5b0af0569bc69bb7c2bba78a53dd0e25bb1c85, right:0x65945940e32d564f25fefcf8af0c68ac402168520936d258e6a7c67e36d648e3 }
-        await this.prover.initProcessProof(blockNumber, blockHash, mmrRoot);
+        await utils.expectThrow(this.prover.initProcessProof(blockNumber, blockHash, mmrRoot));
     });
     
 
