@@ -211,6 +211,7 @@ contract('Bridge', async function (accounts) {
                 let pendingTransfersCount = await this.mirrorBridge.pendingTransfersCount();
                 assert.equal(pendingTransfersCount, 1);
             });
+            
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
                     this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);

@@ -4,18 +4,11 @@ const MainToken = artifacts.require('MainToken');
 
 const fs = require('fs');
 
-const blocksBetweenCrossEvents = 0;
-const minimumPedingTransfersCount = 0;
-
 function shouldDeployToken(network) {
     return !network.toLowerCase().includes('mainnet');
 }
 
 module.exports = function(deployer, network) {
-    const crossTopic = web3.utils.sha3('Cross(address,address,uint256)');
-    const tokenTopic = web3.utils.sha3('Token(address,string)');
-    let mmrInstance = null;
-
     let symbol = 'e';
     
     if(network == 'regtest' || network == 'testnet')
@@ -23,7 +16,7 @@ module.exports = function(deployer, network) {
 
     deployer.deploy(Manager)
     .then(() => Manager.deployed())
-    .then(() => deployer.deploy(Bridge, Manager.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount))
+    .then(() => deployer.deploy(Bridge, Manager.address, symbol.charCodeAt()))
     .then(() => Bridge.deployed())
     .then( () => {
         if(shouldDeployToken(network)) {
