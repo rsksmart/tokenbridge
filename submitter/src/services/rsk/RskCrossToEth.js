@@ -108,6 +108,7 @@ module.exports = class RskCrossToEth {
           await transactionSender.sendTransaction(sideMMRProverContract.options.address, data, 0, this.config.eth.privateKey);
 
           let blocksToProve = await sideMMRProverContract.methods.getBlocksToProve(log.blockHash, log.blockNumber).call();
+          this.logger.debug('sideMMRProverContract getBlocksToProve',log.blockHash, log.blockNumber, blocksToProve);
           for(var blockToProve of blocksToProve) {
             this.logger.info(`Start to prove block:${blockToProve}`);
             let mmrLeaf = this.mmrController.mmrTree.getLeaf(blockToProve);
