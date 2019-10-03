@@ -15,6 +15,20 @@
   },
   {
     "constant": true,
+    "inputs": [],
+    "name": "initialBlock",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
     "inputs": [
       {
         "name": "",
@@ -69,6 +83,20 @@
       }
     ],
     "name": "setBlockRecorder",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "initial",
+        "type": "uint256"
+      }
+    ],
+    "name": "setInitialBlock",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -275,7 +303,7 @@
       }
     ],
     "payable": false,
-    "stateMutability": "pure",
+    "stateMutability": "view",
     "type": "function"
   },
   {

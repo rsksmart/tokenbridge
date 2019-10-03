@@ -17,6 +17,15 @@ logger.info('ETH Host', config.ethHost);
 logger.info('Confirmations', config.confirmations);
 logger.info('mmrBlockConfirmations', config.mmrBlockConfirmations);
 
+if(config.confirmations < 0 || config.mmrBlockConfirmations < 0) {
+    logger.error('Error at config.js file, confirmations and mmrBlockConfirmations should be 0 or positive numbers');
+    process.exit();
+}
+if(config.confirmations <= config.mmrBlockConfirmations) {
+    logger.error('Error at config.js file, confirmations should be bigger than mmrBlockConfirmations');
+    process.exit();
+}
+
 const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
 const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
 const rskCrossToEth = new RskCrossToEth(config, log4js.getLogger('RSK-TO-ETH'), mmrController);

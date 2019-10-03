@@ -170,9 +170,13 @@ module.exports = class MMRTree {
     }
 
     _getLeaf(root, blockNumber) {
-        //if its a leaf we found the block, return empty array to start appending on recursion
+        //if its a leaf and its the same blockNumber then we found the block otherwise return null
         if (root.isLeaf()) {
-            return root;
+            if(root.end_height == blockNumber) {
+                return root;
+            } else {
+                return null;
+            }
         }
         let result = null;
         //If its on the left side of the peak

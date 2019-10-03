@@ -20,8 +20,17 @@ const logger = log4js.getLogger('test');
 logger.info('----------- Integration Test ---------------------');
 logger.info('RSK Host', config.rsk.host);
 logger.info('ETH Host', config.eth.host);
-logger.info('Confirmations', config.confirmations);
+logger.info('confirmations', config.confirmations);
 logger.info('mmrBlockConfirmations', config.mmrBlockConfirmations);
+
+if(config.confirmations < 0 || config.mmrBlockConfirmations < 0) {
+    logger.error('Error at config.js file, confirmations and mmrBlockConfirmations should be 0 or positive numbers');
+    process.exit();
+}
+if(config.confirmations <= config.mmrBlockConfirmations) {
+    logger.error('Error at config.js file, confirmations should be bigger than mmrBlockConfirmations');
+    process.exit();
+}
 
 const mmrController = new MMRController(config, log4js.getLogger('MMR-CONTROLLER'));
 const rskMMR = new RskMMR(config, log4js.getLogger('RSK-MMR'), mmrController);
@@ -44,7 +53,7 @@ async function run() {
         const mainTokenAddress = mainTokenContract.options.address;
         logger.info('Main token addres:' + mainTokenAddress + ' Sender Address:' + senderAddress);
 
-        logger.info('aprove token transfer');
+        logger.info('approve token transfer');
         let data = mainTokenContract.methods.approve(bridgeAddress, amount).encodeABI();
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.rsk.privateKey);
 

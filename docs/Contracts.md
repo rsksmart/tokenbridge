@@ -8,7 +8,7 @@ yet).
 
 It receives and locks tokens, using its method `receiveTokens`. This method
 get the tokens from the token contract using `safeTransferFrom` so the user should
-have aproved the transfer before invoking the `Bridge` method.
+have approved the transfer before invoking the `Bridge` method.
 
 The other responsability of this contract is to release tokens, under the
 control of the `EventsProcessor` contract. This contract, described below,

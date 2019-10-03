@@ -3,7 +3,7 @@ module.exports = {
     eth: require('./development.json'),
     runEvery: 1, // In minutes,
     mmrSyncInterval: 1, // In minutes
-    confirmations: 0,
-    mmrBlockConfirmations: 1,
+    confirmations: 3,
+    mmrBlockConfirmations: 2,
     storagePath: '/home/user/tokenbridge/submitter/db'
 }
