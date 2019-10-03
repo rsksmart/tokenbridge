@@ -11,7 +11,7 @@ const RskCreateEvent = require('./src/services/rsk/RskCreateEvent.js');
 const MMRController = require('./src/lib/mmr/MMRController.js');
 //abis
 const abiBridge = require('./src/abis/Bridge.json');
-const abiMainToken = require('./src/abis/MainToken.json');
+const abiMainToken = require('./src/abis/IERC20.json');
 //utils
 const TransactionSender = require('./src/lib/TransactionSender.js');
 
