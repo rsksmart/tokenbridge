@@ -14,9 +14,6 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
 
     address public manager;
     uint8 symbolPrefix;
-    uint256 public lastCrossEventBlock;
-    uint256 public blocksBetweenCrossEvents;
-    uint256 public minimumPedingTransfersCount;
 
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
@@ -24,76 +21,25 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     
     mapping (address => address) public mappedAddresses;
 
-    struct TransferStruct {
-        address token;
-        address receiver;
-        uint256 amount;
-        string symbol;
-    }
-    
-    uint256 public pendingTransfersCount;
-    TransferStruct[] public pendingTransferStruct;
-    
-    event Token(address indexed token, string symbol);
-    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount);
+    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
 
     modifier onlyManager() {
         require(msg.sender == manager, "Sender is not the manager");
         _;
     }
 
-    constructor(address _manager, uint8 _symbolPrefix, uint256 _blocksBetweenCrossEvents, uint256 _minimumPedingTransfersCount) public {
+    constructor(address _manager, uint8 _symbolPrefix) public {
         require(_manager != address(0), "Empty manager");
         require(_symbolPrefix != 0, "Empty symbol prefix");
         manager = _manager;
         symbolPrefix = _symbolPrefix;
-        pendingTransfersCount = 0;
-        blocksBetweenCrossEvents = _blocksBetweenCrossEvents;
-        minimumPedingTransfersCount = _minimumPedingTransfersCount;
     }
 
     function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
         return tokenFallback(to, amount, data);
     }
 
-    function addPendingTransfer(ERC20Detailed fromToken, address to, uint256 amount) private whenNotPaused {
-        validateToken(fromToken);
-        //TODO should group by address and sender
-        pendingTransferStruct.push(TransferStruct(address(fromToken), to, amount, fromToken.symbol()));
-        pendingTransfersCount++;
-    }
-
-    function emitEvent() public whenNotPaused returns (bool success) {
-        //TODO add validations
-        if(block.number > lastCrossEventBlock + blocksBetweenCrossEvents || pendingTransfersCount > minimumPedingTransfersCount ) {
-            for(uint256 i = 0; i < pendingTransfersCount; i++) {
-                TransferStruct memory transfer = pendingTransferStruct[i];
-                address token = transfer.token;
-                
-                if (originalTokens[token] != address(0))
-                    token = originalTokens[token];
-                else if (!knownTokens[token]) {
-                    emit Token(token, ERC20Detailed(token).symbol());
-                    knownTokens[token] = true;
-                }
-                    
-                emit Cross(token, getMappedAddress(transfer.receiver), transfer.amount);
-                
-                delete pendingTransferStruct[i];
-            }
-            
-            pendingTransfersCount = 0;
-            lastCrossEventBlock = block.number;
-            
-            pendingTransferStruct.length = 0;
-            
-            return true;
-        }
-        
-        return false;
-    }
-    
-    function processToken(address token, string memory symbol) public onlyManager whenNotPaused returns (bool) {
+    function processToken(address token, string memory symbol) private onlyManager whenNotPaused {
         SideToken sideToken = mappedTokens[token];
         
         if (address(sideToken) == address(0)) {
@@ -102,12 +48,12 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             mappedTokens[token] = sideToken;
             originalTokens[address(sideToken)] = token;
         }
-        
-        return true;
     }
 
-    function acceptTransfer(address tokenAddress, address receiver, uint256 amount)
+    function acceptTransfer(address tokenAddress, address receiver, uint256 amount, string memory symbol)
         public onlyManager whenNotPaused returns(bool) {
+        processToken(tokenAddress, symbol);
+        
         address to = getMappedAddress(receiver);
 
         if (isMappedToken(tokenAddress)) {
@@ -134,7 +80,7 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         address originalTokenAddress = originalTokens[msg.sender];
         require(originalTokenAddress != address(0), "Sender is not one of the crossed token contracts");
         SideToken sideToken = SideToken(msg.sender);
-        addPendingTransfer(ERC20Detailed(originalTokenAddress), from, amount);
+        emit Cross(originalTokenAddress, getMappedAddress(from), amount, ERC20Detailed(originalTokenAddress).symbol());
         sideToken.burn(amount);
         return true;
     }
@@ -161,7 +107,7 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         //TODO should we accept  that people call receiveTokens with the SideToken???
         validateToken(tokenToUse);
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        addPendingTransfer(tokenToUse, msg.sender, amount);
+        emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         
         if (isSideToken(address(tokenToUse)))
             SideToken(address(tokenToUse)).burn(amount);
