@@ -329,17 +329,6 @@ contract('MMRProver', function (accounts) {
             }
         }
     });
-    
-    it('process proof only block bigger than initialBlock', async function () {
-
-        this.prover.setInitialBlock(52);
-        const blockHash = '0xbb044e8fa46e55284663825d0054cb10dfc9e43342aa2139e9f3c65b2c80fa34';
-        const blockNumber = 36;
-        const mmrRoot = '0x26f01f18b12ea7fe1736f7297f2e826ea4b2a261234ed31c71bc5042ccf86713';
-
-        await utils.expectThrow(this.prover.initProcessProof(blockNumber, blockHash, mmrRoot));
-    });
-    
 
     it('only owner can set block recorder', async function () {
         await utils.expectThrow(this.prover.setBlockRecorder(accounts[1], { from: accounts[2] }));
@@ -369,8 +358,31 @@ contract('MMRProver', function (accounts) {
         assert.ok(firstBlock.toNumber() > 0);
         assert.ok(firstBlock.toNumber() < 4572473);
         assert.equal(firstBlock.toNumber(), 4069584);
-        assert.equal(latestBlock.toNumber(), 123456789);
+        assert.equal(latestBlock.toNumber(), blockNumber);
         assert.equal(blocksToProve[26].toNumber(), 122953882);
+    });
+
+    it('getBlocksToProve with initialBlock', async function () {
+        let initialBlock = 52;
+        this.prover.setInitialBlock(initialBlock);
+        const blockHash = '0x0ad7f127aab285947f4f1e37eb6eed963ca00215284a1eea16f0d100ef307aee';
+        const blockNumber = 67;
+
+        let blocksToProve = await this.prover.getBlocksToProve(blockHash, blockNumber);
+        blocksToProve = blocksToProve.map((bn) => { return bn.toNumber(); });
+        for(var blockToProve of blocksToProve) {
+            assert.ok(blockToProve > initialBlock);
+            assert.ok(blockToProve <= blockNumber);
+        }
+    });
+
+    it('getBlocksToProve only block numbers bigger than initialBlock', async function () {
+
+        this.prover.setInitialBlock(52);
+        const blockHash = '0xbb044e8fa46e55284663825d0054cb10dfc9e43342aa2139e9f3c65b2c80fa34';
+        const blockNumber = 36;
+
+        await utils.expectThrow(this.prover.getBlocksToProve(blockHash, blockNumber));
     });
 
     it('log_2', async function () {
