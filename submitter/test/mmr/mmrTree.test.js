@@ -232,9 +232,13 @@ describe('MMR Tree tests', () => {
         });
 
         it('Get Leaf', () => {
-            let root = this.mmr.getRoot();
-            let node = this.mmr.getLeaf(this.node7.number);
+            let node = this.mmr.getLeaf(this.node7.end_height);
             expect(node).to.equals(this.node7);
+        });
+
+        it('Get Inexistent Leaf', () => {
+            let node = this.mmr.getLeaf(99999999);
+            expect(node).to.be.null;
         });
     });
 
