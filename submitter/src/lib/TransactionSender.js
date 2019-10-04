@@ -92,7 +92,8 @@ module.exports = class TransactionSender {
             delete rawTx.v;
             sendTransactionPromise = this.client.eth.sendTransaction(rawTx);
         }
-        return sendTransactionPromise.then((receipt) => {
+        return sendTransactionPromise
+            .then((receipt) => {
                 this.client.eth.transactionConfirmationBlocks = prevConfirmations;
                 if(receipt.status == 1) {
                     this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
