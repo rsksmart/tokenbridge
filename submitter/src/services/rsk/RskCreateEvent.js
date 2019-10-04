@@ -23,7 +23,7 @@ module.exports = class RskToEth {
           await transactionSender.sendTransaction(bridgeAddress, data, 0, this.config.rsk.privateKey);
           return true;
         } else {
-          this.logger.debug('Conditions not met to emmit the event');
+          this.logger.debug('Conditions are not met to emmit the event');
           return false;
         }
     } catch(err) {

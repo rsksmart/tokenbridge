@@ -15,7 +15,7 @@ module.exports = class MMRController {
         this.logger.info('rskMMRPath', this.rskMMRPath);
         this.requiredConfirmations = config.mmrBlockConfirmations == null ? 10 : config.mmrBlockConfirmations;
         this.startBlock = parseInt(this.config.rsk.fromBlock);
-        this.logger.debug('MMR controller start block',this.startBlock)
+        this.logger.debug('MMR controller start block', this.startBlock)
         this.web3 = new Web3(this.config.rsk.host);
         this.mmrTree = this._restoreMMRTree();
     }

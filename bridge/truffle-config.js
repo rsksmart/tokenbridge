@@ -36,11 +36,12 @@ module.exports = {
       network_id: "*", // Match any network id
       gas: 6800000
     },
-    testnet: {
-      provider: () => new HDWalletProvider(MNEMONIC, 'https://public-node.testnet.rsk.co'),
-      network_id: 31, // Match chain id
-      gas: 6800000,
-      gasPrice: 59240000
+    rsktestnet: {
+      provider: () =>
+        new HDWalletProvider(MNEMONIC, "http://public-node.testnet.rsk.co/1.1.0"),
+      network_id: 31,
+      gas: 6700000,
+      gasPrice: 62000000 // 0.06 gwei    
     },
      //Ethereum
      ropsten: {

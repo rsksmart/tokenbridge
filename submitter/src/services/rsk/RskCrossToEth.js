@@ -47,17 +47,16 @@ module.exports = class RskCrossToEth {
       const from = await transactionSender.getAddress(this.config.eth.privateKey);
       this.logger.debug('use sender address', from);
       
-      let fromBlock = null;
+      let fromBlock = 0x01;
       try {
         fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
       } catch(err) {
         fromBlock = this.config.rsk.fromBlock;
       }
-      fromBlock++;
       this.logger.debug('run from Block', fromBlock);
 
       const logs = await bridgeContract.getPastEvents( "Cross", {
-        fromBlock: fromBlock || "0x01",
+        fromBlock: fromBlock,
         toBlock: toBlock || "latest"
       });
       this.logger.info(`Found ${logs.length} logs`);
@@ -157,8 +156,10 @@ module.exports = class RskCrossToEth {
         let data2 = sideEventsProcessorContract.methods.processReceipt(log.blockHash, rawTxReceipt, prefsuf.prefixes, prefsuf.suffixes).encodeABI();
         await transactionSender.sendTransaction(sideEventsProcessorContract.options.address, data2, 0, this.config.eth.privateKey);
       }
-
-      fs.writeFileSync(this.lastBlockPath, previousBlockNumber);
+      if(previousBlockNumber) {
+        previousBlockNumber++;
+        fs.writeFileSync(this.lastBlockPath, previousBlockNumber.toString(16));
+      }
       return true;
     } catch (err) {
         this.logger.error(new CustomError('Exception Crossing RSK Event', err));

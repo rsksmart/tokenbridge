@@ -42,7 +42,8 @@ async function run() {
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.rsk.privateKey);
 
         //This may varies according to the number of token logs or mmr block samples
-        let waitBlocks = 8;
+        let currentBlockNumber = await ethWeb3.eth.getBlockNumber();
+        let waitBlocks = Math.ceil(Math.log2(currentBlockNumber)) + 3;
         logger.debug(`Wait for ${waitBlocks} blocks`);
         await utils.waitBlocks(ethWeb3, waitBlocks);
 

@@ -1,54 +1,13 @@
-# RSK Decentralized Token Bridge POC
+# RSK Trustless Decentralized Token Bridge POC
 
-Proof of concept Ethereum/RSK Decentralized Token Bridge.
+Proof of concept Ethereum/RSK Trustless Decentralized Token Bridge.
 
+## Rationale
+Cross chain events are very important in the future of crypto. Currently most of them have a federation or a group of people that is trusted to validate and cross this events. We propose a way of using smart contracts to verify events from the other chain, this way anyone can cross the events. As the motto goes verify, don't trust.
 
-## Transfer flows
+## Overview
+We have a smart contract bridge on each network, the bridge on one chain will receive and lock the tokens, then it will emmit an event that can be served to the bridge on the other chain. This bridge will validate the tx receipt, the merkle proof that the tx receipt is inside the block, verify the block and its pow and finally using Fly Client it will verify that the block is part of the block using the MMR root (Mountain Merkle Range root)
 
-### Mainchain to Sidechain
-
-To transfer Tokens from the Mainchain to the Sidechain first an account must approve the transfers of tokens to the Bridge, and then call receiveTokens on the Bridge, to send the Tokens. The Bridge acts only as a Token Custodian, it holds the received tokens and emits a Cross token event that batches the tokens transfers. The Submitter (a group of off-chain scripts) listens for the events emitted by the Bridge and gives the information to the EventProcessor in the other network. 
-
-The side chain EventProcessor verifies the block POW, tx Receipt, Merkle proof for the tx Receipt, MMR root for the block, and Merkle Proof for the MMR root. If everything is ok it calls the Bridge to release the Sidechain Tokens.
-
-The Sidechain Bridge dinamically allocates (create / mint / burn) Mirror Tokens to release the transferred amount of Mirror Tokens to the specified source account. The source account from the Mainchain could be the same as the destination account on the Sidechain or it can be mapped in the Mainchain Bridge to a different account.
-
-To avoid undeserible side-effects due to a Blockchain reorganization the EventsProcessor only process transfer events that have enough confirmations (K confirmation blocks).
-
-![Mainchain to Sidechain transfer flow](./docs/images/mainchain_to_sidechain_high_level.jpg?raw=true "Mainchain to Sidechain transfer")
-
-### Sidechain to Mainchain
-
-When an account from the Sidechain wants to transfer Mirror Tokens back to the Mainchain, it transfers them to the Sidechain Bridge. Similar to the Mainchain to Sidechain transfer, the Bridge emits events that are listened by the Submitter (it might be the same group as the ones in the Mainchain, but this is not mandatory). 
-
-The Mainchain EventsProcessor veryfies everything is ok and it instructs the Mainchain Bridge to release the transferred amount of Tokens to the specified Mainchain account. As in the previous case, the source account from the Sidechain could be the same as the destination account of the Mainchain or it can be mapped in the Sidechain Bridge to a different account.
-
-![Sidechain to Mainchain transfer flow](./docs/images/sidechain_to_mainchain_high_level.jpg?raw=true "Sidechain to Mainchain transfer")
-
-### Simplified sequence diagram
-![Simplified sequence diagram](./docs/images/simplified_decentralized_bridge_sequence.jpg?raw=true "Simplified sequence diagram")
-
-## Components
-
-The Token Bridge works between RSK and Ethereum. The original ERC20 Token Contract is deployed on the Mainchain and it does not require any modifications (it might pre-exists to the deployment of the RSK Token Bridge).
-
-Two additional contracts are deployed on the Mainchain:
-* The MMR Contract: Keeps track of the MMR root and emits an event with it.
-* The Bridge Contract: Acts as a Token Custodian of the Tokens on the Mainchain, creates the Cross Tokens Event. It receives Tokens from the Mainchain and holds them until the EventsProcessor instructs it to release them.
-
-On the Sidechain seven contracts are deployed:
-* The EventsProcessor Contract: Verifies the information from Manchain and controls the release of Mirror Tokens from the Sidechain to the Mainchain.
-* The BlockRecorder Contract: Verifies the Block and store its hash and the asociated Tx Receipt Root.
-* The MMRProver Contract: Verifies the MMR root and MMR Proof are valid.
-* The ReceiptProver Contract: Verifies the Tx Receipt given and Merkle Proof hash up to the Tx Receipt root of a block.
-* The RskPow/EthPow Contract: Verifies the block Proof of Work.
-* The Bridge Contract: Verifies the Cross tokens event and releases the transfered tokens from the mainchain, also acts as a Token Custodian of the Mirror Tokens on the Sidechain.
-
-Finally, a set of off-chain scripts known as the Submitter listens for transfer events emitted by the Bridge. This set of scripts can be seen as a group of Oracles and its main purpose is to inform the events between both chains.
-
-Note: To make it work both ways you'll need all of the contracts deployed in both networks.
-
-![Components Diagram](./docs/images/components_diagram.jpg?raw=true "Components Diagram")
 
 ## References
 - [FlyClient: Super-Light Clients for Cryptocurrencies](https://eprint.iacr.org/2019/226.pdf)
