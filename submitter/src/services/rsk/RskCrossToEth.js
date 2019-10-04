@@ -158,7 +158,7 @@ module.exports = class RskCrossToEth {
       }
       if(previousBlockNumber) {
         previousBlockNumber++;
-        fs.writeFileSync(this.lastBlockPath, previousBlockNumber.toString(16));
+        fs.writeFileSync(this.lastBlockPath, '0x' + previousBlockNumber.toString(16));
       }
       return true;
     } catch (err) {
