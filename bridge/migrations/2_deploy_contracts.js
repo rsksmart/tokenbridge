@@ -34,7 +34,7 @@ module.exports = function(deployer, network) {
     .then(() => EventsProcessor.deployed())
     .then(() => { 
         let symbol = 'e';
-        if(network == 'regtest' || network == 'testnet')
+        if(network == 'regtest' || network == 'rsktestnet')
             symbol = 'r';
         
         return deployer.deploy(Bridge, EventsProcessor.address, symbol.charCodeAt(), blocksBetweenCrossEvents, minimumPedingTransfersCount);
@@ -74,6 +74,8 @@ module.exports = function(deployer, network) {
             let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
             host += currentProvider.host + ((currentProvider.port) ? `:${currentProvider.port}` : '');
             config.host = host;
+        } else {
+            config.host = '';
         }
         
         fs.writeFileSync(`../submitter/${network}.json`, JSON.stringify(config, null, 4));
