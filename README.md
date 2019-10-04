@@ -6,7 +6,11 @@ Proof of concept Ethereum/RSK Trustless Decentralized Token Bridge.
 Cross chain events are very important in the future of crypto. Currently most of them have a federation or a group of people that is trusted to validate and cross this events. We propose a way of using smart contracts to verify events from the other chain, this way anyone can cross the events. As the motto goes verify, don't trust.
 
 ## Overview
-We have a smart contract bridge on each network, the bridge on one chain will receive and lock the tokens, then it will emmit an event that can be served to the bridge on the other chain. This bridge will validate the tx receipt, the merkle proof that the tx receipt is inside the block, verify the block and its pow and finally using Fly Client it will verify that the block is part of the block using the MMR root (Mountain Merkle Range root)
+We have a smart contract bridge on each network, the bridge on one chain will receive and lock the tokens, then it will emmit an event that can be served to the bridge on the other chain. This bridge will validate the tx receipt, the merkle proof that the tx receipt is inside the block, verify the block and its pow and finally using Fly Client it will verify that the block is part of the blockchain using the MMR root (Mountain Merkle Range root).
+
+![Mainchain to Sidechain transfer flow](./images/mainchain_to_sidechain_high_level.jpg?raw=true "Mainchain to Sidechain transfer")
+
+See the [documentation](./docs) for more information on how it works.
 
 
 ## References
