@@ -20,3 +20,5 @@ Finally, a set of off-chain scripts known as the Submitter listens for transfer 
 Note: To make it work both ways you'll need all of the contracts deployed in both networks.
 
 ![Components Diagram](./images/components_diagram.jpg?raw=true "Components Diagram")
+
+See the ["token bridge flow"](./Flow.md) for a better understanding on how it's used

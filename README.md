@@ -12,6 +12,9 @@ We have a smart contract bridge on each network, the bridge on one chain will re
 
 See the [documentation](./docs) for more information on how it works.
 
+## Testnet Example
+We used this POC on RSK testnet and Ethereum Rinkeby and transfered the RSK RIF token to Ethereum, in order to probe the trustless decentralized token bridge.
+See the ['real example'](./docs/RealExample.md) for more information.
 
 ## References
 - [FlyClient: Super-Light Clients for Cryptocurrencies](https://eprint.iacr.org/2019/226.pdf)
