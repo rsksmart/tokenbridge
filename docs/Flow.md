@@ -18,6 +18,7 @@ To avoid undeserible side-effects due to a Blockchain reorganization the EventsP
 ## Simplified sequence diagram
 ![Simplified sequence diagram](./images/simplified_decentralized_bridge_sequence.jpg?raw=true "Simplified sequence diagram")
 
+See a ["real example"](./RealExample.md) for a testnet example of the steps described above
 
 ## Sidechain to Mainchain
 
