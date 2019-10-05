@@ -74,6 +74,6 @@ in the other chain are retrieved. Their information is applied to this chain `Br
 creating new mirror tokens if needed, and executing the mirror transfer.
 
 
-
+See the ["token bridge components"](./Components.md) for a better understanding of the pieces involced
 
 
