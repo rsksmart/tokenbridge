@@ -1,0 +1,8 @@
+# Scope
+As this is a POC it has it's limitations and its not ment as fully productive. This is a list of this restrictions:
+
+- Only one way RSK => ETH: As getting back the tokens is the same process as crossing them in the first place we only implemented it one way for this POC. Also etehreum POW costs a lot more gas to verify on smart contracts than RSK. 
+- MMR calculate smart contract: As we don't have the mmr root as part of the block header, this needs to be calculated on chain. As the smart contracts only can get the last 256 blocks hashes in ETH and RSK calling this contracts before 256 blocks since the last time is fundamental. Also this calculation is the most expensive of all the process
+- Verification of the MMR event: We haven't added the validation of the MMR event inside the Event Procesor as the process is the same as the validation of the Cross event. But for a productive enviroment this validation is mandatory if the mmr root is not inside the block header.
+- Number of confirmations: The number of confirmations that comes by default in this project is very low in order to make test fast, as it's just a proof of concept. In a production enviroment this values should be set higher.
+- Bridge Cross Event: The bridge cross event must wait for a period of time to group the events to be more cost efective (it's cheaper to send bulked events) but also it has to have a limit of events in that bulk, because if they are too many you could get an out of gas exception on the other bridge. The current numbers for this are just for testing they are not ment for production.
