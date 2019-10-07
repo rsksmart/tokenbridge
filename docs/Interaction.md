@@ -1,7 +1,3 @@
----
-title: 'Decentralized bridge interaction guide'
----
-
 Decentralized bridge interaction guide
 ===
 
@@ -33,7 +29,9 @@ In particular for this use case, it was used:
 
 Start by connecting the blockchain interface client to the Mainchain network. In this case the connection is to a custom local node that was previously started.
 
-![](./images/rsk_node_setup.png =500x350)
+<p align="center">
+  <img src="./images/rsk_node_setup.png" width="500" height="350" />
+</p>
 
 ---
 
@@ -61,7 +59,9 @@ Then confirm the gas price, write and sign the transaction and finally send it. 
 
 !["Transaction Write"](./images/transaction_write.png "Transaction Write")
 !["Transaction Send"](./images/transaction_send.png "Transaction Send")
-!["Transaction Confirm"](./images/transaction_confirm.png =300x330 "Transaction Confirm")
+<p align="center">
+  <img src="./images/transaction_confirm.png" width="300" height="330" />
+</p>
 
 ---
 
@@ -87,7 +87,9 @@ On this occasion invoke the receiveTokens method placing the IER20 contract addr
 
 Again, write, sign and confirm the transaction and wait for it to be approved.
 
-!["Transaction Confirm Receive"](./images/transaction_confirm_receive.png =300x330 "Transaction Confirm Receive")
+<p align="center">
+  <img src="./images/transaction_confirm_receive.png" width="300" height="330" />
+</p>
 
 ---
 
