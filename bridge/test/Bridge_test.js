@@ -13,10 +13,8 @@ contract('Bridge', async function (accounts) {
     const anotherAccount = accounts[6];
     
     beforeEach(async function () {
-        this.blocksBetweenCrossEvents = 0, 
-        this.minimumPedingTransfersCount = 0;
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
-        this.bridge = await Bridge.new(bridgeManager, 'e'.charCodeAt(), this.blocksBetweenCrossEvents, this.minimumPedingTransfersCount, { from: bridgeOwner });
+        this.bridge = await Bridge.new(bridgeManager, 'e'.charCodeAt(), { from: bridgeOwner });
     });
 
     describe('Main Side', async function () {
@@ -62,14 +60,7 @@ contract('Bridge', async function (accounts) {
             await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
             await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
 
-            let pendingTransfersCount = await this.bridge.pendingTransfersCount();
-            assert.equal(pendingTransfersCount, 1);
-
-            let tx = await this.bridge.emitEvent();
-            utils.checkRcpt(tx);
-
-            pendingTransfersCount = await this.bridge.pendingTransfersCount();
-            assert.equal(pendingTransfersCount, 0);
+            // TODO check event
         });
 
         describe('maps addresses', async function () {
@@ -95,41 +86,15 @@ contract('Bridge', async function (accounts) {
 
     describe('Mirror Side', async function () {
         beforeEach(async function () {;
-            this.mirrorBridge = await Bridge.new(bridgeManager, 'r'.charCodeAt(), this.blocksBetweenCrossEvents, this.minimumPedingTransfersCount, { from: bridgeOwner });
+            this.mirrorBridge = await Bridge.new(bridgeManager, 'r'.charCodeAt(), { from: bridgeOwner });
 
             this.amount = 1000;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
             await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
-            await this.bridge.emitEvent();
         });
 
         describe('Cross the tokens', async function () {
-            it('process token', async function () {
-                await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
-
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                let sideToken = await SideToken.at(sideTokenAddress);
-                const sideTokenSymbol = await sideToken.symbol();
-                assert.equal(sideTokenSymbol, "rMAIN");
-            });
-                
-            it('process token transfer only manager', async function () {
-                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: bridgeOwner }));
-                await utils.expectThrow(this.bridge.processToken(this.token.address, "MAIN", { from: anAccount }));
-
-                const anAccountBalance = await this.token.balanceOf(anAccount);
-                assert.equal(anAccountBalance, 0);
-                
-                const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
-                assert.equal(newBridgeBalance, 1000);
-
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                assert.equal(sideTokenAddress, 0);
-            });
-
             it('accept transfer', async function () {
-                await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
-
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 let sideToken = await SideToken.at(sideTokenAddress);
                 const sideTokenSymbol = await sideToken.symbol();
@@ -148,7 +113,6 @@ contract('Bridge', async function (accounts) {
             });
 
             it('accept transfer only manager', async function () {
-                await this.bridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, this.amount, { from: bridgeOwner }));
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, this.amount, { from: anAccount }));
 
@@ -163,7 +127,6 @@ contract('Bridge', async function (accounts) {
             });
 
             it('accept transfer same token', async function () {
-                await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, { from: bridgeManager });
 
                 const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -186,7 +149,6 @@ contract('Bridge', async function (accounts) {
 
         describe('Cross back the tokens', async function () {
             beforeEach(async function () {
-                await this.mirrorBridge.processToken(this.token.address, "MAIN", { from: bridgeManager });
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, { from: bridgeManager });
                 this.amountToCrossBack = 100;
             });
@@ -208,8 +170,7 @@ contract('Bridge', async function (accounts) {
                 let mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                 assert.equal(mirrorBridgeBalance, 0); 
                 
-                let pendingTransfersCount = await this.mirrorBridge.pendingTransfersCount();
-                assert.equal(pendingTransfersCount, 1);
+                // TODO check events?
             });
             
             describe('After the mirror Bridge burned the tokens', function () {
@@ -220,17 +181,6 @@ contract('Bridge', async function (accounts) {
 
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     await this.sideToken.transferAndCall(this.mirrorBridge.address, this.amountToCrossBack, "0x", { from: anAccount });
-                });
-
-                it('should emit event to cross', async function () {
-                    let pendingTransfersCount = await this.mirrorBridge.pendingTransfersCount();
-                    assert.equal(pendingTransfersCount, 1);
-
-                    let tx = await this.mirrorBridge.emitEvent();
-                    utils.checkRcpt(tx);
-
-                    pendingTransfersCount = await this.mirrorBridge.pendingTransfersCount();
-                    assert.equal(pendingTransfersCount, 0);
                 });
 
                 it('main Bridge should relealse the tokens', async function () {
