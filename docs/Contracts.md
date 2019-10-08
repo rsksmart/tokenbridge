@@ -29,14 +29,14 @@ Proof of Work (PoW) is validated, using the RSK algorithm based on Bitcoin merge
 mining.
 
 - The Merkle Mountain Range (MMR) validation is informed by a helper contract `MMRProver`, specialized
-in validate the information provided, described below. Currently, only the validation
+in validating the information provided, described below. Currently, only the validation
 is asserted, based on the presence of the block in many MMR subtrees on a blockchain. The
 block MMR is not supplied.
 
-To do: Implements the same functionality for Ethereum block headers, validating
+To do: Implement the same functionality for Ethereum block headers, validating
 their Proof of Work (PoW) using ETHash.
 
-## MMRProver`
+## MMRProver
 
 Its responsability is to validate the presence of a block in a blockchain. To do
 the validation, a proof of existence of the supplied block in a blockchain is provided,
