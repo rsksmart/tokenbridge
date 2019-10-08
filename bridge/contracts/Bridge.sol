@@ -22,7 +22,7 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     mapping (address => address) public mappedAddresses;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
-
+    
     modifier onlyManager() {
         require(msg.sender == manager, "Sender is not the manager");
         _;
@@ -40,6 +40,9 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     }
 
     function processToken(address token, string memory symbol) private onlyManager whenNotPaused {
+        if (knownTokens[token])
+            return;
+    
         SideToken sideToken = mappedTokens[token];
         
         if (address(sideToken) == address(0)) {
@@ -107,11 +110,16 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         //TODO should we accept  that people call receiveTokens with the SideToken???
         validateToken(tokenToUse);
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         
-        if (isSideToken(address(tokenToUse)))
+        if (isSideToken(address(tokenToUse))) {
             SideToken(address(tokenToUse)).burn(amount);
-            
+            emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(msg.sender), amount, tokenToUse.symbol());
+        }
+        else {
+            knownTokens[address(tokenToUse)] = true;            
+            emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
+        }
+
         return true;
     }
     
