@@ -2,6 +2,6 @@ config.js
 regtest.json
 development.json
 test.json
-submitter.log
+federator.log
 mmrDB.json
 db/*.*
