@@ -93,6 +93,16 @@ module.exports = class RskCrossToEth {
 
       var previousBlockNumber = null;
       for(let log of logs) {
+        let rawTxReceipt = await rskWeb3.rsk.getRawTransactionReceiptByHash(log.transactionHash);
+        
+        const bufferReceipt = Buffer.concat([Buffer.from(log.blockHash.substring(2), 'hex'), Buffer.from(rawTxReceipt.substring(2), 'hex')]);
+        const processReceiptHash = Web3.utils.sha3(bufferReceipt);
+        
+        const processed = await sideEventsProcessorContract.methods.processed(processReceiptHash).call();
+        
+        if (processed)
+            continue;
+
         this.logger.info('log', log);
 
         if(previousBlockNumber != log.blockNumber) {
@@ -144,7 +154,6 @@ module.exports = class RskCrossToEth {
           previousBlockNumber = log.blockNumber;
         }
 
-        let rawTxReceipt = await rskWeb3.rsk.getRawTransactionReceiptByHash(log.transactionHash);
         let txReceiptNode = await rskWeb3.rsk.getTransactionReceiptNodesByHash(log.blockHash, log.transactionHash);
         txReceiptNode.unshift(rawTxReceipt);
         this.logger.debug('txReceiptNode', txReceiptNode);
