@@ -1,6 +1,20 @@
 [
     {
       "constant": true,
+      "inputs": [],
+      "name": "mmrProvider",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
       "inputs": [
         {
           "name": "",
@@ -10,14 +24,36 @@
       "name": "blockData",
       "outputs": [
         {
-          "name": "",
+          "name": "number",
+          "type": "uint256"
+        },
+        {
+          "name": "difficulty",
+          "type": "uint256"
+        },
+        {
+          "name": "receiptRoot",
           "type": "bytes32"
+        },
+        {
+          "name": "mmrProved",
+          "type": "bool"
         }
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0xb4468d33"
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_mmrProvider",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
     },
     {
       "constant": false,
@@ -31,7 +67,58 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0xb9dc9da4"
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "blockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "mmrProved",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "blockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getBlockReceiptRoot",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "blockHash",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getBlockMMRProved",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
     }
 ]

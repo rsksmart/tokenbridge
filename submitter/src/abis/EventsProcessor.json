@@ -11,8 +11,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x328df9b0"
+      "type": "function"
     },
     {
       "constant": true,
@@ -26,8 +25,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x32a8f30f"
+      "type": "function"
     },
     {
       "constant": true,
@@ -41,8 +39,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x92ff0d31"
+      "type": "function"
     },
     {
       "constant": true,
@@ -56,8 +53,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x938b5f32"
+      "type": "function"
     },
     {
       "constant": true,
@@ -71,8 +67,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0x9d3340b7"
+      "type": "function"
     },
     {
       "constant": true,
@@ -91,8 +86,7 @@
       ],
       "payable": false,
       "stateMutability": "view",
-      "type": "function",
-      "signature": "0xc1f0808a"
+      "type": "function"
     },
     {
       "inputs": [
@@ -111,8 +105,7 @@
       ],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "constructor",
-      "signature": "constructor"
+      "type": "constructor"
     },
     {
       "constant": false,
@@ -126,8 +119,7 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0xf5e1c4de"
+      "type": "function"
     },
     {
       "constant": false,
@@ -141,8 +133,7 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0x47c484e9"
+      "type": "function"
     },
     {
       "constant": false,
@@ -168,7 +159,6 @@
       "outputs": [],
       "payable": false,
       "stateMutability": "nonpayable",
-      "type": "function",
-      "signature": "0x9854b00d"
+      "type": "function"
     }
 ]
