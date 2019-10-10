@@ -24,7 +24,6 @@ module.exports = class RskMMR {
             return true;
         } catch(err) {
             this.logger.error(new CustomError('Exception on calculating MMR', err));
-            process.exit()
         }
     }
 
