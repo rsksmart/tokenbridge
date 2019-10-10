@@ -10,7 +10,7 @@ function shouldDeployToken(network) {
 
 module.exports = function(deployer, network) {
     let symbol = 'e';
-    
+
     if(network == 'regtest' || network == 'testnet')
         symbol = 'r';
 
@@ -40,7 +40,7 @@ module.exports = function(deployer, network) {
         } else {
             config.host = '';
         }
-        
-        fs.writeFileSync(`../submitter/${network}.json`, JSON.stringify(config, null, 4));
+
+        fs.writeFileSync(`../federator/${network}.json`, JSON.stringify(config, null, 4));
     });
 };
