@@ -2,8 +2,7 @@ config.js
 regtest.json
 development.json
 rinkeby.json
-rinkeby-fork.json
 rsktestnet.json
 test.json
-submitter.log
-mmrDB.json
+federator.log
+db/*.*
