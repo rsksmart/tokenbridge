@@ -1,8 +1,8 @@
 
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
-const utils = require('./utils.js');
-const CustomError = require('./CustomError');
+const utils = require('../lib/utils');
+const CustomError = require('../lib/CustomError');
 
 module.exports = class TransactionSender {
     constructor(client, logger) {
@@ -23,7 +23,7 @@ module.exports = class TransactionSender {
         return `0x${parseInt(number).toString(16)}`;
     }
 
-    async createRawTransaction(from, to, data, value) { 
+    async createRawTransaction(from, to, data, value) {
         const nonce = await this.getNonce(from);
         const chainId =  this.chainId || await this.client.eth.net.getId();
         const gasPrice = await this.client.eth.getGasPrice();
@@ -48,7 +48,7 @@ module.exports = class TransactionSender {
         return tx;
     }
 
-    async sendSignedTransaction(signedTx) {;  
+    async sendSignedTransaction(signedTx) {;
         const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
         return this.client.eth.sendSignedTransaction(serializedTx);
     }
@@ -72,7 +72,7 @@ module.exports = class TransactionSender {
         this.client.eth.transactionConfirmationBlocks = 1;
         const rawTx = await this.createRawTransaction(from, to, data, value);
         let sendTransactionPromise = null;
-        if (privateKey && privateKey.length) {            
+        if (privateKey && privateKey.length) {
             let signedTx = this.signRawTransaction(rawTx, privateKey);
             sendTransactionPromise = this.sendSignedTransaction(signedTx);
         } else {
@@ -86,11 +86,11 @@ module.exports = class TransactionSender {
                 this.client.eth.transactionConfirmationBlocks = prevConfirmations;
                 if(receipt.status == 1) {
                     this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                    return receipt;    
+                    return receipt;
                 }
                 this.logger.error('Transaction Receipt Status Failed', receipt);
                 this.logger.error('RawTx that failed', rawTx);
-                throw new Error('Transaction Failed: ' + stack);                
+                throw new Error('Transaction Failed: ' + stack);
             }).catch((err) => {
                 this.logger.error('RawTx that failed', rawTx);
                 throw new CustomError('Transaction Failed: '+ stack, err);
