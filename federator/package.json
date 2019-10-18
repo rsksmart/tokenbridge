@@ -16,9 +16,7 @@
   "scripts": {
     "start": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
-    "mmrsync": "node --max-old-space-size=2048 ./src/mmrSync.js",
-    "integrationTest": "node integrationTest.js",
-    "sendTestToken": "node transferTest.js",
+    "transferTest": "node transferTest.js",
     "clean": "rm -rf ./db/*"
   },
   "keywords": [
