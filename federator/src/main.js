@@ -7,29 +7,19 @@ log4js.configure(logConfig);
 
 // Services
 const Scheduler = require('./services/Scheduler.js');
-const EventCreator = require('./services/EventCreator.js');
-const Federator = require('./lib/federated/Federator.js');
+// const EventCreator = require('./services/EventCreator.js');
+const Federator = require('./lib/Federator.js');
 
 const logger = log4js.getLogger('main');
-logger.info('RSK Host', config.rsk.host);
-logger.info('ETH Host', config.eth.host);
-
-const federatorId = process.argv[2];
-if (!federatorId) {
-    logger.error('Federator id must be provided as an argument');
-    process.exit();
-}
-if (!config.members[federatorId]) {
-    logger.error('Invalid federator id');
-    process.exit();
-}
+logger.info('RSK Host', config.mainchain.host);
+logger.info('ETH Host', config.sidechain.host);
 
 if(!config.mainchain || !config.sidechain) {
     logger.error('Mainchain and Sidechain configuration are required');
     process.exit();
 }
 
-const federator = new Federator(config, log4js.getLogger('FEDERATOR'), federatorId);
+const federator = new Federator(config, log4js.getLogger('FEDERATOR'));
 // const eventCreator = new EventCreator(config, logger);
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
@@ -50,8 +40,6 @@ async function run() {
 }
 
 async function exitHandler() {
-    await rskMMR.exitHandler();
-
     process.exit();
 }
 

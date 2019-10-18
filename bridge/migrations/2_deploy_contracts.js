@@ -14,11 +14,14 @@ module.exports = function(deployer, network) {
     if(network == 'regtest' || network == 'testnet')
         symbol = 'r';
 
+    // TODO Deploy MultiSigWallet on pipeline and use its address
+    let multiSigAddress = deployer.networks[network].multi_sig_address;
+
     deployer.deploy(Manager)
     .then(() => Manager.deployed())
-    .then(() => deployer.deploy(Bridge, Manager.address, symbol.charCodeAt()))
+    .then(() => deployer.deploy(Bridge, multiSigAddress, symbol.charCodeAt()))
     .then(() => Bridge.deployed())
-    .then( () => {
+    .then(() => {
         if(shouldDeployToken(network)) {
             return deployer.deploy(MainToken, 'MAIN', 'MAIN', 18, web3.utils.toWei('1000'))
                 .then(() => MainToken.deployed());
