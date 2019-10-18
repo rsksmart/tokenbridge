@@ -15,7 +15,7 @@ module.exports = class Federator {
 
         this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, '0x4b61abafea2b52038085e8e2294187af51bd7144'/*this.config.sidechain.multisig*/);
+        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, this.config.sidechain.multisig);
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
 
@@ -137,8 +137,8 @@ module.exports = class Federator {
         ).encodeABI();
 
         let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
-        let transactionId = await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
-        this.logger.info(`Transaction ${log.transactionHash} submitted and added with id`, transactionId);
+        await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+        this.logger.info(`Transaction ${log.transactionHash} submitted to multisig`);
     }
 
     _saveProgress (path, value) {
