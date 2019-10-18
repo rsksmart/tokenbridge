@@ -15,7 +15,7 @@ module.exports = function(deployer, network) {
         symbol = 'r';
 
     // TODO Deploy MultiSigWallet on pipeline and use its address
-    let multiSigAddress = deployer.networks[network].multi_sig_address;
+    let multiSigAddress = deployer.networks[network].multisig;
 
     deployer.deploy(Manager)
     .then(() => Manager.deployed())
