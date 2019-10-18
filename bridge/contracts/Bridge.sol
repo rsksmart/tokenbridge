@@ -18,11 +18,13 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
     mapping (address => bool) public knownTokens;
-    
+
     mapping (address => address) public mappedAddresses;
 
+    mapping(bytes32 => bool) processed;
+
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
-    
+
     modifier onlyManager() {
         require(msg.sender == manager, "Sender is not the manager");
         _;
@@ -42,9 +44,9 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     function processToken(address token, string memory symbol) private onlyManager whenNotPaused {
         if (knownTokens[token])
             return;
-    
+
         SideToken sideToken = mappedTokens[token];
-        
+
         if (address(sideToken) == address(0)) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
             sideToken = new SideToken(newSymbol, newSymbol);
@@ -53,10 +55,21 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         }
     }
 
-    function acceptTransfer(address tokenAddress, address receiver, uint256 amount, string memory symbol)
+    function acceptTransfer(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        string memory symbol,
+        uint blockNumber,
+        bytes32 blockHash,
+        bytes32 transactionHash,
+        string memory logIndex
+    )
         public onlyManager whenNotPaused returns(bool) {
+        require(!transactionWasProcessed(blockNumber, blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
+
         processToken(tokenAddress, symbol);
-        
+
         address to = getMappedAddress(receiver);
 
         if (isMappedToken(tokenAddress)) {
@@ -64,16 +77,18 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             require(sideToken.mint(to, amount), "Error minting on side token");
         }
         else {
+            require(false, "safe transfered");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
-        
+        processTransaction(blockNumber, blockHash, transactionHash, receiver, amount, logIndex);
+
         return true;
     }
 
     function changeManager(address newmanager) public onlyManager whenNotPaused {
         require(newmanager != address(0), "New manager address is empty");
-        
+
         manager = newmanager;
     }
 
@@ -110,25 +125,68 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         //TODO should we accept  that people call receiveTokens with the SideToken???
         validateToken(tokenToUse);
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        
+
         if (isSideToken(address(tokenToUse))) {
             SideToken(address(tokenToUse)).burn(amount);
             emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
         else {
-            knownTokens[address(tokenToUse)] = true;            
+            knownTokens[address(tokenToUse)] = true;
             emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
 
         return true;
     }
-    
+
     function isSideToken(address token) private view returns (bool) {
         return originalTokens[token] != address(0);
     }
-    
+
     function isMappedToken(address token) private view returns (bool) {
         return address(mappedTokens[token]) != address(0);
+    }
+
+    function getTransactionCompiledId(
+        uint _blockNumber,
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        string memory _logIndex
+    )
+        private pure returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex));
+    }
+
+    function transactionWasProcessed(
+        uint _blockNumber,
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        string memory _logIndex
+    )
+        public view returns(bool)
+    {
+        bytes32 compiledId = getTransactionCompiledId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex);
+
+        return processed[compiledId];
+    }
+
+    function processTransaction(
+        uint _blockNumber,
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        string memory _logIndex
+    )
+        private whenNotPaused
+    {
+        bytes32 compiledId = getTransactionCompiledId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex);
+
+        processed[compiledId] = true;
     }
 }
 

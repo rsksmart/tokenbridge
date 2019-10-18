@@ -1,21 +1,26 @@
 const Web3 = require('web3');
-const abiBridge = require('../../abis/Bridge.json');
-const abiMultiSig = require('../../abis/MultiSig.json');
+const fs = require('fs');
+const abiBridge = require('../abis/Bridge.json');
+const abiMultiSig = require('../abis/MultiSig.json');
 const TransactionSender = require('../services/TransactionSender');
+const CustomError = require('./CustomError');
 
 module.exports = class Federator {
-    constructor(config, logger, id) {
+    constructor(config, logger) {
         this.config = config;
         this.logger = logger;
 
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
-        this.bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, this.config.sidechain.multisig);
+        this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
+        this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
+        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, '0x4b61abafea2b52038085e8e2294187af51bd7144'/*this.config.sidechain.multisig*/);
 
-        this.federatorConfig = config.members[id];
+        this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+        this.lastTxCountPath = `${config.storagePath || __dirname}/lastTxCount.txt`;
     }
 
     async run() {
@@ -33,16 +38,18 @@ module.exports = class Federator {
                 fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
                 fromBlock++;
             } catch(err) {
-                fromBlock = this.config.fromBlock || '0x01';
+                fromBlock = this.config.fromBlock || 0;
             }
             this.logger.debug('Running from Block', fromBlock);
 
-            const logs = await this.bridgeContract.getPastEvents('Cross', {
+            const logs = await this.mainBridgeContract.getPastEvents('Cross', {
                 fromBlock,
-                toBlock
+                toBlock,
+                filter: { _tokenAddress: this.config.mainchain.testToken }
             });
             this.logger.info(`Found ${logs.length} logs`);
 
+            await this._confirmPendingTransactions();
             await this._processLogs(logs);
         } catch (err) {
             this.logger.error(new CustomError('Exception Running Federator', err));
@@ -50,31 +57,93 @@ module.exports = class Federator {
         }
     }
 
-    async _processLogs(logs) {
+    async _confirmPendingTransactions() {
         const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
-        const bridgeAddress = `0x${sabi.encodeValue(this.config.mainchain.bridge)}`;
+        const from = await transactionSender.getAddress(this.config.privateKey);
 
-        let lastBlockNumber = null;
+        let fromTransactionCount = 0;
+        try {
+            fromTransactionCount = fs.readFileSync(this.lastTxCountPath, 'utf8');
+        } catch(err) {
+            fromTransactionCount = 0;
+        }
 
-        for(let log of logs) {
-            if (log.topics[2] === bridgeAddress) {
-                this.logger.info(`Processing event log: ${log}`);
+        let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
+        this.logger.info(`Checking pending transaction from ${fromTransactionCount} to ${currentTransactionCount}`);
 
-                const originalReceiver = log.topics[1];
-                const receiver = await this.bridgeContract.methods.getMappedAddress(originalReceiver);
-                this.logger.info(`Sidechain receiver: ${receiver}`);
+        let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(fromTransactionCount, currentTransactionCount, true, false).call();
 
-                const value = log.returnValues._amount;
-                this.logger.info(`Transfering: ${value}`);
-
-                let data = multiSigContract.methods.submitTransaction(receiver, value, log.data).encodeABI();
-                await transactionSender.sendTransaction(multiSigContract.options.address, data, 0, this.federatorConfig.privateKey);
-
-                lastBlockNumber = log.blockNumber;
+        if (pendingTransactions && pendingTransactions.length) {
+            for (let pending of pendingTransactions) {
+                let wasConfirmed = await this.multiSigContract.methods.confirmations(pending, from).call();
+                if (!wasConfirmed) {
+                    this.logger.info(`Confirm MultiSig Tx ${pending}`)
+                    let txData = await this.multiSigContract.methods.confirmTransaction(pending).encodeABI();
+                    await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+                }
             }
         }
 
-        fs.writeFileSync(this.lastBlockPath, lastBlockNumber);
+        this._saveProgress(this.lastTxCountPath, currentTransactionCount);
+    }
+
+    async _processLogs(logs) {
+        let lastBlockNumber = null;
+
+        for(let log of logs) {
+            this.logger.info('Processing event log:', log);
+
+            const { returnValues } = log;
+            const originalReceiver = returnValues._to;
+            const receiver = await this.mainBridgeContract.methods.getMappedAddress(originalReceiver).call();
+
+            let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
+                log.blockNumber,
+                log.blockHash,
+                log.transactionHash,
+                receiver,
+                log.returnValues._amount,
+                log.id
+            ).call();
+
+            console.log('was processed? ', wasProcessed)
+
+            if (!wasProcessed) {
+                this.logger.info('Voting tx ', log.transactionHash);
+                await this._voteTransaction(log, receiver);
+            }
+
+            lastBlockNumber = log.blockNumber;
+        }
+
+        this._saveProgress(this.lastBlockPath, lastBlockNumber);
+    }
+
+    async _voteTransaction(log, receiver) {
+        const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+
+        const { _amount: amount, _symbol: symbol} = log.returnValues ;
+        this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address}`);
+
+        let txTransferData = this.sideBridgeContract.methods.acceptTransfer(
+            this.config.sidechain.testToken,
+            receiver,
+            amount,
+            symbol,
+            log.blockNumber,
+            log.blockHash,
+            log.transactionHash,
+            log.id
+        ).encodeABI();
+
+        let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
+        let transactionId = await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+        this.logger.info(`Transaction ${log.transactionHash} submitted and added with id`, transactionId);
+    }
+
+    _saveProgress (path, value) {
+        if (value) {
+            fs.writeFileSync(path, value);
+        }
     }
 }
-
