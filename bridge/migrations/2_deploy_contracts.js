@@ -31,7 +31,8 @@ module.exports = function(deployer, network) {
         const currentProvider = deployer.networks[network];
         const config = {
             bridge: Bridge.address,
-            privateKey: ""
+            privateKey: "",
+            multisig: currentProvider.multisig
         };
         if(shouldDeployToken(network)) {
             config.testToken = MainToken.address;

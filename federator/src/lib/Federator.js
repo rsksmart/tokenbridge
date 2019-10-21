@@ -95,7 +95,7 @@ module.exports = class Federator {
 
             const { returnValues } = log;
             const originalReceiver = returnValues._to;
-            const receiver = await this.mainBridgeContract.methods.getMappedAddress(originalReceiver).call();
+            const receiver = await this.sideBridgeContract.methods.getMappedAddress(originalReceiver).call();
 
             let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
                 log.blockNumber,
@@ -105,8 +105,6 @@ module.exports = class Federator {
                 log.returnValues._amount,
                 log.id
             ).call();
-
-            console.log('was processed? ', wasProcessed)
 
             if (!wasProcessed) {
                 this.logger.info('Voting tx ', log.transactionHash);
@@ -123,10 +121,10 @@ module.exports = class Federator {
         const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
 
         const { _amount: amount, _symbol: symbol} = log.returnValues ;
-        this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address}`);
+        this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
         let txTransferData = this.sideBridgeContract.methods.acceptTransfer(
-            this.config.sidechain.testToken,
+            this.config.mainchain.testToken,
             receiver,
             amount,
             symbol,
