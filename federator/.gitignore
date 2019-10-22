@@ -4,3 +4,4 @@ development.json
 test.json
 federator.log
 db/*.*
+test/lib/*.txt

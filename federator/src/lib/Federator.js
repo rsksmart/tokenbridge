@@ -1,4 +1,4 @@
-const Web3 = require('web3');
+const web3 = require('web3');
 const fs = require('fs');
 const abiBridge = require('../abis/Bridge.json');
 const abiMultiSig = require('../abis/MultiSig.json');
@@ -6,7 +6,7 @@ const TransactionSender = require('../services/TransactionSender');
 const CustomError = require('./CustomError');
 
 module.exports = class Federator {
-    constructor(config, logger) {
+    constructor(config, logger, Web3 = web3) {
         this.config = config;
         this.logger = logger;
 
