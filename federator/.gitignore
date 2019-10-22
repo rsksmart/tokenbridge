@@ -6,3 +6,4 @@ rsktestnet.json
 test.json
 federator.log
 db/*.*
+test/lib/*.txt
