@@ -4,19 +4,23 @@ const defaults = require('../defaults');
 const methods = {};
 
 methods.transactionCount = () => ({
-    call: () => defaults.data.transactionCount
+    call: () => Promise.resolve(defaults.data.transactionCount)
 });
 
 methods.getTransactionIds = () => ({
-    call: () => defaults.data.transactionIds
+    call: () => Promise.resolve(defaults.data.transactionIds)
 });
 
 methods.confirmations = () => ({
-    call: () => defaults.data.confirmations
+    call: () => Promise.resolve(defaults.data.confirmations)
 });
 
 methods.confirmTransaction = () => ({
-    encodeABI: () => Promise.resolve('0x0')
+    encodeABI: () => '0x0'
+});
+
+methods.submitTransaction = () => ({
+    encodeABI: () => '0x0'
 });
 
 class MultiSig extends Contract {
