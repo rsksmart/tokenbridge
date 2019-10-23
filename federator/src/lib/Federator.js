@@ -47,96 +47,123 @@ module.exports = class Federator {
                 toBlock,
                 filter: { _tokenAddress: this.config.mainchain.testToken }
             });
+            if (!logs) return;
+
             this.logger.info(`Found ${logs.length} logs`);
 
             await this._confirmPendingTransactions();
             await this._processLogs(logs);
+
+            return true;
         } catch (err) {
             this.logger.error(new CustomError('Exception Running Federator', err));
+            console.log(err)
             process.exit();
         }
     }
 
     async _confirmPendingTransactions() {
-        const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
-        const from = await transactionSender.getAddress(this.config.privateKey);
-
-        let fromTransactionCount = 0;
         try {
-            fromTransactionCount = fs.readFileSync(this.lastTxCountPath, 'utf8');
-        } catch(err) {
-            fromTransactionCount = 0;
-        }
+            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+            const from = await transactionSender.getAddress(this.config.privateKey);
 
-        let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
-        this.logger.info(`Checking pending transaction from ${fromTransactionCount} to ${currentTransactionCount}`);
+            let fromTransactionCount = 0;
+            try {
+                fromTransactionCount = fs.readFileSync(this.lastTxCountPath, 'utf8');
+            } catch(err) {
+                fromTransactionCount = 0;
+            }
 
-        let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(fromTransactionCount, currentTransactionCount, true, false).call();
+            let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
+            this.logger.info(`Checking pending transaction from ${fromTransactionCount} to ${currentTransactionCount}`);
 
-        if (pendingTransactions && pendingTransactions.length) {
-            for (let pending of pendingTransactions) {
-                let wasConfirmed = await this.multiSigContract.methods.confirmations(pending, from).call();
-                if (!wasConfirmed) {
-                    this.logger.info(`Confirm MultiSig Tx ${pending}`)
-                    let txData = await this.multiSigContract.methods.confirmTransaction(pending).encodeABI();
-                    await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+            let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(fromTransactionCount, currentTransactionCount, true, false).call();
+
+            if (pendingTransactions && pendingTransactions.length) {
+                for (let pending of pendingTransactions) {
+                    let wasConfirmed = await this.multiSigContract.methods.confirmations(pending, from).call();
+                    if (!wasConfirmed) {
+                        this.logger.info(`Confirm MultiSig Tx ${pending}`)
+                        let txData = await this.multiSigContract.methods.confirmTransaction(pending).encodeABI();
+                        await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+                    }
                 }
             }
-        }
 
-        this._saveProgress(this.lastTxCountPath, currentTransactionCount);
+            this._saveProgress(this.lastTxCountPath, currentTransactionCount);
+
+            return true;
+
+        } catch (err) {
+            throw new Error(`Exception while confirming previous txs ${err}`);
+        }
     }
 
-    async _processLogs(logs) {
-        let lastBlockNumber = null;
+    async _processLogs(logs = []) {
+        try {
+            let lastBlockNumber = null;
 
-        for(let log of logs) {
-            this.logger.info('Processing event log:', log);
+            for(let log of logs) {
+                this.logger.info('Processing event log:', log);
 
-            const { returnValues } = log;
-            const originalReceiver = returnValues._to;
-            const receiver = await this.sideBridgeContract.methods.getMappedAddress(originalReceiver).call();
+                const { returnValues } = log;
+                const originalReceiver = returnValues._to;
+                const receiver = await this.sideBridgeContract.methods.getMappedAddress(originalReceiver).call();
 
-            let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
-                log.blockNumber,
-                log.blockHash,
-                log.transactionHash,
-                receiver,
-                log.returnValues._amount,
-                log.id
-            ).call();
+                let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
+                    log.blockNumber,
+                    log.blockHash,
+                    log.transactionHash,
+                    receiver,
+                    log.returnValues._amount,
+                    log.id
+                ).call();
 
-            if (!wasProcessed) {
-                this.logger.info('Voting tx ', log.transactionHash);
-                await this._voteTransaction(log, receiver);
+                if (!wasProcessed) {
+                    this.logger.info('Voting tx ', log.transactionHash);
+                    await this._voteTransaction(log, receiver);
+                }
+
+                lastBlockNumber = log.blockNumber;
             }
 
-            lastBlockNumber = log.blockNumber;
-        }
+            this._saveProgress(this.lastBlockPath, lastBlockNumber);
 
-        this._saveProgress(this.lastBlockPath, lastBlockNumber);
+            return true;
+        } catch (err) {
+            throw new Error(`Exception processing logs ${err}`);
+        }
     }
 
     async _voteTransaction(log, receiver) {
-        const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+        try {
+            if (!log || !receiver) {
+                return false;
+            }
 
-        const { _amount: amount, _symbol: symbol} = log.returnValues ;
-        this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
+            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+            const { _amount: amount, _symbol: symbol} = log.returnValues;
+            this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
-        let txTransferData = this.sideBridgeContract.methods.acceptTransfer(
-            this.config.mainchain.testToken,
-            receiver,
-            amount,
-            symbol,
-            log.blockNumber,
-            log.blockHash,
-            log.transactionHash,
-            log.id
-        ).encodeABI();
+            let txTransferData = this.sideBridgeContract.methods.acceptTransfer(
+                this.config.mainchain.testToken,
+                receiver,
+                amount,
+                symbol,
+                log.blockNumber,
+                log.blockHash,
+                log.transactionHash,
+                log.id
+            ).encodeABI();
 
-        let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
-        await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
-        this.logger.info(`Transaction ${log.transactionHash} submitted to multisig`);
+            let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
+            await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+            this.logger.info(`Transaction ${log.transactionHash} submitted to multisig`);
+
+            return true;
+        } catch (err) {
+            throw new Error(`Exception Voting tx  ${err}`);
+        }
     }
 
     _saveProgress (path, value) {
