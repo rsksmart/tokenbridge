@@ -3,6 +3,7 @@ const defaults = require('./defaults');
 
 let eth = {};
 
+eth.getBlockNumber = () => defaults.data.blockNumber;
 eth.getAccounts = () => defaults.data.accounts;
 eth.getTransactionCount = () => defaults.data.ethTransactionCount;
 eth.getGasPrice = () => defaults.data.gasPrice;
