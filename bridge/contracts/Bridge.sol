@@ -60,13 +60,12 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         address receiver,
         uint256 amount,
         string memory symbol,
-        uint blockNumber,
         bytes32 blockHash,
         bytes32 transactionHash,
-        string memory logIndex
+        uint32 logIndex
     )
         public onlyManager whenNotPaused returns(bool) {
-        require(!transactionWasProcessed(blockNumber, blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
+        require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
 
@@ -77,11 +76,10 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             require(sideToken.mint(to, amount), "Error minting on side token");
         }
         else {
-            require(false, "safe transfered");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
-        processTransaction(blockNumber, blockHash, transactionHash, receiver, amount, logIndex);
+        processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
         return true;
     }
@@ -147,44 +145,41 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
     }
 
     function getTransactionCompiledId(
-        uint _blockNumber,
         bytes32 _blockHash,
         bytes32 _transactionHash,
         address _receiver,
         uint256 _amount,
-        string memory _logIndex
+        uint32 _logIndex
     )
         private pure returns(bytes32)
     {
-        return keccak256(abi.encodePacked(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex));
+        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
     }
 
     function transactionWasProcessed(
-        uint _blockNumber,
         bytes32 _blockHash,
         bytes32 _transactionHash,
         address _receiver,
         uint256 _amount,
-        string memory _logIndex
+        uint32 _logIndex
     )
         public view returns(bool)
     {
-        bytes32 compiledId = getTransactionCompiledId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         return processed[compiledId];
     }
 
     function processTransaction(
-        uint _blockNumber,
         bytes32 _blockHash,
         bytes32 _transactionHash,
         address _receiver,
         uint256 _amount,
-        string memory _logIndex
+        uint32 _logIndex
     )
         private whenNotPaused
     {
-        bytes32 compiledId = getTransactionCompiledId(_blockNumber, _blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         processed[compiledId] = true;
     }
