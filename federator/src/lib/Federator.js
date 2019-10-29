@@ -20,7 +20,6 @@ module.exports = class Federator {
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
 
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
-        this.lastTxCountPath = `${config.storagePath || __dirname}/lastTxCount.txt`;
     }
 
     async run() {
@@ -31,6 +30,10 @@ module.exports = class Federator {
 
             if (toBlock <= 0) {
                 return false;
+            }
+
+            if (!fs.existsSync(this.config.storagePath)) {
+                fs.mkdirSync(this.config.storagePath);
             }
 
             let fromBlock = null;
@@ -67,17 +70,10 @@ module.exports = class Federator {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
             const from = await transactionSender.getAddress(this.config.privateKey);
 
-            let fromTransactionCount = 0;
-            try {
-                fromTransactionCount = fs.readFileSync(this.lastTxCountPath, 'utf8');
-            } catch(err) {
-                fromTransactionCount = 0;
-            }
-
             let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
-            this.logger.info(`Checking pending transaction from ${fromTransactionCount} to ${currentTransactionCount}`);
+            this.logger.info(`Checking pending transaction until tx ${currentTransactionCount}`);
 
-            let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(fromTransactionCount, currentTransactionCount, true, false).call();
+            let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(0, currentTransactionCount, true, false).call();
 
             if (pendingTransactions && pendingTransactions.length) {
                 for (let pending of pendingTransactions) {
@@ -89,9 +85,6 @@ module.exports = class Federator {
                     }
                 }
             }
-
-            this._saveProgress(this.lastTxCountPath, currentTransactionCount);
-
             return true;
 
         } catch (err) {
@@ -145,7 +138,7 @@ module.exports = class Federator {
             const { _amount: amount, _symbol: symbol} = log.returnValues;
             this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
-            let txTransferData = this.sideBridgeContract.methods.acceptTransfer(
+            let txTransferData = await this.sideBridgeContract.methods.acceptTransfer(
                 this.config.mainchain.testToken,
                 receiver,
                 amount,
@@ -162,7 +155,7 @@ module.exports = class Federator {
 
             return true;
         } catch (err) {
-            throw new Error(`Exception Voting tx  ${err}`);
+            this.logger.info(`Exception Voting tx  ${err}`);
         }
     }
 
