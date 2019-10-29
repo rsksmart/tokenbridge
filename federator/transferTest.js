@@ -17,11 +17,28 @@ logger.info('----------- Transfer Test ---------------------');
 logger.info('Mainchain Host', config.mainchain.host);
 logger.info('Sidechain Host', config.sidechain.host);
 
-run();
+let keys = process.argv.slice(2);
 
-async function run() {
+if (keys && keys.length) {
+    let federators = [];
+    keys.forEach((key, i) => {
+        let federator = new Federator({
+             ...config,
+             privateKey: key,
+             storagePath: `${config.storagePath}/fed-${i + 1}`
+            },
+            log4js.getLogger('FEDERATOR')
+        );
+        federators.push(federator);
+    });
+    run(federators);
+} else {
+    let federator = new Federator(config, log4js.getLogger('FEDERATOR'));
+    run([federator]);
+}
+
+async function run(federators) {
     try {
-        let federator = new Federator(config, log4js.getLogger('FEDERATOR'));
         let mainchainWeb3 = new Web3(config.mainchain.host);
         let sidechainWeb3 = new Web3(config.sidechain.host);
 
@@ -48,7 +65,14 @@ async function run() {
         await utils.waitBlocks(mainchainWeb3, waitBlocks);
 
         logger.debug('Start federator process');
-        await federator.run();
+        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+        // Start federators with delay between them
+        await federators.reduce(function(promise, item) {
+            return promise.then(function() {
+                return Promise.all([delay(5000), item.run()]);
+            })
+        }, Promise.resolve());
 
         logger.debug('Get the side token address');
         let sideBridgeContract = new sidechainWeb3.eth.Contract(abiBridge, config.sidechain.bridge);

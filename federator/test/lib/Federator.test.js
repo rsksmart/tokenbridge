@@ -19,19 +19,6 @@ describe('Federator module tests', () => {
         expect(result).to.be.true;
     });
 
-    it('Confirms pending transactions and saves progress', async () => {
-        let federator = new Federator(testConfig, logger, web3Mock);
-        let path = `${storagePath}/lastTxCount.txt`;
-
-        let result = await federator._confirmPendingTransactions();
-
-        expect(result).to.be.true;
-        expect(fs.existsSync(path)).to.be.true;
-
-        let count = fs.readFileSync(path, 'utf8');
-        expect(count).to.eq('10');
-    });
-
     it('Saves the progress in a file path', async () => {
         let federator = new Federator(testConfig, logger, web3Mock);
         let path = `${storagePath}/testPath.txt`;
