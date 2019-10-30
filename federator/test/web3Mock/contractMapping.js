@@ -1,6 +1,6 @@
 const MultiSig = require('./contracts/MultiSig');
 const Bridge = require('./contracts/Bridge');
-const config = require('../../config');
+const config = require('../../config.js');
 
 const mappings = {
     [config.mainchain.multisig]: MultiSig,
