@@ -5,9 +5,8 @@ contract Transferable {
         address originalTokenAddress,
         address receiver, uint256 amount,
         string memory symbol,
-        uint blockNumber,
         bytes32 blockHash,
         bytes32 transactionHash,
-        string memory logIndex
+        uint32 logIndex
     ) public returns(bool);
 }
