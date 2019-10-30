@@ -102,14 +102,13 @@ module.exports = class Federator {
                 const { returnValues } = log;
                 const originalReceiver = returnValues._to;
                 const receiver = await this.sideBridgeContract.methods.getMappedAddress(originalReceiver).call();
-
+                console.log(log)
                 let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
-                    log.blockNumber,
                     log.blockHash,
                     log.transactionHash,
                     receiver,
                     log.returnValues._amount,
-                    log.id
+                    log.logIndex
                 ).call();
 
                 if (!wasProcessed) {
@@ -143,10 +142,9 @@ module.exports = class Federator {
                 receiver,
                 amount,
                 symbol,
-                log.blockNumber,
                 log.blockHash,
                 log.transactionHash,
-                log.id
+                log.logIndex
             ).encodeABI();
 
             let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();

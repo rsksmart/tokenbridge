@@ -8,6 +8,7 @@ eth.getAccounts = () => defaults.data.accounts;
 eth.getTransactionCount = () => defaults.data.ethTransactionCount;
 eth.getGasPrice = () => defaults.data.gasPrice;
 eth.sendSignedTransaction = () => Promise.resolve(defaults.data.receipt);
+eth.sendTransaction = () => Promise.resolve(defaults.data.receipt);
 
 eth.Contract = contractMapping;
 
