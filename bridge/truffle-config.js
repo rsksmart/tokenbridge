@@ -20,14 +20,12 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       network_id: "*", // Match any network id
-      multisig: "0x4b61abafea2b52038085e8e2294187af51bd7144"
     },
     //RSK
     regtest: {
       host: "127.0.0.1",
       port: 4444,
       network_id: "*", // Match any network id
-      multisig: "0x4b61abafea2b52038085e8e2294187af51bd7144"
     },
     testnet: {
       provider: () => new HDWalletProvider(MNEMONIC, 'https://public-node.testnet.rsk.co'),
