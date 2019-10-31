@@ -49,45 +49,45 @@ contract MultiSigWallet {
     }
 
     modifier ownerDoesNotExist(address owner) {
-        require(!isOwner[owner]);
+        require(!isOwner[owner], "The owner already exists");
         _;
     }
 
     modifier ownerExists(address owner) {
-        require(isOwner[owner]);
+        require(isOwner[owner], "The owner does not exist");
         _;
     }
 
     modifier transactionExists(uint transactionId) {
-        require(transactions[transactionId].destination != address(0));
+        require(transactions[transactionId].destination != address(0), "Transaction does not exist");
         _;
     }
 
     modifier confirmed(uint transactionId, address owner) {
-        require(confirmations[transactionId][owner]);
+        require(confirmations[transactionId][owner], "Transaction is not confirmed by owner");
         _;
     }
 
     modifier notConfirmed(uint transactionId, address owner) {
-        require(!confirmations[transactionId][owner]);
+        require(!confirmations[transactionId][owner], "Transaction is already confirmed by owner");
         _;
     }
 
     modifier notExecuted(uint transactionId) {
-        require(!transactions[transactionId].executed);
+        require(!transactions[transactionId].executed, "Transaction was already executed");
         _;
     }
 
     modifier notNull(address _address) {
-        require(_address != 0);
+        require(_address != address(0), "Address cannot be empty");
         _;
     }
 
     modifier validRequirement(uint ownerCount, uint _required) {
-        require(ownerCount <= MAX_OWNER_COUNT
-            && _required <= ownerCount
-            && _required != 0
-            && ownerCount != 0);
+        require(ownerCount <= MAX_OWNER_COUNT &&
+            _required <= ownerCount &&
+            _required != 0 &&
+            ownerCount != 0, "Required value is invalid for the current owners count");
         _;
     }
 
@@ -110,8 +110,8 @@ contract MultiSigWallet {
         public
         validRequirement(_owners.length, _required)
     {
-        for (uint i=0; i<_owners.length; i++) {
-            require(!isOwner[_owners[i]] && _owners[i] != 0);
+        for (uint i = 0; i < _owners.length; i++) {
+            require(!isOwner[_owners[i]] && _owners[i] != address(0), "Owners addresses are invalid");
             isOwner[_owners[i]] = true;
         }
         owners = _owners;
@@ -129,7 +129,7 @@ contract MultiSigWallet {
     {
         isOwner[owner] = true;
         owners.push(owner);
-        OwnerAddition(owner);
+        emit OwnerAddition(owner);
     }
 
     /// @dev Allows to remove an owner. Transaction has to be sent by wallet.
@@ -140,7 +140,7 @@ contract MultiSigWallet {
         ownerExists(owner)
     {
         isOwner[owner] = false;
-        for (uint i=0; i<owners.length - 1; i++)
+        for (uint i = 0; i < owners.length - 1; i++)
             if (owners[i] == owner) {
                 owners[i] = owners[owners.length - 1];
                 break;
@@ -148,7 +148,7 @@ contract MultiSigWallet {
         owners.length -= 1;
         if (required > owners.length)
             changeRequirement(owners.length);
-        OwnerRemoval(owner);
+        emit OwnerRemoval(owner);
     }
 
     /// @dev Allows to replace an owner with a new owner. Transaction has to be sent by wallet.
@@ -160,15 +160,15 @@ contract MultiSigWallet {
         ownerExists(owner)
         ownerDoesNotExist(newOwner)
     {
-        for (uint i=0; i<owners.length; i++)
+        for (uint i = 0; i < owners.length; i++)
             if (owners[i] == owner) {
                 owners[i] = newOwner;
                 break;
             }
         isOwner[owner] = false;
         isOwner[newOwner] = true;
-        OwnerRemoval(owner);
-        OwnerAddition(newOwner);
+        emit OwnerRemoval(owner);
+        emit OwnerAddition(newOwner);
     }
 
     /// @dev Allows to change the number of required confirmations. Transaction has to be sent by wallet.
@@ -179,7 +179,7 @@ contract MultiSigWallet {
         validRequirement(owners.length, _required)
     {
         required = _required;
-        RequirementChange(_required);
+        emit RequirementChange(_required);
     }
 
     /// @dev Allows an owner to submit and confirm a transaction.
@@ -204,7 +204,7 @@ contract MultiSigWallet {
         notConfirmed(transactionId, msg.sender)
     {
         confirmations[transactionId][msg.sender] = true;
-        Confirmation(msg.sender, transactionId);
+        emit Confirmation(msg.sender, transactionId);
         executeTransaction(transactionId);
     }
 
@@ -217,7 +217,7 @@ contract MultiSigWallet {
         notExecuted(transactionId)
     {
         confirmations[transactionId][msg.sender] = false;
-        Revocation(msg.sender, transactionId);
+        emit Revocation(msg.sender, transactionId);
     }
 
     /// @dev Allows anyone to execute a confirmed transaction.
@@ -232,9 +232,9 @@ contract MultiSigWallet {
             Transaction storage txn = transactions[transactionId];
             txn.executed = true;
             if (external_call(txn.destination, txn.value, txn.data.length, txn.data))
-                Execution(transactionId);
+                emit Execution(transactionId);
             else {
-                ExecutionFailure(transactionId);
+                emit ExecutionFailure(transactionId);
                 txn.executed = false;
             }
         }
@@ -271,7 +271,7 @@ contract MultiSigWallet {
         returns (bool)
     {
         uint count = 0;
-        for (uint i=0; i<owners.length; i++) {
+        for (uint i = 0; i < owners.length; i++) {
             if (confirmations[transactionId][owners[i]])
                 count += 1;
             if (count == required)
@@ -300,7 +300,7 @@ contract MultiSigWallet {
             executed: false
         });
         transactionCount += 1;
-        Submission(transactionId);
+        emit Submission(transactionId);
     }
 
     /*
@@ -314,7 +314,7 @@ contract MultiSigWallet {
         view
         returns (uint count)
     {
-        for (uint i=0; i<owners.length; i++)
+        for (uint i = 0; i < owners.length; i++)
             if (confirmations[transactionId][owners[i]])
                 count += 1;
     }
@@ -328,7 +328,7 @@ contract MultiSigWallet {
         view
         returns (uint count)
     {
-        for (uint i=0; i<transactionCount; i++)
+        for (uint i = 0; i < transactionCount; i++)
             if (   pending && !transactions[i].executed
                 || executed && transactions[i].executed)
                 count += 1;
@@ -355,13 +355,13 @@ contract MultiSigWallet {
         address[] memory confirmationsTemp = new address[](owners.length);
         uint count = 0;
         uint i;
-        for (i=0; i<owners.length; i++)
+        for (i = 0; i < owners.length; i++)
             if (confirmations[transactionId][owners[i]]) {
                 confirmationsTemp[count] = owners[i];
                 count += 1;
             }
         _confirmations = new address[](count);
-        for (i=0; i<count; i++)
+        for (i = 0; i < count; i++)
             _confirmations[i] = confirmationsTemp[i];
     }
 
@@ -379,7 +379,7 @@ contract MultiSigWallet {
         uint[] memory transactionIdsTemp = new uint[](transactionCount);
         uint count = 0;
         uint i;
-        for (i=0; i<transactionCount; i++)
+        for (i = 0; i < transactionCount; i++)
             if (   pending && !transactions[i].executed
                 || executed && transactions[i].executed)
             {
@@ -387,7 +387,7 @@ contract MultiSigWallet {
                 count += 1;
             }
         _transactionIds = new uint[](to - from);
-        for (i=from; i<to; i++)
+        for (i = from; i < to; i++)
             _transactionIds[i - from] = transactionIdsTemp[i];
     }
 }
