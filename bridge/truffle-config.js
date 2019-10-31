@@ -26,7 +26,6 @@ module.exports = {
       host: "127.0.0.1",
       port: 4444,
       network_id: "*", // Match any network id
-      gas: 6700000
     },
     rsktestnet: {
       provider: () =>
