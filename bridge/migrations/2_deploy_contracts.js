@@ -1,5 +1,5 @@
 const Bridge = artifacts.require("Bridge");
-const Manager = artifacts.require("Manager");
+const MultiSigWallet = artifacts.require("MultiSigWallet");
 const MainToken = artifacts.require('MainToken');
 
 const fs = require('fs');
@@ -8,18 +8,15 @@ function shouldDeployToken(network) {
     return !network.toLowerCase().includes('mainnet');
 }
 
-module.exports = function(deployer, network) {
+module.exports = function(deployer, network, accounts) {
     let symbol = 'e';
 
     if(network == 'regtest' || network == 'testnet')
         symbol = 'r';
 
-    // TODO Deploy MultiSigWallet on pipeline and use its address
-    let multiSigAddress = deployer.networks[network].multisig;
-
-    deployer.deploy(Manager)
-    .then(() => Manager.deployed())
-    .then(() => deployer.deploy(Bridge, multiSigAddress, symbol.charCodeAt()))
+    deployer.deploy(MultiSigWallet, [accounts[0]], 1)
+    .then(() => MultiSigWallet.deployed())
+    .then(() => deployer.deploy(Bridge, MultiSigWallet.address, symbol.charCodeAt()))
     .then(() => Bridge.deployed())
     .then(() => {
         if(shouldDeployToken(network)) {
@@ -32,7 +29,7 @@ module.exports = function(deployer, network) {
         const config = {
             bridge: Bridge.address,
             privateKey: "",
-            multisig: currentProvider.multisig
+            multisig: MultiSigWallet.address
         };
         if(shouldDeployToken(network)) {
             config.testToken = MainToken.address;
