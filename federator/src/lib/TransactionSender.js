@@ -1,8 +1,8 @@
 
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
-const utils = require('../lib/utils');
-const CustomError = require('../lib/CustomError');
+const utils = require('./utils');
+const CustomError = require('./CustomError');
 
 module.exports = class TransactionSender {
     constructor(client, logger) {
@@ -75,37 +75,52 @@ module.exports = class TransactionSender {
         return address;
     }
 
-    async sendTransaction(to, data, value, privateKey) {
-        const stack = new Error().stack;
-        var from = await this.getAddress(privateKey);
-        const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
-        this.client.eth.transactionConfirmationBlocks = 1;
-        const rawTx = await this.createRawTransaction(from, to, data, value);
-        let sendTransactionPromise = null;
-        if (privateKey && privateKey.length) {
+    signAndSendTransaction(rawTx, privateKey) {
+        if (privateKey && privateKey.length) {            
             let signedTx = this.signRawTransaction(rawTx, privateKey);
-            sendTransactionPromise = this.sendSignedTransaction(signedTx);
+            return this.sendSignedTransaction(signedTx);
         } else {
             //If no private key provided we use personal (personal is only for testing)
             delete rawTx.r;
             delete rawTx.s;
             delete rawTx.v;
-            sendTransactionPromise = this.client.eth.sendTransaction(rawTx);
+            return this.client.eth.sendTransaction(rawTx);
         }
-        return sendTransactionPromise
-            .then((receipt) => {
-                this.client.eth.transactionConfirmationBlocks = prevConfirmations;
+    }
+
+    async sendTransaction(to, data, value, privateKey) {
+        const stack = new Error().stack;
+        var from = await this.getAddress(privateKey);
+        const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
+        this.client.eth.transactionConfirmationBlocks = 2;
+
+        let rawTx = await this.createRawTransaction(from, to, data, value);
+        
+        let retries = 3;
+        const sleepAfterRetrie=40000;
+        while(retries > 0) {
+            try {
+                rawTx = await this.createRawTransaction(from, to, data, value);
+                let receipt = await this.signAndSendTransaction(rawTx, privateKey);
                 if(receipt.status == 1) {
+                    this.client.eth.transactionConfirmationBlocks = prevConfirmations;
                     this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                    return receipt;
+                    return receipt;    
                 }
                 this.logger.error('Transaction Receipt Status Failed', receipt);
                 this.logger.error('RawTx that failed', rawTx);
-                throw new Error('Transaction Failed: ' + stack);
-            }).catch((err) => {
+                retries--;
+                await utils.sleep(sleepAfterRetrie);
+            } catch(err) {
+                this.logger.error('Send Signed Transaction Failed', err);
                 this.logger.error('RawTx that failed', rawTx);
-                throw new CustomError('Transaction Failed: '+ stack, err);
-            });
+                retries--;
+                await utils.sleep(sleepAfterRetrie);
+            }
+        }
+
+        this.client.eth.transactionConfirmationBlocks = prevConfirmations;
+        throw new CustomError('Transaction Failed after retries: ', stack);
     }
 
 }
