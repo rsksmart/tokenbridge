@@ -6,7 +6,7 @@ contract('SideToken', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];
-    
+
     beforeEach(async function () {
         this.token = await SideToken.new("SIDE", "SIDE");
     });
@@ -20,14 +20,14 @@ contract('SideToken', async function (accounts) {
 
         const anAccountBalance = await this.token.balanceOf(anAccount);
         assert.equal(anAccountBalance, 0);
-        
-        const totalSupply = await this.token.totalSupply();        
+
+        const totalSupply = await this.token.totalSupply();
         assert.equal(totalSupply, 0);
     });
 
     it('mint', async function () {
         await this.token.mint(anAccount, 1000, { from: tokenCreator });
-        
+
         const creatorBalance = await this.token.balanceOf(tokenCreator);
         assert.equal(creatorBalance, 0);
 
@@ -36,12 +36,12 @@ contract('SideToken', async function (accounts) {
 
         const anAccountBalance = await this.token.balanceOf(anAccount);
         assert.equal(anAccountBalance, 1000);
-        
-        const totalSupply = await this.token.totalSupply();        
+
+        const totalSupply = await this.token.totalSupply();
         assert.equal(totalSupply, 1000);
     });
 
-    it('mint only creator', async function () {    
+    it('mint only creator', async function () {
         expectThrow(this.token.mint(anAccount, 1000, { from: anAccount }));
 
         const creatorBalance = await this.token.balanceOf(tokenCreator);
@@ -52,15 +52,15 @@ contract('SideToken', async function (accounts) {
 
         const anAccountBalance = await this.token.balanceOf(anAccount);
         assert.equal(anAccountBalance, 0);
-        
-        const totalSupply = await this.token.totalSupply();        
+
+        const totalSupply = await this.token.totalSupply();
         assert.equal(totalSupply, 0);
     });
 
     it('transfer account to account', async function () {
         await this.token.mint(anAccount, 1000, { from: tokenCreator });
         await this.token.transfer(anotherAccount, 400, { from: anAccount });
-        
+
         const creatorBalance = await this.token.balanceOf(tokenCreator);
         assert.equal(creatorBalance, 0);
 
@@ -69,11 +69,11 @@ contract('SideToken', async function (accounts) {
 
         const anAccountBalance = await this.token.balanceOf(anAccount);
         assert.equal(anAccountBalance, 600);
-        
+
         const anotherAccountBalance = await this.token.balanceOf(anotherAccount);
         assert.equal(anotherAccountBalance, 400);
 
-        const totalSupply = await this.token.totalSupply();        
+        const totalSupply = await this.token.totalSupply();
         assert.equal(totalSupply, 1000);
     });
 
