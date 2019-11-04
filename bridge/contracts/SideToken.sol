@@ -4,7 +4,6 @@ import "./zeppelin/token/ERC20/ERC20Burnable.sol";
 import "./zeppelin/token/ERC20/ERC20Mintable.sol";
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./ERC677TransferReceiver.sol";
-import "./Transferable.sol";
 
 contract SideToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     /**
