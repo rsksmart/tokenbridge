@@ -44,6 +44,34 @@
   {
     "constant": true,
     "inputs": [],
+    "name": "validateAllowedTokens",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "symbolPrefix",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint8"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
     "name": "paused",
     "outputs": [
       {
@@ -68,6 +96,25 @@
       {
         "name": "",
         "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "allowedTokens",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
       }
     ],
     "payable": false,
@@ -104,6 +151,20 @@
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "crossingPayment",
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -209,6 +270,103 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": true,
+        "name": "_newSideTokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_originalTokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "_symbol",
+        "type": "string"
+      }
+    ],
+    "name": "NewSideToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "AcceptedCrossTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "CrossingPaymentChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_previousManager",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_newManager",
+        "type": "address"
+      }
+    ],
+    "name": "ManagmentTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_tokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "AllowedTokenAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_tokenAddress",
+        "type": "address"
+      }
+    ],
+    "name": "AllowedTokenRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": false,
         "name": "account",
         "type": "address"
@@ -257,27 +415,23 @@
     "constant": false,
     "inputs": [
       {
-        "name": "to",
+        "name": "tokenToUse",
         "type": "address"
       },
       {
         "name": "amount",
         "type": "uint256"
-      },
-      {
-        "name": "data",
-        "type": "bytes"
       }
     ],
-    "name": "onTokenTransfer",
+    "name": "receiveTokens",
     "outputs": [
       {
-        "name": "success",
+        "name": "",
         "type": "bool"
       }
     ],
-    "payable": false,
-    "stateMutability": "nonpayable",
+    "payable": true,
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -319,6 +473,47 @@
         "type": "bool"
       }
     ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "to",
+        "type": "address"
+      },
+      {
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "name": "data",
+        "type": "bytes"
+      }
+    ],
+    "name": "onTokenTransfer",
+    "outputs": [
+      {
+        "name": "success",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "setCrossingPayment",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -398,29 +593,6 @@
     "type": "function"
   },
   {
-    "constant": false,
-    "inputs": [
-      {
-        "name": "tokenToUse",
-        "type": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "receiveTokens",
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "constant": true,
     "inputs": [
       {
@@ -453,6 +625,71 @@
     ],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "isTokenAllowed",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "addAllowedToken",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "removeAllowedToken",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "enableAllowedTokensValidation",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "disableAllowedTokensValidation",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]
