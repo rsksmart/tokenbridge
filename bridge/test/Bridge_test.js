@@ -3,6 +3,7 @@ const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge');
 
 const utils = require('./utils');
+const BN = web3.utils.BN;
 
 contract('Bridge', async function (accounts) {
     const bridgeOwner = accounts[0];
@@ -42,29 +43,61 @@ contract('Bridge', async function (accounts) {
             });
         });
 
-        it('receiveTokens (approve and transferFrom)', async function () {
-            const amount = 1000;
-            await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-            let tx = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
-            utils.checkRcpt(tx);
+        describe('receiveTokens', async function () {
+            it('emit event approve and transferFrom token contract', async function () {
+                const amount = 1000;
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+                let tx = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
+                utils.checkRcpt(tx);
+                
+                assert.equal(tx.logs[0].event, 'Cross');
 
-            const tokenBalance = await this.token.balanceOf(tokenOwner);
-            assert.equal(tokenBalance, 9000);
+                const tokenBalance = await this.token.balanceOf(tokenOwner);
+                assert.equal(tokenBalance, 9000);
+                
+                const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+            });
+
+            it('setCrossingPayment successful', async function () {
+                const amount = 1000;
+                await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
+                let result = await this.bridge.crossingPayment();
+                assert.equal(result, amount);
+            });
+
+            it('setCrossingPayment should fail if not the owner', async function () {
+                const amount = 1000;
+                await utils.expectThrow(this.bridge.setCrossingPayment(amount, { from: tokenOwner}));
+                let result = await this.bridge.crossingPayment();
+                assert.equal(result, 0);
+            });
+
+            it('with payment successful', async function () {
+                const payment = 1000;
+                const amount = 1000;
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                let balance = new BN(await web3.eth.getBalance(bridgeManager));
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+                
+                let tx = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: payment });
+                utils.checkRcpt(tx);
+                let newBalance = new BN(await web3.eth.getBalance(bridgeManager));
+                assert.equal(balance.add(new BN(payment)).toString(), newBalance.toString());
+            });
+
+            it('should fail with unsuficient payment', async function () {
+                const payment = 1000;
+                const amount = 1000;
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
+            });
             
-            const bridgeBalance = await this.token.balanceOf(this.bridge.address);
-            assert.equal(bridgeBalance, amount);
-        });
-
-        it('emitEvent', async function () {
-            const amount = 1000;
-            await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-            await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
-
-            // TODO check event
         });
 
         describe('maps addresses', async function () {
-            
             it('not mapped address', async function () {
                 const result = await this.bridge.getMappedAddress(anAccount);
                 
