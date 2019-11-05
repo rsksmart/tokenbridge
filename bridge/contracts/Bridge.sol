@@ -8,61 +8,32 @@ import "./zeppelin/math/SafeMath.sol";
 import "./ERC677TransferReceiver.sol";
 import "./IBridge.sol";
 import "./SideToken.sol";
+import "./Governance.sol";
+import "./AllowTokens.sol";
 
-contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
+contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance, AllowTokens {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
-    address public manager;
     uint8 public symbolPrefix;
-    uint public crossingPayment;
 
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
     mapping (address => bool) public knownTokens;
     mapping (address => address) public mappedAddresses;
     mapping(bytes32 => bool) processed;
-    address[] public allowedTokens;
-    bool public validateAllowedTokens = false;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
-    event CrossingPaymentChanged(uint256 _amount);
-    event ManagmentTransferred(address indexed _previousManager, address indexed _newManager);
-    event AllowedTokenAdded(address indexed _tokenAddress);
-    event AllowedTokenRemoved(address indexed _tokenAddress);
-    event AllowedTokenValidation(bool _enabled);
-
-    modifier onlyManager() {
-        require(msg.sender == manager, "Sender is not the manager");
-        _;
-    }
-
-    modifier onlyAllowedTokens(address token) {
-        require(isTokenAllowed(token), "Token is not allowed for transfer");
-        _;
-    }
-
-    modifier tokenExists(address token) {
-        require(allowedTokenExist(token), "Token already exist");
-        _;
-    }
-
-    modifier tokenDoesNotExist(address token) {
-        require(!allowedTokenExist(token), "Token does not exist");
-        _;
-    }
 
     modifier notNull(address _address) {
         require(_address != address(0), "Address cannot be empty");
         _;
     }
 
-    constructor(address _manager, uint8 _symbolPrefix) public {
-        require(_manager != address(0), "Empty manager");
+    constructor(address _manager, uint8 _symbolPrefix) public Governance(_manager) {
         require(_symbolPrefix != 0, "Empty symbol prefix");
-        manager = _manager;
         symbolPrefix = _symbolPrefix;
     }
 
@@ -129,18 +100,6 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
             originalTokens[sideTokenAddress] = token;
             emit NewSideToken(sideTokenAddress, token, newSymbol);
         }
-    }
-
-    function setCrossingPayment(uint amount) public onlyManager whenNotPaused {
-        crossingPayment = amount;
-        emit CrossingPaymentChanged(crossingPayment);
-    }
-
-    function changeManager(address newmanager) public onlyManager whenNotPaused {
-        require(newmanager != address(0), "New manager address is empty");
-        address oldmanager = manager;
-        manager = newmanager;
-        emit ManagmentTransferred(newmanager, oldmanager);
     }
 
     function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
@@ -218,50 +177,6 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
         bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         processed[compiledId] = true;
-    }
-
-    function allowedTokenExist(address token) private view returns (bool) {
-        if (token == address(0))
-            return false;
-
-        for (uint i; i < allowedTokens.length; i++) {
-            if (allowedTokens[i] == token)
-            return true;
-        }
-        return false;
-    }
-
-    function isTokenAllowed(address token) public view returns (bool) {
-        if (validateAllowedTokens) {
-            return allowedTokenExist(token);
-        }
-        return true;
-    }
-
-    function addAllowedToken(address token) public onlyManager notNull(token) tokenDoesNotExist(token) {
-        allowedTokens.push(token);
-        emit AllowedTokenAdded(token);
-    }
-
-    function removeAllowedToken(address token) public onlyManager tokenExists(token) {
-        for (uint i = 0; i < allowedTokens.length - 1; i++)
-            if (allowedTokens[i] == token) {
-                allowedTokens[i] = allowedTokens[allowedTokens.length - 1];
-                break;
-            }
-        allowedTokens.length -= 1;
-
-        emit AllowedTokenRemoved(token);
-    }
-
-    function enableAllowedTokensValidation() public onlyManager {
-        validateAllowedTokens = true;
-        emit AllowedTokenValidation(validateAllowedTokens);
-    }
-
-    function disableAllowedTokensValidation() public onlyManager {
-        validateAllowedTokens = false;
-        emit AllowedTokenValidation(validateAllowedTokens);
     }
 }
 
