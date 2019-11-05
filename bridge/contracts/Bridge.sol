@@ -32,6 +32,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
     event ManagmentTransferred(address indexed _previousManager, address indexed _newManager);
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
+    event AllowedTokenValidation(bool _enabled);
 
     modifier onlyManager() {
         require(msg.sender == manager, "Sender is not the manager");
@@ -44,7 +45,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
     }
 
     modifier tokenExists(address token) {
-        require(allowedTokenExist(token), "Token does not exist");
+        require(allowedTokenExist(token), "Token already exist");
         _;
     }
 
@@ -255,10 +256,12 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable {
 
     function enableAllowedTokensValidation() public onlyManager {
         validateAllowedTokens = true;
+        emit AllowedTokenValidation(validateAllowedTokens);
     }
 
     function disableAllowedTokensValidation() public onlyManager {
         validateAllowedTokens = false;
+        emit AllowedTokenValidation(validateAllowedTokens);
     }
 }
 
