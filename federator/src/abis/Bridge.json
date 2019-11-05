@@ -368,6 +368,18 @@
     "inputs": [
       {
         "indexed": false,
+        "name": "_enabled",
+        "type": "bool"
+      }
+    ],
+    "name": "AllowedTokenValidation",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "name": "account",
         "type": "address"
       }
