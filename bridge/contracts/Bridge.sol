@@ -11,7 +11,7 @@ import "./SideToken.sol";
 import "./Governance.sol";
 import "./AllowTokens.sol";
 
-contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance, AllowTokens {
+contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -22,6 +22,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance, AllowT
     mapping (address => bool) public knownTokens;
     mapping (address => address) public mappedAddresses;
     mapping(bytes32 => bool) processed;
+    AllowTokens allowTokens;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
@@ -32,9 +33,11 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance, AllowT
         _;
     }
 
-    constructor(address _manager, uint8 _symbolPrefix) public Governance(_manager) {
+    constructor(address _manager, address _allowTokens, uint8 _symbolPrefix) public Governance(_manager) {
         require(_symbolPrefix != 0, "Empty symbol prefix");
+        require(_allowTokens != address(0), "Missing AllowTokens contract address");
         symbolPrefix = _symbolPrefix;
+        allowTokens = AllowTokens(_allowTokens);
     }
 
     function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
@@ -63,7 +66,8 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance, AllowT
         bytes32 transactionHash,
         uint32 logIndex
     )
-        public onlyManager whenNotPaused onlyAllowedTokens(tokenAddress) returns(bool) {
+        public onlyManager whenNotPaused returns(bool) {
+        require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);

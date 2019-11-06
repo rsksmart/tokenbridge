@@ -1,6 +1,7 @@
 const MainToken = artifacts.require('./MainToken');
 const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge');
+const AllowTokens = artifacts.require('./AllowTokens');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
@@ -15,7 +16,8 @@ contract('Bridge', async function (accounts) {
 
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
-        this.bridge = await Bridge.new(bridgeManager, 'e'.charCodeAt(), { from: bridgeOwner });
+        this.allowTokens = await AllowTokens.new(bridgeManager);
+        this.bridge = await Bridge.new(bridgeManager, this.allowTokens.address, 'e'.charCodeAt(), { from: bridgeOwner });
     });
 
     describe('Main Side', async function () {
@@ -118,8 +120,8 @@ contract('Bridge', async function (accounts) {
     });
 
     describe('Mirror Side', async function () {
-        beforeEach(async function () {;
-            this.mirrorBridge = await Bridge.new(bridgeManager, 'r'.charCodeAt(), { from: bridgeOwner });
+        beforeEach(async function () {
+            this.mirrorBridge = await Bridge.new(bridgeManager, this.allowTokens.address, 'r'.charCodeAt(), { from: bridgeOwner });
 
             this.amount = 1000;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
@@ -239,96 +241,6 @@ contract('Bridge', async function (accounts) {
                 });
             });
 
-        });
-
-        describe('Tokens whitelist', async function () {
-
-            it('should allow tokens transfer with initial values', async function () {
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, false);
-
-                let tx = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
-                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
-                utils.checkRcpt(tx);
-
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                let sideToken = await SideToken.at(sideTokenAddress);
-                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
-                assert.equal(mirrorBridgeBalance, 0);
-                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
-                assert.equal(mirrorAnAccountBalance, this.amount);
-            });
-
-            it('enables tokens whitelist validation', async function() {
-                await this.mirrorBridge.enableAllowedTokensValidation({ from: bridgeManager });
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, true);
-
-                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
-                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
-            });
-
-            it('disables tokens whitelist validation', async function() {
-                await this.mirrorBridge.enableAllowedTokensValidation({ from: bridgeManager });
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, true);
-
-                await this.mirrorBridge.disableAllowedTokensValidation({ from: bridgeManager });
-                validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, false);
-            });
-
-            it('accepts transfer and validates whitelisted token', async function() {
-                await this.mirrorBridge.enableAllowedTokensValidation({ from: bridgeManager });
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, true);
-
-                await this.mirrorBridge.addAllowedToken(this.token.address, { from: bridgeManager });
-                let isAllowed = await this.mirrorBridge.isTokenAllowed(this.token.address);
-                assert.equal(isAllowed, true);
-
-                let tx = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
-                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
-                utils.checkRcpt(tx);
-
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                let sideToken = await SideToken.at(sideTokenAddress);
-                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
-                assert.equal(mirrorBridgeBalance, 0);
-                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
-                assert.equal(mirrorAnAccountBalance, this.amount);
-            });
-
-            it('rejects to accept transfer with not whitelisted tokens', async function() {
-                await this.mirrorBridge.enableAllowedTokensValidation({ from: bridgeManager });
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, true);
-
-                await this.mirrorBridge.addAllowedToken(this.token.address, { from: bridgeManager });
-                let isAllowed = await this.mirrorBridge.isTokenAllowed(this.token.address);
-                assert.equal(isAllowed, true);
-
-                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.bridge.address, anAccount, this.amount, "MAIN",
-                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
-            });
-
-            it('removes allowed token', async function() {
-                await this.mirrorBridge.enableAllowedTokensValidation({ from: bridgeManager });
-                let validateAllowedTokens = await this.mirrorBridge.validateAllowedTokens();
-                assert.equal(validateAllowedTokens, true);
-
-                await this.mirrorBridge.addAllowedToken(this.token.address, { from: bridgeManager });
-                let isAllowed = await this.mirrorBridge.isTokenAllowed(this.token.address);
-                assert.equal(isAllowed, true);
-
-                await this.mirrorBridge.removeAllowedToken(this.token.address, { from: bridgeManager });
-                isAllowed = await this.mirrorBridge.isTokenAllowed(this.token.address);
-                assert.equal(isAllowed, false);
-            });
         });
 
     });

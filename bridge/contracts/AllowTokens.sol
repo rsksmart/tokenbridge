@@ -13,15 +13,12 @@ contract AllowTokens is Governance {
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
 
-    modifier onlyAllowedTokens(address token) {
-        require(isTokenAllowed(token), "Token is not allowed for transfer");
-        _;
-    }
-
     modifier notNull(address _address) {
         require(_address != address(0), "Address cannot be empty");
         _;
     }
+
+    constructor(address _manager) public Governance(_manager) {}
 
     function allowedTokenExist(address token) private view returns (bool) {
         if (token == address(0))
