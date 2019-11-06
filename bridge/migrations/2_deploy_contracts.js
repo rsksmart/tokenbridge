@@ -1,6 +1,7 @@
 const Bridge = artifacts.require("Bridge");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const MainToken = artifacts.require('MainToken');
+const AllowTokens = artifacts.require('AllowTokens');
 
 const fs = require('fs');
 
@@ -16,7 +17,9 @@ module.exports = function(deployer, network, accounts) {
 
     deployer.deploy(MultiSigWallet, [accounts[0]], 1)
     .then(() => MultiSigWallet.deployed())
-    .then(() => deployer.deploy(Bridge, MultiSigWallet.address, symbol.charCodeAt()))
+    .then(() => deployer.deploy(AllowTokens, MultiSigWallet.address))
+    .then(() => AllowTokens.deployed())
+    .then(() => deployer.deploy(Bridge, MultiSigWallet.address, AllowTokens.address, symbol.charCodeAt()))
     .then(() => Bridge.deployed())
     .then(() => {
         if(shouldDeployToken(network)) {
