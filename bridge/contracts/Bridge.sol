@@ -3,113 +3,77 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/lifecycle/Pausable.sol";
+import "./zeppelin/ownership/Ownable.sol";
 import "./zeppelin/math/SafeMath.sol";
 import "./ERC677TransferReceiver.sol";
-import "./Transferable.sol";
+import "./IBridge.sol";
 import "./SideToken.sol";
+import "./Governance.sol";
+import "./AllowTokens.sol";
 
-contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
+contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
-    address public manager;
-    uint8 symbolPrefix;
-    uint256 public lastCrossEventBlock;
-    uint256 public blocksBetweenCrossEvents;
-    uint256 public minimumPedingTransfersCount;
+    uint8 public symbolPrefix;
 
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
     mapping (address => bool) public knownTokens;
-    
     mapping (address => address) public mappedAddresses;
+    mapping(bytes32 => bool) processed;
+    AllowTokens allowTokens;
 
-    struct TransferStruct {
-        address token;
-        address receiver;
-        uint256 amount;
-        string symbol;
-    }
-    
-    uint256 public pendingTransfersCount;
-    TransferStruct[] public pendingTransferStruct;
-    
-    event Token(address indexed token, string symbol);
-    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount);
+    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
+    event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
+    event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
 
-    modifier onlyManager() {
-        require(msg.sender == manager, "Sender is not the manager");
+    modifier notNull(address _address) {
+        require(_address != address(0), "Address cannot be empty");
         _;
     }
 
-    constructor(address _manager, uint8 _symbolPrefix, uint256 _blocksBetweenCrossEvents, uint256 _minimumPedingTransfersCount) public {
-        require(_manager != address(0), "Empty manager");
+    constructor(address _manager, address _allowTokens, uint8 _symbolPrefix) public Governance(_manager) {
         require(_symbolPrefix != 0, "Empty symbol prefix");
-        manager = _manager;
+        require(_allowTokens != address(0), "Missing AllowTokens contract address");
         symbolPrefix = _symbolPrefix;
-        pendingTransfersCount = 0;
-        blocksBetweenCrossEvents = _blocksBetweenCrossEvents;
-        minimumPedingTransfersCount = _minimumPedingTransfersCount;
+        allowTokens = AllowTokens(_allowTokens);
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
-        return tokenFallback(to, amount, data);
-    }
-
-    function addPendingTransfer(ERC20Detailed fromToken, address to, uint256 amount) private whenNotPaused {
-        validateToken(fromToken);
-        //TODO should group by address and sender
-        pendingTransferStruct.push(TransferStruct(address(fromToken), to, amount, fromToken.symbol()));
-        pendingTransfersCount++;
-    }
-
-    function emitEvent() public whenNotPaused returns (bool success) {
-        //TODO add validations
-        if(block.number > lastCrossEventBlock + blocksBetweenCrossEvents || pendingTransfersCount > minimumPedingTransfersCount ) {
-            for(uint256 i = 0; i < pendingTransfersCount; i++) {
-                TransferStruct memory transfer = pendingTransferStruct[i];
-                address token = transfer.token;
-                
-                if (originalTokens[token] != address(0))
-                    token = originalTokens[token];
-                else if (!knownTokens[token]) {
-                    emit Token(token, ERC20Detailed(token).symbol());
-                    knownTokens[token] = true;
-                }
-                    
-                emit Cross(token, getMappedAddress(transfer.receiver), transfer.amount);
-                
-                delete pendingTransferStruct[i];
-            }
-            
-            pendingTransfersCount = 0;
-            lastCrossEventBlock = block.number;
-            
-            pendingTransferStruct.length = 0;
-            
-            return true;
+    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
+        validateToken(tokenToUse);
+        require(msg.value >= crossingPayment, "Insufficient coins sent for crossingPayment");
+        if (isSideToken(address(tokenToUse))) {
+            SideToken(address(tokenToUse)).burn(amount);
+            emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
-        
-        return false;
-    }
-    
-    function processToken(address token, string memory symbol) public onlyManager whenNotPaused returns (bool) {
-        SideToken sideToken = mappedTokens[token];
-        
-        if (address(sideToken) == address(0)) {
-            string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-            sideToken = new SideToken(newSymbol, newSymbol);
-            mappedTokens[token] = sideToken;
-            originalTokens[address(sideToken)] = token;
+        else {
+            knownTokens[address(tokenToUse)] = true;
+            emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
-        
+        tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
+        address payable receiver = address(uint160(manager));
+        receiver.transfer(msg.value);
         return true;
     }
 
-    function acceptTransfer(address tokenAddress, address receiver, uint256 amount)
+    function acceptTransfer(
+        address tokenAddress,
+        address receiver,
+        uint256 amount,
+        string memory symbol,
+        bytes32 blockHash,
+        bytes32 transactionHash,
+        uint32 logIndex
+    )
         public onlyManager whenNotPaused returns(bool) {
-        address to = getMappedAddress(receiver);
+        require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
+        require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
+        processToken(tokenAddress, symbol);
+        processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+
+        address to = getMappedAddress(receiver);
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
             require(sideToken.mint(to, amount), "Error minting on side token");
@@ -118,14 +82,28 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
-        
+        emit AcceptedCrossTransfer(tokenAddress, to, amount);
         return true;
     }
 
-    function changeManager(address newmanager) public onlyManager whenNotPaused {
-        require(newmanager != address(0), "New manager address is empty");
-        
-        manager = newmanager;
+    function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
+        return tokenFallback(to, amount, data);
+    }
+
+    function processToken(address token, string memory symbol) private onlyManager whenNotPaused {
+        if (knownTokens[token])
+            return;
+
+        SideToken sideToken = mappedTokens[token];
+
+        if (address(sideToken) == address(0)) {
+            string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
+            sideToken = new SideToken(newSymbol, newSymbol);
+            mappedTokens[token] = sideToken;
+            address sideTokenAddress = address(sideToken);
+            originalTokens[sideTokenAddress] = token;
+            emit NewSideToken(sideTokenAddress, token, newSymbol);
+        }
     }
 
     function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
@@ -134,8 +112,8 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         address originalTokenAddress = originalTokens[msg.sender];
         require(originalTokenAddress != address(0), "Sender is not one of the crossed token contracts");
         SideToken sideToken = SideToken(msg.sender);
-        addPendingTransfer(ERC20Detailed(originalTokenAddress), from, amount);
         sideToken.burn(amount);
+        emit Cross(originalTokenAddress, getMappedAddress(from), amount, ERC20Detailed(originalTokenAddress).symbol());
         return true;
     }
 
@@ -157,24 +135,52 @@ contract Bridge is Transferable, ERC677TransferReceiver, Pausable {
         require(bytes(tokenToUse.symbol()).length != 0, "Token doesn't have symbol");
     }
 
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public whenNotPaused returns (bool) {
-        //TODO should we accept  that people call receiveTokens with the SideToken???
-        validateToken(tokenToUse);
-        tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        addPendingTransfer(tokenToUse, msg.sender, amount);
-        
-        if (isSideToken(address(tokenToUse)))
-            SideToken(address(tokenToUse)).burn(amount);
-            
-        return true;
-    }
-    
     function isSideToken(address token) private view returns (bool) {
         return originalTokens[token] != address(0);
     }
-    
+
     function isMappedToken(address token) private view returns (bool) {
         return address(mappedTokens[token]) != address(0);
+    }
+
+    function getTransactionCompiledId(
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        uint32 _logIndex
+    )
+        private pure returns(bytes32)
+    {
+        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
+    }
+
+    function transactionWasProcessed(
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        uint32 _logIndex
+    )
+        public view returns(bool)
+    {
+        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+
+        return processed[compiledId];
+    }
+
+    function processTransaction(
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        uint32 _logIndex
+    )
+        private whenNotPaused
+    {
+        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+
+        processed[compiledId] = true;
     }
 }
 
