@@ -1,0 +1,9 @@
+config.js
+regtest.json
+development.json
+rinkeby.json
+rsktestnet.json
+test.json
+federator.log
+db/*.*
+test/lib/*.txt

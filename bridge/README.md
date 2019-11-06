@@ -55,7 +55,7 @@ truffle migrate --network development
 truffle migrate --network regtest
 ```
 
-This will also generate the json files for that network with the addresses of the deployed contracts that will be called by the submitter.
+This will also generate the json files for that network with the addresses of the deployed contracts that will be called by the federator.
 
 
 

@@ -16,8 +16,8 @@ The following list summarizes the tools and components that are necessary to go 
 * Mainchain account with funds
 * Contract addresses and JSON ABIs in Mainchain for IERC20 token (or similar) and Bridge contract
 
-* Contract address and JSON ABI in Sidechain for  Bridge contract
-* Submitter process crossing transactions from Mainchain to Sidechain
+* Contract address and JSON ABI in Sidechain for Bridge contract
+* Federator processes voting transactions from Mainchain to Sidechain
 
 In particular for this use case, it was used:
 
@@ -79,7 +79,7 @@ Next, access the Bridge contract in the Mainchain, entering its address (which i
 
 ---
 
-On this occasion invoke the receiveTokens method placing the IER20 contract address in the tokenToUse input and the amount in unit of wei that we wish to receive.
+On this occasion invoke the `receiveTokens` method placing the IER20 contract address in the tokenToUse input and the amount in unit of wei that we wish to receive.
 
 !["Contract Receive"](./images/contract_receive.png "Contract Receive")
 
@@ -93,14 +93,14 @@ Again, write, sign and confirm the transaction and wait for it to be approved.
 
 ---
 
-Once this transaction on Bridge contract is processed, the submitter service will identify the event and cross the information to the Sidechain. The submitter might be configured to wait a few blocks before transferring transactions.
+Once this transaction on Bridge contract is processed, the federator service will identify the event and cross the information to the MultiSig contract on the sidechain. If multiple federators are configured it might last a few minutos to cross networks.
 
 
 ## Switch networks
 
 The next step is to connect the Blockchain interface client to the Sidechain, where the tokens will be received. In this case we use the Ganache client with the corresponding contracts previously deployed.
 
-Then connect to the Bridge's Sidechain contract using the corresponding address and JSON ABI once again. This time call the mappedTokens method passing as a parameter the address of the IERC20 contract of the Mainchain that was previously used. The result of this operation will be the address of the associated contract on the Sidechain that holds the transferred tokens.
+Then connect to the Bridge's Sidechain contract using the corresponding address and JSON ABI once again. This time call the `mappedTokens` method passing as a parameter the address of the IERC20 contract of the Mainchain that was previously used. The result of this operation will be the address of the associated contract on the Sidechain that holds the transferred tokens.
 
 !["Contract Mapped Tokens"](./images/contract_mapped_tokens.png "Contract Mapped Tokens")
 
