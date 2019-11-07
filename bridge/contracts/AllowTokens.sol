@@ -7,18 +7,23 @@ contract AllowTokens is Governance {
     using SafeMath for uint256;
 
     address[] public allowedTokens;
-    bool public validateAllowedTokens = false;
+    bool public validateAllowedTokens;
+    uint256 public maxTokensAllowed;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
+    event MaxTokensAllowedChanged(uint256 _maxTokens);
 
     modifier notNull(address _address) {
         require(_address != address(0), "Address cannot be empty");
         _;
     }
 
-    constructor(address _manager) public Governance(_manager) {}
+    constructor(address _manager) public Governance(_manager) {
+        validateAllowedTokens = false;
+        maxTokensAllowed = 10000 ether;
+    }
 
     function allowedTokenExist(address token) private view returns (bool) {
         if (token == address(0))
@@ -66,5 +71,10 @@ contract AllowTokens is Governance {
     function disableAllowedTokensValidation() public onlyManager {
         validateAllowedTokens = false;
         emit AllowedTokenValidation(validateAllowedTokens);
+    }
+
+    function setMaxTokensAllowed(uint256 maxTokens) public onlyManager {
+        maxTokensAllowed = maxTokens;
+        emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
 }
