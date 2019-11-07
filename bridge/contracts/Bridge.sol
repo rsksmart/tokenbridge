@@ -42,6 +42,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
 
     function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
         validateToken(tokenToUse);
+        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(msg.value >= crossingPayment, "Insufficient coins sent for crossingPayment");
         if (isSideToken(address(tokenToUse))) {
             SideToken(address(tokenToUse)).burn(amount);
@@ -68,6 +69,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
     )
         public onlyManager whenNotPaused returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
+        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
