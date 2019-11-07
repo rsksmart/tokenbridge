@@ -62,7 +62,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('should set initial values', async function() {
             let maxTokens = await this.allowTokens.maxTokensAllowed();
-            assert.equal(maxTokens, 10000000000000000000000);
+            assert.equal(maxTokens, 10000000000000000000000); // 10000 ether in wei
         });
 
         it ('sets a new amount of max tokens', async function() {

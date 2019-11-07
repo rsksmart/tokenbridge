@@ -13,7 +13,7 @@ contract AllowTokens is Governance {
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
-    event SetMaxTokensAllowed(uint256 _maxTokens);
+    event MaxTokensAllowedChanged(uint256 _maxTokens);
 
     modifier notNull(address _address) {
         require(_address != address(0), "Address cannot be empty");
@@ -22,7 +22,7 @@ contract AllowTokens is Governance {
 
     constructor(address _manager) public Governance(_manager) {
         validateAllowedTokens = false;
-        maxTokensAllowed = 10000000000000000000000; // 10000 Ether in Wei
+        maxTokensAllowed = 10000 ether;
     }
 
     function allowedTokenExist(address token) private view returns (bool) {
@@ -75,6 +75,6 @@ contract AllowTokens is Governance {
 
     function setMaxTokensAllowed(uint256 maxTokens) public onlyManager {
         maxTokensAllowed = maxTokens;
-        emit SetMaxTokensAllowed(maxTokensAllowed);
+        emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
 }
