@@ -97,6 +97,17 @@ contract('Bridge', async function (accounts) {
                 await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
             });
 
+            it('rejects to receive an amount greater than allowed', async function() {
+                let maxTokensAllowed = await this.allowTokens.maxTokensAllowed();
+                let amount = maxTokensAllowed + 1;
+
+                const payment = 1000;
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
+            });
+
         });
 
         describe('maps addresses', async function () {
@@ -182,6 +193,15 @@ contract('Bridge', async function (accounts) {
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
 
+            });
+
+            it('rejects the transaction with amount greater than allowed', async function() {
+                let maxTokensAllowed = await this.allowTokens.maxTokensAllowed();
+                let amount = maxTokensAllowed + 1;
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
             });
         });
 
