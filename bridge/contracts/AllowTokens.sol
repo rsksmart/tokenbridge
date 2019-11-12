@@ -1,7 +1,7 @@
 pragma solidity >=0.4.21 <0.6.0;
 
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 import "./zeppelin/math/SafeMath.sol";
-import "./zeppelin/ownership/Ownable.sol";
 
 contract AllowTokens is Ownable {
     using SafeMath for uint256;
