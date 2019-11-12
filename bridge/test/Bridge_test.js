@@ -1,6 +1,6 @@
 const MainToken = artifacts.require('./MainToken');
 const SideToken = artifacts.require('./SideToken');
-const Bridge = artifacts.require('./Bridge');
+const Bridge = artifacts.require('./Bridge_v0');
 const AllowTokens = artifacts.require('./AllowTokens');
 
 const utils = require('./utils');
@@ -61,6 +61,13 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance, amount);
             });
 
+            it.only('send money to contract should fail', async function () {
+                const amount = 1000;
+                await utils.expectThrow(web3.eth.sendTransaction( { from:tokenOwner,
+                    to: this.bridge.address, value: amount } ));
+            });
+
+
             it('setCrossingPayment successful', async function () {
                 const amount = 1000;
                 await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
@@ -75,7 +82,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result, 0);
             });
 
-            it('with payment successful', async function () {
+            it('receiveTokens with payment successful', async function () {
                 const payment = 1000;
                 const amount = 1000;
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
@@ -88,7 +95,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(balance.add(new BN(payment)).toString(), newBalance.toString());
             });
 
-            it('should fail with unsuficient payment', async function () {
+            it('receiveTokens should fail with unsuficient payment', async function () {
                 const payment = 1000;
                 const amount = 1000;
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});

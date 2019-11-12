@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
+    "@openzeppelin/cli": "^2.6.0",
+    "@openzeppelin/contracts-ethereum-package": "^2.3.0",
+    "@openzeppelin/upgrades": "^2.6.0",
     "rlp": "^2.2.3",
     "truffle-hdwallet-provider": "^1.0.17",
     "truffle-privatekey-provider": "^1.3.0"

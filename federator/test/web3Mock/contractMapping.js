@@ -1,5 +1,5 @@
 const MultiSig = require('./contracts/MultiSig');
-const Bridge = require('./contracts/Bridge');
+const Bridge = require('./contracts/Bridge_v0');
 const config = require('../../config.js');
 
 const mappings = {

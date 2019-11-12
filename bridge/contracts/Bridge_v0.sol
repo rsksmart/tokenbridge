@@ -1,21 +1,26 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
+
+// Import base Initializable contract
+import '@openzeppelin/upgrades/contracts/Initializable.sol';
+// Import interface and library from OpenZeppelin contracts
+import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
+import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
-import "./zeppelin/lifecycle/Pausable.sol";
-import "./zeppelin/ownership/Ownable.sol";
 import "./zeppelin/math/SafeMath.sol";
+
 import "./ERC677TransferReceiver.sol";
 import "./IBridge.sol";
 import "./SideToken.sol";
-import "./Governance.sol";
 import "./AllowTokens.sol";
 
-contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
+contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Pausable, Ownable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
     uint8 public symbolPrefix;
+    uint256 public crossingPayment;
 
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
@@ -27,17 +32,18 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
+    event CrossingPaymentChanged(uint256 _amount);
 
-    modifier notNull(address _address) {
-        require(_address != address(0), "Address cannot be empty");
-        _;
-    }
-
-    constructor(address _manager, address _allowTokens, uint8 _symbolPrefix) public Governance(_manager) {
+    function initialize(address _manager, address _allowTokens, uint8 _symbolPrefix) public initializer {
         require(_symbolPrefix != 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
+        transferOwnership(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
+    }
+
+    function version() public pure returns (string memory) {
+        return "v0";
     }
 
     function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
@@ -53,7 +59,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
             emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        address payable receiver = address(uint160(manager));
+        address payable receiver = address(uint160(owner()));
         receiver.transfer(msg.value);
         return true;
     }
@@ -67,7 +73,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
         bytes32 transactionHash,
         uint32 logIndex
     )
-        public onlyManager whenNotPaused returns(bool) {
+        public onlyOwner whenNotPaused returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
         require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
@@ -92,7 +98,7 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
         return tokenFallback(to, amount, data);
     }
 
-    function processToken(address token, string memory symbol) private onlyManager whenNotPaused {
+    function processToken(address token, string memory symbol) private onlyOwner whenNotPaused {
         if (knownTokens[token])
             return;
 
@@ -183,6 +189,11 @@ contract Bridge is IBridge, ERC677TransferReceiver, Pausable, Governance {
         bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         processed[compiledId] = true;
+    }
+
+    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
+        crossingPayment = amount;
+        emit CrossingPaymentChanged(crossingPayment);
     }
 }
 
