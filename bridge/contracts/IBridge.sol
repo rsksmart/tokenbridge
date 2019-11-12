@@ -1,8 +1,10 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 
 contract IBridge {
+    function version() public pure returns (string memory);
+
     function acceptTransfer(
         address originalTokenAddress,
         address receiver, uint256 amount,
