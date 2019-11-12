@@ -6,7 +6,6 @@
     "Bridge": "Bridge_v0"
   },
   "dependencies": {
-    "@openzeppelin/contracts-ethereum-package": "^2.3.0"
   },
   "compiler": {
     "manager": "openzeppelin",

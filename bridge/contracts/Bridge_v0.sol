@@ -3,8 +3,8 @@ pragma solidity ^0.5.0;
 // Import base Initializable contract
 import '@openzeppelin/upgrades/contracts/Initializable.sol';
 // Import interface and library from OpenZeppelin contracts
-import "@openzeppelin/contracts-ethereum-package/contracts/lifecycle/Pausable.sol";
-import "@openzeppelin/contracts-ethereum-package/contracts/ownership/Ownable.sol";
+import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
@@ -15,7 +15,7 @@ import "./IBridge.sol";
 import "./SideToken.sol";
 import "./AllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Pausable, Ownable {
+contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
