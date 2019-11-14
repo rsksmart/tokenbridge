@@ -2,13 +2,14 @@ pragma solidity >=0.4.21 <0.6.0;
 
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
+import "./IAllowTokens.sol";
 
-contract AllowTokens is Ownable {
+contract AllowTokens is IAllowTokens, Ownable {
     using SafeMath for uint256;
 
-    address[] public allowedTokens;
-    bool public validateAllowedTokens;
-    uint256 public maxTokensAllowed;
+    address[] private allowedTokens;
+    bool private validateAllowedTokens;
+    uint256 private maxTokensAllowed;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
@@ -24,6 +25,18 @@ contract AllowTokens is Ownable {
         transferOwnership(_manager);
         validateAllowedTokens = false;
         maxTokensAllowed = 10000 ether;
+    }
+
+    function getAllowedTokens() public view returns(address[] memory) {
+        return allowedTokens;
+    }
+
+    function isValidatingAllowedTokens() public view returns(bool) {
+        return validateAllowedTokens;
+    }
+
+    function getMaxTokensAllowed() public view returns(uint256) {
+        return maxTokensAllowed;
     }
 
     function allowedTokenExist(address token) private view notNull(token) returns (bool) {

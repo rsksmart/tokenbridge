@@ -6,7 +6,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const utils = require('./utils');
 const BN = web3.utils.BN;
 
-contract('Bridge', async function (accounts) {
+contract.only('Bridge', async function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
@@ -61,7 +61,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance, amount);
             });
 
-            it.only('send money to contract should fail', async function () {
+            it('send money to contract should fail', async function () {
                 const amount = 1000;
                 await utils.expectThrow(web3.eth.sendTransaction( { from:tokenOwner,
                     to: this.bridge.address, value: amount } ));
