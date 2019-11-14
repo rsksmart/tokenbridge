@@ -4,18 +4,18 @@ pragma solidity ^0.5.0;
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-// import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+//import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/math/SafeMath.sol";
 
-import "./ERC677TransferReceiver.sol";
+import "./IERC677TransferReceiver.sol";
 import "./IBridge.sol";
 import "./SideToken.sol";
-import "./AllowTokens.sol";
+import "./IAllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
+contract Bridge_v0 is Initializable, IBridge, IERC677TransferReceiver, UpgradablePausable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -27,7 +27,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
     mapping (address => bool) public knownTokens;
     mapping (address => address) public mappedAddresses;
     mapping(bytes32 => bool) processed;
-    AllowTokens allowTokens;
+    IAllowTokens allowTokens;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
@@ -42,16 +42,16 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
         // UpgradablePausable.initialize(_manager);
         // transferOwnership(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
+        allowTokens = IAllowTokens(_allowTokens);
     }
 
     function version() public pure returns (string memory) {
         return "v0";
     }
 
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable  returns (bool) {
+    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable  whenNotPaused returns (bool) {
         validateToken(tokenToUse);
-        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
+        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(msg.value >= crossingPayment, "Insufficient coins sent for crossingPayment");
         if (isSideToken(address(tokenToUse))) {
             SideToken(address(tokenToUse)).burn(amount);
@@ -75,10 +75,9 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    )
-        public returns(bool) {
+    ) public whenNotPaused returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
-        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
+        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -97,7 +96,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
         return true;
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public  returns (bool success) {
+    function onTokenTransfer(address to, uint256 amount, bytes memory data) public returns (bool success) {
         return tokenFallback(to, amount, data);
     }
 
@@ -117,7 +116,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
         }
     }
 
-    function tokenFallback(address from, uint256 amount, bytes memory) public  returns (bool) {
+    function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
         //TODO add validations and manage callback from contracts correctly
         //TODO If its a mirror contract created by us we should brun the tokens and sent then back. If not we shoulld add it to the pending trasnfer
         address originalTokenAddress = originalTokens[msg.sender];

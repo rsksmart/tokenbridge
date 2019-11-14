@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./zeppelin/token/ERC20/ERC20Burnable.sol";
 import "./zeppelin/token/ERC20/ERC20Mintable.sol";
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
-import "./ERC677TransferReceiver.sol";
+import "./IERC677TransferReceiver.sol";
 
 contract SideToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
     /**
@@ -25,7 +25,7 @@ contract SideToken is ERC20Detailed, ERC20Mintable, ERC20Burnable {
 
         emit Transfer(msg.sender, _to, _value, _data);
 
-        ERC677TransferReceiver receiver = ERC677TransferReceiver(_to);
+        IERC677TransferReceiver receiver = IERC677TransferReceiver(_to);
         receiver.tokenFallback(msg.sender, _value, _data);
         return true;
     }
