@@ -10,13 +10,12 @@ import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/math/SafeMath.sol";
 
-import "./ERC677TransferReceiver.sol";
 import "./IBridge.sol";
 import "./SideToken.sol";
 import "./SideTokenFactory.sol";
-import "./AllowTokens.sol";
+import "./IAllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, UpgradableOwnable, UpgradablePausable {
+contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -28,23 +27,23 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
     mapping (address => bool) public knownTokens;
     mapping (address => address) public mappedAddresses;
     mapping(bytes32 => bool) processed;
-    AllowTokens allowTokens;
-    SideTokenFactory public sideTokenFactory;
+    IAllowTokens allowTokens;
+    SideTokenFactory sideTokenFactory;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount);
 
-    function initialize(address _manager, address _allowTokens, uint8 _symbolPrefix) public initializer {
+    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
         require(_symbolPrefix != 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
         require(_manager != address(0), "Manager is empty");
-        // UpgradableOwnable.initialize(_manager);
-        // UpgradablePausable.initialize(_manager);
-        // transferOwnership(_manager);
+        //UpgradableOwnable.initialize(_manager);
+        //UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
+        allowTokens = IAllowTokens(_allowTokens);
+        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
     }
 
     function version() public pure returns (string memory) {
@@ -52,21 +51,46 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
     }
 
     function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
-        validateToken(tokenToUse);
-        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
-        require(msg.value >= crossingPayment, "Insufficient coins sent for crossingPayment");
-        if (isSideToken(address(tokenToUse))) {
-            SideToken(address(tokenToUse)).burn(amount);
-            emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(msg.sender), amount, tokenToUse.symbol());
+        validateAndCreateCrossEvent(address(tokenToUse), amount, msg.value);
+        //Transfer the tokens on ERC20
+        tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
+        sendIncentiveToEventsCrossers(msg.value);
+        return true;
+    }
+
+    function sendIncentiveToEventsCrossers(uint256 payment) private {
+        //Send the payment to the MultiSig of the Federation
+        address payable receiver = address(uint160(owner()));
+        receiver.transfer(payment);
+    }
+
+    function validateAndCreateCrossEvent(address tokenToUse, uint256 amount, uint256 payment) private {
+        validateToken(tokenToUse, amount, payment);
+        if (isSideToken(tokenToUse)) {
+            (SideToken(tokenToUse)).operatorBurn(msg.sender, amount, '', '');
+            emit Cross(originalTokens[tokenToUse], getMappedAddress(msg.sender), amount, (ERC20Detailed(tokenToUse)).symbol());
         }
         else {
-            knownTokens[address(tokenToUse)] = true;
-            emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
+            knownTokens[tokenToUse] = true;
+            emit Cross(tokenToUse, getMappedAddress(msg.sender), amount, (ERC20Detailed(tokenToUse)).symbol());
         }
-        tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        address payable receiver = address(uint160(owner())); // Revert to owner()
-        receiver.transfer(msg.value);
-        return true;
+    }
+
+    //TODO ERC777 does not sent currency here, we should change that
+    //Also we should implement tokenSender to verify if the amount sent is correct
+    function tokensReceived(
+        address operator,
+        address from,
+        address to,
+        uint amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) public payable whenNotPaused returns (bool) {
+        //Hook from ERC777
+        require(to == address(this), "This contract is not the address recieving the tokens");
+        //TODO add Balance check
+        validateAndCreateCrossEvent(msg.sender, amount, msg.value);
+        sendIncentiveToEventsCrossers(msg.value);
     }
 
     function acceptTransfer(
@@ -77,10 +101,9 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    )
-        public onlyOwner whenNotPaused returns(bool) {
+    ) public onlyOwner whenNotPaused returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
-        require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
+        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -89,9 +112,10 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         address to = getMappedAddress(receiver);
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            require(sideToken.mint(to, amount), "Error minting on side token");
+            sideToken.operatorMint(to, amount, "", "");
         }
         else {
+            require(knownTokens[tokenAddress], "Token address is not in knownTokens");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(to, amount);
         }
@@ -99,7 +123,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         return true;
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
+    function onTokenTransfer(address to, uint256 amount, bytes memory data) public returns (bool success) {
         return tokenFallback(to, amount, data);
     }
 
@@ -126,7 +150,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         address originalTokenAddress = originalTokens[msg.sender];
         require(originalTokenAddress != address(0), "Sender is not one of the crossed token contracts");
         SideToken sideToken = SideToken(msg.sender);
-        sideToken.burn(amount);
+        sideToken.operatorBurn(msg.sender, amount, '', '');
         emit Cross(originalTokenAddress, getMappedAddress(from), amount, ERC20Detailed(originalTokenAddress).symbol());
         return true;
     }
@@ -144,9 +168,12 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         return mapped;
     }
 
-    function validateToken(ERC20Detailed tokenToUse) private view {
-        require(tokenToUse.decimals() == 18, "Token has decimals other than 18");
-        require(bytes(tokenToUse.symbol()).length != 0, "Token doesn't have symbol");
+    function validateToken(address tokenToUse, uint256 amount, uint256 payment) private view {
+        ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
+        require(detailedTokenToUse.decimals() == 18, "Token has decimals other than 18");
+        require(bytes(detailedTokenToUse.symbol()).length != 0, "Token doesn't have a symbol");
+        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
+        require(payment >= crossingPayment, "Insufficient coins sent for crossingPayment");
     }
 
     function isSideToken(address token) private view returns (bool) {
