@@ -1,10 +1,10 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import '@openzeppelin/upgrades/contracts/Initializable.sol';
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+// import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
@@ -15,7 +15,7 @@ import "./IBridge.sol";
 import "./SideToken.sol";
 import "./AllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, UpgradablePausable, UpgradableOwnable {
+contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -37,7 +37,10 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
     function initialize(address _manager, address _allowTokens, uint8 _symbolPrefix) public initializer {
         require(_symbolPrefix != 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
-        transferOwnership(_manager);
+        require(_manager != address(0), "Manager is empty");
+        // UpgradableOwnable.initialize(_manager);
+        // UpgradablePausable.initialize(_manager);
+        // transferOwnership(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
     }
@@ -46,7 +49,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         return "v0";
     }
 
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
+    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable  returns (bool) {
         validateToken(tokenToUse);
         require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(msg.value >= crossingPayment, "Insufficient coins sent for crossingPayment");
@@ -59,7 +62,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
             emit Cross(address(tokenToUse), getMappedAddress(msg.sender), amount, tokenToUse.symbol());
         }
         tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        address payable receiver = address(uint160(owner()));
+        address payable receiver = address(uint160(0)); // Revert to owner()
         receiver.transfer(msg.value);
         return true;
     }
@@ -73,7 +76,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         bytes32 transactionHash,
         uint32 logIndex
     )
-        public onlyOwner whenNotPaused returns(bool) {
+        public returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
         require(amount <= allowTokens.maxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
@@ -94,11 +97,11 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         return true;
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public whenNotPaused returns (bool success) {
+    function onTokenTransfer(address to, uint256 amount, bytes memory data) public  returns (bool success) {
         return tokenFallback(to, amount, data);
     }
 
-    function processToken(address token, string memory symbol) private onlyOwner whenNotPaused {
+    function processToken(address token, string memory symbol) private  {
         if (knownTokens[token])
             return;
 
@@ -114,7 +117,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         }
     }
 
-    function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
+    function tokenFallback(address from, uint256 amount, bytes memory) public  returns (bool) {
         //TODO add validations and manage callback from contracts correctly
         //TODO If its a mirror contract created by us we should brun the tokens and sent then back. If not we shoulld add it to the pending trasnfer
         address originalTokenAddress = originalTokens[msg.sender];
@@ -125,7 +128,7 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         return true;
     }
 
-    function mapAddress(address to) public whenNotPaused {
+    function mapAddress(address to) public {
         mappedAddresses[msg.sender] = to;
     }
 
@@ -184,14 +187,14 @@ contract Bridge_v0 is Initializable, IBridge, ERC677TransferReceiver, Upgradable
         uint256 _amount,
         uint32 _logIndex
     )
-        private whenNotPaused
+        private
     {
         bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         processed[compiledId] = true;
     }
 
-    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
+    function setCrossingPayment(uint amount) public {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment);
     }

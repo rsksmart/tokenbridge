@@ -5,8 +5,7 @@
   "contracts": {
     "Bridge": "Bridge_v0"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "compiler": {
     "manager": "openzeppelin",
     "solcVersion": "0.5.12",
