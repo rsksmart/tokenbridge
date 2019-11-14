@@ -29,6 +29,7 @@ module.exports = function(deployer, networkName, accounts) {
         const allowTokens = await AllowTokens.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
         let initArgs = [ multiSig.address, allowTokens.address, symbol.charCodeAt() ];
+        console.log('init args ', initArgs);
         await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
       })
 };
