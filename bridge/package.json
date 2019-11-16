@@ -5,13 +5,14 @@
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
     "@openzeppelin/cli": "^2.6.0",
+    "@openzeppelin/test-helpers": "^0.5.4",
     "@openzeppelin/upgrades": "^2.6.0",
     "rlp": "^2.2.3",
     "truffle-hdwallet-provider": "^1.0.17",
     "truffle-privatekey-provider": "^1.3.0"
   },
   "scripts": {
-    "start": "truffle migrate",
+    "start": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && truffle migrate",
     "test": "truffle test",
     "deploy": "truffle migrate --reset --network regtest && truffle migrate --reset --network development"
   },
@@ -21,5 +22,9 @@
     "bridge",
     "ethereum"
   ],
-  "author": "IOVLabs"
+  "author": "IOVLabs",
+  "devDependencies": {
+    "chalk": "^3.0.0",
+    "table": "^5.4.6"
+  }
 }
