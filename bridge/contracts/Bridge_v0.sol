@@ -15,7 +15,7 @@ import "./SideToken.sol";
 import "./SideTokenFactory.sol";
 import "./IAllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwnable {
+contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -30,17 +30,18 @@ contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwna
     IAllowTokens allowTokens;
     SideTokenFactory sideTokenFactory;
 
-    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol);
+    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount);
 
+event test(uint);
     function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
         require(_symbolPrefix != 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
         require(_manager != address(0), "Manager is empty");
-        //UpgradableOwnable.initialize(_manager);
-        //UpgradablePausable.initialize(_manager);
+        UpgradableOwnable.initialize(_manager);
+        UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = IAllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
@@ -48,49 +49,6 @@ contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwna
 
     function version() public pure returns (string memory) {
         return "v0";
-    }
-
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) public payable whenNotPaused returns (bool) {
-        validateAndCreateCrossEvent(address(tokenToUse), amount, msg.value);
-        //Transfer the tokens on ERC20
-        tokenToUse.safeTransferFrom(msg.sender, address(this), amount);
-        sendIncentiveToEventsCrossers(msg.value);
-        return true;
-    }
-
-    function sendIncentiveToEventsCrossers(uint256 payment) private {
-        //Send the payment to the MultiSig of the Federation
-        address payable receiver = address(uint160(owner()));
-        receiver.transfer(payment);
-    }
-
-    function validateAndCreateCrossEvent(address tokenToUse, uint256 amount, uint256 payment) private {
-        validateToken(tokenToUse, amount, payment);
-        if (isSideToken(tokenToUse)) {
-            (SideToken(tokenToUse)).operatorBurn(msg.sender, amount, '', '');
-            emit Cross(originalTokens[tokenToUse], getMappedAddress(msg.sender), amount, (ERC20Detailed(tokenToUse)).symbol());
-        }
-        else {
-            knownTokens[tokenToUse] = true;
-            emit Cross(tokenToUse, getMappedAddress(msg.sender), amount, (ERC20Detailed(tokenToUse)).symbol());
-        }
-    }
-
-    //TODO ERC777 does not sent currency here, we should change that
-    //Also we should implement tokenSender to verify if the amount sent is correct
-    function tokensReceived(
-        address operator,
-        address from,
-        address to,
-        uint amount,
-        bytes memory userData,
-        bytes memory operatorData
-    ) public payable whenNotPaused returns (bool) {
-        //Hook from ERC777
-        require(to == address(this), "This contract is not the address recieving the tokens");
-        //TODO add Balance check
-        validateAndCreateCrossEvent(msg.sender, amount, msg.value);
-        sendIncentiveToEventsCrossers(msg.value);
     }
 
     function acceptTransfer(
@@ -123,8 +81,80 @@ contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwna
         return true;
     }
 
-    function onTokenTransfer(address to, uint256 amount, bytes memory data) public returns (bool success) {
-        return tokenFallback(to, amount, data);
+    /**
+     * ERC-20 tokens approve and transferFrom pattern
+     * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
+     */
+    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
+        validateToken(tokenToUse, amount);
+        //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
+        ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
+        sendIncentiveToEventsCrossers(msg.value);
+        crossTokens(tokenToUse, msg.sender, amount, '0x');
+    }
+
+    /**
+     * ERC-677 and ERC-223 implementation for Receiving Tokens Contracts
+     * See https://github.com/ethereum/EIPs/issues/677 for details
+     * See https://github.com/ethereum/EIPs/issues/223 for details
+     */
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
+        //This can only be used with trusted contracts
+        require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
+        validateToken(msg.sender, amount);
+        //TODO cant make it payable find a work around
+        sendIncentiveToEventsCrossers(0);
+        return crossTokens(msg.sender, from, amount, userData);
+    }
+
+    /**
+     * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
+     * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
+     */
+    function tokensReceived (
+        address operator,
+        address from,
+        address to,
+        uint amount,
+        bytes memory userData,
+        bytes memory operatorData
+    ) public whenNotPaused {
+        //Hook from ERC777
+        require(to == address(this), "This contract is not the address recieving the tokens");
+        /**
+        * TODO add Balance check
+        */
+        validateToken(msg.sender, amount);
+        //TODO cant make it payable find a work around
+        sendIncentiveToEventsCrossers(0);
+        crossTokens(msg.sender, from, amount, userData);
+    }
+
+    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
+    private returns (bool) {
+        if (isSideToken(tokenToUse)) {
+            sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
+        } else {
+            mainTokenCrossing(from, tokenToUse, amount, userData);
+        }
+        return true;
+    }
+
+    function sendIncentiveToEventsCrossers(uint256 payment) private {
+        require(payment >= crossingPayment, "Insufficient coins sent for crossingPayment");
+        //Send the payment to the MultiSig of the Federation
+        address payable receiver = address(uint160(owner()));
+        receiver.transfer(payment);
+    }
+
+    function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
+        tokenToUse.burn(amount, userData);
+        emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(from), amount, tokenToUse.symbol(), userData);
+    }
+
+    function mainTokenCrossing(address from, address tokenToUse, uint256 amount, bytes memory userData) private {
+        knownTokens[tokenToUse] = true;
+        emit Cross(tokenToUse, getMappedAddress(from), amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
     function processToken(address token, string memory symbol) private onlyOwner whenNotPaused {
@@ -144,17 +174,6 @@ contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwna
         }
     }
 
-    function tokenFallback(address from, uint256 amount, bytes memory) public whenNotPaused returns (bool) {
-        //TODO add validations and manage callback from contracts correctly
-        //TODO If its a mirror contract created by us we should brun the tokens and sent then back. If not we shoulld add it to the pending trasnfer
-        address originalTokenAddress = originalTokens[msg.sender];
-        require(originalTokenAddress != address(0), "Sender is not one of the crossed token contracts");
-        SideToken sideToken = SideToken(msg.sender);
-        sideToken.operatorBurn(msg.sender, amount, '', '');
-        emit Cross(originalTokenAddress, getMappedAddress(from), amount, ERC20Detailed(originalTokenAddress).symbol());
-        return true;
-    }
-
     function mapAddress(address to) public whenNotPaused {
         mappedAddresses[msg.sender] = to;
     }
@@ -168,12 +187,11 @@ contract Bridge_v0 is Initializable, IBridge, UpgradablePausable, UpgradableOwna
         return mapped;
     }
 
-    function validateToken(address tokenToUse, uint256 amount, uint256 payment) private view {
+    function validateToken(address tokenToUse, uint256 amount) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Token has decimals other than 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Token doesn't have a symbol");
         require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
-        require(payment >= crossingPayment, "Insufficient coins sent for crossingPayment");
     }
 
     function isSideToken(address token) private view returns (bool) {
