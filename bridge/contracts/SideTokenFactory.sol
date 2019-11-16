@@ -1,10 +1,11 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
 
+import "./zeppelin/ownership/Ownable.sol";
 import "./SideToken.sol";
 
-contract SideTokenFactory {
-    function createSideToken(string memory name, string memory symbol) public returns (SideToken) {
-        SideToken sideToken = new SideToken(name, symbol);
-        return sideToken;
+contract SideTokenFactory is Ownable {
+
+    function createSideToken(string memory name, string memory symbol) public onlyOwner returns(SideToken) {
+        return new SideToken(name, symbol, owner());
     }
 }

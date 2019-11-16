@@ -1,6 +1,7 @@
 const Bridge = artifacts.require("Bridge_v0");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const MainToken = artifacts.require('MainToken');
+const SideTokenFactory = artifacts.require('SideTokenFactory');
 
 const fs = require('fs');
 
@@ -9,7 +10,13 @@ function shouldDeployToken(network) {
 }
 
 module.exports = function(deployer, networkName, accounts) {
-    deployer.then(() => {
+    deployer
+    .then(async ()=> {
+        const sideTokenFactory = await SideTokenFactory.deployed();
+        const bridge = await Bridge.deployed();
+        sideTokenFactory.transferOwnership(bridge.address);
+    })
+    .then(() => {
         if(shouldDeployToken(networkName)) {
             return deployer.deploy(MainToken, 'MAIN', 'MAIN', 18, web3.utils.toWei('1000'));
         }
