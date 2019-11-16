@@ -14,5 +14,5 @@ interface IBridge {
         uint32 logIndex
     ) external returns(bool);
 
-    function receiveTokens(ERC20Detailed tokenToUse, uint256 amount) external payable returns (bool);
+    function receiveTokens(address tokenToUse, uint256 amount) external payable;
 }
