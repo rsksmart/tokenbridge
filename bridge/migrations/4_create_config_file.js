@@ -14,8 +14,6 @@ module.exports = function(deployer, networkName, accounts) {
     .then(async ()=> {
         const sideTokenFactory = await SideTokenFactory.deployed();
         const bridge = await Bridge.deployed();
-        console.log(bridge.address);
-        console.log(bridge.implementation);
         sideTokenFactory.transferOwnership(bridge.address);
     })
     .then(() => {
