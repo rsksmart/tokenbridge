@@ -4,10 +4,10 @@ const log4js = require('log4js');
 //configurations
 const config = require('./config.js');
 const logConfig = require('./log-config.json');
-const abiBridge = require('./src/abis/Bridge.json');
+const abiBridge = require('./src/abis/Bridge_v0.json');
 const abiMainToken = require('./src/abis/IERC20.json');
 //utils
-const TransactionSender = require('./src/services/TransactionSender.js');
+const TransactionSender = require('./src/lib/TransactionSender.js');
 const Federator = require('./src/lib/Federator.js');
 const utils = require('./src/lib/utils.js');
 
