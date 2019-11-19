@@ -1,7 +1,9 @@
 pragma solidity ^0.5.0;
 
-import "../GSN/Context.sol";
-import "../access/roles/PauserRole.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
+
+import "../../GSN/Context.sol";
+import "../access/roles/UpgradablePauserRole.sol";
 
 /**
  * @dev Contract module which allows children to implement an emergency stop
@@ -12,7 +14,7 @@ import "../access/roles/PauserRole.sol";
  * the functions of your contract. Note that they will not be pausable by
  * simply including this module, only once the modifiers are put in place.
  */
-contract Pausable is Context, PauserRole {
+contract UpgradablePausable is Initializable, Context, UpgradablePauserRole {
     /**
      * @dev Emitted when the pause is triggered by a pauser (`account`).
      */
@@ -29,7 +31,9 @@ contract Pausable is Context, PauserRole {
      * @dev Initializes the contract in unpaused state. Assigns the Pauser role
      * to the deployer.
      */
-    constructor () internal {
+    function initialize(address sender) public initializer {
+        UpgradablePauserRole.initialize(sender);
+
         _paused = false;
     }
 
@@ -71,4 +75,6 @@ contract Pausable is Context, PauserRole {
         _paused = false;
         emit Unpaused(_msgSender());
     }
+
+    uint256[50] private ______gap;
 }

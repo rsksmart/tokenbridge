@@ -1,6 +1,6 @@
 const web3 = require('web3');
 const fs = require('fs');
-const abiBridge = require('../abis/Bridge.json');
+const abiBridge = require('../abis/Bridge_v0.json');
 const abiMultiSig = require('../abis/MultiSig.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');

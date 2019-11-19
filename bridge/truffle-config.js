@@ -19,20 +19,20 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "*", // Match any network id
+      network_id: "5777", // Match any network id
     },
     //RSK
     regtest: {
       host: "127.0.0.1",
       port: 4444,
-      network_id: "*", // Match any network id
+      network_id: "7771",
     },
     rsktestnet: {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "http://public-node.testnet.rsk.co/1.1.0"),
       network_id: 31,
       gas: 6700000,
-      gasPrice: 62000000 // 0.06 gwei    
+      gasPrice: 62000000 // 0.06 gwei
     },
      //Ethereum
      ropsten: {
@@ -56,7 +56,7 @@ module.exports = {
   },
   compilers: {
       solc: {
-          version: "0.5.7"
+          version: "0.5.12"
       }
   }
 };

@@ -1,3 +1,4 @@
+
 const MainToken = artifacts.require('./MainToken');
 const AllowTokens = artifacts.require('./AllowTokens');
 
@@ -13,30 +14,30 @@ contract('AllowTokens', async function (accounts) {
     describe('Tokens whitelist', async function () {
 
         it('should allow tokens transfer with initial values', async function () {
-            let validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, false);
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, false);
         });
 
         it('enables tokens whitelist validation', async function() {
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-            let validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, true);
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
         });
 
         it('disables tokens whitelist validation', async function() {
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-            let validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, true);
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
 
             await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-            validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, false);
+            isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, false);
         });
 
         it('validates whitelisted token', async function() {
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-            let validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, true);
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
 
             await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
             let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
@@ -45,8 +46,8 @@ contract('AllowTokens', async function (accounts) {
 
         it('removes allowed token', async function() {
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-            let validateAllowedTokens = await this.allowTokens.validateAllowedTokens();
-            assert.equal(validateAllowedTokens, true);
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
 
             await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
             let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
@@ -61,7 +62,7 @@ contract('AllowTokens', async function (accounts) {
     describe('Max tokens allowed', async function() {
 
         it('should set initial values', async function() {
-            let maxTokens = await this.allowTokens.maxTokensAllowed();
+            let maxTokens = await this.allowTokens.getMaxTokensAllowed();
             assert.equal(maxTokens, 10000000000000000000000); // 10000 ether in wei
         });
 
@@ -69,7 +70,7 @@ contract('AllowTokens', async function (accounts) {
             let newMaxTokens = 50000;
             await this.allowTokens.setMaxTokensAllowed(newMaxTokens, { from: manager });
 
-            let maxTokens = await this.allowTokens.maxTokensAllowed();
+            let maxTokens = await this.allowTokens.getMaxTokensAllowed();
             assert.equal(maxTokens, newMaxTokens);
         });
     });
