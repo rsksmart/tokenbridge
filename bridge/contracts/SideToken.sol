@@ -22,7 +22,7 @@ event testOperators(address[]);
     )
     public onlyMinter
     {
-        _mint(msg.sender, account, amount, userData, operatorData);
+        _mint(_msgSender(), account, amount, userData, operatorData);
     }
 
 }
