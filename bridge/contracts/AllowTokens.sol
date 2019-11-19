@@ -1,14 +1,15 @@
 pragma solidity >=0.4.21 <0.6.0;
 
 import "./zeppelin/math/SafeMath.sol";
-import "./Governance.sol";
+import "./zeppelin/ownership/Ownable.sol";
+import "./IAllowTokens.sol";
 
-contract AllowTokens is Governance {
+contract AllowTokens is IAllowTokens, Ownable {
     using SafeMath for uint256;
 
-    address[] public allowedTokens;
-    bool public validateAllowedTokens;
-    uint256 public maxTokensAllowed;
+    address[] private allowedTokens;
+    bool private validateAllowedTokens;
+    uint256 private maxTokensAllowed;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
@@ -20,15 +21,25 @@ contract AllowTokens is Governance {
         _;
     }
 
-    constructor(address _manager) public Governance(_manager) {
+    constructor(address _manager) public  {
+        transferOwnership(_manager);
         validateAllowedTokens = false;
         maxTokensAllowed = 10000 ether;
     }
 
-    function allowedTokenExist(address token) private view returns (bool) {
-        if (token == address(0))
-            return false;
+    function getAllowedTokens() public view returns(address[] memory) {
+        return allowedTokens;
+    }
 
+    function isValidatingAllowedTokens() public view returns(bool) {
+        return validateAllowedTokens;
+    }
+
+    function getMaxTokensAllowed() public view returns(uint256) {
+        return maxTokensAllowed;
+    }
+
+    function allowedTokenExist(address token) private view notNull(token) returns (bool) {
         for (uint i; i < allowedTokens.length; i++) {
             if (allowedTokens[i] == token)
                 return true;
@@ -36,21 +47,21 @@ contract AllowTokens is Governance {
         return false;
     }
 
-    function isTokenAllowed(address token) public view returns (bool) {
+    function isTokenAllowed(address token) public view notNull(token) returns (bool) {
         if (validateAllowedTokens) {
             return allowedTokenExist(token);
         }
         return true;
     }
 
-    function addAllowedToken(address token) public onlyManager notNull(token) {
+    function addAllowedToken(address token) public onlyOwner {
         require(!allowedTokenExist(token), "Token does not exist");
 
         allowedTokens.push(token);
         emit AllowedTokenAdded(token);
     }
 
-    function removeAllowedToken(address token) public onlyManager {
+    function removeAllowedToken(address token) public onlyOwner {
         require(allowedTokenExist(token), "Token already exist");
 
         for (uint i = 0; i < allowedTokens.length - 1; i++)
@@ -63,17 +74,17 @@ contract AllowTokens is Governance {
         emit AllowedTokenRemoved(token);
     }
 
-    function enableAllowedTokensValidation() public onlyManager {
+    function enableAllowedTokensValidation() public onlyOwner {
         validateAllowedTokens = true;
         emit AllowedTokenValidation(validateAllowedTokens);
     }
 
-    function disableAllowedTokensValidation() public onlyManager {
+    function disableAllowedTokensValidation() public onlyOwner {
         validateAllowedTokens = false;
         emit AllowedTokenValidation(validateAllowedTokens);
     }
 
-    function setMaxTokensAllowed(uint256 maxTokens) public onlyManager {
+    function setMaxTokensAllowed(uint256 maxTokens) public onlyOwner {
         maxTokensAllowed = maxTokens;
         emit MaxTokensAllowedChanged(maxTokensAllowed);
     }

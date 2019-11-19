@@ -1,9 +1,11 @@
 pragma solidity ^0.5.0;
 
-import "../../GSN/Context.sol";
-import "../Roles.sol";
+import "@openzeppelin/upgrades/contracts/Initializable.sol";
 
-contract PauserRole is Context {
+import "../../../GSN/Context.sol";
+import "../../../access/Roles.sol";
+
+contract UpgradablePauserRole is Initializable, Context {
     using Roles for Roles.Role;
 
     event PauserAdded(address indexed account);
@@ -11,8 +13,10 @@ contract PauserRole is Context {
 
     Roles.Role private _pausers;
 
-    constructor () internal {
-        _addPauser(_msgSender());
+    function initialize(address sender) public initializer {
+        if (!isPauser(sender)) {
+            _addPauser(sender);
+        }
     }
 
     modifier onlyPauser() {
@@ -41,4 +45,6 @@ contract PauserRole is Context {
         _pausers.remove(account);
         emit PauserRemoved(account);
     }
+
+    uint256[50] private ______gap;
 }
