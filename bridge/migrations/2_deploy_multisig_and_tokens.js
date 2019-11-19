@@ -11,7 +11,7 @@ module.exports = function(deployer, networkName, accounts) {
     .then(() => MultiSigWallet.deployed())
     .then(() => deployer.deploy(AllowTokens, MultiSigWallet.address))
     .then(() => {
-        if (networkName === 'development' || networkName == 'regtest') {
+        if (networkName == 'development' || networkName == 'regtest') {
             // In a test environment an ERC777 token requires deploying an ERC1820 registry
             return singletons.ERC1820Registry(accounts[0]);
         }

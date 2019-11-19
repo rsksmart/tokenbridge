@@ -43,6 +43,21 @@ contract('Bridge_v0', async function (accounts) {
                 const manager = await this.bridge.owner();
                 assert.equal(manager, bridgeManager);
             });
+            
+            it('setCrossingPayment successful', async function () {
+                const amount = 1000;
+                await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
+                let result = await this.bridge.crossingPayment();
+                assert.equal(result, amount);
+            });
+
+            it('setCrossingPayment should fail if not the owner', async function () {
+                const amount = 1000;
+                await utils.expectThrow(this.bridge.setCrossingPayment(amount, { from: tokenOwner}));
+                let result = await this.bridge.crossingPayment();
+                assert.equal(result, 0);
+            });
+
         });
 
         describe('receiveTokens', async function () {
@@ -67,20 +82,6 @@ contract('Bridge_v0', async function (accounts) {
                     to: this.bridge.address, value: amount } ));
             });
 
-
-            it('setCrossingPayment successful', async function () {
-                const amount = 1000;
-                await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
-                let result = await this.bridge.crossingPayment();
-                assert.equal(result, amount);
-            });
-
-            it('setCrossingPayment should fail if not the owner', async function () {
-                const amount = 1000;
-                await utils.expectThrow(this.bridge.setCrossingPayment(amount, { from: tokenOwner}));
-                let result = await this.bridge.crossingPayment();
-                assert.equal(result, 0);
-            });
 
             it('receiveTokens with payment successful', async function () {
                 const payment = 1000;
