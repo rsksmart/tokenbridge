@@ -3,20 +3,19 @@ pragma solidity ^0.5.0;
 // Import base Initializable contract
 import "@openzeppelin/upgrades/contracts/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
-import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "./zeppelin/token/ERC20/ERC20Detailed.sol";
-import "./zeppelin/token/ERC20/SafeERC20.sol";
-import "./zeppelin/GSN/Context.sol";
-import "./zeppelin/math/SafeMath.sol";
+import "../zeppelin/token/ERC20/ERC20Detailed.sol";
+import "../zeppelin/token/ERC20/SafeERC20.sol";
+import "../zeppelin/math/SafeMath.sol";
 
-import "./IBridge.sol";
-import "./SideToken.sol";
-import "./SideTokenFactory.sol";
-import "./IAllowTokens.sol";
+import "../IBridge.sol";
+import "../SideToken.sol";
+import "../SideTokenFactory.sol";
+import "../IAllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, UpgradablePausable, UpgradableOwnable {
+contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -34,21 +33,13 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
-    event CrossingPaymentChanged(uint256 _amount);
+    event CrossingPaymentChanged(uint256 _amount, string test);
 
-    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
-        require(_symbolPrefix != 0, "Empty symbol prefix");
-        require(_allowTokens != address(0), "Missing AllowTokens contract address");
-        require(_manager != address(0), "Manager is empty");
-        UpgradableOwnable.initialize(_manager);
-        UpgradablePausable.initialize(_manager);
-        symbolPrefix = _symbolPrefix;
-        allowTokens = IAllowTokens(_allowTokens);
-        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+    function initialize() public initializer {
     }
 
     function version() public pure returns (string memory) {
-        return "v0";
+        return "test";
     }
 
     function acceptTransfer(
@@ -88,24 +79,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
     function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
         validateToken(tokenToUse, amount);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-        ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
+        ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
-        crossTokens(tokenToUse, _msgSender(), amount, '0x');
+        crossTokens(tokenToUse, msg.sender, amount, '0x');
     }
 
-    /**
-     * ERC-677 and ERC-223 implementation for Receiving Tokens Contracts
-     * See https://github.com/ethereum/EIPs/issues/677 for details
-     * See https://github.com/ethereum/EIPs/issues/223 for details
-     */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
-        //This can only be used with trusted contracts
-        require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
-        validateToken(_msgSender(), amount);
-        //TODO cant make it payable find a work around
-        sendIncentiveToEventsCrossers(0);
-        return crossTokens(_msgSender(), from, amount, userData);
-    }
 
     /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
@@ -124,10 +102,10 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
         /**
         * TODO add Balance check
         */
-        validateToken(_msgSender(), amount);
+        validateToken(msg.sender, amount);
         //TODO cant make it payable find a work around
         sendIncentiveToEventsCrossers(0);
-        crossTokens(_msgSender(), from, amount, userData);
+        crossTokens(msg.sender, from, amount, userData);
     }
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
@@ -175,7 +153,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
     }
 
     function mapAddress(address to) public whenNotPaused {
-        mappedAddresses[_msgSender()] = to;
+        mappedAddresses[msg.sender] = to;
     }
 
     function getMappedAddress(address account) public view returns (address) {
@@ -242,9 +220,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
         processed[compiledId] = true;
     }
 
-    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
+    function setCrossingPayment(uint amount, string memory test) public onlyOwner whenNotPaused {
         crossingPayment = amount;
-        emit CrossingPaymentChanged(crossingPayment);
+        emit CrossingPaymentChanged(crossingPayment, test);
     }
 
     function getAllowTokens() public view returns(address) {
@@ -257,9 +235,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
 
     }
 
-    function getSymbolPrefix() public view returns(uint8) {
-        return symbolPrefix;
-
+    function newMethodTest() public whenNotPaused  returns(bool) {
+        return true;
     }
 }
 
