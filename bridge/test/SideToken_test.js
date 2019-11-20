@@ -9,7 +9,7 @@ contract('SideToken', async function (accounts) {
     const anotherAccount = accounts[2];
 
     beforeEach(async function () {
-        this.token = await SideToken.new("SIDE", "SIDE", tokenCreator);
+        this.token = await SideToken.new("SIDE", "SIDE", [tokenCreator]);
     });
 
     it('initial state', async function () {

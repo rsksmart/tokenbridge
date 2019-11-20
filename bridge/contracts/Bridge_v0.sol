@@ -8,7 +8,6 @@ import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
-import "./zeppelin/GSN/Context.sol";
 import "./zeppelin/math/SafeMath.sol";
 
 import "./IBridge.sol";
@@ -16,7 +15,7 @@ import "./SideToken.sol";
 import "./SideTokenFactory.sol";
 import "./IAllowTokens.sol";
 
-contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, UpgradablePausable, UpgradableOwnable {
+contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
@@ -112,12 +111,12 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
      * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
      */
     function tokensReceived (
-        address operator,
+        address,
         address from,
         address to,
         uint amount,
         bytes memory userData,
-        bytes memory operatorData
+        bytes memory
     ) public whenNotPaused {
         //Hook from ERC777
         require(to == address(this), "This contract is not the address recieving the tokens");
@@ -165,7 +164,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
 
         if (address(sideToken) == address(0)) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-            // sideToken = new SideToken(newSymbol, newSymbol);
             sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol);
             mappedTokens[token] = sideToken;
             address sideTokenAddress = address(sideToken);
@@ -261,5 +259,16 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, Context, Upgrada
         return symbolPrefix;
 
     }
+
+    function getMappedTokens(address originalTokenAddr) public view returns(address) {
+        return address(mappedTokens[originalTokenAddr]);
+
+    }
+
+    function getOriginalTokens(address sideTokenAddr) public view returns(address) {
+        return address(originalTokens[sideTokenAddr]);
+
+    }
+
 }
 

@@ -77,5 +77,4 @@ contract UpgradableOwnable is Initializable, Context {
         _owner = newOwner;
     }
 
-    uint256[50] private ______gap;
 }
