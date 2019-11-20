@@ -75,6 +75,4 @@ contract UpgradablePausable is Initializable, Context, UpgradablePauserRole {
         _paused = false;
         emit Unpaused(_msgSender());
     }
-
-    uint256[50] private ______gap;
 }
