@@ -84,34 +84,34 @@ async function run({ mainchainFederators, sidechainFederators, config, sideConfi
 
 async function transfer(federators, config, origin, destination) {
     try {
-        let mainchainWeb3 = new Web3(config.mainchain.host);
-        let sidechainWeb3 = new Web3(config.sidechain.host);
+        let originWeb3 = new Web3(config.mainchain.host);
+        let destinationWeb3 = new Web3(config.sidechain.host);
 
-        const mainTokenContract = new mainchainWeb3.eth.Contract(abiMainToken, config.mainchain.testToken);
-        const transactionSender = new TransactionSender(mainchainWeb3, logger);
+        const originTokenContract = new originWeb3.eth.Contract(abiMainToken, config.mainchain.testToken);
+        const transactionSender = new TransactionSender(originWeb3, logger);
 
-        const mainBridgeAddress = config.mainchain.bridge;
-        const amount = mainchainWeb3.utils.toWei('1');
-        const mainTokenAddress = mainTokenContract.options.address;
+        const originBridgeAddress = config.mainchain.bridge;
+        const amount = originWeb3.utils.toWei('1');
+        const originAddress = originTokenContract.options.address;
 
         logger.debug('Getting address from pk');
         const senderAddress = await transactionSender.getAddress(config.mainchain.privateKey);
-        logger.info(`${origin} token addres ${mainTokenAddress} - Sender Address: ${senderAddress}`);
+        logger.info(`${origin} token addres ${originAddress} - Sender Address: ${senderAddress}`);
 
         logger.debug('Aproving token transfer');
-        let data = mainTokenContract.methods.approve(mainBridgeAddress, amount).encodeABI();
-        await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.mainchain.privateKey);
+        let data = originTokenContract.methods.approve(originBridgeAddress, amount).encodeABI();
+        await transactionSender.sendTransaction(originAddress, data, 0, config.mainchain.privateKey);
         logger.debug('Token transfer approved');
 
         logger.debug('Bridge receiveTokens (transferFrom)');
-        let bridgeContract = new mainchainWeb3.eth.Contract(abiBridge, mainBridgeAddress);
-        data = bridgeContract.methods.receiveTokens(mainTokenAddress, amount).encodeABI();
-        await transactionSender.sendTransaction(mainBridgeAddress, data, 0, config.mainchain.privateKey);
+        let bridgeContract = new originWeb3.eth.Contract(abiBridge, originBridgeAddress);
+        data = bridgeContract.methods.receiveTokens(originAddress, amount).encodeABI();
+        await transactionSender.sendTransaction(originBridgeAddress, data, 0, config.mainchain.privateKey);
         logger.debug('Bridge receivedTokens completed');
 
         let waitBlocks = config.confirmations;
         logger.debug(`Wait for ${waitBlocks} blocks`);
-        await utils.waitBlocks(mainchainWeb3, waitBlocks);
+        await utils.waitBlocks(originWeb3, waitBlocks);
 
         logger.debug('Starting federator processes');
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
@@ -123,14 +123,14 @@ async function transfer(federators, config, origin, destination) {
             })
         }, Promise.resolve());
 
-        logger.debug('Get the side token address');
-        let sideBridgeContract = new sidechainWeb3.eth.Contract(abiBridge, config.sidechain.bridge);
-        let sideTokenAddress = await sideBridgeContract.methods.mappedTokens(mainTokenAddress).call();
-        logger.info(`${destination} token address`, sideTokenAddress);
+        logger.debug('Get the destination token address');
+        let destinationBridgeContract = new destinationWeb3.eth.Contract(abiBridge, config.sidechain.bridge);
+        let destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
+        logger.info(`${destination} token address`, destinationTokenAddress);
 
         logger.debug('Check balance on the other side');
-        let sideTokenContract = new sidechainWeb3.eth.Contract(abiMainToken, sideTokenAddress);
-        let balance = await sideTokenContract.methods.balanceOf(senderAddress).call();
+        let destinationTokenContract = new destinationWeb3.eth.Contract(abiMainToken, destinationTokenAddress);
+        let balance = await destinationTokenContract.methods.balanceOf(senderAddress).call();
         logger.info(`${destination} token balance`, balance);
 
     } catch(err) {
