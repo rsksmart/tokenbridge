@@ -13,7 +13,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 
 const utils = require('./utils');
 
-contract.only('Bridge_upgrade_test', async (accounts) => {
+contract('Bridge_upgrade_test', async (accounts) => {
     const deployerAddress = accounts[0];
     const managerAddress = accounts[1];
 
@@ -40,9 +40,9 @@ contract.only('Bridge_upgrade_test', async (accounts) => {
         });
 
         it('should initialize it', async () => {
-            const proxy = await this.project.createProxy(Bridge_v0, 
+            const proxy = await this.project.createProxy(Bridge_v0,
                 { initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt()] });
-            
+
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
             result = await proxy.methods.getAllowTokens().call();
@@ -62,7 +62,7 @@ contract.only('Bridge_upgrade_test', async (accounts) => {
             await this.project.upgradeProxy(proxy.address, Bridge_upgrade_test);
             result = await proxy.methods.version().call();
             assert.equal(result, 'test');
-            
+
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
             result = await proxy.methods.getAllowTokens().call();
@@ -73,7 +73,7 @@ contract.only('Bridge_upgrade_test', async (accounts) => {
     });
     describe('after upgrade', () => {
         beforeEach(async () => {
-            this.proxy = await this.project.createProxy(Bridge_v0, 
+            this.proxy = await this.project.createProxy(Bridge_v0,
                 { initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt()] });
             this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_upgrade_test);
         });

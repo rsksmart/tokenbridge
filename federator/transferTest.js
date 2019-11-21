@@ -17,27 +17,72 @@ logger.info('----------- Transfer Test ---------------------');
 logger.info('Mainchain Host', config.mainchain.host);
 logger.info('Sidechain Host', config.sidechain.host);
 
-let keys = process.argv.slice(2);
+const sideConfig = {
+    ...config,
+    confirmations: 0,
+    mainchain: config.sidechain,
+    sidechain: config.mainchain,
+};
 
-if (keys && keys.length) {
+const mainKeys = process.argv[2] ? process.argv[2].split(',') : [];
+const sideKeys = process.argv[3] ? process.argv[3].split(',') : [];
+
+const mainchainFederators = getMainchainFederators(mainKeys);
+const sidechainFederators = getSidechainFederators(sideKeys, sideConfig);
+
+run({ mainchainFederators, sidechainFederators, config, sideConfig });
+
+function getMainchainFederators(keys) {
     let federators = [];
-    keys.forEach((key, i) => {
-        let federator = new Federator({
-             ...config,
-             privateKey: key,
-             storagePath: `${config.storagePath}/fed-${i + 1}`
-            },
-            log4js.getLogger('FEDERATOR')
-        );
+    if (keys && keys.length) {
+        keys.forEach((key, i) => {
+            let federator = new Federator({
+                ...config,
+                privateKey: key,
+                storagePath: `${config.storagePath}/fed-${i + 1}`
+            }, log4js.getLogger('FEDERATOR'));
+            federators.push(federator);
+        });
+    } else {
+        let federator = new Federator(config, log4js.getLogger('FEDERATOR'));
         federators.push(federator);
-    });
-    run(federators);
-} else {
-    let federator = new Federator(config, log4js.getLogger('FEDERATOR'));
-    run([federator]);
+    }
+    return federators;
 }
 
-async function run(federators) {
+function getSidechainFederators(keys, sideConfig) {
+    let federators = [];
+    if (keys && keys.length) {
+        keys.forEach((key, i) => {
+            let federator = new Federator({
+                ...sideConfig,
+                privateKey: key,
+                storagePath: `${config.storagePath}/rev-fed-${i + 1}`
+            },
+            log4js.getLogger('FEDERATOR'));
+            federators.push(federator);
+        });
+    } else {
+        let federator = new Federator({
+            ...sideConfig,
+            storagePath: `${config.storagePath}/rev-fed`,
+        }, log4js.getLogger('FEDERATOR'));
+        federators.push(federator);
+    }
+    return federators;
+}
+
+async function run({ mainchainFederators, sidechainFederators, config, sideConfig }) {
+    logger.info('Starting transfer from Mainchain to Sidechain');
+    await transfer(mainchainFederators, config, 'MAIN', 'SIDE');
+    logger.info('Completed transfer from Mainchain to Sidechain');
+
+    logger.info('Starting transfer from Sidechain to Mainchain');
+    await transfer(sidechainFederators, sideConfig, 'SIDE', 'MAIN');
+    logger.info('Completed transfer from Sidechain to Mainchain');
+}
+
+async function transfer(federators, config, origin, destination) {
     try {
         let mainchainWeb3 = new Web3(config.mainchain.host);
         let sidechainWeb3 = new Web3(config.sidechain.host);
@@ -46,25 +91,29 @@ async function run(federators) {
         const transactionSender = new TransactionSender(mainchainWeb3, logger);
 
         const mainBridgeAddress = config.mainchain.bridge;
-        let amount = mainchainWeb3.utils.toWei('1');
-        const senderAddress = await transactionSender.getAddress(config.mainchain.privateKey);
+        const amount = mainchainWeb3.utils.toWei('1');
         const mainTokenAddress = mainTokenContract.options.address;
-        logger.info(`Main token addres ${mainTokenAddress} - Sender Address: ${senderAddress}`);
 
-        logger.debug('Aprove token transfer');
+        logger.debug('Getting address from pk');
+        const senderAddress = await transactionSender.getAddress(config.mainchain.privateKey);
+        logger.info(`${origin} token addres ${mainTokenAddress} - Sender Address: ${senderAddress}`);
+
+        logger.debug('Aproving token transfer');
         let data = mainTokenContract.methods.approve(mainBridgeAddress, amount).encodeABI();
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.mainchain.privateKey);
+        logger.debug('Token transfer approved');
 
         logger.debug('Bridge receiveTokens (transferFrom)');
         let bridgeContract = new mainchainWeb3.eth.Contract(abiBridge, mainBridgeAddress);
         data = bridgeContract.methods.receiveTokens(mainTokenAddress, amount).encodeABI();
         await transactionSender.sendTransaction(mainBridgeAddress, data, 0, config.mainchain.privateKey);
+        logger.debug('Bridge receivedTokens completed');
 
         let waitBlocks = config.confirmations;
         logger.debug(`Wait for ${waitBlocks} blocks`);
         await utils.waitBlocks(mainchainWeb3, waitBlocks);
 
-        logger.debug('Start federator process');
+        logger.debug('Starting federator processes');
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         // Start federators with delay between them
@@ -77,15 +126,15 @@ async function run(federators) {
         logger.debug('Get the side token address');
         let sideBridgeContract = new sidechainWeb3.eth.Contract(abiBridge, config.sidechain.bridge);
         let sideTokenAddress = await sideBridgeContract.methods.mappedTokens(mainTokenAddress).call();
-        logger.info('Side token address', sideTokenAddress);
+        logger.info(`${destination} token address`, sideTokenAddress);
 
         logger.debug('Check balance on the other side');
         let sideTokenContract = new sidechainWeb3.eth.Contract(abiMainToken, sideTokenAddress);
         let balance = await sideTokenContract.methods.balanceOf(senderAddress).call();
-        logger.info('Side token balance', balance);
+        logger.info(`${destination} token balance`, balance);
 
     } catch(err) {
-        logger.error('Unhandled Error on run()', err.stack);
+        logger.error('Unhandled Error on transfer()', err.stack);
         process.exit();
     }
 
