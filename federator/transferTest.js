@@ -6,6 +6,7 @@ const config = require('./config.js');
 const logConfig = require('./log-config.json');
 const abiBridge = require('./src/abis/Bridge_v0.json');
 const abiMainToken = require('./src/abis/IERC20.json');
+const abiSideToken = require('./src/abis/IERC20.json');
 //utils
 const TransactionSender = require('./src/lib/TransactionSender.js');
 const Federator = require('./src/lib/Federator.js');
@@ -74,21 +75,22 @@ function getSidechainFederators(keys, sideConfig) {
 
 async function run({ mainchainFederators, sidechainFederators, config, sideConfig }) {
     logger.info('Starting transfer from Mainchain to Sidechain');
-    await transfer(mainchainFederators, config, 'MAIN', 'SIDE');
+    await transfer(mainchainFederators, sidechainFederators, config, 'MAIN', 'SIDE');
     logger.info('Completed transfer from Mainchain to Sidechain');
 
-    logger.info('Starting transfer from Sidechain to Mainchain');
-    await transfer(sidechainFederators, sideConfig, 'SIDE', 'MAIN');
-    logger.info('Completed transfer from Sidechain to Mainchain');
+    // logger.info('Starting transfer from Sidechain to Mainchain');
+    // await transfer(sidechainFederators, sideConfig, 'SIDE', 'MAIN');
+    // logger.info('Completed transfer from Sidechain to Mainchain');
 }
 
-async function transfer(federators, config, origin, destination) {
+async function transfer(originFederators, destinationFederators, config, origin, destination) {
     try {
         let originWeb3 = new Web3(config.mainchain.host);
         let destinationWeb3 = new Web3(config.sidechain.host);
 
         const originTokenContract = new originWeb3.eth.Contract(abiMainToken, config.mainchain.testToken);
         const transactionSender = new TransactionSender(originWeb3, logger);
+        const destinationTransactionSender = new TransactionSender(destinationWeb3, logger);
 
         const originBridgeAddress = config.mainchain.bridge;
         const amount = originWeb3.utils.toWei('1');
@@ -116,8 +118,8 @@ async function transfer(federators, config, origin, destination) {
         logger.debug('Starting federator processes');
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-        // Start federators with delay between them
-        await federators.reduce(function(promise, item) {
+        // Start origin federators with delay between them
+        await originFederators.reduce(function(promise, item) {
             return promise.then(function() {
                 return Promise.all([delay(5000), item.run()]);
             })
@@ -129,9 +131,22 @@ async function transfer(federators, config, origin, destination) {
         logger.info(`${destination} token address`, destinationTokenAddress);
 
         logger.debug('Check balance on the other side');
-        let destinationTokenContract = new destinationWeb3.eth.Contract(abiMainToken, destinationTokenAddress);
+        let destinationTokenContract = new destinationWeb3.eth.Contract(abiSideToken, destinationTokenAddress);
         let balance = await destinationTokenContract.methods.balanceOf(senderAddress).call();
         logger.info(`${destination} token balance`, balance);
+
+        // Transfer back
+        logger.info('Started transfer back of tokens');
+
+        logger.debug('Aproving token transfer on destination');
+        data = destinationTokenContract.methods.approve(destinationBridgeContract.options.address, amount).encodeABI();
+        await destinationTransactionSender.sendTransaction(destinationTokenContract.options.address, data, 0, config.sidechain.privateKey);
+        logger.debug('Token transfer approved');
+
+        logger.debug('Bridge side receiveTokens');
+        data = destinationBridgeContract.methods.receiveTokens(destinationTokenContract.options.address, amount).encodeABI();
+        await destinationTransactionSender.sendTransaction(destinationBridgeContract.options.address, data, 0, config.sidechain.privateKey);
+        logger.debug('Bridge side receiveTokens completed');
 
     } catch(err) {
         logger.error('Unhandled Error on transfer()', err.stack);
