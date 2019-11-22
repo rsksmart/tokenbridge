@@ -15,6 +15,8 @@ import "../SideToken.sol";
 import "../SideTokenFactory.sol";
 import "../IAllowTokens.sol";
 
+import "../EmptyContract.sol";
+
 contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
@@ -35,7 +37,15 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount, string test);
 
-    function initialize() public initializer {
+    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
+        require(_symbolPrefix != 0, "Empty symbol prefix");
+        require(_allowTokens != address(0), "Missing AllowTokens contract address");
+        require(_manager != address(0), "Manager is empty");
+        UpgradableOwnable.initialize(_manager);
+        UpgradablePausable.initialize(_manager);
+        symbolPrefix = _symbolPrefix;
+        allowTokens = IAllowTokens(_allowTokens);
+        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
     }
 
     function version() public pure returns (string memory) {
@@ -50,7 +60,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public onlyOwner whenNotPaused returns(bool) {
+    ) public  onlyOwner whenNotPaused returns(bool) {
         require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
         require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
@@ -90,12 +100,12 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
      */
     function tokensReceived (
-        address operator,
+        address,
         address from,
         address to,
         uint amount,
         bytes memory userData,
-        bytes memory operatorData
+        bytes memory
     ) public whenNotPaused {
         //Hook from ERC777
         require(to == address(this), "This contract is not the address recieving the tokens");
@@ -143,7 +153,6 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
         if (address(sideToken) == address(0)) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-            // sideToken = new SideToken(newSymbol, newSymbol);
             sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol);
             mappedTokens[token] = sideToken;
             address sideTokenAddress = address(sideToken);
@@ -235,8 +244,19 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     }
 
-    function newMethodTest() public whenNotPaused  returns(bool) {
+    function getMappedTokens(address originalTokenAddr) public view returns(address) {
+        return address(mappedTokens[originalTokenAddr]);
+
+    }
+
+    function getOriginalTokens(address sideTokenAddr) public view returns(address) {
+        return address(originalTokens[sideTokenAddr]);
+
+    }
+
+    function newMethodTest() public whenNotPaused view returns(bool) {
         return true;
     }
+
 }
 

@@ -22,6 +22,15 @@ module.exports = class TransactionSender {
         }
         return `0x${parseInt(number).toString(16)}`;
     }
+
+    getGasPrice(chainId) {
+        chainId = parseInt(chainId)
+        if(chainId>= 30 && chainId <=32) {
+            return this.getRskGasPrice();
+        }
+        return this.getEthGasPrice();
+    }
+
     async getEthGasPrice() {
         const gasPrice = await this.client.eth.getGasPrice();
         return gasPrice;
@@ -36,7 +45,7 @@ module.exports = class TransactionSender {
     async createRawTransaction(from, to, data, value) {
         const nonce = await this.getNonce(from);
         const chainId =  this.chainId || await this.client.eth.net.getId();
-        const gasPrice = await this.getEthGasPrice();
+        const gasPrice = await this.getGasPrice(chainId);
         let rawTx = {
             gasPrice: this.numberToHexString(gasPrice),
             gas: this.gasLimit,
