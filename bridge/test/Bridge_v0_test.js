@@ -20,7 +20,7 @@ contract('Bridge_v0', async function (accounts) {
         this.allowTokens = await AllowTokens.new(bridgeManager);
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
-        await this.bridge.initialize(bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt(), { from: bridgeOwner });
+        await this.bridge.methods['initialize(address,address,address,uint8)'](bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt(), { from: bridgeOwner });
         await this.sideTokenFactory.transferOwnership(this.bridge.address);
     });
 
@@ -64,10 +64,10 @@ contract('Bridge_v0', async function (accounts) {
             it('emit event approve and transferFrom token contract', async function () {
                 const amount = 1000;
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-                let tx = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
-                utils.checkRcpt(tx);
+                let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
 
-                assert.equal(tx.logs[0].event, 'Cross');
+                assert.equal(receipt.logs[0].event, 'Cross');
 
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance, 9000);
@@ -143,7 +143,7 @@ contract('Bridge_v0', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.initialize(bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r'.charCodeAt(), { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,uint8)'](bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r'.charCodeAt(), { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
 
             this.amount = 1000;
@@ -158,12 +158,12 @@ contract('Bridge_v0', async function (accounts) {
                     this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
                 utils.checkRcpt(receipt);
 
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                let sideTokenAddress = await this.mirrorBridge.getMappedTokens(this.token.address);
                 let sideToken = await SideToken.at(sideTokenAddress);
                 const sideTokenSymbol = await sideToken.symbol();
                 assert.equal(sideTokenSymbol, "rMAIN");
 
-                let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                let originalTokenAddress = await this.mirrorBridge.getOriginalTokens(sideTokenAddress);
                 assert.equal(originalTokenAddress, this.token.address);
 
                 const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -186,7 +186,7 @@ contract('Bridge_v0', async function (accounts) {
                 const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(newBridgeBalance, 1000);
 
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                let sideTokenAddress = await this.mirrorBridge.getMappedTokens(this.token.address);
                 assert.equal(sideTokenAddress, 0);
             });
 
@@ -195,7 +195,7 @@ contract('Bridge_v0', async function (accounts) {
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                const sideTokenAddress = await this.mirrorBridge.getMappedTokens(this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
 
                 let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -226,7 +226,7 @@ contract('Bridge_v0', async function (accounts) {
             });
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    let sideTokenAddress = await this.mirrorBridge.getMappedTokens(this.token.address);
     
                     let sideToken = await SideToken.at(sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -249,7 +249,7 @@ contract('Bridge_v0', async function (accounts) {
 
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
-                    this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    this.sideTokenAddress = await this.mirrorBridge.getMappedTokens(this.token.address);
 
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
 
