@@ -25,7 +25,7 @@ module.exports = {
     regtest: {
       host: "127.0.0.1",
       port: 4444,
-      network_id: "7771",
+      network_id: "33",
     },
     rsktestnet: {
       provider: () =>

@@ -25,7 +25,7 @@ module.exports = class TransactionSender {
 
     getGasPrice(chainId) {
         chainId = parseInt(chainId)
-        if(chainId>= 30 && chainId <=32) {
+        if(chainId>= 30 && chainId <=33) {
             return this.getRskGasPrice();
         }
         return this.getEthGasPrice();

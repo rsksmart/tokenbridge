@@ -12,7 +12,7 @@
     "truffle-privatekey-provider": "^1.3.0"
   },
   "scripts": {
-    "start": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && truffle migrate",
+    "start": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && truffle migrate --reset",
     "test": "truffle test",
     "deploy": "truffle migrate --reset --network regtest && truffle migrate --reset --network development"
   },
