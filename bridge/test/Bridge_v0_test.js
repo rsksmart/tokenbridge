@@ -20,7 +20,7 @@ contract('Bridge_v0', async function (accounts) {
         this.allowTokens = await AllowTokens.new(bridgeManager);
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,uint8)'](bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt(), { from: bridgeOwner });
+        await this.bridge.methods['initialize(address,address,address,string)'](bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
         await this.sideTokenFactory.transferOwnership(this.bridge.address);
     });
 
@@ -159,7 +159,7 @@ contract('Bridge_v0', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,uint8)'](bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r'.charCodeAt(), { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,string)'](bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
 
             this.amount = 1000;
