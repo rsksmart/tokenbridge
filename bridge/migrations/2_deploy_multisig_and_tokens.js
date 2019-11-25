@@ -14,7 +14,7 @@ module.exports = function(deployer, networkName, accounts) {
         if (networkName == 'development' || networkName == 'regtest') {
             // In a test environment an ERC777 token requires deploying an ERC1820 registry
             // return singletons.ERC1820Registry(accounts[0]); //use a modified version cause RSK returns 0x00 whtn eth_Code is empty
-            return ERC1820Registry(accounts[0]); //REmove this and use singletons.ERC1820Registry(accounts[0]); when the nre version of RSKJ is released
+            return ERC1820Registry(accounts[0]); //Remove this and use singletons.ERC1820Registry(accounts[0]); when the nre version of RSKJ is released
         }
     })
     .then(() => deployer.deploy(SideTokenFactory));

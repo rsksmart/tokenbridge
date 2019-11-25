@@ -29,7 +29,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
         this.amount = 1000;
     });
 
-    describe('before upgrade', async () => {
+    describe('freshly created', async () => {
         it('should create a proxy', async () => {
             const proxy = await this.project.createProxy(Bridge_v0);
             let result = await proxy.methods.version().call();
@@ -59,7 +59,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
             assert.equal(result,  'r'.charCodeAt());
         });
 
-        describe('with proxy created and initialized', async () => {
+        describe('initialized', async () => {
             beforeEach(async() => {
                 this.proxy = await this.project.createProxy(Bridge_v0, 
                     { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
@@ -105,6 +105,45 @@ contract('Bridge_upgrade_test', async (accounts) => {
                 assert.equal(result,  this.sideTokenFactory.address);
             });
 
+            describe('upgrade governance', () => {
+                it('proxy owner', async () => {
+                    let owner = await this.project.proxyAdmin.contract.methods.owner().call();
+                    assert.equal(owner, deployerAddress);
+                });
+
+                it('proxy admin', async () => {
+                    let admin = await this.project.proxyAdmin.contract.methods.getProxyAdmin(this.proxy.address).call();
+                    assert.equal(admin, this.project.proxyAdmin.contract.address);
+                });
+
+                it('should renounce ownership', async () => {
+                    let owner = await this.project.proxyAdmin.contract.methods.owner().call();
+                    assert.equal(owner, deployerAddress);
+
+                    let tx = await this.project.proxyAdmin.contract.methods.renounceOwnership().send({from: deployerAddress});
+                    utils.checkGas(tx.cumulativeGasUsed);
+
+                    owner = await this.project.proxyAdmin.contract.methods.owner().call();
+                    assert.equal(owner, 0);
+
+                    await utils.expectThrow(this.project.upgradeProxy(this.proxy.address, Bridge_upgrade_test));
+                });
+
+                it('should transfer ownership', async () => {
+                    let owner = await this.project.proxyAdmin.contract.methods.owner().call();
+                    assert.equal(owner, deployerAddress);
+
+                    let tx = await this.project.proxyAdmin.contract.methods.transferOwnership(anAccount).send({from: deployerAddress});
+                    utils.checkGas(tx.cumulativeGasUsed);
+
+                    owner = await this.project.proxyAdmin.contract.methods.owner().call();
+                    assert.equal(owner, anAccount);
+
+                    await utils.expectThrow(this.project.upgradeProxy(this.proxy.address, Bridge_upgrade_test));
+                });
+
+            });
+
             describe('after upgrade', () => {
                 beforeEach(async () => {
                     this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_upgrade_test);
@@ -124,14 +163,43 @@ contract('Bridge_upgrade_test', async (accounts) => {
                     }
                 });
 
+                it('should receive tokens', async () => {
+                    const amount = 1000;
+                    await this.token.transfer(anAccount, amount, { from: deployerAddress });
+                    await this.token.approve(this.proxy.address, amount, { from: anAccount });
+    
+                    let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
+                    utils.checkGas(tx.cumulativeGasUsed);
+    
+                    assert.equal(tx.events.Cross.event, 'Cross');
+                    const balance = await this.token.balanceOf(this.proxy.address);
+                    assert.equal(balance, amount);
+                    const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
+                    assert.equal(isKnownToken, true);
+                    
+                });
+
                 it('should accept Transfer', async () => {
                     await this.sideTokenFactory.transferOwnership(this.proxy.address, { from: deployerAddress })
                     let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     randomHex(32), randomHex(32), 0).send({ from: managerAddress });
                     utils.checkGas(tx.cumulativeGasUsed);
+
+                    let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
+                    let sideToken = await SideToken.at(sideTokenAddress);
+                    const sideTokenSymbol = await sideToken.symbol();
+                    assert.equal(sideTokenSymbol, "rMAIN");
+
+                    let originalTokenAddress = await this.proxy.methods.originalTokens(sideTokenAddress).call();
+                    assert.equal(originalTokenAddress, this.token.address);
+
+                    const mirrorBridgeBalance = await sideToken.balanceOf(this.proxy.address);
+                    assert.equal(mirrorBridgeBalance, 0);
+                    const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                    assert.equal(mirrorAnAccountBalance, this.amount);
                 });
                 
-            });
-        });
-    });
+            }); // end after upgrade
+        }); // end initialized
+    }); // end freshly created
 });
