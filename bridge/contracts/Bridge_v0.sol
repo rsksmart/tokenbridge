@@ -67,17 +67,16 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         processToken(tokenAddress, symbol);
         processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
-        address to = getMappedAddress(receiver);
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            sideToken.operatorMint(to, amount, "", "");
+            sideToken.operatorMint(receiver, amount, "", "");
         }
         else {
             require(knownTokens[tokenAddress], "Token address is not in knownTokens");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
-            token.safeTransfer(to, amount);
+            token.safeTransfer(receiver, amount);
         }
-        emit AcceptedCrossTransfer(tokenAddress, to, amount);
+        emit AcceptedCrossTransfer(tokenAddress, receiver, amount);
         return true;
     }
 
