@@ -19,13 +19,17 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "5777", // Match any network id
+      network_id: "5777",
+      gas:6000000,
+      gasPrice: 20000000000
     },
     //RSK
     regtest: {
       host: "127.0.0.1",
       port: 4444,
       network_id: "33",
+      gas: 6700000,
+      gasPrice: 60000000 // 0.06 gwei
     },
     rsktestnet: {
       provider: () =>

@@ -15,8 +15,6 @@ import "../SideToken.sol";
 import "../SideTokenFactory.sol";
 import "../IAllowTokens.sol";
 
-import "../EmptyContract.sol";
-
 contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
@@ -27,10 +25,10 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
     mapping (address => bool) public knownTokens;
-    mapping (address => address) public mappedAddresses;
+    mapping (address => address) mappedAddresses;
     mapping(bytes32 => bool) processed;
-    IAllowTokens allowTokens;
-    SideTokenFactory sideTokenFactory;
+    IAllowTokens public allowTokens;
+    SideTokenFactory public sideTokenFactory;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
@@ -232,26 +230,6 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     function setCrossingPayment(uint amount, string memory test) public onlyOwner whenNotPaused {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment, test);
-    }
-
-    function getAllowTokens() public view returns(address) {
-        return address(allowTokens);
-
-    }
-
-    function getSideTokenFactory() public view returns(address) {
-        return address(sideTokenFactory);
-
-    }
-
-    function getMappedTokens(address originalTokenAddr) public view returns(address) {
-        return address(mappedTokens[originalTokenAddr]);
-
-    }
-
-    function getOriginalTokens(address sideTokenAddr) public view returns(address) {
-        return address(originalTokens[sideTokenAddr]);
-
     }
 
     function newMethodTest() public whenNotPaused view returns(bool) {

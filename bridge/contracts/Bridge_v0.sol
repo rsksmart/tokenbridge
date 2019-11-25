@@ -25,17 +25,18 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     mapping (address => SideToken) public mappedTokens;
     mapping (address => address) public originalTokens;
     mapping (address => bool) public knownTokens;
-    mapping (address => address) public mappedAddresses;
+    mapping (address => address) mappedAddresses;
     mapping(bytes32 => bool) processed;
-    IAllowTokens allowTokens;
-    SideTokenFactory sideTokenFactory;
+    IAllowTokens public allowTokens;
+    SideTokenFactory public sideTokenFactory;
 
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount);
 
-    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
+    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix)
+    public initializer {
         require(_symbolPrefix != 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
         require(_manager != address(0), "Manager is empty");
@@ -45,7 +46,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         allowTokens = IAllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
     }
-
+    
     function version() public pure returns (string memory) {
         return "v0";
     }
@@ -89,7 +90,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
-        crossTokens(tokenToUse, _msgSender(), amount, '0x');
+        crossTokens(tokenToUse, _msgSender(), amount, "");
     }
 
     /**
@@ -97,12 +98,12 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
         //This can only be used with trusted contracts
         require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
         validateToken(_msgSender(), amount);
         //TODO cant make it payable find a work around
-        sendIncentiveToEventsCrossers(0);
+        sendIncentiveToEventsCrossers(msg.value);
         return crossTokens(_msgSender(), from, amount, userData);
     }
 
@@ -125,7 +126,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         */
         validateToken(_msgSender(), amount);
         //TODO cant make it payable find a work around
-        sendIncentiveToEventsCrossers(0);
+        //sendIncentiveToEventsCrossers(msg.value);
         crossTokens(_msgSender(), from, amount, userData);
     }
 
@@ -243,31 +244,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment);
-    }
-
-    function getAllowTokens() public view returns(address) {
-        return address(allowTokens);
-
-    }
-
-    function getSideTokenFactory() public view returns(address) {
-        return address(sideTokenFactory);
-
-    }
-
-    function getSymbolPrefix() public view returns(uint8) {
-        return symbolPrefix;
-
-    }
-
-    function getMappedTokens(address originalTokenAddr) public view returns(address) {
-        return address(mappedTokens[originalTokenAddr]);
-
-    }
-
-    function getOriginalTokens(address sideTokenAddr) public view returns(address) {
-        return address(originalTokens[sideTokenAddr]);
-
     }
 
 }

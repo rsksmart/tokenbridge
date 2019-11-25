@@ -4,7 +4,7 @@ const AllowTokens = artifacts.require('AllowTokens');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
 
 //example https://github.com/OpenZeppelin/openzeppelin-sdk/tree/master/examples/truffle-migrate/migrations
-async function ozDeploy(options, name, alias, initArgs) {
+async function ozDeploy(options, name, alias, initArgs, from) {
     try {
         // Register v0 of MyContract in the zos project
         scripts.add({ contractsData: [{ name: name, alias: alias }] });
@@ -32,6 +32,6 @@ module.exports = function(deployer, networkName, accounts) {
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
         let initArgs = [ multiSig.address, allowTokens.address, sideTokenFactory.address, symbol.charCodeAt() ];
 
-        await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
+        await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs, accounts[0]);
       });
 };
