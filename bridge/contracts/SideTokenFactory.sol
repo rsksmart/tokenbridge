@@ -2,7 +2,6 @@ pragma solidity ^0.5.0;
 
 import "./zeppelin/ownership/Ownable.sol";
 import "./SideToken.sol";
-import "./EmptyContract.sol";
 
 contract SideTokenFactory is Ownable {
     event createdSideToken(address sideToken, string symbol);

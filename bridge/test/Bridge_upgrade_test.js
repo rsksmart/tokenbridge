@@ -7,8 +7,6 @@ ZWeb3.initialize(web3.currentProvider);
 const Bridge_v0 = Contracts.getFromLocal('Bridge_v0');
 const Bridge_upgrade_test = Contracts.getFromLocal('Bridge_upgrade_test');
 
-const BridgeUpgradeTest = artifacts.require('./Bridge_upgrade_test');
-
 //Normal Contracts
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
@@ -39,32 +37,32 @@ contract('Bridge_upgrade_test', async (accounts) => {
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  "0x0000000000000000000000000000000000000000");
-            result = await proxy.methods.getAllowTokens().call();
+            result = await proxy.methods.allowTokens().call();
             assert.equal(result,  "0x0000000000000000000000000000000000000000");
-            result = await proxy.methods.getSideTokenFactory().call();
+            result = await proxy.methods.sideTokenFactory().call();
             assert.equal(result,  "0x0000000000000000000000000000000000000000");
-            result = await proxy.methods.getSymbolPrefix().call();
+            result = await proxy.methods.symbolPrefix().call();
             assert.equal(result,  0);
         });
 
         it('should initialize it', async () => {
             const proxy = await this.project.createProxy(Bridge_v0,
-                { initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
+                { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
-            result = await proxy.methods.getAllowTokens().call();
+            result = await proxy.methods.allowTokens().call();
             assert.equal(result, this.allowTokens.address);
-            result = await proxy.methods.getSideTokenFactory().call();
+            result = await proxy.methods.sideTokenFactory().call();
             assert.equal(result,  this.sideTokenFactory.address);
-            result = await proxy.methods.getSymbolPrefix().call();
+            result = await proxy.methods.symbolPrefix().call();
             assert.equal(result,  'r'.charCodeAt());
         });
 
         describe('with proxy created and initialized', async () => {
             beforeEach(async() => {
                 this.proxy = await this.project.createProxy(Bridge_v0, 
-                    { initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt()] });
+                    { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
             });
 
             it('should accept send Transaction', async () => {
@@ -72,6 +70,22 @@ contract('Bridge_upgrade_test', async (accounts) => {
                 utils.checkGas(tx.cumulativeGasUsed);
                 let mappedAddress = await this.proxy.methods.getMappedAddress(deployerAddress).call();
                 assert.equal(mappedAddress, anAccount);
+            });
+
+            it('should receive tokens', async () => {
+                const amount = 1000;
+                await this.token.transfer(anAccount, amount, { from: deployerAddress });
+                await this.token.approve(this.proxy.address, amount, { from: anAccount });
+
+                let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
+                utils.checkGas(tx.cumulativeGasUsed);
+
+                assert.equal(tx.events.Cross.event, 'Cross');
+                const balance = await this.token.balanceOf(this.proxy.address);
+                assert.equal(balance, amount);
+                const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
+                assert.equal(isKnownToken, true);
+                
             });
 
             it('should update it', async () => {
@@ -85,9 +99,9 @@ contract('Bridge_upgrade_test', async (accounts) => {
                 
                 result = await newProxy.methods.owner().call();
                 assert.equal(result,  managerAddress);
-                result = await newProxy.methods.getAllowTokens().call();
+                result = await newProxy.methods.allowTokens().call();
                 assert.equal(result, this.allowTokens.address);
-                result = await newProxy.methods.getSideTokenFactory().call();
+                result = await newProxy.methods.sideTokenFactory().call();
                 assert.equal(result,  this.sideTokenFactory.address);
             });
 
@@ -108,6 +122,13 @@ contract('Bridge_upgrade_test', async (accounts) => {
                     } catch(err) {
                         assert.isTrue(true);
                     }
+                });
+
+                it('should accept Transfer', async () => {
+                    await this.sideTokenFactory.transferOwnership(this.proxy.address, { from: deployerAddress })
+                    let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                    randomHex(32), randomHex(32), 0).send({ from: managerAddress });
+                    utils.checkGas(tx.cumulativeGasUsed);
                 });
                 
             });
