@@ -47,8 +47,7 @@ module.exports = class Federator {
 
             const logs = await this.mainBridgeContract.getPastEvents('Cross', {
                 fromBlock,
-                toBlock,
-                filter: { _tokenAddress: this.config.mainchain.testToken }
+                toBlock
             });
             if (!logs) return;
 
@@ -100,9 +99,7 @@ module.exports = class Federator {
                 this.logger.info('Processing event log:', log);
 
                 const { returnValues } = log;
-                const originalReceiver = returnValues._to;
-                const receiver = await this.sideBridgeContract.methods.getMappedAddress(originalReceiver).call();
-                console.log(log)
+                const receiver = returnValues._to;
                 let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
                     log.blockHash,
                     log.transactionHash,
@@ -134,11 +131,11 @@ module.exports = class Federator {
             }
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
-            const { _amount: amount, _symbol: symbol} = log.returnValues;
+            const { _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress} = log.returnValues;
             this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
             let txTransferData = await this.sideBridgeContract.methods.acceptTransfer(
-                this.config.mainchain.testToken,
+                tokenAddress,
                 receiver,
                 amount,
                 symbol,
