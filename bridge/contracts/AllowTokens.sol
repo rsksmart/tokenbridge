@@ -7,7 +7,7 @@ import "./IAllowTokens.sol";
 contract AllowTokens is IAllowTokens, Ownable {
     using SafeMath for uint256;
 
-    address[] private allowedTokens;
+    mapping (address => bool) public allowedTokens;
     bool private validateAllowedTokens;
     uint256 private maxTokensAllowed;
 
@@ -27,10 +27,6 @@ contract AllowTokens is IAllowTokens, Ownable {
         maxTokensAllowed = 10000 ether;
     }
 
-    function getAllowedTokens() public view returns(address[] memory) {
-        return allowedTokens;
-    }
-
     function isValidatingAllowedTokens() public view returns(bool) {
         return validateAllowedTokens;
     }
@@ -40,11 +36,7 @@ contract AllowTokens is IAllowTokens, Ownable {
     }
 
     function allowedTokenExist(address token) private view notNull(token) returns (bool) {
-        for (uint i; i < allowedTokens.length; i++) {
-            if (allowedTokens[i] == token)
-                return true;
-        }
-        return false;
+        return allowedTokens[token];
     }
 
     function isTokenAllowed(address token) public view notNull(token) returns (bool) {
@@ -55,22 +47,14 @@ contract AllowTokens is IAllowTokens, Ownable {
     }
 
     function addAllowedToken(address token) public onlyOwner {
-        require(!allowedTokenExist(token), "Token does not exist");
-
-        allowedTokens.push(token);
+        require(!allowedTokenExist(token), "Token already exists");
+        allowedTokens[token] = true;
         emit AllowedTokenAdded(token);
     }
 
     function removeAllowedToken(address token) public onlyOwner {
-        require(allowedTokenExist(token), "Token already exist");
-
-        for (uint i = 0; i < allowedTokens.length - 1; i++)
-            if (allowedTokens[i] == token) {
-                allowedTokens[i] = allowedTokens[allowedTokens.length - 1];
-                break;
-            }
-        allowedTokens.length -= 1;
-
+        require(allowedTokenExist(token), "Token does not exist");
+        allowedTokens[token] = false;
         emit AllowedTokenRemoved(token);
     }
 
