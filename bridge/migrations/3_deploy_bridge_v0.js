@@ -22,7 +22,7 @@ async function ozDeploy(options, name, alias, initArgs, from) {
 module.exports = function(deployer, networkName, accounts) {
     let symbol = 'e';
 
-    if(networkName == 'regtest' || networkName == 'testnet')
+    if(networkName == 'regtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')
         symbol = 'r';
 
     deployer.then(async () => {
@@ -30,7 +30,7 @@ module.exports = function(deployer, networkName, accounts) {
         const allowTokens = await AllowTokens.deployed();
         const sideTokenFactory = await SideTokenFactory.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-        let initArgs = [ multiSig.address, allowTokens.address, sideTokenFactory.address, symbol.charCodeAt() ];
+        let initArgs = [ multiSig.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
         await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs, accounts[0]);
       });

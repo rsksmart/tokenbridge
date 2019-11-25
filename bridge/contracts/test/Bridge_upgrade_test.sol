@@ -19,7 +19,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
 
-    uint8 public symbolPrefix;
+    string public symbolPrefix;
     uint256 public crossingPayment;
 
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
@@ -35,8 +35,8 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount, string test);
 
-    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, uint8 _symbolPrefix) public initializer {
-        require(_symbolPrefix != 0, "Empty symbol prefix");
+    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
+        require(bytes(_symbolPrefix).length > 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
         require(_manager != address(0), "Manager is empty");
         UpgradableOwnable.initialize(_manager);
