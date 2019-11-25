@@ -18,6 +18,7 @@ contract('Bridge_v0', async function (accounts) {
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
         this.allowTokens = await AllowTokens.new(bridgeManager);
+        await this.allowTokens.disableAllowedTokensValidation({from: bridgeManager});
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,uint8)'](bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e'.charCodeAt(), { from: bridgeOwner });
@@ -221,15 +222,6 @@ contract('Bridge_v0', async function (accounts) {
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
 
-            });
-
-            it('rejects the transaction with amount greater than allowed', async function() {
-                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
-                let amount = maxTokensAllowed + 1;
-
-                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, amount, "MAIN",
-                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
             });
         });
 

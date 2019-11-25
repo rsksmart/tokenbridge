@@ -24,6 +24,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
     beforeEach(async () => {
         this.project = await TestHelper();
         this.allowTokens = await AllowTokens.new(managerAddress);
+        await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory = await SideTokenFactory.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: deployerAddress });
         this.amount = 1000;

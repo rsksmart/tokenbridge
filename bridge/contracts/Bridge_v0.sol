@@ -60,8 +60,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes32 transactionHash,
         uint32 logIndex
     ) public onlyOwner whenNotPaused returns(bool) {
-        require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -134,6 +132,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         if (isSideToken(tokenToUse)) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
+            require(allowTokens.isTokenAllowed(tokenToUse), "Token is not allowed for transfer");
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
         return true;
