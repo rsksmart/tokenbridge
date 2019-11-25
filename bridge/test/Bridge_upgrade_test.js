@@ -74,14 +74,18 @@ contract('Bridge_upgrade_test', async (accounts) => {
 
             it('should receive tokens', async () => {
                 const amount = 1000;
-                
                 await this.token.transfer(anAccount, amount, { from: deployerAddress });
                 await this.token.approve(this.proxy.address, amount, { from: anAccount });
+
                 let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
                 utils.checkGas(tx.cumulativeGasUsed);
 
-                let balance = await this.token.balanceOf(this.proxy.address);
+                assert.equal(tx.events.Cross.event, 'Cross');
+                const balance = await this.token.balanceOf(this.proxy.address);
                 assert.equal(balance, amount);
+                const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
+                assert.equal(isKnownToken, true);
+                
             });
 
             it('should update it', async () => {
