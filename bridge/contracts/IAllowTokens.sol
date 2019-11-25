@@ -4,7 +4,7 @@ import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 
 interface IAllowTokens {
 
-    function getAllowedTokens() external view returns(address[] memory);
+    function allowedTokens(address) external view returns(bool);
 
     function isValidatingAllowedTokens() external view returns(bool);
 

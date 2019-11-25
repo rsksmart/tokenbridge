@@ -63,17 +63,18 @@ contract('Bridge_v0', async function (accounts) {
         describe('receiveTokens', async function () {
             it('emit event approve and transferFrom token contract', async function () {
                 const amount = 1000;
+
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 assert.equal(receipt.logs[0].event, 'Cross');
-
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance, 9000);
-
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, true);
             });
 
             it('send money to contract should fail', async function () {
@@ -92,8 +93,13 @@ contract('Bridge_v0', async function (accounts) {
 
                 let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: payment });
                 utils.checkRcpt(receipt);
+
                 let newBalance = new BN(await web3.eth.getBalance(bridgeManager));
                 assert.equal(balance.add(new BN(payment)).toString(), newBalance.toString());
+                const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, true);
             });
 
             it('receiveTokens should fail with unsuficient payment', async function () {
@@ -103,6 +109,11 @@ contract('Bridge_v0', async function (accounts) {
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
                 await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
+
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, false);
+                const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, 0);
             });
 
             it('rejects to receive an amount greater than allowed', async function() {
@@ -114,6 +125,11 @@ contract('Bridge_v0', async function (accounts) {
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
                 await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
+
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, false);
+                const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, 0);
             });
 
         });

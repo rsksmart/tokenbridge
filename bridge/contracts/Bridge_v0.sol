@@ -143,8 +143,10 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     function sendIncentiveToEventsCrossers(uint256 payment) private {
         require(payment >= crossingPayment, "Insufficient coins sent for crossingPayment");
         //Send the payment to the MultiSig of the Federation
-        address payable receiver = address(uint160(owner()));
-        receiver.transfer(payment);
+        if(payment > 0) {
+            address payable receiver = address(uint160(owner()));
+            receiver.transfer(payment);
+        }
     }
 
     function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
