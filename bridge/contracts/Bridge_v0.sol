@@ -22,11 +22,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     uint8 public symbolPrefix;
     uint256 public crossingPayment;
 
-    mapping (address => SideToken) public mappedTokens;
-    mapping (address => address) public originalTokens;
-    mapping (address => bool) public knownTokens;
-    mapping (address => address) mappedAddresses;
-    mapping(bytes32 => bool) processed;
+    mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => address) public originalTokens; // SideToken => OriginalToken
+    mapping (address => bool) public knownTokens; // OriginalToken => true
+    mapping (address => address) mappedAddresses; // SenderAddress => SideReceiverAddress
+    mapping(bytes32 => bool) processed; // ProcessedHash => true
     IAllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
 
@@ -46,7 +46,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         allowTokens = IAllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
     }
-    
+
     function version() public pure returns (string memory) {
         return "v0";
     }
