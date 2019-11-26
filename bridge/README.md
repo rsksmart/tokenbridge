@@ -10,7 +10,8 @@ npm install
 ## Running test
 
 ```
-truffle test --network test
+npm test
+npm run coverage
 ```
 
 ## Configure networks
