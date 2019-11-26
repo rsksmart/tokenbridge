@@ -47,7 +47,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
 
         it('should initialize it', async () => {
             const proxy = await this.project.createProxy(Bridge_v0,
-                { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
+                { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'] });
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
@@ -56,13 +56,13 @@ contract('Bridge_upgrade_test', async (accounts) => {
             result = await proxy.methods.sideTokenFactory().call();
             assert.equal(result,  this.sideTokenFactory.address);
             result = await proxy.methods.symbolPrefix().call();
-            assert.equal(result,  'r'.charCodeAt());
+            assert.equal(result,  'r');
         });
 
         describe('initialized', async () => {
             beforeEach(async() => {
                 this.proxy = await this.project.createProxy(Bridge_v0, 
-                    { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'.charCodeAt()] });
+                    { initMethod: 'initialize', initArgs: [managerAddress, this.allowTokens.address, this.sideTokenFactory.address, 'r'] });
             });
 
             it('should accept send Transaction', async () => {
