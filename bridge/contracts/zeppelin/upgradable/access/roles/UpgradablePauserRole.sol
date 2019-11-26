@@ -45,6 +45,4 @@ contract UpgradablePauserRole is Initializable, Context {
         _pausers.remove(account);
         emit PauserRemoved(account);
     }
-
-    uint256[50] private ______gap;
 }

@@ -5,5 +5,5 @@ rinkeby.json
 rsktestnet.json
 test.json
 federator.log
-db/*.*
+db/
 test/lib/*.txt
