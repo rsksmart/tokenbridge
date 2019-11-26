@@ -34,9 +34,8 @@ module.exports = function(deployer, networkName, accounts) {
         if(shouldDeployToken(networkName)) {
             config.testToken = mainToken.address;
             let allowTokens = await AllowTokens.deployed();
-            let estimateGas = await allowTokens.addAllowedToken.estimateGas(mainToken.address, {from: multiSig.address});
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
-            await multiSig.submitTransaction(allowTokens.address, estimateGas, data);
+            await multiSig.submitTransaction(allowTokens.address, 0, data);
         }
         if (currentProvider.host) {
             let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
