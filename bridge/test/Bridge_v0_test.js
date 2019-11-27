@@ -3,6 +3,7 @@ const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge_v0');
 const AllowTokens = artifacts.require('./AllowTokens');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
+const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
@@ -44,7 +45,7 @@ contract('Bridge_v0', async function (accounts) {
                 const manager = await this.bridge.owner();
                 assert.equal(manager, bridgeManager);
             });
-            
+
             it('setCrossingPayment successful', async function () {
                 const amount = 1000;
                 await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
@@ -235,25 +236,25 @@ contract('Bridge_v0', async function (accounts) {
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
                     let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-    
+
                     let sideToken = await SideToken.at(sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance, this.amount);
-    
+
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     let receipt = await sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
                     receipt = await this.mirrorBridge.receiveTokens(sideTokenAddress, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
-    
+
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance, this.amount - this.amountToCrossBack);
-    
+
                     let mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance, 0);
                 });
             });
-            
+
 
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
@@ -286,6 +287,106 @@ contract('Bridge_v0', async function (accounts) {
 
         });
 
+    });
+
+    describe('Calls from MultiSig', async function() {
+        const multiSigOnwerA = accounts[7];
+        const multiSigOnwerB = accounts[8];
+
+        beforeEach(async function () {
+            this.multiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
+            this.allowTokens = await AllowTokens.new(this.multiSig.address);
+            this.mirrorSideTokenFactory = await SideTokenFactory.new();
+            this.mirrorBridge = await Bridge.new();
+
+            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,uint8)'](
+                this.multiSig.address,
+                this.allowTokens.address,
+                this.mirrorSideTokenFactory.address,
+                'r'.charCodeAt()
+            ).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(0);
+            assert.equal(tx.executed, true);
+
+            await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
+
+            data = this.allowTokens.contract.methods.disableAllowedTokensValidation().encodeABI();
+            await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(1, { from: multiSigOnwerB });
+
+            tx = await this.multiSig.transactions(1);
+            assert.equal(tx.executed, true);
+
+            this.amount = 1000;
+            await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
+            this.txReceipt = await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
+        });
+
+        it('should not accept a transfer due to missing signatures', async function() {
+            let data = this.mirrorBridge.contract.methods.acceptTransfer(
+                this.token.address,
+                anAccount,
+                this.amount,
+                'MAIN',
+                this.txReceipt.receipt.blockHash,
+                this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex
+            ).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+
+            let tx = await this.multiSig.transactions(2);
+            assert.equal(tx.executed, false);
+        });
+
+        it('should accept a transfer', async function() {
+            let data = this.mirrorBridge.contract.methods.acceptTransfer(
+                this.token.address,
+                anAccount,
+                this.amount,
+                'MAIN',
+                this.txReceipt.receipt.blockHash,
+                this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex
+            ).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(2);
+            assert.equal(tx.executed, true);
+
+            let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+            let sideToken = await SideToken.at(sideTokenAddress);
+            const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+            assert.equal(mirrorBridgeBalance, 0);
+        });
+
+        it('should not allow to set a crossing payment due to missing signatures', async function() {
+            let crossingPayment = await this.mirrorBridge.crossingPayment();
+
+            let data = this.mirrorBridge.contract.methods.setCrossingPayment(2000).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+
+            let tx = await this.multiSig.transactions(2);
+            assert.equal(tx.executed, false);
+
+            let crossingPaymentAfter = await this.mirrorBridge.crossingPayment();
+            assert.equal(BigInt(crossingPayment), BigInt(crossingPaymentAfter));
+        });
+
+        it('should allow to set a crossing payment', async function() {
+            let data = this.mirrorBridge.contract.methods.setCrossingPayment(2000).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(2);
+            assert.equal(tx.executed, true);
+
+            let crossingPaymentAfter = await this.mirrorBridge.crossingPayment();
+            assert.equal(BigInt(crossingPaymentAfter), BigInt(2000));
+        });
     });
 
 });
