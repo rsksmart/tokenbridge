@@ -1,3 +1,5 @@
 infura.key
 mnemonic.key
 .openzeppelin/.session
+coverage/
+coverage.json

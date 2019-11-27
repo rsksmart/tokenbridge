@@ -13,9 +13,9 @@ contract('AllowTokens', async function (accounts) {
 
     describe('Tokens whitelist', async function () {
 
-        it('should allow tokens transfer with initial values', async function () {
+        it('should validate allowed tokens with initial values', async function () {
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-            assert.equal(isValidatingAllowedTokens, false);
+            assert.equal(isValidatingAllowedTokens, true);
         });
 
         it('enables tokens whitelist validation', async function() {
