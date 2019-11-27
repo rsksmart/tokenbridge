@@ -7,10 +7,6 @@ methods.acceptTransfer = () => ({
     encodeABI: () => Promise.resolve('0x0')
 });
 
-methods.getMappedAddress = () => ({
-    call: () => Promise.resolve(defaults.data.mappedAddress)
-});
-
 methods.transactionWasProcessed = () => ({
     call: () => Promise.resolve(false)
 });

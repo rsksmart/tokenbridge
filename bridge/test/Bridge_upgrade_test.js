@@ -67,10 +67,11 @@ contract('Bridge_upgrade_test', async (accounts) => {
             });
 
             it('should accept send Transaction', async () => {
-                let tx = await this.proxy.methods.mapAddress(anAccount).send({ from: deployerAddress });
+                const anAmount = 5000;
+                let tx = await this.proxy.methods.setCrossingPayment(anAmount).send({ from: managerAddress });
                 utils.checkGas(tx.cumulativeGasUsed);
-                let mappedAddress = await this.proxy.methods.getMappedAddress(deployerAddress).call();
-                assert.equal(mappedAddress, anAccount);
+                let crossingPayment = await this.proxy.methods.getCrossingPayment().call();
+                assert.equal(crossingPayment, anAmount);
             });
 
             it('should receive tokens', async () => {
