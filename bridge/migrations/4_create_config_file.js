@@ -2,6 +2,7 @@ const Bridge = artifacts.require("Bridge_v0");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const MainToken = artifacts.require('MainToken');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
+const AllowTokens = artifacts.require('AllowTokens');
 
 const fs = require('fs');
 
@@ -32,6 +33,9 @@ module.exports = function(deployer, networkName, accounts) {
         };
         if(shouldDeployToken(networkName)) {
             config.testToken = mainToken.address;
+            let allowTokens = await AllowTokens.deployed();
+            let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
+            await multiSig.submitTransaction(allowTokens.address, 0, data);
         }
         if (currentProvider.host) {
             let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';

@@ -23,7 +23,7 @@ contract AllowTokens is IAllowTokens, Ownable {
 
     constructor(address _manager) public  {
         transferOwnership(_manager);
-        validateAllowedTokens = false;
+        validateAllowedTokens = true;
         maxTokensAllowed = 10000 ether;
     }
 

@@ -31,6 +31,13 @@ module.exports = {
       gas: 6700000,
       gasPrice: 60000000 // 0.06 gwei
     },
+    coverage: {
+      host: "localhost",
+      network_id: "*",
+      port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
+      gas: 0xfffffffffff, // <-- Use this high gas value
+      gasPrice: 0x01      // <-- Use this low gas price
+    },
     rsktestnet: {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "http://public-node.testnet.rsk.co/1.1.0"),

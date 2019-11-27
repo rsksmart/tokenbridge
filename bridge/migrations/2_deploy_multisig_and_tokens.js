@@ -2,7 +2,6 @@ const MultiSigWallet = artifacts.require("MultiSigWallet");
 const AllowTokens = artifacts.require('AllowTokens');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
 
-
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 //const { singletons } = require('@openzeppelin/test-helpers');
 
@@ -20,12 +19,14 @@ module.exports = function(deployer, networkName, accounts) {
     .then(() => deployer.deploy(SideTokenFactory));
 };
 
+var resolve = require('resolve');
+const path = require("path");
 //This will be removed when the new RSKJ version is released
-const testHelperNodeMulesPath = '../node_modules/@openzeppelin/test-helpers/src';
-const ether = require(testHelperNodeMulesPath+'/ether');
-const send = require(testHelperNodeMulesPath+'/send');
+const testHelperNodeMulesPath =  path.dirname(resolve.sync("@openzeppelin/test-helpers"));
+const ether = require(testHelperNodeMulesPath+'/src/ether');
+const send = require(testHelperNodeMulesPath+'/src/send');
 
-const { getSingletonsConfig } = require(testHelperNodeMulesPath+'/config/singletons');
+const { getSingletonsConfig } = require(testHelperNodeMulesPath+'/src/config/singletons');
 
 const { setupLoader } = require('@openzeppelin/contract-loader');
 
@@ -33,7 +34,7 @@ const {
   ERC1820_REGISTRY_ABI,
   ERC1820_REGISTRY_ADDRESS,
   ERC1820_REGISTRY_DEPLOY_TX,
-} = require(testHelperNodeMulesPath+'/data');
+} = require(testHelperNodeMulesPath+'/src/data');
 
 async function ERC1820Registry (funder) {
   // Read https://eips.ethereum.org/EIPS/eip-1820 for more information as to how the ERC1820 registry is deployed to

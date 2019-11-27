@@ -59,8 +59,6 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         bytes32 transactionHash,
         uint32 logIndex
     ) public  onlyOwner whenNotPaused returns(bool) {
-        require(allowTokens.isTokenAllowed(tokenAddress), "Token is not allowed for transfer");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -87,9 +85,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
         validateToken(tokenToUse, amount);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-        ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
-        crossTokens(tokenToUse, msg.sender, amount, '0x');
+        crossTokens(tokenToUse, msg.sender, amount, "");
+        ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
     }
 
 
@@ -121,6 +119,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         if (isSideToken(tokenToUse)) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
+            require(allowTokens.isTokenAllowed(tokenToUse), "Token is not allowed for transfer");
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
         return true;
