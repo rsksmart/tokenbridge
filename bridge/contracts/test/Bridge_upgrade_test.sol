@@ -8,16 +8,18 @@ import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "../zeppelin/token/ERC20/ERC20Detailed.sol";
 import "../zeppelin/token/ERC20/SafeERC20.sol";
+import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
 import "../IBridge.sol";
 import "../SideToken.sol";
 import "../SideTokenFactory.sol";
-import "../IAllowTokens.sol";
+import "../AllowTokens.sol";
 
 contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
+    using Address for address;
 
     string public symbolPrefix;
     uint256 public crossingPayment;
@@ -25,14 +27,10 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
-    mapping (address => address) mappedAddresses; // SenderAddress => SideReceiverAddress
     mapping(bytes32 => bool) processed; // ProcessedHash => true
-    IAllowTokens public allowTokens;
+    AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
 
-    event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
-    event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _symbol);
-    event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
     event CrossingPaymentChanged(uint256 _amount, string test);
 
     function initialize(address _manager, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
@@ -42,7 +40,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = IAllowTokens(_allowTokens);
+        allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
     }
 
@@ -64,17 +62,16 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         processToken(tokenAddress, symbol);
         processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
-        address to = getMappedAddress(receiver);
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            sideToken.operatorMint(to, amount, "", "");
+            sideToken.operatorMint(receiver, amount, "", "");
         }
         else {
-            require(knownTokens[tokenAddress], "Token address is not in knownTokens");
+            require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
-            token.safeTransfer(to, amount);
+            token.safeTransfer(receiver, amount);
         }
-        emit AcceptedCrossTransfer(tokenAddress, to, amount);
+        emit AcceptedCrossTransfer(tokenAddress, receiver, amount);
         return true;
     }
 
@@ -84,10 +81,26 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      */
     function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
         validateToken(tokenToUse, amount);
+        address sender = _msgSender();
+        require(!sender.isContract(), "Bridge: Contracts can't cross tokens to their addresses");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, msg.sender, amount, "");
         ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
+    }
+
+    /**
+     * ERC-677 and ERC-223 implementation for Receiving Tokens Contracts
+     * See https://github.com/ethereum/EIPs/issues/677 for details
+     * See https://github.com/ethereum/EIPs/issues/223 for details
+     */
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
+        //This can only be used with trusted contracts
+        require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
+        validateToken(_msgSender(), amount);
+        //TODO cant make it payable find a work around
+        sendIncentiveToEventsCrossers(msg.value);
+        return crossTokens(_msgSender(), from, amount, userData);
     }
 
 
@@ -104,7 +117,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         bytes memory
     ) public whenNotPaused {
         //Hook from ERC777
-        require(to == address(this), "This contract is not the address recieving the tokens");
+        require(to == address(this), "Bridge: This contract is not the address recieving the tokens");
         /**
         * TODO add Balance check
         */
@@ -126,7 +139,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     }
 
     function sendIncentiveToEventsCrossers(uint256 payment) private {
-        require(payment >= crossingPayment, "Insufficient coins sent for crossingPayment");
+        require(payment >= crossingPayment, "Bridge: Insufficient coins sent for crossingPayment");
         //Send the payment to the MultiSig of the Federation
         address payable receiver = address(uint160(owner()));
         receiver.transfer(payment);
@@ -134,12 +147,12 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
         tokenToUse.burn(amount, userData);
-        emit Cross(originalTokens[address(tokenToUse)], getMappedAddress(from), amount, tokenToUse.symbol(), userData);
+        emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData);
     }
 
     function mainTokenCrossing(address from, address tokenToUse, uint256 amount, bytes memory userData) private {
         knownTokens[tokenToUse] = true;
-        emit Cross(tokenToUse, getMappedAddress(from), amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
+        emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
     function processToken(address token, string memory symbol) private onlyOwner whenNotPaused {
@@ -158,24 +171,11 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         }
     }
 
-    function mapAddress(address to) public whenNotPaused {
-        mappedAddresses[msg.sender] = to;
-    }
-
-    function getMappedAddress(address account) public view returns (address) {
-        address mapped = mappedAddresses[account];
-
-        if (mapped == address(0))
-            return account;
-
-        return mapped;
-    }
-
     function validateToken(address tokenToUse, uint256 amount) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
-        require(detailedTokenToUse.decimals() == 18, "Token has decimals other than 18");
-        require(bytes(detailedTokenToUse.symbol()).length != 0, "Token doesn't have a symbol");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "The amount of tokens to transfer is greater than allowed");
+        require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
+        require(bytes(detailedTokenToUse.symbol()).length != 0, "Birdge: Token doesn't have a symbol");
+        require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -229,6 +229,10 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     function setCrossingPayment(uint amount, string memory test) public onlyOwner whenNotPaused {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment, test);
+    }
+
+    function getCrossingPayment() public view returns(uint) {
+        return crossingPayment;
     }
 
     function newMethodTest() public whenNotPaused view returns(bool) {

@@ -1,5 +1,8 @@
 infura.key
 mnemonic.key
+build
 .openzeppelin/.session
+.openzeppelin/dev-33.json
+.openzeppelin/dev-5777.json
 coverage/
 coverage.json
