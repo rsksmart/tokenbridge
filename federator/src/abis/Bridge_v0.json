@@ -92,7 +92,7 @@
       {
         "indexed": false,
         "internalType": "string",
-        "name": "_symbol",
+        "name": "_newSymbol",
         "type": "string"
       }
     ],
@@ -191,7 +191,7 @@
     "name": "allowTokens",
     "outputs": [
       {
-        "internalType": "contract IAllowTokens",
+        "internalType": "contract AllowTokens",
         "name": "",
         "type": "address"
       }
@@ -392,9 +392,9 @@
     "name": "symbolPrefix",
     "outputs": [
       {
-        "internalType": "uint8",
+        "internalType": "string",
         "name": "",
-        "type": "uint8"
+        "type": "string"
       }
     ],
     "payable": false,
@@ -444,9 +444,24 @@
         "type": "address"
       },
       {
-        "internalType": "uint8",
+        "internalType": "string",
         "name": "_symbolPrefix",
-        "type": "uint8"
+        "type": "string"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -625,42 +640,6 @@
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      }
-    ],
-    "name": "mapAddress",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "getMappedAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
     "type": "function"
   },
   {
