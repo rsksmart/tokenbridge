@@ -48,14 +48,14 @@ contract('Bridge_v0', async function (accounts) {
             it('setCrossingPayment successful', async function () {
                 const amount = 1000;
                 await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
-                let result = await this.bridge.crossingPayment();
+                let result = await this.bridge.getCrossingPayment();
                 assert.equal(result, amount);
             });
 
             it('setCrossingPayment should fail if not the owner', async function () {
                 const amount = 1000;
                 await utils.expectThrow(this.bridge.setCrossingPayment(amount, { from: tokenOwner}));
-                let result = await this.bridge.crossingPayment();
+                let result = await this.bridge.getCrossingPayment();
                 assert.equal(result, 0);
             });
 
@@ -133,24 +133,6 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(bridgeBalance, 0);
             });
 
-        });
-
-        describe('maps addresses', async function () {
-            it('not mapped address', async function () {
-                const result = await this.bridge.getMappedAddress(anAccount);
-
-                assert.ok(result);
-                assert.equal(result, anAccount);
-            });
-
-            it('map address', async function () {
-                await this.bridge.mapAddress(anotherAccount, { from: anAccount });
-
-                const result = await this.bridge.getMappedAddress(anAccount);
-
-                assert.ok(result);
-                assert.equal(result, anotherAccount);
-            });
         });
 
     });
