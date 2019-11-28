@@ -2,6 +2,7 @@ const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const AllowTokens = artifacts.require('AllowTokens');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
+const Bridge_v0 = artifacts.require('Bridge_v0');
 
 //example https://github.com/OpenZeppelin/openzeppelin-sdk/tree/master/examples/truffle-migrate/migrations
 async function ozDeploy(options, name, alias, initArgs, from) {
@@ -31,6 +32,12 @@ module.exports = function(deployer, networkName, accounts) {
         const sideTokenFactory = await SideTokenFactory.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
         let initArgs = [ multiSig.address, allowTokens.address, sideTokenFactory.address, symbol ];
+
+        if (networkName === 'coverage') {
+            return deployer
+                .deploy(Bridge_v0, multiSig.address, allowTokens.address, sideTokenFactory.address, symbol)
+                .then(() => Bridge_v0.deployed())
+        }
 
         await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs, accounts[0]);
       });
