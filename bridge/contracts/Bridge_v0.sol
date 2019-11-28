@@ -45,6 +45,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        lastDay = now;
+        spentToday = 0;
     }
 
     function version() public pure returns (string memory) {
@@ -83,9 +85,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
     function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
-        validateToken(tokenToUse, amount);
+        verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
-        require(!sender.isContract(), "Bridge: Contracts can't cross tokens to their addresses");
+        require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
@@ -100,8 +102,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
         //This can only be used with trusted contracts
         require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
-        validateToken(_msgSender(), amount);
-        //TODO cant make it payable find a work around
+        verifyIsERC20Detailed(_msgSender());
         sendIncentiveToEventsCrossers(msg.value);
         return crossTokens(_msgSender(), from, amount, userData);
     }
@@ -123,7 +124,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         /**
         * TODO add Balance check
         */
-        validateToken(_msgSender(), amount);
+        verifyIsERC20Detailed(_msgSender());
         //TODO cant make it payable find a work around
         //sendIncentiveToEventsCrossers(msg.value);
         crossTokens(_msgSender(), from, amount, userData);
@@ -131,10 +132,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
     private returns (bool) {
-        if (isSideToken(tokenToUse)) {
+        bool isSideToken = isSideToken(tokenToUse);
+        verifyWithAllowTokens(tokenToUse, amount, isSideToken);
+        if (isSideToken) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
-            require(allowTokens.isTokenAllowed(tokenToUse), "Token is not allowed for transfer");
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
         return true;
@@ -175,14 +177,19 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         }
     }
 
-    function validateToken(address tokenToUse, uint256 amount) private {
+    function verifyIsERC20Detailed(address tokenToUse) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
-        require(amount >= allowTokens.getMinTokensAllowed(), "Bridge: The amount of tokens to transfer is less than the allowed");
-        require(isUnderDailyLimit(amount), "Bridge: The amount of tokens to transfer is over the daily limit");
-        spentToday += amount;
+    }
+
+    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+        if (now > lastDay + 24 hours) {
+            lastDay = now;
+            spentToday = 0;
+        }
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        spentToday = spentToday.add(amount);
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -242,29 +249,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         return crossingPayment;
     }
 
-
-    function isUnderDailyLimit(uint amount) private returns (bool) {
-        uint dailyLimit = allowTokens.dailyLimit();
-        if (now > lastDay + 24 hours) {
-            lastDay = now;
-            spentToday = 0;
-        }
-        if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
-            return false;
-        return true;
-    }
-
     function calcMaxWithdraw() public view returns (uint) {
-        uint dailyLimit = allowTokens.dailyLimit();
-        uint maxTokensAllowed = allowTokens.getMaxTokensAllowed();
-        uint maxWithrow = dailyLimit - spentToday;
+        uint spent = spentToday;
         if (now > lastDay + 24 hours)
-            maxWithrow = dailyLimit;
-        if (dailyLimit < spentToday)
-            return 0;
-        if(maxWithrow > maxTokensAllowed)
-            maxWithrow = maxTokensAllowed;
-        return maxWithrow;
+            spent = 0;
+        return allowTokens.calcMaxWithdraw(spent);
     }
 
 }
