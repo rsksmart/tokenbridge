@@ -4,6 +4,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
+const BN = web3.utils.BN;
 
 contract('AllowTokens', async function (accounts) {
     const tokenDeployer= accounts[0];
@@ -107,7 +108,7 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it ('sets a new amount of max tokens', async function() {
-            let newMaxTokens = 50000;
+            let newMaxTokens = web3.utils.toWei('50000');
             await this.allowTokens.setMaxTokensAllowed(newMaxTokens, { from: manager });
 
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
@@ -116,7 +117,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('fail if not the owner', async function() {
             let previousMaxTokens = await this.allowTokens.getMaxTokensAllowed();
-            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(50000, { from: tokenDeployer }));
+            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('50000'), { from: tokenDeployer }));
 
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
             assert.equal(maxTokens.toString(), previousMaxTokens.toString());
@@ -131,7 +132,7 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it ('sets a new amount of min tokens', async function() {
-            let newMinTokens = 100;
+            let newMinTokens = web3.utils.toWei('10');
             await this.allowTokens.setMinTokensAllowed(newMinTokens, { from: manager });
 
             let minTokens = await this.allowTokens.getMinTokensAllowed();
@@ -140,7 +141,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('fail if not the owner', async function() {
             let previousMinTokens = await this.allowTokens.getMinTokensAllowed();
-            utils.expectThrow(this.allowTokens.setMinTokensAllowed(50000, { from: tokenDeployer }));
+            utils.expectThrow(this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: tokenDeployer }));
 
             let minTokens = await this.allowTokens.getMinTokensAllowed();
             assert.equal(minTokens.toString(), previousMinTokens.toString());
@@ -155,7 +156,7 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it ('change daily limit', async function() {
-            let newDailyLimit = 50000;
+            let newDailyLimit = web3.utils.toWei('50000');
             await this.allowTokens.changeDailyLimit(newDailyLimit, { from: manager });
 
             let dailyLimit = await this.allowTokens.dailyLimit();
@@ -164,10 +165,57 @@ contract('AllowTokens', async function (accounts) {
 
         it('fail if not the owner', async function() {
             let previousDailyLimit = await this.allowTokens.dailyLimit();
-            utils.expectThrow(this.allowTokens.changeDailyLimit(50000, { from: tokenDeployer }));
+            utils.expectThrow(this.allowTokens.changeDailyLimit(web3.utils.toWei('50000'), { from: tokenDeployer }));
 
             let dailyLimit = await this.allowTokens.dailyLimit();
             assert.equal(dailyLimit.toString(), previousDailyLimit.toString());
+        });
+        
+        it('calcMaxWithdraw', async function() {
+            let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+            let maxWithdraw = await this.allowTokens.calcMaxWithdraw(0);
+            assert.equal(maxWithdraw.toString(), maxTokensAllowed.toString());
+
+            maxWithdraw = await this.allowTokens.calcMaxWithdraw(maxTokensAllowed);
+            assert.equal(maxWithdraw.toString(), maxTokensAllowed.toString());
+    
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            maxWithdraw = await this.allowTokens.calcMaxWithdraw(dailyLimit);
+            assert.equal(maxWithdraw.toString(), '0');
+    
+            maxWithdraw = await this.allowTokens.calcMaxWithdraw(new BN(dailyLimit).add(new BN('1')));
+            assert.equal(maxWithdraw.toString(), '0');
+        });
+    });
+    
+    describe('isValidTokenTransfer', async function() {
+
+        it('should check max value', async function() {
+            let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+            let result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, true);
+            assert.equal(result, true);
+
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, new BN(maxTokensAllowed).add(new BN('1')), 0, true);
+            assert.equal(result, false);
+        });
+
+        it('should check min value', async function() {
+            let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
+            console.log("minTokensAllowed", minTokensAllowed.toString());
+            let result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, 0, true);
+            assert.equal(result, true);
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, new BN(minTokensAllowed).sub(new BN('1')), 0, true);
+            assert.equal(result, false);
+        });
+
+        it('should check daily limit', async function() {
+            let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            let result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, new BN(dailyLimit).sub(new BN(minTokensAllowed)), true);
+            assert.equal(result, true);
+
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, dailyLimit, true);
+            assert.equal(result, false);
         });
     });
 
@@ -296,7 +344,7 @@ contract('AllowTokens', async function (accounts) {
         it('should fail to set max tokens due to missing signatures', async function() {
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
 
-            let data = this.allowTokens.contract.methods.setMaxTokensAllowed(1000).encodeABI();
+            let data = this.allowTokens.contract.methods.setMaxTokensAllowed(web3.utils.toWei('1000')).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
 
             let tx = await this.multiSig.transactions(0);
@@ -307,7 +355,8 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it('should set max tokens', async function() {
-            let data = this.allowTokens.contract.methods.setMaxTokensAllowed(1000).encodeABI();
+            let newMax = web3.utils.toWei('1000');
+            let data = this.allowTokens.contract.methods.setMaxTokensAllowed(newMax).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
 
@@ -315,11 +364,12 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(tx.executed, true);
 
             let maxTokensAfter = await this.allowTokens.getMaxTokensAllowed();
-            assert.equal(maxTokensAfter.toString(), '1000');
+            assert.equal(maxTokensAfter.toString(), newMax);
         });
 
         it('should set min tokens', async function() {
-            let data = this.allowTokens.contract.methods.setMinTokensAllowed(10).encodeABI();
+            let newMin = web3.utils.toWei('10');
+            let data = this.allowTokens.contract.methods.setMinTokensAllowed(newMin).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
 
@@ -327,11 +377,11 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(tx.executed, true);
 
             let maxTokensAfter = await this.allowTokens.getMinTokensAllowed();
-            assert.equal(maxTokensAfter.toString(), '10');
+            assert.equal(maxTokensAfter.toString(), newMin.toString());
         });
 
         it('should change daily limit', async function() {
-            let newDailyLimit = 50000;
+            let newDailyLimit = web3.utils.toWei('50000');
             let data = this.allowTokens.contract.methods.changeDailyLimit(newDailyLimit).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
