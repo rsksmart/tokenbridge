@@ -45,6 +45,8 @@ module.exports = function(deployer, networkName, accounts) {
             config.host = '';
         }
 
-        fs.writeFileSync(`../federator/${networkName}.json`, JSON.stringify(config, null, 4));
+        if (networkName !== 'coverage') {
+            fs.writeFileSync(`../federator/${networkName}.json`, JSON.stringify(config, null, 4));
+        }
     });
 };
