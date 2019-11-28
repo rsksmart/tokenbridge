@@ -21,8 +21,10 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
-    string public symbolPrefix;
     uint256 crossingPayment;
+    string public symbolPrefix;
+    uint256 public lastDay;
+    uint256 public spentToday;
 
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
@@ -117,7 +119,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes memory
     ) public whenNotPaused {
         //Hook from ERC777
-        require(to == address(this), "Bridge: This contract is not the address recieving the tokens");
+        require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
         /**
         * TODO add Balance check
         */
@@ -173,11 +175,14 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         }
     }
 
-    function validateToken(address tokenToUse, uint256 amount) private view {
+    function validateToken(address tokenToUse, uint256 amount) private {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
         require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
+        require(amount >= allowTokens.getMinTokensAllowed(), "Bridge: The amount of tokens to transfer is less than the allowed");
+        require(isUnderDailyLimit(amount), "Bridge: The amount of tokens to transfer is over the daily limit");
+        spentToday += amount;
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -235,6 +240,31 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function getCrossingPayment() public view returns(uint) {
         return crossingPayment;
+    }
+
+
+    function isUnderDailyLimit(uint amount) private returns (bool) {
+        uint dailyLimit = allowTokens.dailyLimit();
+        if (now > lastDay + 24 hours) {
+            lastDay = now;
+            spentToday = 0;
+        }
+        if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
+            return false;
+        return true;
+    }
+
+    function calcMaxWithdraw() public view returns (uint) {
+        uint dailyLimit = allowTokens.dailyLimit();
+        uint maxTokensAllowed = allowTokens.getMaxTokensAllowed();
+        uint maxWithrow = dailyLimit - spentToday;
+        if (now > lastDay + 24 hours)
+            maxWithrow = dailyLimit;
+        if (dailyLimit < spentToday)
+            return 0;
+        if(maxWithrow > maxTokensAllowed)
+            maxWithrow = maxTokensAllowed;
+        return maxWithrow;
     }
 
 }

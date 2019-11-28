@@ -9,11 +9,15 @@ contract AllowTokens is Ownable {
     mapping (address => bool) public allowedTokens;
     bool private validateAllowedTokens;
     uint256 private maxTokensAllowed;
+    uint256 private minTokensAllowed;
+    uint256 public dailyLimit;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
     event MaxTokensAllowedChanged(uint256 _maxTokens);
+    event MinTokensAllowedChanged(uint256 _minTokens);
+    event DailyLimitChange(uint256 dailyLimit);
 
     modifier notNull(address _address) {
         require(_address != address(0), "Address cannot be empty");
@@ -24,6 +28,8 @@ contract AllowTokens is Ownable {
         transferOwnership(_manager);
         validateAllowedTokens = true;
         maxTokensAllowed = 10000 ether;
+        minTokensAllowed = 1 ether;
+        dailyLimit = 100000 ether;
     }
 
     function isValidatingAllowedTokens() public view returns(bool) {
@@ -32,6 +38,10 @@ contract AllowTokens is Ownable {
 
     function getMaxTokensAllowed() public view returns(uint256) {
         return maxTokensAllowed;
+    }
+
+    function getMinTokensAllowed() public view returns(uint256) {
+        return minTokensAllowed;
     }
 
     function allowedTokenExist(address token) private view notNull(token) returns (bool) {
@@ -71,4 +81,15 @@ contract AllowTokens is Ownable {
         maxTokensAllowed = maxTokens;
         emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
+
+    function setMinTokensAllowed(uint256 minTokens) public onlyOwner {
+        minTokensAllowed = minTokens;
+        emit MinTokensAllowedChanged(minTokensAllowed);
+    }
+
+    function changeDailyLimit(uint256 _dailyLimit) public onlyOwner {
+        dailyLimit = _dailyLimit;
+        emit DailyLimitChange(_dailyLimit);
+    }
+
 }

@@ -52,6 +52,22 @@ let evm_mine = async (iterations) => {
     };
 };
 
+function increaseTimestamp(web3, increase) {
+    return new Promise((resolve, reject) => {
+        web3.currentProvider.send({
+            method: "evm_increaseTime",
+            params: [increase],
+            jsonrpc: "2.0",
+            id: new Date().getTime()
+          }, (error, result) => {
+            if (error) {
+                return reject(error);
+            }
+            return asyncMine().then( ()=> resolve(result));
+          });
+    });    
+}
+
 function stripHexPrefix(hexString) {
     if (hexString.substring(0, 2).toLowerCase() === '0x'){
         hexString = hexString.substring(2);
@@ -100,6 +116,7 @@ module.exports = {
     evm_mine: evm_mine,
     promisify: promisify,
     expectThrow: expectThrow,
-    calculatePrefixesSuffixes: calculatePrefixesSuffixes
+    calculatePrefixesSuffixes: calculatePrefixesSuffixes,
+    increaseTimestamp: increaseTimestamp,
 };
 

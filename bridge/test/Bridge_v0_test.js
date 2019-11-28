@@ -7,6 +7,7 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
+const ONE_DAY = 24*3600
 
 contract('Bridge_v0', async function (accounts) {
     const bridgeOwner = accounts[0];
@@ -14,10 +15,9 @@ contract('Bridge_v0', async function (accounts) {
     const bridgeManager = accounts[2];
     const anAccount = accounts[3];
     const newBridgeManager = accounts[4];
-    const anotherAccount = accounts[6];
 
     beforeEach(async function () {
-        this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
+        this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
         this.allowTokens = await AllowTokens.new(bridgeManager);
         await this.allowTokens.disableAllowedTokensValidation({from: bridgeManager});
         this.sideTokenFactory = await SideTokenFactory.new();
@@ -47,15 +47,15 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('setCrossingPayment successful', async function () {
-                const amount = 1000;
-                await this.bridge.setCrossingPayment(amount, { from: bridgeManager});
+                const payment = 1000;
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
                 let result = await this.bridge.getCrossingPayment();
-                assert.equal(result, amount);
+                assert.equal(result, payment);
             });
 
             it('setCrossingPayment should fail if not the owner', async function () {
-                const amount = 1000;
-                await utils.expectThrow(this.bridge.setCrossingPayment(amount, { from: tokenOwner}));
+                const payment = 1000;
+                await utils.expectThrow(this.bridge.setCrossingPayment(payment, { from: tokenOwner}));
                 let result = await this.bridge.getCrossingPayment();
                 assert.equal(result, 0);
             });
@@ -64,15 +64,15 @@ contract('Bridge_v0', async function (accounts) {
 
         describe('receiveTokens', async function () {
             it('emit event approve and transferFrom token contract', async function () {
-                const amount = 1000;
-
+                const amount = web3.utils.toWei('1000');
+                const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 assert.equal(receipt.logs[0].event, 'Cross');
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
-                assert.equal(tokenBalance, 9000);
+                assert.equal(BigInt(tokenBalance), BigInt(originalTokenBalance) - BigInt(amount));
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
                 const isKnownToken = await this.bridge.knownTokens(this.token.address);
@@ -80,15 +80,15 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('send money to contract should fail', async function () {
-                const amount = 1000;
+                const payment = 1000;
                 await utils.expectThrow(web3.eth.sendTransaction( { from:tokenOwner,
-                    to: this.bridge.address, value: amount } ));
+                    to: this.bridge.address, value: payment } ));
             });
 
 
             it('receiveTokens with payment successful', async function () {
                 const payment = 1000;
-                const amount = 1000;
+                const amount = web3.utils.toWei('1000');
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
                 let balance = new BN(await web3.eth.getBalance(bridgeManager));
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
@@ -106,7 +106,7 @@ contract('Bridge_v0', async function (accounts) {
 
             it('receiveTokens should fail with unsuficient payment', async function () {
                 const payment = 1000;
-                const amount = 1000;
+                const amount = web3.utils.toWei('1000');
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
@@ -118,21 +118,60 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(bridgeBalance, 0);
             });
 
-            it('rejects to receive an amount greater than allowed', async function() {
+            it('rejects to receive tokens greater than  max tokens allowed', async function() {
                 let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
-                let amount = maxTokensAllowed + 1;
+                let amount = maxTokensAllowed.add(new BN('1'));
+                await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
-                const payment = 1000;
-                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
-                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-
-                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner, value: 0 }));
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount.toString(), { from: tokenOwner}));
 
                 const isKnownToken = await this.bridge.knownTokens(this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
             });
+
+            it('rejects to receive tokens lesser than  min tokens allowed', async function() {
+                let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
+                let amount = minTokensAllowed.sub(new BN('1'));
+                await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
+
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount.toString(), { from: tokenOwner}));
+
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, false);
+                const bridgeBalance = await this.token.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, 0);
+            });
+
+            it('rejects to receive an tokens over the daily limit', async function() {
+                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+                let dailyLimit = await this.allowTokens.dailyLimit();
+
+                for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
+                    await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
+                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })   
+                }
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner}));
+            });
+
+            it('clear spent today after 24 hours', async function() {
+                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+                let dailyLimit = await this.allowTokens.dailyLimit();
+                let maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString()); 
+
+                for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
+                    await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
+                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })   
+                }
+                maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                assert.equal(maxWidthdraw.toString(), '0');
+                await utils.increaseTimestamp(web3, ONE_DAY+1);
+                maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
+            });
+
 
         });
 
@@ -146,7 +185,7 @@ contract('Bridge_v0', async function (accounts) {
             await this.mirrorBridge.methods['initialize(address,address,address,string)'](bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
 
-            this.amount = 1000;
+            this.amount = web3.utils.toWei('1000');
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
             this.txReceipt = await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
         });
@@ -184,7 +223,7 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(anAccountBalance, 0);
 
                 const newBridgeBalance = await this.token.balanceOf(this.bridge.address);
-                assert.equal(newBridgeBalance, 1000);
+                assert.equal(newBridgeBalance, this.amount);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 assert.equal(sideTokenAddress, 0);
@@ -213,7 +252,7 @@ contract('Bridge_v0', async function (accounts) {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
-                this.amountToCrossBack = 100;
+                this.amountToCrossBack = web3.utils.toWei('100');
             });
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
@@ -263,7 +302,7 @@ contract('Bridge_v0', async function (accounts) {
                 });
 
                 it('only SideToken can call token fallback', async function () {
-                    await utils.expectThrow(this.mirrorBridge.tokenFallback(anAccount, 100, "0x010203", { from: anAccount }));
+                    await utils.expectThrow(this.mirrorBridge.tokenFallback(anAccount, web3.utils.toWei('100'), "0x010203", { from: anAccount }));
                 });
             });
 
@@ -281,11 +320,11 @@ contract('Bridge_v0', async function (accounts) {
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
 
-            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,uint8)'](
+            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,string)'](
                 this.multiSig.address,
                 this.allowTokens.address,
                 this.mirrorSideTokenFactory.address,
-                'r'.charCodeAt()
+                'r'
             ).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
@@ -302,7 +341,7 @@ contract('Bridge_v0', async function (accounts) {
             tx = await this.multiSig.transactions(1);
             assert.equal(tx.executed, true);
 
-            this.amount = 1000;
+            this.amount = web3.utils.toWei('1000');
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
             this.txReceipt = await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
         });
@@ -346,7 +385,7 @@ contract('Bridge_v0', async function (accounts) {
         });
 
         it('should not allow to set a crossing payment due to missing signatures', async function() {
-            let crossingPayment = await this.mirrorBridge.crossingPayment();
+            let crossingPayment = await this.mirrorBridge.getCrossingPayment();
 
             let data = this.mirrorBridge.contract.methods.setCrossingPayment(2000).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
@@ -354,8 +393,8 @@ contract('Bridge_v0', async function (accounts) {
             let tx = await this.multiSig.transactions(2);
             assert.equal(tx.executed, false);
 
-            let crossingPaymentAfter = await this.mirrorBridge.crossingPayment();
-            assert.equal(BigInt(crossingPayment), BigInt(crossingPaymentAfter));
+            let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
+            assert.equal(crossingPayment.toString(), crossingPaymentAfter.toString());
         });
 
         it('should allow to set a crossing payment', async function() {
@@ -366,8 +405,8 @@ contract('Bridge_v0', async function (accounts) {
             let tx = await this.multiSig.transactions(2);
             assert.equal(tx.executed, true);
 
-            let crossingPaymentAfter = await this.mirrorBridge.crossingPayment();
-            assert.equal(BigInt(crossingPaymentAfter), BigInt(2000));
+            let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
+            assert.equal(crossingPaymentAfter.toString(), '2000');
         });
     });
 
