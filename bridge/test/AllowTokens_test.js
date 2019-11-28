@@ -3,12 +3,14 @@ const MainToken = artifacts.require('./MainToken');
 const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
+const utils = require('./utils');
+
 contract('AllowTokens', async function (accounts) {
-    const tokenOwner = accounts[0];
+    const tokenDeployer= accounts[0];
     const manager = accounts[1];
 
     beforeEach(async function () {
-        this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenOwner });
+        this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenDeployer });
         this.allowTokens = await AllowTokens.new(manager);
     });
 
@@ -19,14 +21,7 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isValidatingAllowedTokens, true);
         });
 
-        it('enables tokens whitelist validation', async function() {
-            await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-            assert.equal(isValidatingAllowedTokens, true);
-        });
-
         it('disables tokens whitelist validation', async function() {
-            await this.allowTokens.enableAllowedTokensValidation({ from: manager });
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
 
@@ -35,8 +30,35 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isValidatingAllowedTokens, false);
         });
 
-        it('validates whitelisted token', async function() {
+        it('fail if disableAllowedTokensValidation caller is not the owner', async function() {
+            let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            utils.expectThrow(this.allowTokens.disableAllowedTokensValidation({ from: tokenDeployer }));
+
+            let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isTokenAllowed, previousIsTokenAllowed);
+        });
+
+        it('enables tokens whitelist validation', async function() {
+            await this.allowTokens.disableAllowedTokensValidation({ from: manager });
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, false);
+
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
+
+            isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
+        });
+
+        it('fail if enableAllowedTokensValidation caller is not the owner', async function() {
+            await this.allowTokens.disableAllowedTokensValidation({ from: manager });
+            let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            utils.expectThrow(this.allowTokens.enableAllowedTokensValidation({ from: tokenDeployer }));
+
+            let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isTokenAllowed, previousIsTokenAllowed);
+        });
+    
+        it('validates whitelisted token', async function() {
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
 
@@ -45,8 +67,15 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isAllowed, true);
         });
 
+        it('fail if addAllowedToken caller is not the owner', async function() {
+            let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            utils.expectThrow(this.allowTokens.addAllowedToken(this.token.address, { from: tokenDeployer }));
+
+            let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isTokenAllowed, previousIsTokenAllowed);
+        });
+
         it('removes allowed token', async function() {
-            await this.allowTokens.enableAllowedTokensValidation({ from: manager });
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
 
@@ -58,13 +87,23 @@ contract('AllowTokens', async function (accounts) {
             isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isAllowed, false);
         });
+
+        it('fail if addAllowedToken caller is not the owner', async function() {
+            let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }));
+
+            let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isTokenAllowed, previousIsTokenAllowed);
+        });
+    
+
     });
 
     describe('Max tokens allowed', async function() {
 
         it('should set initial values', async function() {
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
-            assert.equal(maxTokens, 10000000000000000000000); // 10000 ether in wei
+            assert.equal(maxTokens.toString(), web3.utils.toWei('10000'));
         });
 
         it ('sets a new amount of max tokens', async function() {
@@ -72,7 +111,63 @@ contract('AllowTokens', async function (accounts) {
             await this.allowTokens.setMaxTokensAllowed(newMaxTokens, { from: manager });
 
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
-            assert.equal(maxTokens, newMaxTokens);
+            assert.equal(maxTokens.toString(), newMaxTokens.toString());
+        });
+
+        it('fail if not the owner', async function() {
+            let previousMaxTokens = await this.allowTokens.getMaxTokensAllowed();
+            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(50000, { from: tokenDeployer }));
+
+            let maxTokens = await this.allowTokens.getMaxTokensAllowed();
+            assert.equal(maxTokens.toString(), previousMaxTokens.toString());
+        });
+    });
+
+    describe('Min tokens allowed', async function() {
+
+        it('should set initial values', async function() {
+            let minTokens = await this.allowTokens.getMinTokensAllowed();
+            assert.equal(minTokens.toString(), web3.utils.toWei('1'));
+        });
+
+        it ('sets a new amount of min tokens', async function() {
+            let newMinTokens = 100;
+            await this.allowTokens.setMinTokensAllowed(newMinTokens, { from: manager });
+
+            let minTokens = await this.allowTokens.getMinTokensAllowed();
+            assert.equal(minTokens.toString(), newMinTokens.toString());
+        });
+
+        it('fail if not the owner', async function() {
+            let previousMinTokens = await this.allowTokens.getMinTokensAllowed();
+            utils.expectThrow(this.allowTokens.setMinTokensAllowed(50000, { from: tokenDeployer }));
+
+            let minTokens = await this.allowTokens.getMinTokensAllowed();
+            assert.equal(minTokens.toString(), previousMinTokens.toString());
+        });
+    });
+
+    describe('Max Daily Limit tokens', async function() {
+
+        it('should set initial values', async function() {
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            assert.equal(dailyLimit, web3.utils.toWei('100000'));
+        });
+
+        it ('change daily limit', async function() {
+            let newDailyLimit = 50000;
+            await this.allowTokens.changeDailyLimit(newDailyLimit, { from: manager });
+
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            assert.equal(dailyLimit.toString(), newDailyLimit.toString());
+        });
+
+        it('fail if not the owner', async function() {
+            let previousDailyLimit = await this.allowTokens.dailyLimit();
+            utils.expectThrow(this.allowTokens.changeDailyLimit(50000, { from: tokenDeployer }));
+
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            assert.equal(dailyLimit.toString(), previousDailyLimit.toString());
         });
     });
 
@@ -208,7 +303,7 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(tx.executed, false);
 
             let maxTokensAfter = await this.allowTokens.getMaxTokensAllowed();
-            assert.equal(BigInt(maxTokensAfter), BigInt(maxTokens));
+            assert.equal(maxTokensAfter.toString(), maxTokens.toString());
         });
 
         it('should set max tokens', async function() {
@@ -220,7 +315,32 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(tx.executed, true);
 
             let maxTokensAfter = await this.allowTokens.getMaxTokensAllowed();
-            assert.equal(BigInt(maxTokensAfter), BigInt(1000));
+            assert.equal(maxTokensAfter.toString(), '1000');
+        });
+
+        it('should set min tokens', async function() {
+            let data = this.allowTokens.contract.methods.setMinTokensAllowed(10).encodeABI();
+            await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(0);
+            assert.equal(tx.executed, true);
+
+            let maxTokensAfter = await this.allowTokens.getMinTokensAllowed();
+            assert.equal(maxTokensAfter.toString(), '10');
+        });
+
+        it('should change daily limit', async function() {
+            let newDailyLimit = 50000;
+            let data = this.allowTokens.contract.methods.changeDailyLimit(newDailyLimit).encodeABI();
+            await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(0);
+            assert.equal(tx.executed, true);
+
+            let dailyLimit = await this.allowTokens.dailyLimit();
+            assert.equal(dailyLimit.toString(), newDailyLimit.toString());
         });
     });
 });
