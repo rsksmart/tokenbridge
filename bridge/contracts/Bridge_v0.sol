@@ -21,8 +21,10 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
-    string public symbolPrefix;
     uint256 crossingPayment;
+    string public symbolPrefix;
+    uint256 public lastDay;
+    uint256 public spentToday;
 
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
@@ -43,6 +45,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        lastDay = now;
+        spentToday = 0;
     }
 
     function version() public pure returns (string memory) {
@@ -81,9 +85,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
     function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
-        validateToken(tokenToUse, amount);
+        verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
-        require(!sender.isContract(), "Bridge: Contracts can't cross tokens to their addresses");
+        require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
@@ -98,8 +102,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
         //This can only be used with trusted contracts
         require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
-        validateToken(_msgSender(), amount);
-        //TODO cant make it payable find a work around
+        verifyIsERC20Detailed(_msgSender());
         sendIncentiveToEventsCrossers(msg.value);
         return crossTokens(_msgSender(), from, amount, userData);
     }
@@ -117,11 +120,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes memory
     ) public whenNotPaused {
         //Hook from ERC777
-        require(to == address(this), "Bridge: This contract is not the address recieving the tokens");
+        require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
         /**
         * TODO add Balance check
         */
-        validateToken(_msgSender(), amount);
+        verifyIsERC20Detailed(_msgSender());
         //TODO cant make it payable find a work around
         //sendIncentiveToEventsCrossers(msg.value);
         crossTokens(_msgSender(), from, amount, userData);
@@ -129,10 +132,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
     private returns (bool) {
-        if (isSideToken(tokenToUse)) {
+        bool isSideToken = isSideToken(tokenToUse);
+        verifyWithAllowTokens(tokenToUse, amount, isSideToken);
+        if (isSideToken) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
-            require(allowTokens.isTokenAllowed(tokenToUse), "Token is not allowed for transfer");
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
         return true;
@@ -173,11 +177,19 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         }
     }
 
-    function validateToken(address tokenToUse, uint256 amount) private view {
+    function verifyIsERC20Detailed(address tokenToUse) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
+    }
+
+    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+        if (now > lastDay + 24 hours) {
+            lastDay = now;
+            spentToday = 0;
+        }
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        spentToday = spentToday.add(amount);
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -235,6 +247,13 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function getCrossingPayment() public view returns(uint) {
         return crossingPayment;
+    }
+
+    function calcMaxWithdraw() public view returns (uint) {
+        uint spent = spentToday;
+        if (now > lastDay + 24 hours)
+            spent = 0;
+        return allowTokens.calcMaxWithdraw(spent);
     }
 
 }

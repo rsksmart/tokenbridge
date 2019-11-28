@@ -26,8 +26,8 @@ contract('Bridge_upgrade_test', async (accounts) => {
         this.allowTokens = await AllowTokens.new(managerAddress);
         await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory = await SideTokenFactory.new();
-        this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: deployerAddress });
-        this.amount = 1000;
+        this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('10000'), { from: deployerAddress });
+        this.amount = web3.utils.toWei('1000');
     });
 
     describe('freshly created', async () => {
@@ -67,7 +67,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
             });
 
             it('should accept send Transaction', async () => {
-                const anAmount = 5000;
+                const anAmount = web3.utils.toWei('5000');
                 let tx = await this.proxy.methods.setCrossingPayment(anAmount).send({ from: managerAddress });
                 utils.checkGas(tx.cumulativeGasUsed);
                 let crossingPayment = await this.proxy.methods.getCrossingPayment().call();
@@ -75,7 +75,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
             });
 
             it('should receive tokens', async () => {
-                const amount = 1000;
+                const amount = web3.utils.toWei('1000');
                 await this.token.transfer(anAccount, amount, { from: deployerAddress });
                 await this.token.approve(this.proxy.address, amount, { from: anAccount });
 
@@ -166,7 +166,7 @@ contract('Bridge_upgrade_test', async (accounts) => {
                 });
 
                 it('should receive tokens', async () => {
-                    const amount = 1000;
+                    const amount = web3.utils.toWei('1000');
                     await this.token.transfer(anAccount, amount, { from: deployerAddress });
                     await this.token.approve(this.proxy.address, amount, { from: anAccount });
     

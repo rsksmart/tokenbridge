@@ -21,8 +21,10 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
+    uint256 crossingPayment;
     string public symbolPrefix;
-    uint256 public crossingPayment;
+    uint256 public lastDay;
+    uint256 public spentToday;
 
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
@@ -171,11 +173,12 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         }
     }
 
-    function validateToken(address tokenToUse, uint256 amount) private view {
+    function validateToken(address tokenToUse, uint256 amount) private {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Birdge: Token doesn't have a symbol");
         require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
+        require(isUnderDailyLimit(amount), "Bridge: The amount of tokens to transfer is over the daily limit");
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -233,6 +236,32 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     function getCrossingPayment() public view returns(uint) {
         return crossingPayment;
+    }
+
+    function isUnderDailyLimit(uint amount) private returns (bool)
+    {
+        uint dailyLimit = allowTokens.dailyLimit();
+        if (now > lastDay + 24 hours) {
+            lastDay = now;
+            spentToday = 0;
+        }
+        if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
+            return false;
+        return true;
+    }
+
+    function calcMaxWithdraw() public view returns (uint)
+    {
+        uint dailyLimit = allowTokens.dailyLimit();
+        uint maxTokensAllowed = allowTokens.getMaxTokensAllowed();
+        uint maxWithrow = dailyLimit - spentToday;
+        if (now > lastDay + 24 hours)
+            maxWithrow = dailyLimit;
+        if (dailyLimit < spentToday)
+            return 0;
+        if(maxWithrow > maxTokensAllowed)
+            maxWithrow = maxTokensAllowed;
+        return maxWithrow;
     }
 
     function newMethodTest() public whenNotPaused view returns(bool) {

@@ -9,14 +9,18 @@ contract AllowTokens is Ownable {
     mapping (address => bool) public allowedTokens;
     bool private validateAllowedTokens;
     uint256 private maxTokensAllowed;
+    uint256 private minTokensAllowed;
+    uint256 public dailyLimit;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
     event MaxTokensAllowedChanged(uint256 _maxTokens);
+    event MinTokensAllowedChanged(uint256 _minTokens);
+    event DailyLimitChange(uint256 dailyLimit);
 
     modifier notNull(address _address) {
-        require(_address != address(0), "Address cannot be empty");
+        require(_address != address(0), "AllowTokens: Address cannot be empty");
         _;
     }
 
@@ -24,6 +28,8 @@ contract AllowTokens is Ownable {
         transferOwnership(_manager);
         validateAllowedTokens = true;
         maxTokensAllowed = 10000 ether;
+        minTokensAllowed = 1 ether;
+        dailyLimit = 100000 ether;
     }
 
     function isValidatingAllowedTokens() public view returns(bool) {
@@ -32,6 +38,10 @@ contract AllowTokens is Ownable {
 
     function getMaxTokensAllowed() public view returns(uint256) {
         return maxTokensAllowed;
+    }
+
+    function getMinTokensAllowed() public view returns(uint256) {
+        return minTokensAllowed;
     }
 
     function allowedTokenExist(address token) private view notNull(token) returns (bool) {
@@ -46,13 +56,13 @@ contract AllowTokens is Ownable {
     }
 
     function addAllowedToken(address token) public onlyOwner {
-        require(!allowedTokenExist(token), "Token already exists");
+        require(!allowedTokenExist(token), "AllowTokens: Token already exists in allowedTokens");
         allowedTokens[token] = true;
         emit AllowedTokenAdded(token);
     }
 
     function removeAllowedToken(address token) public onlyOwner {
-        require(allowedTokenExist(token), "Token does not exist");
+        require(allowedTokenExist(token), "AllowTokens: Token does not exis  in allowedTokenst");
         allowedTokens[token] = false;
         emit AllowedTokenRemoved(token);
     }
@@ -68,7 +78,42 @@ contract AllowTokens is Ownable {
     }
 
     function setMaxTokensAllowed(uint256 maxTokens) public onlyOwner {
+        require(maxTokens >= minTokensAllowed, "AllowTokens: Max Tokens should be equal or bigger than Min Tokens");
         maxTokensAllowed = maxTokens;
         emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
+
+    function setMinTokensAllowed(uint256 minTokens) public onlyOwner {
+        require(maxTokensAllowed >= minTokens, "AllowTokens: Min Tokens should be equal or smaller than Max Tokens");
+        minTokensAllowed = minTokens;
+        emit MinTokensAllowedChanged(minTokensAllowed);
+    }
+
+    function changeDailyLimit(uint256 _dailyLimit) public onlyOwner {
+        require(_dailyLimit >= maxTokensAllowed, "AllowTokens: Daily Limit should be equal or bigger than Max Tokens");
+        dailyLimit = _dailyLimit;
+        emit DailyLimitChange(_dailyLimit);
+    }
+
+    function isValidTokenTransfer(address tokenToUse, uint amount, uint spentToday, bool isSideToken) public view returns (bool) {
+        if(amount > maxTokensAllowed)
+            return false;
+        if(amount < minTokensAllowed)
+            return false;
+        if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
+            return false;
+        if(!isSideToken && !isTokenAllowed(tokenToUse))
+            return false;
+        return true;
+    }
+
+    function calcMaxWithdraw(uint spentToday) public view returns (uint) {
+        uint maxWithrow = dailyLimit - spentToday;
+        if (dailyLimit < spentToday)
+            return 0;
+        if(maxWithrow > maxTokensAllowed)
+            maxWithrow = maxTokensAllowed;
+        return maxWithrow;
+    }
+
 }
