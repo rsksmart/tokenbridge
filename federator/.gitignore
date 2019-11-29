@@ -2,7 +2,11 @@ config.js
 regtest.json
 development.json
 rinkeby.json
+kovan.json
+ropsten.json
+rskregtest.json
 rsktestnet.json
+rskmainnet.json
 test.json
 federator.log
 db/

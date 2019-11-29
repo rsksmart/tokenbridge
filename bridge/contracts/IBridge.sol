@@ -13,7 +13,7 @@ interface IBridge {
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external payable;
+    function receiveTokens(address tokenToUse, uint256 amount) external payable returns(bool);
 
     function acceptTransfer(
         address originalTokenAddress,
@@ -35,4 +35,5 @@ interface IBridge {
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes userData);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _newSymbol);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount);
+    event CrossingPaymentChanged(uint256 _amount);
 }

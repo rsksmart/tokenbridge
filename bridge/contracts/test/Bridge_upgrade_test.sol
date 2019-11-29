@@ -21,7 +21,8 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
-    uint256 crossingPayment;
+    address private federation;
+    uint256 private crossingPayment;
     string public symbolPrefix;
     uint256 public lastDay;
     uint256 public spentToday;
@@ -33,9 +34,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
 
-    event CrossingPaymentChanged(uint256 _amount, string test);
+    event FederationChanged(address _newFederation);
 
-    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
+    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
         require(bytes(_symbolPrefix).length > 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
         require(_manager != address(0), "Manager is empty");
@@ -44,12 +45,19 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        lastDay = now;
+        spentToday = 0;
+        _changeFederation(_federation);
     }
 
     function version() public pure returns (string memory) {
         return "test";
     }
 
+    modifier onlyFederation() {
+        require(msg.sender == federation, "Bridge: Caller is not the Federation");
+        _;
+    }
     function acceptTransfer(
         address tokenAddress,
         address receiver,
@@ -58,7 +66,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public  onlyOwner whenNotPaused returns(bool) {
+    ) public  onlyFederation whenNotPaused returns(bool) {
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -81,7 +89,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
+    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool){
         validateToken(tokenToUse, amount);
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Contracts can't cross tokens to their addresses");
@@ -89,6 +97,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, msg.sender, amount, "");
         ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
+        return true;
     }
 
     /**
@@ -157,7 +166,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
-    function processToken(address token, string memory symbol) private onlyOwner whenNotPaused {
+    function processToken(address token, string memory symbol) private {
         if (knownTokens[token])
             return;
 
@@ -229,9 +238,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         processed[compiledId] = true;
     }
 
-    function setCrossingPayment(uint amount, string memory test) public onlyOwner whenNotPaused {
+    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
         crossingPayment = amount;
-        emit CrossingPaymentChanged(crossingPayment, test);
+        emit CrossingPaymentChanged(crossingPayment);
     }
 
     function getCrossingPayment() public view returns(uint) {
@@ -266,6 +275,19 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     function newMethodTest() public whenNotPaused view returns(bool) {
         return true;
+    }
+
+     function _changeFederation(address newFederation) private {
+        federation = newFederation;
+        emit FederationChanged(federation);
+    }
+
+    function changeFederation(address newFederation) public onlyOwner whenNotPaused {
+        _changeFederation(newFederation);
+    }
+
+    function getFederation() public view returns(address) {
+        return federation;
     }
 
 }
