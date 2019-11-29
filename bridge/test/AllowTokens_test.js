@@ -58,7 +58,7 @@ contract('AllowTokens', async function (accounts) {
             let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isTokenAllowed, previousIsTokenAllowed);
         });
-    
+
         it('validates whitelisted token', async function() {
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
@@ -96,7 +96,7 @@ contract('AllowTokens', async function (accounts) {
             let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isTokenAllowed, previousIsTokenAllowed);
         });
-    
+
 
     });
 
@@ -170,7 +170,7 @@ contract('AllowTokens', async function (accounts) {
             let dailyLimit = await this.allowTokens.dailyLimit();
             assert.equal(dailyLimit.toString(), previousDailyLimit.toString());
         });
-        
+
         it('calcMaxWithdraw', async function() {
             let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
             let maxWithdraw = await this.allowTokens.calcMaxWithdraw(0);
@@ -178,16 +178,16 @@ contract('AllowTokens', async function (accounts) {
 
             maxWithdraw = await this.allowTokens.calcMaxWithdraw(maxTokensAllowed);
             assert.equal(maxWithdraw.toString(), maxTokensAllowed.toString());
-    
+
             let dailyLimit = await this.allowTokens.dailyLimit();
             maxWithdraw = await this.allowTokens.calcMaxWithdraw(dailyLimit);
             assert.equal(maxWithdraw.toString(), '0');
-    
+
             maxWithdraw = await this.allowTokens.calcMaxWithdraw(new BN(dailyLimit).add(new BN('1')));
             assert.equal(maxWithdraw.toString(), '0');
         });
     });
-    
+
     describe('isValidTokenTransfer', async function() {
 
         it('should check max value', async function() {
@@ -393,4 +393,37 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(dailyLimit.toString(), newDailyLimit.toString());
         });
     });
+
+    describe('Ownable methods', async function() {
+        const anotherOwner = accounts[3];
+
+        it('Should renounce ownership', async function() {
+            await this.allowTokens.renounceOwnership({ from: manager });
+            let owner = await this.allowTokens.owner();
+            assert.equal(BigInt(owner), 0);
+        });
+
+        it('Should not renounce ownership when not called by the owner', async function() {
+            let owner = await this.allowTokens.owner();
+            await utils.expectThrow(this.allowTokens.renounceOwnership());
+            let ownerAfter = await this.allowTokens.owner();
+
+            assert.equal(owner, ownerAfter);
+        });
+
+        it('Should transfer ownership', async function() {
+            await this.allowTokens.transferOwnership(anotherOwner, { from: manager });
+            let owner = await this.allowTokens.owner();
+            assert.equal(owner, anotherOwner);
+        });
+
+        it('Should not transfer ownership when not called by the owner', async function() {
+            let owner = await this.allowTokens.owner();
+            await utils.expectThrow(this.allowTokens.transferOwnership(anotherOwner));
+            let ownerAfter = await this.allowTokens.owner();
+
+            assert.equal(owner, ownerAfter);
+        });
+
+    })
 });
