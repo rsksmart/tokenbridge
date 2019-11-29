@@ -47,6 +47,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
         _changeFederation(_federation);
@@ -110,7 +111,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      */
     function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
         //This can only be used with trusted contracts
-        require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
+        require(allowTokens.isValidatingAllowedTokens(), "Bridge: onTokenTransfer needs to have validateAllowedTokens enabled");
         verifyIsERC20Detailed(_msgSender());
         sendIncentiveToEventsCrossers(msg.value);
         return crossTokens(_msgSender(), from, amount, userData);
@@ -190,10 +191,13 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     }
 
     function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+        // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours) {
+            // solium-disable-next-line security/no-block-members
             lastDay = now;
             spentToday = 0;
         }
+        // solium-disable-next-line max-len
         require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
         spentToday = spentToday.add(amount);
     }
@@ -257,6 +261,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function calcMaxWithdraw() public view returns (uint) {
         uint spent = spentToday;
+        // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours)
             spent = 0;
         return allowTokens.calcMaxWithdraw(spent);

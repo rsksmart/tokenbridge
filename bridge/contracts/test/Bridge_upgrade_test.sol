@@ -36,6 +36,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     event FederationChanged(address _newFederation);
 
+    // solium-disable-next-line max-len
     function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
         require(bytes(_symbolPrefix).length > 0, "Empty symbol prefix");
         require(_allowTokens != address(0), "Missing AllowTokens contract address");
@@ -45,6 +46,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
         _changeFederation(_federation);
@@ -107,7 +109,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      */
     function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
         //This can only be used with trusted contracts
-        require(allowTokens.isValidatingAllowedTokens(), 'Bridge: onTokenTransfer needs to have validateAllowedTokens enabled');
+        require(allowTokens.isValidatingAllowedTokens(), "Bridge: onTokenTransfer needs to have validateAllowedTokens enabled");
         validateToken(_msgSender(), amount);
         //TODO cant make it payable find a work around
         sendIncentiveToEventsCrossers(msg.value);
@@ -250,7 +252,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     function isUnderDailyLimit(uint amount) private returns (bool)
     {
         uint dailyLimit = allowTokens.dailyLimit();
+        // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours) {
+            // solium-disable-next-line security/no-block-members
             lastDay = now;
             spentToday = 0;
         }
@@ -264,6 +268,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         uint dailyLimit = allowTokens.dailyLimit();
         uint maxTokensAllowed = allowTokens.getMaxTokensAllowed();
         uint maxWithrow = dailyLimit - spentToday;
+        // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours)
             maxWithrow = dailyLimit;
         if (dailyLimit < spentToday)
@@ -277,7 +282,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         return true;
     }
 
-     function _changeFederation(address newFederation) private {
+    function _changeFederation(address newFederation) private {
         federation = newFederation;
         emit FederationChanged(federation);
     }
