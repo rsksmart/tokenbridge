@@ -84,10 +84,8 @@ contract MultiSigWallet {
     }
 
     modifier validRequirement(uint ownerCount, uint _required) {
-        require(ownerCount <= MAX_OWNER_COUNT &&
-            _required <= ownerCount &&
-            _required != 0 &&
-            ownerCount != 0, "Required value is invalid for the current owners count");
+        // solium-disable-next-line max-len
+        require(ownerCount <= MAX_OWNER_COUNT && _required <= ownerCount && _required != 0 && ownerCount != 0, "Required value is invalid for the current owners count");
         _;
     }
 
@@ -244,6 +242,7 @@ contract MultiSigWallet {
     // of the Solidity's code generator to produce a loop that copies tx.data into memory.
     function external_call(address destination, uint value, uint dataLength, bytes memory data) internal returns (bool) {
         bool result;
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             let x := mload(0x40)   // "Allocate" memory for output (0x40 is where "free memory" pointer is stored by convention)
             let d := add(data, 32) // First 32 bytes are the padded length of data, so exclude that
@@ -314,9 +313,11 @@ contract MultiSigWallet {
         view
         returns (uint count)
     {
-        for (uint i = 0; i < owners.length; i++)
-            if (confirmations[transactionId][owners[i]])
+        for (uint i = 0; i < owners.length; i++) {
+            if (confirmations[transactionId][owners[i]]) {
                 count += 1;
+            }
+        }
     }
 
     /// @dev Returns total number of transactions after filers are applied.
@@ -328,10 +329,11 @@ contract MultiSigWallet {
         view
         returns (uint count)
     {
-        for (uint i = 0; i < transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
+        for (uint i = 0; i < transactionCount; i++) {
+            if ( pending && !transactions[i].executed || executed && transactions[i].executed) {
                 count += 1;
+            }
+        }
     }
 
     /// @dev Returns list of owners.
@@ -380,8 +382,7 @@ contract MultiSigWallet {
         uint count = 0;
         uint i;
         for (i = 0; i < transactionCount; i++)
-            if (   pending && !transactions[i].executed
-                || executed && transactions[i].executed)
+            if (   pending && !transactions[i].executed || executed && transactions[i].executed)
             {
                 transactionIdsTemp[count] = i;
                 count += 1;
