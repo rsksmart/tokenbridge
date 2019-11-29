@@ -15,6 +15,7 @@ contract('Bridge_v0', async function (accounts) {
     const bridgeManager = accounts[2];
     const anAccount = accounts[3];
     const newBridgeManager = accounts[4];
+    const federation = accounts[5];
 
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
@@ -22,7 +23,7 @@ contract('Bridge_v0', async function (accounts) {
         await this.allowTokens.disableAllowedTokensValidation({from: bridgeManager});
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,string)'](bridgeManager, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
+        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
         await this.sideTokenFactory.transferOwnership(this.bridge.address);
     });
 
@@ -58,6 +59,24 @@ contract('Bridge_v0', async function (accounts) {
                 await utils.expectThrow(this.bridge.setCrossingPayment(payment, { from: tokenOwner}));
                 let result = await this.bridge.getCrossingPayment();
                 assert.equal(result, 0);
+            });
+
+            it('check federation', async function () {
+                const fedAddress = await this.bridge.getFederation();
+                assert.equal(fedAddress, federation);
+            });
+
+            it('change federation', async function () {
+                const receipt = await this.bridge.changeFederation(newBridgeManager, { from: bridgeManager });
+                utils.checkRcpt(receipt);
+                const fedAddress = await this.bridge.getFederation();
+                assert.equal(fedAddress, newBridgeManager);
+            });
+
+            it('only manager can change the federation', async function () {
+                await utils.expectThrow(this.bridge.changeFederation(newBridgeManager));
+                const fedAddress = await this.bridge.getFederation();
+                assert.equal(fedAddress, federation);
             });
 
         });
@@ -182,7 +201,7 @@ contract('Bridge_v0', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,string)'](bridgeManager, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
@@ -194,7 +213,7 @@ contract('Bridge_v0', async function (accounts) {
             it('accept transfer', async function () {
                 let receipt = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
+                    this.txReceipt.receipt.logs[0].logIndex, { from: federation });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -211,13 +230,13 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(mirrorAnAccountBalance, this.amount);
             });
 
-            it('accept transfer only manager', async function () {
+            it('accept transfer only federation', async function () {
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, { from: bridgeOwner }));
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: anAccount }));
+                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
 
                 const anAccountBalance = await this.token.balanceOf(anAccount);
                 assert.equal(anAccountBalance, 0);
@@ -232,7 +251,7 @@ contract('Bridge_v0', async function (accounts) {
             it('dont accept transfer the same transaction', async function () {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
+                    this.txReceipt.receipt.logs[0].logIndex, { from: federation });
 
                 const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
@@ -242,7 +261,7 @@ contract('Bridge_v0', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
 
             });
         });
@@ -251,7 +270,7 @@ contract('Bridge_v0', async function (accounts) {
             beforeEach(async function () {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
+                    this.txReceipt.receipt.logs[0].logIndex, { from: federation });
                 this.amountToCrossBack = web3.utils.toWei('100');
             });
             describe('Should burn the side tokens when transfered to the bridge', function () {
@@ -291,7 +310,7 @@ contract('Bridge_v0', async function (accounts) {
                 it('main Bridge should release the tokens', async function () {
                     let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, this.amountToCrossBack, "MAIN",
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager });
+                        this.txReceipt.receipt.logs[0].logIndex, { from: federation });
                     utils.checkRcpt(tx);
 
                     let bridgeBalance = await this.token.balanceOf(this.bridge.address);
@@ -316,12 +335,14 @@ contract('Bridge_v0', async function (accounts) {
 
         beforeEach(async function () {
             this.multiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
+            this.fedMultiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.allowTokens = await AllowTokens.new(this.multiSig.address);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
 
-            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,string)'](
+            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,string)'](
                 this.multiSig.address,
+                this.fedMultiSig.address,
                 this.allowTokens.address,
                 this.mirrorSideTokenFactory.address,
                 'r'
@@ -356,9 +377,9 @@ contract('Bridge_v0', async function (accounts) {
                 this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex
             ).encodeABI();
-            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.fedMultiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
 
-            let tx = await this.multiSig.transactions(2);
+            let tx = await this.fedMultiSig.transactions(0);
             assert.equal(tx.executed, false);
         });
 
@@ -372,10 +393,10 @@ contract('Bridge_v0', async function (accounts) {
                 this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex
             ).encodeABI();
-            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
-            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+            await this.fedMultiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.fedMultiSig.confirmTransaction(0, { from: multiSigOnwerB });
 
-            let tx = await this.multiSig.transactions(2);
+            let tx = await this.fedMultiSig.transactions(0);
             assert.equal(tx.executed, true);
 
             let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -398,7 +419,8 @@ contract('Bridge_v0', async function (accounts) {
         });
 
         it('should allow to set a crossing payment', async function() {
-            let data = this.mirrorBridge.contract.methods.setCrossingPayment(2000).encodeABI();
+            let newPayment = '2000';
+            let data = this.mirrorBridge.contract.methods.setCrossingPayment(newPayment).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
 
@@ -406,7 +428,19 @@ contract('Bridge_v0', async function (accounts) {
             assert.equal(tx.executed, true);
 
             let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
-            assert.equal(crossingPaymentAfter.toString(), '2000');
+            assert.equal(crossingPaymentAfter.toString(), newPayment);
+        });
+
+        it('should allow to set a new federation', async function() {
+            let data = this.mirrorBridge.contract.methods.changeFederation(federation).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(2);
+            assert.equal(tx.executed, true);
+
+            let federationAfter = await this.mirrorBridge.getFederation();
+            assert.equal(federationAfter, federation);
         });
     });
 

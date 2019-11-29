@@ -10,12 +10,12 @@ const promisify = (inner) =>
     })
 );
 
-async function expectThrow (promise) {
-  try {
-    await promise;
-  } catch (error) {
-      return;
-  }
+function expectThrow (promise) {
+  return promise.then( (result) => {
+    assert.equal(result.toString(), "It should have thrown an Error");
+  }, (err) => {
+      return err;
+  });
   
   assert.fail('Expected throw not received');
 }
