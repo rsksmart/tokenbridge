@@ -21,7 +21,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
-    uint256 crossingPayment;
+    address private federation;
+    uint256 private crossingPayment;
     string public symbolPrefix;
     uint256 public lastDay;
     uint256 public spentToday;
@@ -33,13 +34,14 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
 
-    event CrossingPaymentChanged(uint256 _amount);
+    event FederationChanged(address _newFederation);
 
-    function initialize(address _manager, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
+    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
     public initializer {
-        require(bytes(_symbolPrefix).length > 0, "Empty symbol prefix");
-        require(_allowTokens != address(0), "Missing AllowTokens contract address");
-        require(_manager != address(0), "Manager is empty");
+        require(bytes(_symbolPrefix).length > 0, "Bridge: Empty symbol prefix");
+        require(_allowTokens != address(0), "Bridge: Missing AllowTokens contract address");
+        require(_manager != address(0), "Bridge: Manager address is empty");
+        require(_federation != address(0), "Bridge: Federation address is empty");
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
@@ -47,10 +49,16 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
         lastDay = now;
         spentToday = 0;
+        _changeFederation(_federation);
     }
 
     function version() public pure returns (string memory) {
         return "v0";
+    }
+
+    modifier onlyFederation() {
+        require(msg.sender == federation, "Bridge: Caller is not the Federation");
+        _;
     }
 
     function acceptTransfer(
@@ -61,7 +69,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public onlyOwner whenNotPaused returns(bool) {
+    ) public onlyFederation whenNotPaused returns(bool) {
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -84,7 +92,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused {
+    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool){
         verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
@@ -92,6 +100,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, _msgSender(), amount, "");
+        return true;
     }
 
     /**
@@ -121,9 +130,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     ) public whenNotPaused {
         //Hook from ERC777
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
-        /**
-        * TODO add Balance check
-        */
         verifyIsERC20Detailed(_msgSender());
         //TODO cant make it payable find a work around
         //sendIncentiveToEventsCrossers(msg.value);
@@ -254,6 +260,19 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         if (now > lastDay + 24 hours)
             spent = 0;
         return allowTokens.calcMaxWithdraw(spent);
+    }
+
+    function _changeFederation(address newFederation) private {
+        federation = newFederation;
+        emit FederationChanged(federation);
+    }
+
+    function changeFederation(address newFederation) public onlyOwner whenNotPaused {
+        _changeFederation(newFederation);
+    }
+
+    function getFederation() public view returns(address) {
+        return federation;
     }
 
 }

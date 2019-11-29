@@ -17,7 +17,7 @@ contract AllowTokens is Ownable {
     event AllowedTokenValidation(bool _enabled);
     event MaxTokensAllowedChanged(uint256 _maxTokens);
     event MinTokensAllowedChanged(uint256 _minTokens);
-    event DailyLimitChange(uint256 dailyLimit);
+    event DailyLimitChanged(uint256 dailyLimit);
 
     modifier notNull(address _address) {
         require(_address != address(0), "AllowTokens: Address cannot be empty");
@@ -92,7 +92,7 @@ contract AllowTokens is Ownable {
     function changeDailyLimit(uint256 _dailyLimit) public onlyOwner {
         require(_dailyLimit >= maxTokensAllowed, "AllowTokens: Daily Limit should be equal or bigger than Max Tokens");
         dailyLimit = _dailyLimit;
-        emit DailyLimitChange(_dailyLimit);
+        emit DailyLimitChanged(_dailyLimit);
     }
 
     function isValidTokenTransfer(address tokenToUse, uint amount, uint spentToday, bool isSideToken) public view returns (bool) {
