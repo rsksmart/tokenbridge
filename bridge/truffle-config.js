@@ -24,7 +24,7 @@ module.exports = {
       gasPrice: 20000000000
     },
     //RSK
-    regtest: {
+    rskegtest: {
       host: "127.0.0.1",
       port: 4444,
       network_id: "33",
