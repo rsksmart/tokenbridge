@@ -150,7 +150,7 @@ contract('Bridge_v0', async function (accounts) {
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })   
+                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })
                 }
                 await utils.expectThrow(this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner}));
             });
@@ -159,11 +159,11 @@ contract('Bridge_v0', async function (accounts) {
                 let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
                 let dailyLimit = await this.allowTokens.dailyLimit();
                 let maxWidthdraw = await this.bridge.calcMaxWithdraw();
-                assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString()); 
+                assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })   
+                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })
                 }
                 maxWidthdraw = await this.bridge.calcMaxWithdraw();
                 assert.equal(maxWidthdraw.toString(), '0');
@@ -407,6 +407,115 @@ contract('Bridge_v0', async function (accounts) {
 
             let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
             assert.equal(crossingPaymentAfter.toString(), '2000');
+        });
+
+        it('should pause the bridge contract', async function() {
+            let isPaused = await this.mirrorBridge.paused();
+            assert.equal(isPaused, false);
+
+            let data = this.mirrorBridge.contract.methods.pause().encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            isPaused = await this.mirrorBridge.paused();
+            assert.equal(isPaused, true);
+        });
+
+        it('should unpause the bridge contract', async function() {
+            let data = this.mirrorBridge.contract.methods.unpause().encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let isPaused = await this.mirrorBridge.paused();
+            assert.equal(isPaused, false);
+        });
+
+        it('should renounce ownership', async function() {
+            let data = this.mirrorBridge.contract.methods.renounceOwnership().encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let owner = await this.mirrorBridge.owner();
+            assert.equal(BigInt(owner), 0);
+        });
+
+        it('should transfer ownership', async function() {
+            let data = this.mirrorBridge.contract.methods.transferOwnership(bridgeManager).encodeABI();
+            await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
+
+            let owner = await this.mirrorBridge.owner();
+            assert.equal(owner, bridgeManager);
+        });
+    });
+
+    describe('Pausable methods', async function() {
+        it('Should pause the bridge contract', async function() {
+            let isPaused = await this.bridge.paused();
+            assert.equal(isPaused, false);
+
+            await this.bridge.pause({ from: bridgeManager });
+            isPaused = await this.bridge.paused();
+            assert.equal(isPaused, true);
+        });
+
+        it('Should not pause the bridge contract without pauser role', async function() {
+            let isPaused = await this.bridge.paused();
+            assert.equal(isPaused, false);
+
+            await utils.expectThrow(this.bridge.pause());
+            assert.equal(isPaused, false);
+        });
+
+        it('Should unpause the bridge contract', async function() {
+            await this.bridge.pause({ from: bridgeManager });
+            let isPaused = await this.bridge.paused();
+            assert.equal(isPaused, true);
+
+            await this.bridge.unpause({ from: bridgeManager });
+            isPaused = await this.bridge.paused();
+            assert.equal(isPaused, false);
+        });
+
+        it('Should not unpause the bridge contract without pauser role', async function() {
+            await this.bridge.pause({ from: bridgeManager });
+            let isPaused = await this.bridge.paused();
+            assert.equal(isPaused, true);
+
+            await utils.expectThrow(this.bridge.unpause());
+            assert.equal(isPaused, true);
+        });
+    })
+
+    describe('Ownable methods', async function() {
+        const anotherOwner = accounts[7];
+
+        it('Should renounce ownership', async function() {
+            await this.bridge.renounceOwnership({ from: bridgeManager });
+            let owner = await this.bridge.owner();
+            assert.equal(BigInt(owner), 0);
+        });
+
+        it('Should not renounce ownership when not called by the owner', async function() {
+            let owner = await this.bridge.owner();
+            await utils.expectThrow(this.bridge.renounceOwnership());
+            let ownerAfter = await this.bridge.owner();
+
+            assert.equal(owner, ownerAfter);
+        });
+
+        it('Should transfer ownership', async function() {
+            await this.bridge.transferOwnership(anotherOwner, { from: bridgeManager });
+            let owner = await this.bridge.owner();
+            assert.equal(owner, anotherOwner);
+        });
+
+        it('Should not transfer ownership when not called by the owner', async function() {
+            let owner = await this.bridge.owner();
+            await utils.expectThrow(this.bridge.transferOwnership(anotherOwner));
+            let ownerAfter = await this.bridge.owner();
+
+            assert.equal(owner, ownerAfter);
         });
     });
 
