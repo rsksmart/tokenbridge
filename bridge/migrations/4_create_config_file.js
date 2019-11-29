@@ -23,13 +23,15 @@ module.exports = function(deployer, networkName, accounts) {
         }
     }).then(async () => {
         const bridge = await Bridge.deployed();
+        const federation = await bridge.getFederation();
         const multiSig = await MultiSigWallet.deployed();
         const mainToken = await MainToken.deployed();
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
             privateKey: "",
-            multisig: multiSig.address
+            multisig: federation,
+            manager: multiSig.address
         };
         if(shouldDeployToken(networkName)) {
             config.testToken = mainToken.address;

@@ -201,7 +201,6 @@ contract('AllowTokens', async function (accounts) {
 
         it('should check min value', async function() {
             let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
-            console.log("minTokensAllowed", minTokensAllowed.toString());
             let result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, 0, true);
             assert.equal(result, true);
             result = await this.allowTokens.isValidTokenTransfer(this.token.address, new BN(minTokensAllowed).sub(new BN('1')), 0, true);
