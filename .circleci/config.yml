@@ -1,0 +1,11 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/tmp
+    docker:
+      - image: circleci/node:7
+    steps:
+      - checkout
+      - run: cd bridge
+      - run: npm install
+      - run: npm lint
