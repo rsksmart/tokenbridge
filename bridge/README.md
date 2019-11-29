@@ -11,6 +11,7 @@ npm install
 
 ```
 npm test
+npm run lint
 npm run coverage
 ```
 
@@ -53,7 +54,7 @@ truffle migrate --network <network>
 Examples
 ```
 truffle migrate --network development
-truffle migrate --network regtest
+truffle migrate --network rskregtest
 ```
 
 This will also generate the json files for that network with the addresses of the deployed contracts that will be called by the federator.
