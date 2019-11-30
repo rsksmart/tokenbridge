@@ -15,6 +15,26 @@ interface IBridge {
      */
     function receiveTokens(address tokenToUse, uint256 amount) external payable returns(bool);
 
+    /**
+     * ERC-677 and ERC-223 implementation for Receiving Tokens Contracts
+     * See https://github.com/ethereum/EIPs/issues/677 for details
+     * See https://github.com/ethereum/EIPs/issues/223 for details
+     */
+    function tokenFallback(address from, uint amount, bytes calldata userData) external returns(bool);
+
+    /**
+     * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
+     * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
+     */
+    function tokensReceived (
+        address operator,
+        address from,
+        address to,
+        uint amount,
+        bytes calldata userData,
+        bytes calldata operatorData
+    ) external;
+
     function acceptTransfer(
         address originalTokenAddress,
         address receiver, uint256 amount,
