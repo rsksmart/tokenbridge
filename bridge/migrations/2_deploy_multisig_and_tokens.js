@@ -10,7 +10,7 @@ module.exports = function(deployer, networkName, accounts) {
     .then(() => MultiSigWallet.deployed())
     .then(() => deployer.deploy(AllowTokens, MultiSigWallet.address))
     .then(() => {
-        if (networkName === 'development' || networkName === 'rskregtest') {
+        if (networkName === 'development' || networkName === 'rskregtest' || networkName === 'coverage') {
             // In a test environment an ERC777 token requires deploying an ERC1820 registry
             // return singletons.ERC1820Registry(accounts[0]); //use a modified version cause RSK returns 0x00 whtn eth_Code is empty
             return ERC1820Registry(accounts[0]); //Remove this and use singletons.ERC1820Registry(accounts[0]); when the nre version of RSKJ is released

@@ -20,7 +20,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       network_id: "5777",
-      gas:6000000,
+      gas: 6700000,
       gasPrice: 20000000000
     },
     //RSK
@@ -67,7 +67,16 @@ module.exports = {
   },
   compilers: {
       solc: {
-          version: "0.5.12"
+        version: "0.5.3",
+        settings: {
+          optimizer: {
+            enabled: false,
+            // Optimize for how many times you intend to run the code.
+            // Lower values will optimize more for initial deployment cost, higher
+            // values will optimize more for high-frequency usage.
+            runs: 200
+          }
+        }
       }
   }
 };

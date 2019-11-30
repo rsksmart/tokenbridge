@@ -209,13 +209,46 @@ contract('AllowTokens', async function (accounts) {
 
         it('should check daily limit', async function() {
             let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
-            let dailyLimit = await this.allowTokens.dailyLimit();
+            let dailyLimit = await this.allowTokens.dailyLimit({ from: manager });
             let result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, new BN(dailyLimit).sub(new BN(minTokensAllowed)), true);
             assert.equal(result, true);
 
             result = await this.allowTokens.isValidTokenTransfer(this.token.address, minTokensAllowed, dailyLimit, true);
             assert.equal(result, false);
         });
+
+        it('should allow side token', async function() {
+            let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+            let result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, true);
+            assert.equal(result, true);
+
+            await this.allowTokens.disableAllowedTokensValidation({ from: manager });
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, true);
+            assert.equal(result, true);
+
+            await this.allowTokens.enableAllowedTokensValidation({ from: manager });
+            await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, true);
+            assert.equal(result, true);
+        });
+
+        it('should check allowed token if not side token', async function() {
+            let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+            let result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, false);
+            assert.equal(result, false);
+
+            await this.allowTokens.disableAllowedTokensValidation({ from: manager });
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, false);
+            assert.equal(result, true);
+
+            await this.allowTokens.enableAllowedTokensValidation({ from: manager });
+            await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
+
+            result = await this.allowTokens.isValidTokenTransfer(this.token.address, maxTokensAllowed, 0, false);
+            assert.equal(result, true);
+        });
+
+
     });
 
     describe('Calls from MultiSig', async function() {
