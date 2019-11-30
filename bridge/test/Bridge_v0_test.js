@@ -7,6 +7,7 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
+const randomHex = web3.utils.randomHex;
 const ONE_DAY = 24*3600
 
 contract('Bridge_v0', async function (accounts) {
@@ -24,7 +25,7 @@ contract('Bridge_v0', async function (accounts) {
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
-        await this.sideTokenFactory.transferOwnership(this.bridge.address);
+        await this.sideTokenFactory.transferPrimary(this.bridge.address);
     });
 
     describe('Main network', async function () {
@@ -241,7 +242,7 @@ contract('Bridge_v0', async function (accounts) {
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
             await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
-            await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
+            await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
@@ -249,7 +250,7 @@ contract('Bridge_v0', async function (accounts) {
         });
 
         describe('Cross the tokens', async function () {
-            it('accept transfer', async function () {
+            it('accept transfer first time for the token', async function () {
                 let receipt = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, { from: federation });
@@ -267,6 +268,29 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(mirrorBridgeBalance, 0);
                 const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                 assert.equal(mirrorAnAccountBalance, this.amount);
+            });
+
+            it('accept transfer second time for the token', async function () {
+                await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, { from: federation });
+
+                let receipt = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                randomHex(32), randomHex(32), 1, { from: federation });
+                utils.checkRcpt(receipt);
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "rMAIN");
+
+                let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                assert.equal(originalTokenAddress, this.token.address);
+
+                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(mirrorBridgeBalance, 0);
+                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(mirrorAnAccountBalance, this.amount * 2);
             });
 
             it('accept transfer only federation', async function () {
@@ -411,7 +435,7 @@ contract('Bridge_v0', async function (accounts) {
             let tx = await this.multiSig.transactions(0);
             assert.equal(tx.executed, true);
 
-            await this.mirrorSideTokenFactory.transferOwnership(this.mirrorBridge.address);
+            await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             data = this.allowTokens.contract.methods.addAllowedToken(this.token.address).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
