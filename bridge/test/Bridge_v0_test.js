@@ -116,9 +116,9 @@ contract('Bridge_v0', async function (accounts) {
 
             it('tokensReceived for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
-                let erc777 = await SideToken.new("ERC777", "777", [tokenOwner], { from: tokenOwner });
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
-                await erc777.operatorMint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner });
                 utils.checkRcpt(receipt);

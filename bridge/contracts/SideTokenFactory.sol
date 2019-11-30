@@ -7,9 +7,7 @@ contract SideTokenFactory is Secondary {
     event createdSideToken(address sideToken, string symbol);
 
     function createSideToken(string calldata name, string calldata symbol) external onlyPrimary returns(SideToken) {
-        address[] memory defaultOperators = new address[](1);
-        defaultOperators[0] = primary();
-        SideToken sideToken = new SideToken(name, symbol, defaultOperators);
+        SideToken sideToken = new SideToken(name, symbol, primary());
         emit createdSideToken(address(sideToken), symbol);
         return sideToken;
     }

@@ -79,7 +79,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            sideToken.operatorMint(receiver, amount, "", "");
+            sideToken.mint(receiver, amount, "", "");
         }
         else {
             require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
