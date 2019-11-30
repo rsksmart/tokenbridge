@@ -51,8 +51,8 @@ contract('SideTokenFactory', async function (accounts) {
         const name = await sideToken.name();
         assert.equal(name, "SIDE");
 
-        let defaultOperators = await sideToken.defaultOperators();
-        assert.equal(defaultOperators[0], tokenCreator);
+        let minter = await sideToken.minter();
+        assert.equal(minter, tokenCreator);
 
         receipt = await this.sideTokenFactory.createSideToken("OTHERSYMBOL", "OTHERSYMBOL");
         utils.checkRcpt(receipt);
@@ -72,8 +72,8 @@ contract('SideTokenFactory', async function (accounts) {
         let sideTokenAddress = receipt.logs[0].args[0];
         let sideToken = await SideToken.at(sideTokenAddress);
 
-        const isDefaultOperator = await sideToken.isDefaultOperator(anAccount);
-        assert.equal(isDefaultOperator, true);
+        const minter = await sideToken.minter();
+        assert.equal(minter, anAccount);
     });
 
 });
