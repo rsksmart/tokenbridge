@@ -1,8 +1,7 @@
 const Bridge = artifacts.require("Bridge_v0");
-const MultiSigWallet = artifacts.require("MultiSigWallet");
 const MainToken = artifacts.require('MainToken');
-const SideTokenFactory = artifacts.require('SideTokenFactory');
-const AllowTokens = artifacts.require('AllowTokens');
+const AllowTokens = artifacts.require("AllowTokens");
+const MultiSigWallet = artifacts.require("MultiSigWallet");
 
 const fs = require('fs');
 
@@ -12,20 +11,10 @@ function shouldDeployToken(network) {
 
 module.exports = function(deployer, networkName, accounts) {
     deployer
-    .then(async ()=> {
-        const sideTokenFactory = await SideTokenFactory.deployed();
-        const bridge = await Bridge.deployed();
-        sideTokenFactory.transferPrimary(bridge.address);
-    })
-    .then(() => {
-        if(shouldDeployToken(networkName)) {
-            return deployer.deploy(MainToken, 'MAIN', 'MAIN', 18, web3.utils.toWei('1000'));
-        }
-    }).then(async () => {
+    .then(async () => {
         const bridge = await Bridge.deployed();
         const federation = await bridge.getFederation();
         const multiSig = await MultiSigWallet.deployed();
-        const mainToken = await MainToken.deployed();
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
@@ -34,6 +23,7 @@ module.exports = function(deployer, networkName, accounts) {
             manager: multiSig.address
         };
         if(shouldDeployToken(networkName)) {
+            const mainToken = await MainToken.deployed();
             config.testToken = mainToken.address;
             let allowTokens = await AllowTokens.deployed();
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
