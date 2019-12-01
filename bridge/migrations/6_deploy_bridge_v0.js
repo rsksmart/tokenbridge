@@ -36,8 +36,7 @@ module.exports = function(deployer, networkName, accounts) {
 
         if (networkName === 'coverage') {
             return deployer
-                .deploy(Bridge_v0, initArgs[0], initArgs[1], initArgs[2], initArgs[3], initArgs[4])
-                .then(() => Bridge_v0.deployed());
+                .deploy(Bridge_v0, initArgs[0], initArgs[1], initArgs[2], initArgs[3], initArgs[4]);
         }
 
         await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);

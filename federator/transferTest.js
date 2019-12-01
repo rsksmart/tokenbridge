@@ -105,6 +105,8 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await transactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
         await destinationTransactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.sidechain.privateKey);
         logger.info(`${origin} token addres ${originAddress} - User Address: ${userAddress}`);
+        await transactionSender.sendTransaction(config.mainchain.multisig, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
+        await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, '', originWeb3.utils.toWei('1'), config.sidechain.privateKey);
 
         logger.debug('Aproving token transfer');
         data = originTokenContract.methods.transfer(userAddress, amount).encodeABI();
