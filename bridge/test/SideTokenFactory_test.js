@@ -24,7 +24,8 @@ contract('SideTokenFactory', async function (accounts) {
         await utils.expectThrow(this.sideTokenFactory.createSideToken("SIDE", 1));
     });
 
-    it('fails to create a new side token due to wrong owner', async function() {
+    it('fails to create a new side token due to wrong caller', async function() {
+        assert.equal(await this.sideTokenFactory.primary(), tokenCreator);
         await utils.expectThrow(this.sideTokenFactory.createSideToken("SIDE", "SIDE", { from: anAccount }));
     });
 
@@ -60,12 +61,12 @@ contract('SideTokenFactory', async function (accounts) {
         assert.isTrue(newSideTokenAddress != 0);
         assert.isTrue(newSideTokenAddress != sideTokenAddress);
         assert.equal(receipt.logs[0].args[1], "OTHERSYMBOL");
-        defaultOperators = await sideToken.defaultOperators();
-        assert.equal(defaultOperators[0], tokenCreator);
     });
 
-    it('should create create mintable tokens with owner', async function () {
-        await this.sideTokenFactory.transferOwnership(anAccount);
+    it('should create create mintable tokens with caller', async function () {
+        await this.sideTokenFactory.transferPrimary(anAccount);
+        assert.equal(await this.sideTokenFactory.primary(), anAccount);
+
         let receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", { from: anAccount });
 
         let sideTokenAddress = receipt.logs[0].args[0];

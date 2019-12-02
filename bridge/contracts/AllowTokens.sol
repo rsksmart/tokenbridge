@@ -73,6 +73,8 @@ contract AllowTokens is Ownable {
     }
 
     function disableAllowedTokensValidation() public onlyOwner {
+        // Before disabling Allowed Tokens Validations some kind of contract validation system
+        // should be implemented on the Bridge for the methods receiveTokens, tokenFallback and tokensReceived
         validateAllowedTokens = false;
         emit AllowedTokenValidation(validateAllowedTokens);
     }
@@ -95,6 +97,7 @@ contract AllowTokens is Ownable {
         emit DailyLimitChanged(_dailyLimit);
     }
 
+    // solium-disable-next-line max-len
     function isValidTokenTransfer(address tokenToUse, uint amount, uint spentToday, bool isSideToken) public view returns (bool) {
         if(amount > maxTokensAllowed)
             return false;

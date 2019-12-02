@@ -1,198 +1,8 @@
 [
   {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "AcceptedCrossTransfer",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_tokenAddress",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "_symbol",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "bytes",
-        "name": "userData",
-        "type": "bytes"
-      }
-    ],
-    "name": "Cross",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      }
-    ],
-    "name": "CrossingPaymentChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "_newFederation",
-        "type": "address"
-      }
-    ],
-    "name": "FederationChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_newSideTokenAddress",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "_originalTokenAddress",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "_newSymbol",
-        "type": "string"
-      }
-    ],
-    "name": "NewSideToken",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "previousOwner",
-        "type": "address"
-      },
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "newOwner",
-        "type": "address"
-      }
-    ],
-    "name": "OwnershipTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Paused",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "PauserAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": true,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "PauserRemoved",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "Unpaused",
-    "type": "event"
-  },
-  {
     "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
-    ],
-    "name": "addPauser",
+    "inputs": [],
+    "name": "unpause",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -200,39 +10,8 @@
   },
   {
     "constant": true,
-    "inputs": [],
-    "name": "allowTokens",
-    "outputs": [
-      {
-        "internalType": "contract AllowTokens",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "isOwner",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
     "inputs": [
       {
-        "internalType": "address",
         "name": "account",
         "type": "address"
       }
@@ -240,7 +19,34 @@
     "name": "isPauser",
     "outputs": [
       {
-        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "symbolPrefix",
+    "outputs": [
+      {
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "paused",
+    "outputs": [
+      {
         "name": "",
         "type": "bool"
       }
@@ -253,7 +59,6 @@
     "constant": true,
     "inputs": [
       {
-        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -261,7 +66,6 @@
     "name": "knownTokens",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "",
         "type": "bool"
       }
@@ -276,7 +80,6 @@
     "name": "lastDay",
     "outputs": [
       {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -286,60 +89,35 @@
     "type": "function"
   },
   {
-    "constant": true,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "mappedTokens",
-    "outputs": [
-      {
-        "internalType": "contract SideToken",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "originalTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
+    "constant": false,
     "inputs": [],
-    "name": "owner",
-    "outputs": [
+    "name": "renouncePauser",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
       {
-        "internalType": "address",
-        "name": "",
+        "name": "account",
         "type": "address"
       }
     ],
+    "name": "addPauser",
+    "outputs": [],
     "payable": false,
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -354,10 +132,23 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "paused",
+    "name": "owner",
     "outputs": [
       {
-        "internalType": "bool",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "isOwner",
+    "outputs": [
+      {
         "name": "",
         "type": "bool"
       }
@@ -367,21 +158,17 @@
     "type": "function"
   },
   {
-    "constant": false,
+    "constant": true,
     "inputs": [],
-    "name": "renounceOwnership",
-    "outputs": [],
+    "name": "allowTokens",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [],
-    "name": "renouncePauser",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -390,7 +177,25 @@
     "name": "sideTokenFactory",
     "outputs": [
       {
-        "internalType": "contract SideTokenFactory",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "mappedTokens",
+    "outputs": [
+      {
         "name": "",
         "type": "address"
       }
@@ -405,24 +210,8 @@
     "name": "spentToday",
     "outputs": [
       {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "symbolPrefix",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
       }
     ],
     "payable": false,
@@ -433,7 +222,6 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
         "name": "newOwner",
         "type": "address"
       }
@@ -445,21 +233,211 @@
     "type": "function"
   },
   {
-    "constant": false,
-    "inputs": [],
-    "name": "unpause",
-    "outputs": [],
+    "constant": true,
+    "inputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "originalTokens",
+    "outputs": [
+      {
+        "name": "",
+        "type": "address"
+      }
+    ],
     "payable": false,
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "_newFederation",
+        "type": "address"
+      }
+    ],
+    "name": "FederationChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Paused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "Unpaused",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "PauserAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "account",
+        "type": "address"
+      }
+    ],
+    "name": "PauserRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "_amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "name": "_symbol",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "name": "userData",
+        "type": "bytes"
+      }
+    ],
+    "name": "Cross",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_newSideTokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_originalTokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "_newSymbol",
+        "type": "string"
+      }
+    ],
+    "name": "NewSideToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "_tokenAddress",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "name": "_to",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "AcceptedCrossTransfer",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "CrossingPaymentChanged",
+    "type": "event"
   },
   {
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
-        "name": "sender",
+        "name": "_manager",
         "type": "address"
+      },
+      {
+        "name": "_federation",
+        "type": "address"
+      },
+      {
+        "name": "_allowTokens",
+        "type": "address"
+      },
+      {
+        "name": "_sideTokenFactory",
+        "type": "address"
+      },
+      {
+        "name": "_symbolPrefix",
+        "type": "string"
       }
     ],
     "name": "initialize",
@@ -472,29 +450,8 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_manager",
+        "name": "sender",
         "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_federation",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_allowTokens",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_sideTokenFactory",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "_symbolPrefix",
-        "type": "string"
       }
     ],
     "name": "initialize",
@@ -509,7 +466,6 @@
     "name": "version",
     "outputs": [
       {
-        "internalType": "string",
         "name": "",
         "type": "string"
       }
@@ -522,37 +478,30 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
         "name": "tokenAddress",
         "type": "address"
       },
       {
-        "internalType": "address",
         "name": "receiver",
         "type": "address"
       },
       {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       },
       {
-        "internalType": "string",
         "name": "symbol",
         "type": "string"
       },
       {
-        "internalType": "bytes32",
         "name": "blockHash",
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
         "name": "transactionHash",
         "type": "bytes32"
       },
       {
-        "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
       }
@@ -560,7 +509,6 @@
     "name": "acceptTransfer",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "",
         "type": "bool"
       }
@@ -573,12 +521,10 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
         "name": "tokenToUse",
         "type": "address"
       },
       {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
@@ -586,7 +532,6 @@
     "name": "receiveTokens",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "",
         "type": "bool"
       }
@@ -599,17 +544,14 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
         "name": "from",
         "type": "address"
       },
       {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       },
       {
-        "internalType": "bytes",
         "name": "userData",
         "type": "bytes"
       }
@@ -617,45 +559,38 @@
     "name": "tokenFallback",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "",
         "type": "bool"
       }
     ],
-    "payable": true,
-    "stateMutability": "payable",
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
+        "name": "operator",
         "type": "address"
       },
       {
-        "internalType": "address",
         "name": "from",
         "type": "address"
       },
       {
-        "internalType": "address",
         "name": "to",
         "type": "address"
       },
       {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       },
       {
-        "internalType": "bytes",
         "name": "userData",
         "type": "bytes"
       },
       {
-        "internalType": "bytes",
         "name": "",
         "type": "bytes"
       }
@@ -670,27 +605,41 @@
     "constant": true,
     "inputs": [
       {
-        "internalType": "bytes32",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "isSideToken",
+    "outputs": [
+      {
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [
+      {
         "name": "_blockHash",
         "type": "bytes32"
       },
       {
-        "internalType": "bytes32",
         "name": "_transactionHash",
         "type": "bytes32"
       },
       {
-        "internalType": "address",
         "name": "_receiver",
         "type": "address"
       },
       {
-        "internalType": "uint256",
         "name": "_amount",
         "type": "uint256"
       },
       {
-        "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
       }
@@ -698,7 +647,6 @@
     "name": "transactionWasProcessed",
     "outputs": [
       {
-        "internalType": "bool",
         "name": "",
         "type": "bool"
       }
@@ -711,7 +659,6 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
@@ -728,7 +675,6 @@
     "name": "getCrossingPayment",
     "outputs": [
       {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -743,7 +689,6 @@
     "name": "calcMaxWithdraw",
     "outputs": [
       {
-        "internalType": "uint256",
         "name": "",
         "type": "uint256"
       }
@@ -756,7 +701,6 @@
     "constant": false,
     "inputs": [
       {
-        "internalType": "address",
         "name": "newFederation",
         "type": "address"
       }
@@ -773,7 +717,6 @@
     "name": "getFederation",
     "outputs": [
       {
-        "internalType": "address",
         "name": "",
         "type": "address"
       }
