@@ -11,6 +11,7 @@ const abiSideToken = require('./src/abis/SideToken.json');
 const TransactionSender = require('./src/lib/TransactionSender.js');
 const Federator = require('./src/lib/Federator.js');
 const utils = require('./src/lib/utils.js');
+const fundFederators = require('./fundFederators');
 
 const logger = log4js.getLogger('test');
 log4js.configure(logConfig);
@@ -133,10 +134,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         // Start origin federators with delay between them
         logger.debug('Fund federator wallets');
-        for (let i = 0; i < mainKeys.length; i++) {
-            const federatorAddress = await destinationTransactionSender.getAddress(mainKeys[i]);
-            await destinationTransactionSender.sendTransaction(federatorAddress, '', destinationWeb3.utils.toWei('1'), config.sidechain.privateKey);
-        }
+        await fundFederators(destinationWeb3, mainKeys, config.sidechain.privateKey, logger);
 
         await originFederators.reduce(function(promise, item) {
             return promise.then(function() {
@@ -183,10 +181,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Starting federator processes');
 
         logger.debug('Fund federator wallets');
-        for (let i = 0; i < sideKeys.length; i++) {
-            const federatorAddress = await transactionSender.getAddress(mainKeys[i]);
-            await transactionSender.sendTransaction(federatorAddress, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
-        }
+        await fundFederators(destinationWeb3, sideKeys, config.mainchain.privateKey, logger);
 
         // Start destination federators with delay between them
         await destinationFederators.reduce(function(promise, item) {
