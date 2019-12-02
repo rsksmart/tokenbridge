@@ -25,8 +25,8 @@ const sideConfig = {
     sidechain: config.mainchain,
 };
 
-const mainKeys = process.argv[2] ? process.argv[2].split(',') : [];
-const sideKeys = process.argv[3] ? process.argv[3].split(',') : [];
+const mainKeys = process.argv[2] ? process.argv[2].replace(/ /g, '').split(',') : [];
+const sideKeys = process.argv[3] ? process.argv[3].replace(/ /g, '').split(',') : [];
 
 const mainchainFederators = getMainchainFederators(mainKeys);
 const sidechainFederators = getSidechainFederators(sideKeys, sideConfig);
@@ -108,6 +108,9 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await transactionSender.sendTransaction(config.mainchain.multisig, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
         await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, '', originWeb3.utils.toWei('1'), config.sidechain.privateKey);
 
+        const initialUserBalance = await originWeb3.eth.getBalance(userAddress);
+        logger.debug('Initial user balance ', initialUserBalance);
+
         logger.debug('Aproving token transfer');
         data = originTokenContract.methods.transfer(userAddress, amount).encodeABI();
         await transactionSender.sendTransaction(originAddress, data, 0, config.mainchain.privateKey);
@@ -129,6 +132,12 @@ async function transfer(originFederators, destinationFederators, config, origin,
         const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         // Start origin federators with delay between them
+        logger.debug('Fund federator wallets');
+        for (let i = 0; i < mainKeys.length; i++) {
+            const federatorAddress = await destinationTransactionSender.getAddress(mainKeys[i]);
+            await destinationTransactionSender.sendTransaction(federatorAddress, '', destinationWeb3.utils.toWei('1'), config.sidechain.privateKey);
+        }
+
         await originFederators.reduce(function(promise, item) {
             return promise.then(function() {
                 return Promise.all([delay(5000), item.run()]);
@@ -147,6 +156,9 @@ async function transfer(originFederators, destinationFederators, config, origin,
         let balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.info(`${destination} token balance`, balance);
 
+        const crossCompletedBalance = await originWeb3.eth.getBalance(userAddress);
+        logger.debug('One way cross user balance', crossCompletedBalance);
+
         // Transfer back
         logger.info('------------- TRANSFER BACK THE TOKENS -----------------');
         logger.debug('Getting initial balances before transfer');
@@ -156,7 +168,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug(`bridge balance:${bridgeBalanceBefore}, receiver balance:${receiverBalanceBefore}, sender balance:${senderBalanceBefore} `);
         await destinationTransactionSender.sendTransaction(userAddress, "", 6000000, config.sidechain.privateKey);
 
-        logger.debug('Aproving token transfer on destination');        
+        logger.debug('Aproving token transfer on destination');
         data = destinationTokenContract.methods.approve(destinationBridgeAddress, amount).encodeABI();
         await destinationTransactionSender.sendTransaction(destinationTokenAddress, data, 0, userPrivateKey);
         logger.debug('Token transfer approved');
@@ -169,6 +181,13 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Bridge side receiveTokens completed');
 
         logger.debug('Starting federator processes');
+
+        logger.debug('Fund federator wallets');
+        for (let i = 0; i < sideKeys.length; i++) {
+            const federatorAddress = await transactionSender.getAddress(mainKeys[i]);
+            await transactionSender.sendTransaction(federatorAddress, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
+        }
+
         // Start destination federators with delay between them
         await destinationFederators.reduce(function(promise, item) {
             return promise.then(function() {
@@ -197,6 +216,10 @@ async function transfer(originFederators, destinationFederators, config, origin,
         if (expectedBalance !== BigInt(senderBalanceAfter)) {
             logger.warn(`Wrong Sender balance. Expected ${expectedBalance} but got ${senderBalanceAfter}`);
         }
+
+        const crossBackCompletedBalance = await originWeb3.eth.getBalance(userAddress);
+        logger.debug('Final user balance', crossBackCompletedBalance);
+        logger.debug('Cost: ', BigInt(initialUserBalance) - BigInt(crossBackCompletedBalance));
 
     } catch(err) {
         logger.error('Unhandled Error on transfer()', err.stack);
