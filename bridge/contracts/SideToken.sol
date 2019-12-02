@@ -3,31 +3,26 @@ pragma solidity ^0.5.0;
 import "./zeppelin/token/ERC777/ERC777.sol";
 
 contract SideToken is ERC777 {
+    address public minter;
 
-    constructor(string memory name, string memory symbol, address[] memory newDefaultOperators)
-    ERC777(name, symbol, newDefaultOperators) public {}
+    constructor(string memory _name, string memory _symbol, address _minter)
+    ERC777(_name, _symbol, new address[](0)) public {
+        minter = _minter;
+    }
 
-    function operatorMint(
+    modifier onlyMinter() {
+        require(_msgSender() == minter, "SideToken: caller is not the minter");
+        _;
+    }
+    function mint(
         address account,
         uint256 amount,
         bytes memory userData,
         bytes memory operatorData
     )
-    public
+    public onlyMinter
     {
-        require(isDefaultOperator(_msgSender()), "Only default Operators can Mint");
         _mint(_msgSender(), account, amount, userData, operatorData);
-    }
-
-    function isDefaultOperator(address anAddress) public view returns(bool _isDefaultOperator) {
-        _isDefaultOperator = false;
-        for (uint i = 0; i < defaultOperators().length; i++) {
-            if(anAddress == defaultOperators()[i]) {
-                _isDefaultOperator = true;
-                break;
-            }
-        }
-        return _isDefaultOperator;
     }
 
 }
