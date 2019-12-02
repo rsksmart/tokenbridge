@@ -8,7 +8,7 @@
   "dependencies": {},
   "compiler": {
     "manager": "openzeppelin",
-    "solcVersion": "0.5.3",
+    "solcVersion": "0.5.12",
     "compilerSettings": {
       "optimizer": {
         "enabled": false,

@@ -32,8 +32,8 @@ module.exports = class TransactionSender {
     }
 
     async getEthGasPrice() {
-        const gasPrice = await this.client.eth.getGasPrice();
-        return gasPrice;
+        const gasPrice = parseInt(await this.client.eth.getGasPrice());
+        return gasPrice <= 1 ? 1: gasPrice * 1.01;
     }
 
     async getRskGasPrice() {
@@ -101,7 +101,6 @@ module.exports = class TransactionSender {
         const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
         const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
-        this.client.eth.transactionConfirmationBlocks = 2;
 
         let rawTx = await this.createRawTransaction(from, to, data, value);
         
@@ -112,7 +111,6 @@ module.exports = class TransactionSender {
                 rawTx = await this.createRawTransaction(from, to, data, value);
                 let receipt = await this.signAndSendTransaction(rawTx, privateKey);
                 if(receipt.status == 1) {
-                    this.client.eth.transactionConfirmationBlocks = prevConfirmations;
                     this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
                     return receipt;    
                 }
