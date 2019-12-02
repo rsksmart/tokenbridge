@@ -7,10 +7,9 @@ log4js.configure(logConfig);
 
 // Services
 const Scheduler = require('./services/Scheduler.js');
-// const EventCreator = require('./services/EventCreator.js');
 const Federator = require('./lib/Federator.js');
 
-const logger = log4js.getLogger('main');
+const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
 logger.info('ETH Host', config.sidechain.host);
 
@@ -19,8 +18,13 @@ if(!config.mainchain || !config.sidechain) {
     process.exit();
 }
 
-const federator = new Federator(config, log4js.getLogger('FEDERATOR'));
-// const eventCreator = new EventCreator(config, logger);
+const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
+const sideFederator = new Federator({
+    ...config,
+    mainchain: config.sidechain,
+    sidechain: config.mainchain,
+    storagePath: `${config.storagePath}/side-fed`
+}, log4js.getLogger('SIDE-FEDERATOR'));
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
@@ -31,8 +35,8 @@ scheduler.start().catch((err) => {
 
 async function run() {
     try {
-        //let isEventCreated = await eventCreator.run();
-        federator.run();
+        await mainFederator.run();
+        await sideFederator.run();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
         process.exit();
