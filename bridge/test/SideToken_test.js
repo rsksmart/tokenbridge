@@ -9,7 +9,7 @@ contract('SideToken', async function (accounts) {
     const anotherAccount = accounts[2];
 
     beforeEach(async function () {
-        this.token = await SideToken.new("SIDE", "SIDE", [tokenCreator]);
+        this.token = await SideToken.new("SIDE", "SIDE", tokenCreator);
     });
 
     it('initial state', async function () {
@@ -27,7 +27,7 @@ contract('SideToken', async function (accounts) {
     });
 
     it('mint', async function () {
-        await this.token.operatorMint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+        await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
 
         const creatorBalance = await this.token.balanceOf(tokenCreator);
         assert.equal(creatorBalance, 0);
@@ -43,7 +43,7 @@ contract('SideToken', async function (accounts) {
     });
 
     it('mint only default operators', async function () {
-        expectThrow(this.token.operatorMint(anAccount, 1000, '0x', '0x', { from: anAccount }));
+        expectThrow(this.token.mint(anAccount, 1000, '0x', '0x', { from: anAccount }));
 
         const creatorBalance = await this.token.balanceOf(tokenCreator);
         assert.equal(creatorBalance, 0);
@@ -59,7 +59,7 @@ contract('SideToken', async function (accounts) {
     });
 
     it('transfer account to account', async function () {
-        await this.token.operatorMint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+        await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
         await this.token.transfer(anotherAccount, 400, { from: anAccount });
 
         const creatorBalance = await this.token.balanceOf(tokenCreator);

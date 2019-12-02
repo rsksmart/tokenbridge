@@ -3,6 +3,7 @@ pragma solidity ^0.5.0;
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
+import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
 import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
@@ -16,7 +17,7 @@ import "../SideToken.sol";
 import "../SideTokenFactory.sol";
 import "../AllowTokens.sol";
 
-contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable {
+contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using Address for address;
@@ -67,11 +68,11 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         address tokenAddress,
         address receiver,
         uint256 amount,
-        string memory symbol,
+        string calldata symbol,
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public  onlyFederation whenNotPaused returns(bool) {
+    ) external  onlyFederation whenNotPaused nonReentrant returns(bool) {
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
         processToken(tokenAddress, symbol);
@@ -79,7 +80,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
-            sideToken.operatorMint(receiver, amount, "", "");
+            sideToken.mint(receiver, amount, "", "");
         }
         else {
             require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
@@ -94,13 +95,13 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool) {
+    function receiveTokens(address tokenToUse, uint256 amount) external payable whenNotPaused nonReentrant returns(bool) {
         verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
+        sendIncentiveToEventsCrossers(msg.value);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
-        sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, _msgSender(), amount, "");
         return true;
     }
@@ -110,7 +111,8 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns(bool) {
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
+        require(crossingPayment == 0, "Bridge: Need payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
         crossTokens(_msgSender(), from, amount, userData);
@@ -132,6 +134,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
+        require(crossingPayment == 0, "Bridge: Need payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
         crossTokens(_msgSender(), from, amount, userData);

@@ -114,11 +114,24 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(isKnownToken, true);
             });
 
+            it("tokenFallback shouldn't work if setted a crossingPayment", async function () {
+                const amount = web3.utils.toWei('1000');
+                const payment = 1000;
+                const originalTokenBalance = await this.token.balanceOf(tokenOwner);
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                utils.expectThrow(this.token.transferAndCall(this.bridge.address, amount, "0x", { from: tokenOwner }));
+
+                const tokenBalance = await this.token.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), originalTokenBalance);
+                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, false);
+            });
+
             it('tokensReceived for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
-                let erc777 = await SideToken.new("ERC777", "777", [tokenOwner], { from: tokenOwner });
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
-                await erc777.operatorMint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner });
                 utils.checkRcpt(receipt);
@@ -131,12 +144,28 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(isKnownToken, true);
             });
 
+            it("tokensReceived shouldn't work if setted a crossingPayment", async function () {
+                const amount = web3.utils.toWei('1000');
+                const payment = 1000;
+                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
+                await utils.expectThrow(erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner }));
+
+                const tokenBalance = await erc777.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.toString());
+                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                assert.equal(isKnownToken, false);
+            });
+
             it('send money to contract should fail', async function () {
                 const payment = 1000;
                 await utils.expectThrow(web3.eth.sendTransaction( { from:tokenOwner,
                     to: this.bridge.address, value: payment } ));
             });
-
 
             it('receiveTokens with payment successful', async function () {
                 const payment = 1000;
