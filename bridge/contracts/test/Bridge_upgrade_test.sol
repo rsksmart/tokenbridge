@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
