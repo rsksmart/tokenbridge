@@ -18,7 +18,6 @@ module.exports = function(deployer, networkName, accounts) {
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
-            privateKey: "",
             multisig: federation,
             manager: multiSig.address
         };

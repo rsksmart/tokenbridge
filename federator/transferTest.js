@@ -102,15 +102,15 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Getting address from pk');
         const userPrivateKey = originWeb3.eth.accounts.create().privateKey;
         const userAddress = await transactionSender.getAddress(userPrivateKey);
-        await transactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
-        await destinationTransactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.sidechain.privateKey);
+        await transactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.privateKey);
+        await destinationTransactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.privateKey);
         logger.info(`${origin} token addres ${originAddress} - User Address: ${userAddress}`);
-        await transactionSender.sendTransaction(config.mainchain.multisig, '', originWeb3.utils.toWei('1'), config.mainchain.privateKey);
-        await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, '', originWeb3.utils.toWei('1'), config.sidechain.privateKey);
+        await transactionSender.sendTransaction(config.mainchain.multisig, '', originWeb3.utils.toWei('1'), config.privateKey);
+        await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, '', originWeb3.utils.toWei('1'), config.privateKey);
 
         logger.debug('Aproving token transfer');
         data = originTokenContract.methods.transfer(userAddress, amount).encodeABI();
-        await transactionSender.sendTransaction(originAddress, data, 0, config.mainchain.privateKey);
+        await transactionSender.sendTransaction(originAddress, data, 0, config.privateKey);
         data = originTokenContract.methods.approve(originBridgeAddress, amount).encodeABI();
         await transactionSender.sendTransaction(originAddress, data, 0, userPrivateKey);
         logger.debug('Token transfer approved');
@@ -154,9 +154,9 @@ async function transfer(originFederators, destinationFederators, config, origin,
         const receiverBalanceBefore = await originTokenContract.methods.balanceOf(userAddress).call();
         const senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.debug(`bridge balance:${bridgeBalanceBefore}, receiver balance:${receiverBalanceBefore}, sender balance:${senderBalanceBefore} `);
-        await destinationTransactionSender.sendTransaction(userAddress, "", 6000000, config.sidechain.privateKey);
+        await destinationTransactionSender.sendTransaction(userAddress, "", 6000000, config.privateKey);
 
-        logger.debug('Aproving token transfer on destination');        
+        logger.debug('Aproving token transfer on destination');
         data = destinationTokenContract.methods.approve(destinationBridgeAddress, amount).encodeABI();
         await destinationTransactionSender.sendTransaction(destinationTokenAddress, data, 0, userPrivateKey);
         logger.debug('Token transfer approved');
