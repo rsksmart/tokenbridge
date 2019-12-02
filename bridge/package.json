@@ -11,15 +11,17 @@
     "resolve": "^1.13.0",
     "rlp": "^2.2.3",
     "solidity-coverage": "^0.6.7",
+    "truffle": "^5.0.33",
     "truffle-hdwallet-provider": "^1.0.17",
     "truffle-privatekey-provider": "^1.3.0"
   },
   "scripts": {
-    "start": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && truffle migrate --reset",
-    "test": "truffle test",
-    "coverage": "npx solidity-coverage",
+    "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solium -d contracts/",
-    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json truffle migrate --reset --network rskregtest && truffle migrate --reset --network development"
+    "migrate": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && npx truffle migrate --reset",
+    "test": "npx truffle test",
+    "coverage": "npx solidity-coverage",
+    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
   },
   "keywords": [
     "rsk",

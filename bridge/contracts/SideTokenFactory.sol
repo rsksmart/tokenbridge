@@ -1,14 +1,14 @@
 pragma solidity ^0.5.0;
 
-import "./zeppelin/ownership/Ownable.sol";
+import "./zeppelin/ownership/Secondary.sol";
 import "./SideToken.sol";
 
-contract SideTokenFactory is Ownable {
+contract SideTokenFactory is Secondary {
     event createdSideToken(address sideToken, string symbol);
 
-    function createSideToken(string calldata name, string calldata symbol) external onlyOwner returns(SideToken) {
+    function createSideToken(string calldata name, string calldata symbol) external onlyPrimary returns(SideToken) {
         address[] memory defaultOperators = new address[](1);
-        defaultOperators[0] = owner();
+        defaultOperators[0] = primary();
         SideToken sideToken = new SideToken(name, symbol, defaultOperators);
         emit createdSideToken(address(sideToken), symbol);
         return sideToken;

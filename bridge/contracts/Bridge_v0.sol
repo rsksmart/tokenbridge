@@ -1,11 +1,12 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "./zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
+import "./zeppelin/introspection/IERC1820Registry.sol";
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/utils/Address.sol";
@@ -33,6 +34,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
+    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     event FederationChanged(address _newFederation);
 
@@ -51,6 +53,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         lastDay = now;
         spentToday = 0;
         _changeFederation(_federation);
+        //keccak256("ERC777TokensRecipient")
+        erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
     function version() public pure returns (string memory) {
@@ -73,8 +77,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     ) public onlyFederation whenNotPaused returns(bool) {
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
-        processToken(tokenAddress, symbol);
         processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        createSideToken(tokenAddress, symbol);
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
@@ -93,13 +97,13 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool){
+    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool) {
         verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
+        sendIncentiveToEventsCrossers(msg.value);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
-        sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, _msgSender(), amount, "");
         return true;
     }
@@ -109,12 +113,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
-        //This can only be used with trusted contracts
-        require(allowTokens.isValidatingAllowedTokens(), "Bridge: onTokenTransfer needs to have validateAllowedTokens enabled");
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
         verifyIsERC20Detailed(_msgSender());
-        sendIncentiveToEventsCrossers(msg.value);
-        return crossTokens(_msgSender(), from, amount, userData);
+        //This can only be used with trusted contracts
+        crossTokens(_msgSender(), from, amount, userData);
+        return true;
     }
 
     /**
@@ -122,23 +125,22 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
      */
     function tokensReceived (
-        address,
+        address operator,
         address from,
         address to,
         uint amount,
         bytes memory userData,
         bytes memory
-    ) public whenNotPaused {
-        //Hook from ERC777
+    ) public whenNotPaused{
+        //Hook from ERC777address
+        if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
         verifyIsERC20Detailed(_msgSender());
-        //TODO cant make it payable find a work around
-        //sendIncentiveToEventsCrossers(msg.value);
+        //This can only be used with trusted contracts
         crossTokens(_msgSender(), from, amount, userData);
     }
 
-    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
-    private returns (bool) {
+    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isSideToken = isSideToken(tokenToUse);
         verifyWithAllowTokens(tokenToUse, amount, isSideToken);
         if (isSideToken) {
@@ -146,7 +148,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         } else {
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
-        return true;
     }
 
     function sendIncentiveToEventsCrossers(uint256 payment) private {
@@ -168,9 +169,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
-    function processToken(address token, string memory symbol) private {
+    function createSideToken(address token, string memory symbol) private {
         if (knownTokens[token])
-            return;
+            return; //Crossing Back
 
         SideToken sideToken = mappedTokens[token];
 
@@ -202,7 +203,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         spentToday = spentToday.add(amount);
     }
 
-    function isSideToken(address token) private view returns (bool) {
+    function isSideToken(address token) public view returns (bool) {
         return originalTokens[token] != address(0);
     }
 

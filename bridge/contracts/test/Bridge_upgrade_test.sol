@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
@@ -33,6 +33,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
+    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     event FederationChanged(address _newFederation);
 
@@ -50,6 +51,8 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         lastDay = now;
         spentToday = 0;
         _changeFederation(_federation);
+        //keccak256("ERC777TokensRecipient")
+        erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
     function version() public pure returns (string memory) {
@@ -91,14 +94,14 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool){
-        validateToken(tokenToUse, amount);
+    function receiveTokens(address tokenToUse, uint256 amount) public payable whenNotPaused returns(bool) {
+        verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
-        require(!sender.isContract(), "Bridge: Contracts can't cross tokens to their addresses");
+        require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
+        ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         sendIncentiveToEventsCrossers(msg.value);
-        crossTokens(tokenToUse, msg.sender, amount, "");
-        ERC20Detailed(tokenToUse).safeTransferFrom(msg.sender, address(this), amount);
+        crossTokens(tokenToUse, _msgSender(), amount, "");
         return true;
     }
 
@@ -107,48 +110,41 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused payable returns (bool) {
+    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns(bool) {
+        verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
-        require(allowTokens.isValidatingAllowedTokens(), "Bridge: onTokenTransfer needs to have validateAllowedTokens enabled");
-        validateToken(_msgSender(), amount);
-        //TODO cant make it payable find a work around
-        sendIncentiveToEventsCrossers(msg.value);
-        return crossTokens(_msgSender(), from, amount, userData);
+        crossTokens(_msgSender(), from, amount, userData);
+        return true;
     }
-
 
     /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
      * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
      */
     function tokensReceived (
-        address,
+        address operator,
         address from,
         address to,
         uint amount,
         bytes memory userData,
         bytes memory
-    ) public whenNotPaused {
-        //Hook from ERC777
-        require(to == address(this), "Bridge: This contract is not the address recieving the tokens");
-        /**
-        * TODO add Balance check
-        */
-        validateToken(msg.sender, amount);
-        //TODO cant make it payable find a work around
-        sendIncentiveToEventsCrossers(0);
-        crossTokens(msg.sender, from, amount, userData);
+    ) public whenNotPaused{
+        //Hook from ERC777address
+        if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
+        require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
+        verifyIsERC20Detailed(_msgSender());
+        //This can only be used with trusted contracts
+        crossTokens(_msgSender(), from, amount, userData);
     }
 
-    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData)
-    private returns (bool) {
-        if (isSideToken(tokenToUse)) {
+    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
+        bool isSideToken = isSideToken(tokenToUse);
+        verifyWithAllowTokens(tokenToUse, amount, isSideToken);
+        if (isSideToken) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
-            require(allowTokens.isTokenAllowed(tokenToUse), "Token is not allowed for transfer");
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
-        return true;
     }
 
     function sendIncentiveToEventsCrossers(uint256 payment) private {
@@ -184,12 +180,22 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         }
     }
 
-    function validateToken(address tokenToUse, uint256 amount) private {
+    function verifyIsERC20Detailed(address tokenToUse) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
         require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
-        require(bytes(detailedTokenToUse.symbol()).length != 0, "Birdge: Token doesn't have a symbol");
-        require(amount <= allowTokens.getMaxTokensAllowed(), "Bridge: The amount of tokens to transfer is greater than allowed");
-        require(isUnderDailyLimit(amount), "Bridge: The amount of tokens to transfer is over the daily limit");
+        require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
+    }
+
+    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+        // solium-disable-next-line security/no-block-members
+        if (now > lastDay + 24 hours) {
+            // solium-disable-next-line security/no-block-members
+            lastDay = now;
+            spentToday = 0;
+        }
+        // solium-disable-next-line max-len
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        spentToday = spentToday.add(amount);
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -249,33 +255,12 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         return crossingPayment;
     }
 
-    function isUnderDailyLimit(uint amount) private returns (bool)
-    {
-        uint dailyLimit = allowTokens.dailyLimit();
-        // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours) {
-            // solium-disable-next-line security/no-block-members
-            lastDay = now;
-            spentToday = 0;
-        }
-        if (spentToday + amount > dailyLimit || spentToday + amount < spentToday)
-            return false;
-        return true;
-    }
-
-    function calcMaxWithdraw() public view returns (uint)
-    {
-        uint dailyLimit = allowTokens.dailyLimit();
-        uint maxTokensAllowed = allowTokens.getMaxTokensAllowed();
-        uint maxWithrow = dailyLimit - spentToday;
+    function calcMaxWithdraw() public view returns (uint) {
+        uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours)
-            maxWithrow = dailyLimit;
-        if (dailyLimit < spentToday)
-            return 0;
-        if(maxWithrow > maxTokensAllowed)
-            maxWithrow = maxTokensAllowed;
-        return maxWithrow;
+            spent = 0;
+        return allowTokens.calcMaxWithdraw(spent);
     }
 
     function newMethodTest() public whenNotPaused view returns(bool) {
