@@ -16,7 +16,7 @@ Start the service running `npm start` which will start a single federator. Make 
 ## Test
 You can run an integration test with `node transferTest.js` and unit tests using `npm test`. The integration test will use a preconfigured private key (from `config.js`) which is assumed to be the only owner of the MultiSig contract.
 
-In order to test with multiple federators, ensure they're added as signers of the MultiSig contract and pass their private keys as arguments of the integration test script. For instance:
+In order to test with multiple federators, ensure they're added as signers of the MultiSig contract and pass their private keys as a comma separated string for both chains as arguments of the integration test script. For instance:
 
-`node transferTest.js privKey1 privKey2 privKeyN`
+`node transferTest.js "privKeyM1, privKeyM2, privKeyMN" "privKeyS1, privKeyS2, privKeySN"`
 
