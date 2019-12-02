@@ -1,7 +1,7 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "@openzeppelin/upgrades/contracts/Initializable.sol";
+import "./zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
 import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
@@ -77,8 +77,8 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     ) public onlyFederation whenNotPaused returns(bool) {
         require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
 
-        processToken(tokenAddress, symbol);
         processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        createSideToken(tokenAddress, symbol);
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
@@ -101,9 +101,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         verifyIsERC20Detailed(tokenToUse);
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Contracts can't cross tokens using their addresses as destination");
+        sendIncentiveToEventsCrossers(msg.value);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
-        sendIncentiveToEventsCrossers(msg.value);
         crossTokens(tokenToUse, _msgSender(), amount, "");
         return true;
     }
@@ -169,9 +169,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
-    function processToken(address token, string memory symbol) private {
+    function createSideToken(address token, string memory symbol) private {
         if (knownTokens[token])
-            return;
+            return; //Crossing Back
 
         SideToken sideToken = mappedTokens[token];
 
