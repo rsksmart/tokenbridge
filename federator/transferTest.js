@@ -106,8 +106,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await transactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.privateKey);
         await destinationTransactionSender.sendTransaction(userAddress, '', originWeb3.utils.toWei('1'), config.privateKey);
         logger.info(`${origin} token addres ${originAddress} - User Address: ${userAddress}`);
-        await transactionSender.sendTransaction(config.mainchain.multisig, '', originWeb3.utils.toWei('1'), config.privateKey);
-        await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, '', originWeb3.utils.toWei('1'), config.privateKey);
 
         const initialUserBalance = await originWeb3.eth.getBalance(userAddress);
         logger.debug('Initial user balance ', initialUserBalance);

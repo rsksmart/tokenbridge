@@ -1,7 +1,7 @@
 const web3 = require('web3');
 const fs = require('fs');
 const abiBridge = require('../abis/Bridge_v0.json');
-const abiMultiSig = require('../abis/MultiSig.json');
+const abiFederation = require('../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
 
@@ -15,7 +15,7 @@ module.exports = class Federator {
 
         this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, this.config.sidechain.multisig);
+        this.federationContract = new this.sideWeb3.eth.Contract(abiFederation, this.config.sidechain.federation);
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
 
@@ -25,7 +25,7 @@ module.exports = class Federator {
     async run() {
         try {
             const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-            const toBlock = currentBlock - this.config.confirmations || 0;
+            const toBlock = currentBlock - this.config.confirmations || 120;
             this.logger.info('Running to Block', toBlock);
 
             if (toBlock <= 0) {
@@ -52,8 +52,6 @@ module.exports = class Federator {
             if (!logs) return;
 
             this.logger.info(`Found ${logs.length} logs`);
-
-            await this._confirmPendingTransactions();
             await this._processLogs(logs);
 
             return true;
@@ -64,53 +62,44 @@ module.exports = class Federator {
         }
     }
 
-    async _confirmPendingTransactions() {
-        try {
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
-            const from = await transactionSender.getAddress(this.config.privateKey);
-
-            let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
-            this.logger.info(`Checking pending transaction until tx ${currentTransactionCount}`);
-
-            let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(0, currentTransactionCount, true, false).call();
-
-            if (pendingTransactions && pendingTransactions.length) {
-                for (let pending of pendingTransactions) {
-                    let wasConfirmed = await this.multiSigContract.methods.confirmations(pending, from).call();
-                    if (!wasConfirmed) {
-                        this.logger.info(`Confirm MultiSig Tx ${pending}`)
-                        let txData = await this.multiSigContract.methods.confirmTransaction(pending).encodeABI();
-                        await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
-                    }
-                }
-            }
-            return true;
-
-        } catch (err) {
-            throw new Error(`Exception while confirming previous txs ${err}`);
-        }
-    }
-
     async _processLogs(logs = []) {
         try {
             let lastBlockNumber = null;
+            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+            const from = await transactionSender.getAddress(this.config.privateKey);
 
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
-                const { returnValues } = log;
-                const receiver = returnValues._to;
-                let wasProcessed = await this.sideBridgeContract.methods.transactionWasProcessed(
+                const { _to: receiver, _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress} = log.returnValues;
+                let transactionId = await this.federationContract.methods.getTransactionId(
+                    tokenAddress,
+                    receiver,
+                    amount,
+                    symbol,
                     log.blockHash,
                     log.transactionHash,
-                    receiver,
-                    log.returnValues._amount,
                     log.logIndex
                 ).call();
 
+                let wasProcessed = await this.federationContract.methods.transactionWasProcessed(transactionId).call();
                 if (!wasProcessed) {
-                    this.logger.info('Voting tx ', log.transactionHash);
-                    await this._voteTransaction(log, receiver);
+                    let hasVoted = await this.federationContract.methods.hasVoted(transactionId).call({from: from});
+                    if(!hasVoted) {
+                        this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} token: ${symbol}`);
+                        await this._voteTransaction(tokenAddress,
+                            receiver,
+                            amount,
+                            symbol,
+                            log.blockHash,
+                            log.transactionHash,
+                            log.logIndex);
+                    } else {
+                        this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol}  has already been voted by us`);
+                    }
+                    
+                } else {
+                    this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol} was already processed`);
                 }
 
                 lastBlockNumber = log.blockNumber;
@@ -124,33 +113,27 @@ module.exports = class Federator {
         }
     }
 
-    async _voteTransaction(log, receiver) {
+    async _voteTransaction(tokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex) {
         try {
-            if (!log || !receiver) {
-                return false;
-            }
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
-            const { _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress} = log.returnValues;
-            this.logger.info(`Transfering ${amount} to sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
+            this.logger.info(`Transfering ${amount} of ${symbol} trough sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
-            let txTransferData = await this.sideBridgeContract.methods.acceptTransfer(
+            let txData = await this.federationContract.methods.voteTransaction(
                 tokenAddress,
                 receiver,
                 amount,
                 symbol,
-                log.blockHash,
-                log.transactionHash,
-                log.logIndex
+                blockHash,
+                transactionHash,
+                logIndex
             ).encodeABI();
 
-            let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
-            await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
-            this.logger.info(`Transaction ${log.transactionHash} submitted to multisig`);
-
+            await transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
+            this.logger.info(`Voted Transaction: ${transactionHash} of block: ${blockHash} token ${symbol} to Federation Contract `);
             return true;
         } catch (err) {
-            this.logger.info(`Exception Voting tx  ${err}`);
+            this.logger.info(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`,err);
         }
     }
 

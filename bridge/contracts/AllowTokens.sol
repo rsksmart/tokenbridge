@@ -6,6 +6,8 @@ import "./zeppelin/ownership/Ownable.sol";
 contract AllowTokens is Ownable {
     using SafeMath for uint256;
 
+    address constant private NULL_ADDRESS = address(0);
+
     mapping (address => bool) public allowedTokens;
     bool private validateAllowedTokens;
     uint256 private maxTokensAllowed;
@@ -20,7 +22,7 @@ contract AllowTokens is Ownable {
     event DailyLimitChanged(uint256 dailyLimit);
 
     modifier notNull(address _address) {
-        require(_address != address(0), "AllowTokens: Address cannot be empty");
+        require(_address != NULL_ADDRESS, "AllowTokens: Address cannot be empty");
         _;
     }
 

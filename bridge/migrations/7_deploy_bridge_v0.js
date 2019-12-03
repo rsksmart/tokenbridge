@@ -1,5 +1,6 @@
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
+const Federation = artifacts.require("Federation");
 const AllowTokens = artifacts.require('AllowTokens');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
 const Bridge_v0 = artifacts.require('Bridge_v0');
@@ -30,7 +31,7 @@ module.exports = function(deployer, networkName, accounts) {
         const multiSig = await MultiSigWallet.deployed();
         const allowTokens = await AllowTokens.deployed();
         const sideTokenFactory = await SideTokenFactory.deployed();
-        const federation = await MultiSigWallet.new([accounts[0]], 1);
+        const federation = await Federation.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
         let initArgs = [ multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
