@@ -1,5 +1,4 @@
 const SideToken = artifacts.require('./SideToken');
-const { singletons, BN, expectEvent } = require('@openzeppelin/test-helpers');
 
 const expectThrow = require('./utils').expectThrow;
 

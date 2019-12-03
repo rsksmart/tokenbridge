@@ -22,6 +22,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
+    address constant private NULL_ADDRESS = address(0);
+    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+
     address private federation;
     uint256 private crossingPayment;
     string public symbolPrefix;
@@ -34,7 +37,6 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     event FederationChanged(address _newFederation);
 
@@ -111,7 +113,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
+    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused returns (bool) {
         require(crossingPayment == 0, "Bridge: Need payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
@@ -128,9 +130,9 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         address from,
         address to,
         uint amount,
-        bytes memory userData,
-        bytes memory
-    ) public whenNotPaused{
+        bytes calldata userData,
+        bytes calldata
+    ) external whenNotPaused{
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");

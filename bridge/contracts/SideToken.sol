@@ -7,11 +7,12 @@ contract SideToken is ERC777 {
 
     constructor(string memory _name, string memory _symbol, address _minter)
     ERC777(_name, _symbol, new address[](0)) public {
+        require(_minter != address(0), "SideToken: Minter address is null");
         minter = _minter;
     }
 
     modifier onlyMinter() {
-        require(_msgSender() == minter, "SideToken: caller is not the minter");
+        require(_msgSender() == minter, "SideToken: Caller is not the minter");
         _;
     }
     function mint(
