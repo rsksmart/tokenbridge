@@ -134,7 +134,8 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         // Start origin federators with delay between them
         logger.debug('Fund federator wallets');
-        await fundFederators(destinationWeb3, mainKeys, config.sidechain.privateKey, logger);
+        let federatorKeys = mainKeys && mainKeys.length ? mainkeys : [config.privateKey];
+        await fundFederators(config.sidechain.host, federatorKeys, config.sidechain.privateKey, destinationWeb3.utils.toWei('1'));
 
         await originFederators.reduce(function(promise, item) {
             return promise.then(function() {
@@ -181,7 +182,8 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Starting federator processes');
 
         logger.debug('Fund federator wallets');
-        await fundFederators(destinationWeb3, sideKeys, config.mainchain.privateKey, logger);
+        federatorKeys = sideKeys && sideKeys.length ? sideKeys : [config.privateKey];
+        await fundFederators(config.mainchain.host, federatorKeys, config.mainchain.privateKey, originWeb3.utils.toWei('1'));
 
         // Start destination federators with delay between them
         await destinationFederators.reduce(function(promise, item) {
