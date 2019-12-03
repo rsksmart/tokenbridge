@@ -1,7 +1,7 @@
 const web3 = require('web3');
 const fs = require('fs');
 const abiBridge = require('../abis/Bridge_v0.json');
-const abiMultiSig = require('../abis/MultiSig.json');
+const abiFederation = require('../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
 
@@ -15,7 +15,7 @@ module.exports = class Federator {
 
         this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-        this.multiSigContract = new this.sideWeb3.eth.Contract(abiMultiSig, this.config.sidechain.multisig);
+        this.federationContract = new this.sideWeb3.eth.Contract(abiFederation, this.config.sidechain.federation);
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
 
@@ -69,18 +69,18 @@ module.exports = class Federator {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
             const from = await transactionSender.getAddress(this.config.privateKey);
 
-            let currentTransactionCount = await this.multiSigContract.methods.transactionCount().call();
+            let currentTransactionCount = await this.federationContract.methods.transactionCount().call();
             this.logger.info(`Checking pending transaction until tx ${currentTransactionCount}`);
 
-            let pendingTransactions = await this.multiSigContract.methods.getTransactionIds(0, currentTransactionCount, true, false).call();
+            let pendingTransactions = await this.federationContract.methods.getTransactionIds(0, currentTransactionCount, true, false).call();
 
             if (pendingTransactions && pendingTransactions.length) {
                 for (let pending of pendingTransactions) {
-                    let wasConfirmed = await this.multiSigContract.methods.confirmations(pending, from).call();
+                    let wasConfirmed = await this.federationContract.methods.confirmations(pending, from).call();
                     if (!wasConfirmed) {
                         this.logger.info(`Confirm MultiSig Tx ${pending}`)
-                        let txData = await this.multiSigContract.methods.confirmTransaction(pending).encodeABI();
-                        await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+                        let txData = await this.federationContract.methods.confirmTransaction(pending).encodeABI();
+                        await transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
                     }
                 }
             }
@@ -144,8 +144,8 @@ module.exports = class Federator {
                 log.logIndex
             ).encodeABI();
 
-            let txData = this.multiSigContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
-            await transactionSender.sendTransaction(this.multiSigContract.options.address, txData, 0, this.config.privateKey);
+            let txData = this.federationContract.methods.submitTransaction(this.sideBridgeContract.options.address, 0, txTransferData).encodeABI();
+            await transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
             this.logger.info(`Transaction ${log.transactionHash} submitted to multisig`);
 
             return true;

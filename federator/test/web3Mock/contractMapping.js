@@ -1,10 +1,10 @@
-const MultiSig = require('./contracts/MultiSig');
+const Federation = require('./contracts/Federation');
 const Bridge = require('./contracts/Bridge_v0');
 const config = require('../../config.js');
 
 const mappings = {
-    [config.mainchain.multisig]: MultiSig,
-    [config.sidechain.multisig]: MultiSig,
+    [config.mainchain.federation]: Federation,
+    [config.sidechain.federation]: Federation,
     [config.sidechain.bridge]: Bridge,
     [config.mainchain.bridge]: Bridge,
 };
