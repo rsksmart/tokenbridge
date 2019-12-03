@@ -18,8 +18,7 @@ module.exports = function(deployer, networkName, accounts) {
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
-            multisig: federation,
-            manager: multiSig.address
+            federation: federation
         };
         if(shouldDeployToken(networkName)) {
             const mainToken = await MainToken.deployed();

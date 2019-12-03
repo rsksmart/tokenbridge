@@ -23,6 +23,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
+    address constant private NULL_ADDRESS = address(0);
+    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+
     address private federation;
     uint256 private crossingPayment;
     string public symbolPrefix;
@@ -35,16 +38,15 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     SideTokenFactory public sideTokenFactory;
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     event FederationChanged(address _newFederation);
 
     function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
     public initializer {
         require(bytes(_symbolPrefix).length > 0, "Bridge: Empty symbol prefix");
-        require(_allowTokens != address(0), "Bridge: Missing AllowTokens contract address");
-        require(_manager != address(0), "Bridge: Manager address is empty");
-        require(_federation != address(0), "Bridge: Federation address is empty");
+        require(_allowTokens != NULL_ADDRESS, "Bridge: Missing AllowTokens contract address");
+        require(_manager != NULL_ADDRESS, "Bridge: Manager address is empty");
+        require(_federation != NULL_ADDRESS, "Bridge: Federation address is empty");
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
@@ -114,7 +116,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes memory userData) public whenNotPaused returns (bool) {
+    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused returns (bool) {
         require(crossingPayment == 0, "Bridge: Needs payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
@@ -131,9 +133,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         address from,
         address to,
         uint amount,
-        bytes memory userData,
-        bytes memory
-    ) public whenNotPaused{
+        bytes calldata userData,
+        bytes calldata
+    ) external whenNotPaused{
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
@@ -178,7 +180,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
         SideToken sideToken = mappedTokens[token];
 
-        if (address(sideToken) == address(0)) {
+        if (address(sideToken) == NULL_ADDRESS) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
             sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol);
             mappedTokens[token] = sideToken;
@@ -207,14 +209,14 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     }
 
     function isSideToken(address token) public view returns (bool) {
-        return originalTokens[token] != address(0);
+        return originalTokens[token] != NULL_ADDRESS;
     }
 
     function isMappedToken(address token) private view returns (bool) {
-        return address(mappedTokens[token]) != address(0);
+        return address(mappedTokens[token]) != NULL_ADDRESS;
     }
 
-    function getTransactionCompiledId(
+    function getTransactionId(
         bytes32 _blockHash,
         bytes32 _transactionHash,
         address _receiver,
@@ -235,7 +237,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     )
         public view returns(bool)
     {
-        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         return processed[compiledId];
     }
@@ -249,7 +251,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     )
         private
     {
-        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         processed[compiledId] = true;
     }

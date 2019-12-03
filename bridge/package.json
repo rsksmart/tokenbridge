@@ -21,7 +21,7 @@
     "migrate": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && npx truffle migrate --reset",
     "test": "npx truffle test",
     "coverage": "npx solidity-coverage",
-    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
+    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json && rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
   },
   "keywords": [
     "rsk",
