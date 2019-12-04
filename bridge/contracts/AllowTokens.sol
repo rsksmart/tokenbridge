@@ -69,7 +69,7 @@ contract AllowTokens is Ownable {
     }
 
     function removeAllowedToken(address token) public onlyOwner {
-        require(allowedTokenExist(token), "AllowTokens: Token does not exis  in allowedTokenst");
+        require(allowedTokenExist(token), "AllowTokens: Token does not exist in allowedTokens");
         allowedTokens[token] = false;
         emit AllowedTokenRemoved(token);
     }
