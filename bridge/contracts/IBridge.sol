@@ -7,7 +7,7 @@ interface IBridge {
 
     function getCrossingPayment() external view returns(uint);
 
-    function calcMaxWithdraw() external view returns (uint);
+    function calcMaxWithdraw(address _token) external view returns (uint);
 
     /**
      * ERC-20 tokens approve and transferFrom pattern

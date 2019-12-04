@@ -28,8 +28,8 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     address private federation;
     uint256 private crossingPayment;
     string public symbolPrefix;
-    uint256 public lastDay;
-    uint256 public spentToday;
+    mapping (address => uint256) public lastDay;
+    mapping (address => uint256) public spentToday;
 
     mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
@@ -50,9 +50,6 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         sideTokenFactory = SideTokenFactory(_sideTokenFactory);
-        // solium-disable-next-line security/no-block-members
-        lastDay = now;
-        spentToday = 0;
         _changeFederation(_federation);
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
@@ -193,14 +190,14 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
 
     function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
         // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours) {
+        if (now > lastDay[tokenToUse] + 24 hours) {
             // solium-disable-next-line security/no-block-members
-            lastDay = now;
-            spentToday = 0;
+            lastDay[tokenToUse] = now;
+            spentToday[tokenToUse] = 0;
         }
         // solium-disable-next-line max-len
-        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
-        spentToday = spentToday.add(amount);
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday[tokenToUse], isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        spentToday[tokenToUse] = spentToday[tokenToUse].add(amount);
     }
 
     function isSideToken(address token) private view returns (bool) {
@@ -260,12 +257,12 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         return crossingPayment;
     }
 
-    function calcMaxWithdraw() public view returns (uint) {
-        uint spent = spentToday;
+    function calcMaxWithdraw(address tokenToUse) public view returns (uint) {
+        uint spent = spentToday[tokenToUse];
         // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours)
+        if (now > lastDay[tokenToUse] + 24 hours)
             spent = 0;
-        return allowTokens.calcMaxWithdraw(spent);
+        return allowTokens.calcMaxWithdraw(tokenToUse, spent);
     }
 
     function newMethodTest() public whenNotPaused view returns(bool) {

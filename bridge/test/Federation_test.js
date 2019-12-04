@@ -6,6 +6,7 @@ const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
+const toWei = web3.utils.toWei;
 
 contract('Federation', async function (accounts) {
     const deployer = accounts[0];
@@ -173,7 +174,7 @@ contract('Federation', async function (accounts) {
 
         beforeEach(async function () {
             this.allowTokens = await AllowTokens.new(deployer);
-            await this.allowTokens.addAllowedToken(originalTokenAddress);
+            await this.allowTokens.addAllowedToken(originalTokenAddress, toWei('10000'), toWei('1'), toWei('100000'));
             this.sideTokenFactory = await SideTokenFactory.new();
             this.bridge = await Bridge.new();
             await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federation.address, this.allowTokens.address, this.sideTokenFactory.address, 'e');
@@ -181,7 +182,30 @@ contract('Federation', async function (accounts) {
             await this.federation.setBridge(this.bridge.address);
         });
 
-        it('voteTransaction should be pending with 1/2 feds', async function() {
+        it('voteTransaction should be pending with 1/2 feds require 1', async function() {
+            let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
+            let transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            let receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1});
+            utils.checkRcpt(receipt);
+
+            let hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember1});
+            assert.equal(hasVoted, true);
+
+            transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 1);
+
+            let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
+            assert.equal(transactionWasProcessed, false);
+
+            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            assert.equal(transactionWasProcessed, false);
+        });
+
+        it('voteTransaction should be pending with 1/2 feds require 2', async function() {
+            await this.federation.changeRequirement(2);
             let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
             let transactionCount = await this.federation.getTransactionCount(transactionId);
             assert.equal(transactionCount, 0);
@@ -203,7 +227,43 @@ contract('Federation', async function (accounts) {
             assert.equal(transactionWasProcessed, false);
         });
             
-        it('voteTransaction should be successful with 2/2 feds', async function() {
+        it('voteTransaction should be successful with 2/2 feds required 1', async function() {
+            let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
+            let transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            let receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1});
+            utils.checkRcpt(receipt);
+
+            let hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember1});
+            assert.equal(hasVoted, true);
+
+            transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 1);
+
+            let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
+            assert.equal(transactionWasProcessed, false);
+
+            receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember2});
+            utils.checkRcpt(receipt);
+
+            hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember2});
+            assert.equal(hasVoted, true);
+
+            transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 2);
+
+            transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
+            assert.equal(transactionWasProcessed, true);
+
+            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            assert.equal(transactionWasProcessed, true);
+        });
+
+        it('voteTransaction should be successful with 2/2 feds required 2', async function() {
+            await this.federation.changeRequirement(2);
             let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
             let transactionCount = await this.federation.getTransactionCount(transactionId);
             assert.equal(transactionCount, 0);
