@@ -149,7 +149,7 @@ contract('Bridge_v0', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const payment = 1000;
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
-                
+
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
@@ -208,7 +208,7 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('rejects to receive tokens greater than  max tokens allowed', async function() {
-                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+                let maxTokensAllowed = await this.allowTokens.maxTokensAllowed(this.token.address);
                 let amount = maxTokensAllowed.add(new BN('1'));
                 await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
@@ -221,7 +221,7 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('rejects to receive tokens lesser than  min tokens allowed', async function() {
-                let minTokensAllowed = await this.allowTokens.getMinTokensAllowed();
+                let minTokensAllowed = await this.allowTokens.minTokensAllowed(this.token.address);
                 let amount = minTokensAllowed.sub(new BN('1'));
                 await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
@@ -234,8 +234,8 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('rejects to receive tokens over the daily limit', async function() {
-                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
-                let dailyLimit = await this.allowTokens.dailyLimit();
+                let maxTokensAllowed = await this.allowTokens.maxTokensAllowed(this.token.address);
+                let dailyLimit = await this.allowTokens.dailyLimit(this.token.address);
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
@@ -245,19 +245,19 @@ contract('Bridge_v0', async function (accounts) {
             });
 
             it('clear spent today after 24 hours', async function() {
-                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
-                let dailyLimit = await this.allowTokens.dailyLimit();
-                let maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                let maxTokensAllowed = await this.allowTokens.maxTokensAllowed(this.token.address);
+                let dailyLimit = await this.allowTokens.dailyLimit(this.token.address);
+                let maxWidthdraw = await this.bridge.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
                     await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })
                 }
-                maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                maxWidthdraw = await this.bridge.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), '0');
                 await utils.increaseTimestamp(web3, ONE_DAY+1);
-                maxWidthdraw = await this.bridge.calcMaxWithdraw();
+                maxWidthdraw = await this.bridge.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
             });
 
@@ -274,8 +274,8 @@ contract('Bridge_v0', async function (accounts) {
             await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
-            this.amount = web3.utils.toWei('1000');
-            await this.token.approve(this.bridge.address, this.amount,toWei('10000'), toWei('1'), toWei('100000'), { from: tokenOwner });
+            this.amount = web3.utils.toWei('100');
+            await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
             this.txReceipt = await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
         });
 
@@ -369,6 +369,7 @@ contract('Bridge_v0', async function (accounts) {
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
                     let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    await this.mirrorAllowTokens.addAllowedToken(sideTokenAddress, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
 
                     let sideToken = await SideToken.at(sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -389,6 +390,7 @@ contract('Bridge_v0', async function (accounts) {
 
                 it('using ERC777 tokensReceived', async function () {
                     let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    await this.mirrorAllowTokens.addAllowedToken(sideTokenAddress, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
 
                     let sideToken = await SideToken.at(sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -411,6 +413,7 @@ contract('Bridge_v0', async function (accounts) {
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
                     this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    await this.mirrorAllowTokens.addAllowedToken(this.sideTokenAddress, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
 
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
 

@@ -31,17 +31,6 @@ describe('Federator module tests', () => {
         expect(value).to.eq('test');
     });
 
-    it('Should no vote for empty log and receiver', async () => {
-        let federator = new Federator(testConfig, logger, web3Mock);
-        let result1 = await federator._voteTransaction(null, null);
-        let result2 = await federator._voteTransaction({}, null);
-        let result3 = await federator._voteTransaction(null, '0x0');
-
-        expect(result1).to.be.false;
-        expect(result2).to.be.false;
-        expect(result3).to.be.false;
-    })
-
     it('Votes a transaction from a log entry', async () => {
         let federator = new Federator(testConfig, logger, web3Mock);
         let log = {
@@ -78,7 +67,16 @@ describe('Federator module tests', () => {
             }
         }
 
-        let result = await federator._voteTransaction(log, '0x0');
+        let result = await federator._voteTransaction(
+            log.returnValues._tokenAddress,
+            log.returnValues._to,
+            log.returnValues._amount,
+            log.returnValues._symbol,
+            log.blockHash,
+            log.transactionHash,
+            log.logIndex,
+        );
+console.log('result ', result)
         expect(result).to.be.true;
     });
 
