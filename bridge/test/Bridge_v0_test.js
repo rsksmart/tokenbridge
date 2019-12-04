@@ -7,6 +7,7 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
+const toWei = web3.utils.toWei;
 const randomHex = web3.utils.randomHex;
 const ONE_DAY = 24*3600
 
@@ -19,9 +20,9 @@ contract('Bridge_v0', async function (accounts) {
     const federation = accounts[5];
 
     beforeEach(async function () {
-        this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
+        this.token = await MainToken.new("MAIN", "MAIN", 18, toWei('1000000000'), { from: tokenOwner });
         this.allowTokens = await AllowTokens.new(bridgeManager);
-        await this.allowTokens.addAllowedToken(this.token.address, {from: bridgeManager});
+        await this.allowTokens.addAllowedToken(this.token.address, toWei('10000'), toWei('1'), toWei('100000'), {from: bridgeManager});
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
@@ -130,7 +131,7 @@ contract('Bridge_v0', async function (accounts) {
             it('tokensReceived for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
-                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await this.allowTokens.addAllowedToken(erc777.address, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner });
@@ -150,7 +151,7 @@ contract('Bridge_v0', async function (accounts) {
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
                 
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
-                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await this.allowTokens.addAllowedToken(erc777.address, toWei('10000'), toWei('1'), toWei('100000'), { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 await utils.expectThrow(erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner }));
@@ -274,7 +275,7 @@ contract('Bridge_v0', async function (accounts) {
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
-            await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
+            await this.token.approve(this.bridge.address, this.amount,toWei('10000'), toWei('1'), toWei('100000'), { from: tokenOwner });
             this.txReceipt = await this.bridge.receiveTokens(this.token.address, this.amount, { from: tokenOwner });
         });
 
@@ -466,7 +467,7 @@ contract('Bridge_v0', async function (accounts) {
 
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
-            data = this.allowTokens.contract.methods.addAllowedToken(this.token.address).encodeABI();
+            data = this.allowTokens.contract.methods.addAllowedToken(this.token.address, toWei('10000'), toWei('1'), toWei('100000')).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(1, { from: multiSigOnwerB });
 

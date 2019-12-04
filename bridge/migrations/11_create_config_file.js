@@ -4,6 +4,7 @@ const AllowTokens = artifacts.require("AllowTokens");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 
 const fs = require('fs');
+const toWei = web3.utils.toWei;
 
 function shouldDeployToken(network) {
     return !network.toLowerCase().includes('mainnet');
@@ -24,7 +25,7 @@ module.exports = function(deployer, networkName, accounts) {
             const mainToken = await MainToken.deployed();
             config.testToken = mainToken.address;
             let allowTokens = await AllowTokens.deployed();
-            let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
+            let data = allowTokens.contract.methods.addAllowedToken(mainToken.address, toWei('10000'), toWei('1'), toWei('100000')).encodeABI();
             await multiSig.submitTransaction(allowTokens.address, 0, data);
         }
         if (currentProvider.host) {

@@ -68,7 +68,7 @@ contract Federation is Ownable {
         emit Voted(_msgSender(), transactionId);
 
         uint8 transactionCount = getTransactionCount(transactionId);
-        if (transactionCount >= required && transactionCount < members.length / 2 + 1)
+        if (transactionCount < required || transactionCount < members.length / 2 + 1)
             return true;
 
         if (bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex)) {
