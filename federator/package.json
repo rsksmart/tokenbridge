@@ -14,7 +14,8 @@
     "mocha": "^6.2.0"
   },
   "scripts": {
-    "start": "node ./src/main.js",
+    "start": "npx pm2 start ./src/main.js --exp-backoff-restart-delay=30000",
+    "dev": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
     "transferTest": "node transferTest.js",
     "clean": "rm -rf ./db/*"
