@@ -24,6 +24,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     using Address for address;
 
     address constant private NULL_ADDRESS = address(0);
+    bytes32 constant private NULL_HASH = bytes32(0);
     IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address private federation;
@@ -78,16 +79,23 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes32 transactionHash,
         uint32 logIndex
     ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
-        require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
+        require(tokenAddress != NULL_ADDRESS, "Bridge: Token Address cant be null");
+        require(receiver != NULL_ADDRESS, "Bridge: Receiver Address cant be null");
+        require(amount > 0, "Bridge: Amount cant be 0");
+        require(bytes(symbol).length > 0, "Bridge: Symbol cant be empty");
+        require(blockHash != NULL_HASH, "Bridge: Block Hash cant be null");
+        require(transactionHash != NULL_HASH, "Bridge: Transaction Hash cant be null");
 
-        processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
+        require(!processed[compiledId], "Bridge: Transaction was already processed");
+        processed[compiledId] = true;
+
         createSideToken(tokenAddress, symbol);
 
         if (isMappedToken(tokenAddress)) {
             SideToken sideToken = mappedTokens[tokenAddress];
             sideToken.mint(receiver, amount, "", "");
-        }
-        else {
+        } else {
             require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(receiver, amount);
@@ -240,20 +248,6 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         return processed[compiledId];
-    }
-
-    function processTransaction(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    )
-        private
-    {
-        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-
-        processed[compiledId] = true;
     }
 
     function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
