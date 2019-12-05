@@ -181,6 +181,52 @@ contract('Federation', async function (accounts) {
             await this.federation.setBridge(this.bridge.address);
         });
 
+        it('voteTransaction should be successful with 1/1 feds require 1', async function() {
+            this.federation.removeMember(fedMember2)
+            let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
+            let transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            let receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1});
+            utils.checkRcpt(receipt);
+
+            let hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember1});
+            assert.equal(hasVoted, true);
+
+            transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 1);
+
+            let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
+            assert.equal(transactionWasProcessed, true);
+
+            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            assert.equal(transactionWasProcessed, true);
+        });
+
+        it('voteTransaction should fail with wrong acceptTransfer arguments', async function() {
+            this.federation.removeMember(fedMember2);
+            const wrongTokenAddress = "0x0000000000000000000000000000000000000000";
+            let transactionId = await this.federation.getTransactionId(wrongTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
+            let transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            await utils.expectThrow(this.federation.voteTransaction(wrongTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1}));
+
+            let hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember1});
+            assert.equal(hasVoted, false);
+
+            transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
+            assert.equal(transactionWasProcessed, false);
+
+            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            assert.equal(transactionWasProcessed, false);
+        });
+
         it('voteTransaction should be pending with 1/2 feds require 1', async function() {
             let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
             let transactionCount = await this.federation.getTransactionCount(transactionId);
