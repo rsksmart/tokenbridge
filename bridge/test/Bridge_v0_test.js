@@ -356,6 +356,47 @@ contract('Bridge_v0', async function (accounts) {
                 this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
 
             });
+
+            it('should fail null token address', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer("0x", anAccount, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+
+            });
+
+            it('should fail null receiver address', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, 0, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+
+            });
+
+            it('should fail null amount address', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, 0, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+
+            });
+
+            it('should fail null symbol', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+
+            });
+
+            it('should fail null blockhash', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                "0x", this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+            });
+
+            it('should fail null transaction hash', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, "0x",
+                this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+            });
+
         });
 
         describe('Cross back the tokens', async function () {
