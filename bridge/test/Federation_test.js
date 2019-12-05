@@ -225,7 +225,7 @@ contract('Federation', async function (accounts) {
             transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
             assert.equal(transactionWasProcessed, false);
         });
-            
+
         it('voteTransaction should be successful with 2/2 feds require 1', async function() {
             let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
             let transactionCount = await this.federation.getTransactionCount(transactionId);
@@ -413,7 +413,7 @@ contract('Federation', async function (accounts) {
 
             hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember2});
             assert.equal(hasVoted, true);
-            
+
             let count = await this.federation.getTransactionCount(transactionId, {from: fedMember2});
             assert.equal(count, 2);
 
@@ -440,8 +440,25 @@ contract('Federation', async function (accounts) {
         });
 
         it('should fail if not federation member', async function() {
-            await utils.expectThrow(this.federation.voteTransaction(originalTokenAddress, 
+            await utils.expectThrow(this.federation.voteTransaction(originalTokenAddress,
                 anAccount, amount, symbol, blockHash, transactionHash, logIndex));
+        });
+
+        it('voteTransaction should be successfull if already voted', async function() {
+            let transactionId = await this.federation.getTransactionId(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex);
+            let transactionCount = await this.federation.getTransactionCount(transactionId);
+            assert.equal(transactionCount, 0);
+
+            let receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1});
+            utils.checkRcpt(receipt);
+
+            let hasVoted = await this.federation.hasVoted(transactionId, {from: fedMember1});
+            assert.equal(hasVoted, true);
+
+            receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex,
+                {from: fedMember1});
+            utils.checkRcpt(receipt);
         });
 
     });
