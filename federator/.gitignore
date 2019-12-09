@@ -6,6 +6,8 @@ kovan.json
 ropsten.json
 rskregtest.json
 rsktestnet.json
+rsktestnet-rinkeby.json
+rsktestnet-kovan.json
 rskmainnet.json
 test.json
 federator.log

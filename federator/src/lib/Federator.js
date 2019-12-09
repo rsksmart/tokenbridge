@@ -39,10 +39,10 @@ module.exports = class Federator {
             let fromBlock = null;
             try {
                 fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
-                fromBlock++;
             } catch(err) {
-                fromBlock = this.config.fromBlock || 0;
+                fromBlock = this.config.mainchain.fromBlock || 0;
             }
+            fromBlock = parseInt(fromBlock)+1;
             this.logger.debug('Running from Block', fromBlock);
 
             const logs = await this.mainBridgeContract.getPastEvents('Cross', {
