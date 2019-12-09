@@ -148,7 +148,7 @@ contract('Bridge_v0', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const payment = 1000;
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
-                
+
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
@@ -260,6 +260,21 @@ contract('Bridge_v0', async function (accounts) {
                 assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
             });
 
+            it('clear spent today and successfully receives tokens', async function() {
+                const amount = web3.utils.toWei('1000');
+                let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
+                let dailyLimit = await this.allowTokens.dailyLimit();
+
+                for(let tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
+                    await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
+                    await this.bridge.receiveTokens(this.token.address, maxTokensAllowed, { from: tokenOwner })
+                }
+                await utils.increaseTimestamp(web3, ONE_DAY + 1);
+
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+                let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner});
+                utils.checkRcpt(receipt);
+            });
 
         });
 
