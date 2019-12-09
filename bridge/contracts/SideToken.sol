@@ -5,10 +5,10 @@ import "./zeppelin/token/ERC777/ERC777.sol";
 contract SideToken is ERC777 {
     address public minter;
 
-    constructor(string memory _name, string memory _symbol, address _minter)
-    ERC777(_name, _symbol, new address[](0)) public {
-        require(_minter != address(0), "SideToken: Minter address is null");
-        minter = _minter;
+    constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr)
+    ERC777(_tokenName, _tokenSymbol, new address[](0)) public {
+        require(_minterAddr != address(0), "SideToken: Minter address is null");
+        minter = _minterAddr;
     }
 
     modifier onlyMinter() {
@@ -18,10 +18,10 @@ contract SideToken is ERC777 {
     function mint(
         address account,
         uint256 amount,
-        bytes memory userData,
-        bytes memory operatorData
+        bytes calldata userData,
+        bytes calldata operatorData
     )
-    public onlyMinter
+    external onlyMinter
     {
         _mint(_msgSender(), account, amount, userData, operatorData);
     }

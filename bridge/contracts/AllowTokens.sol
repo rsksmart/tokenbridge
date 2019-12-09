@@ -34,15 +34,15 @@ contract AllowTokens is Ownable {
         dailyLimit = 100000 ether;
     }
 
-    function isValidatingAllowedTokens() public view returns(bool) {
+    function isValidatingAllowedTokens() external view returns(bool) {
         return validateAllowedTokens;
     }
 
-    function getMaxTokensAllowed() public view returns(uint256) {
+    function getMaxTokensAllowed() external view returns(uint256) {
         return maxTokensAllowed;
     }
 
-    function getMinTokensAllowed() public view returns(uint256) {
+    function getMinTokensAllowed() external view returns(uint256) {
         return minTokensAllowed;
     }
 
@@ -57,50 +57,50 @@ contract AllowTokens is Ownable {
         return true;
     }
 
-    function addAllowedToken(address token) public onlyOwner {
+    function addAllowedToken(address token) external onlyOwner {
         require(!allowedTokenExist(token), "AllowTokens: Token already exists in allowedTokens");
         allowedTokens[token] = true;
         emit AllowedTokenAdded(token);
     }
 
-    function removeAllowedToken(address token) public onlyOwner {
+    function removeAllowedToken(address token) external onlyOwner {
         require(allowedTokenExist(token), "AllowTokens: Token does not exis  in allowedTokenst");
         allowedTokens[token] = false;
         emit AllowedTokenRemoved(token);
     }
 
-    function enableAllowedTokensValidation() public onlyOwner {
+    function enableAllowedTokensValidation() external onlyOwner {
         validateAllowedTokens = true;
         emit AllowedTokenValidation(validateAllowedTokens);
     }
 
-    function disableAllowedTokensValidation() public onlyOwner {
+    function disableAllowedTokensValidation() external onlyOwner {
         // Before disabling Allowed Tokens Validations some kind of contract validation system
         // should be implemented on the Bridge for the methods receiveTokens, tokenFallback and tokensReceived
         validateAllowedTokens = false;
         emit AllowedTokenValidation(validateAllowedTokens);
     }
 
-    function setMaxTokensAllowed(uint256 maxTokens) public onlyOwner {
+    function setMaxTokensAllowed(uint256 maxTokens) external onlyOwner {
         require(maxTokens >= minTokensAllowed, "AllowTokens: Max Tokens should be equal or bigger than Min Tokens");
         maxTokensAllowed = maxTokens;
         emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
 
-    function setMinTokensAllowed(uint256 minTokens) public onlyOwner {
+    function setMinTokensAllowed(uint256 minTokens) external onlyOwner {
         require(maxTokensAllowed >= minTokens, "AllowTokens: Min Tokens should be equal or smaller than Max Tokens");
         minTokensAllowed = minTokens;
         emit MinTokensAllowedChanged(minTokensAllowed);
     }
 
-    function changeDailyLimit(uint256 _dailyLimit) public onlyOwner {
+    function changeDailyLimit(uint256 _dailyLimit) external onlyOwner {
         require(_dailyLimit >= maxTokensAllowed, "AllowTokens: Daily Limit should be equal or bigger than Max Tokens");
         dailyLimit = _dailyLimit;
         emit DailyLimitChanged(_dailyLimit);
     }
 
     // solium-disable-next-line max-len
-    function isValidTokenTransfer(address tokenToUse, uint amount, uint spentToday, bool isSideToken) public view returns (bool) {
+    function isValidTokenTransfer(address tokenToUse, uint amount, uint spentToday, bool isSideToken) external view returns (bool) {
         if(amount > maxTokensAllowed)
             return false;
         if(amount < minTokensAllowed)
@@ -112,7 +112,7 @@ contract AllowTokens is Ownable {
         return true;
     }
 
-    function calcMaxWithdraw(uint spentToday) public view returns (uint) {
+    function calcMaxWithdraw(uint spentToday) external view returns (uint) {
         uint maxWithrow = dailyLimit - spentToday;
         if (dailyLimit < spentToday)
             return 0;

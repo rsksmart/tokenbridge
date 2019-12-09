@@ -61,7 +61,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
-    function version() public pure returns (string memory) {
+    function version() external pure returns (string memory) {
         return "v0";
     }
 
@@ -124,7 +124,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
      * See https://github.com/ethereum/EIPs/issues/677 for details
      * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused returns (bool) {
+    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused nonReentrant returns (bool) {
         require(crossingPayment == 0, "Bridge: Needs payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
@@ -143,7 +143,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused{
+    ) external whenNotPaused {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
@@ -154,9 +154,9 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     }
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
-        bool isSideToken = isSideToken(tokenToUse);
-        verifyWithAllowTokens(tokenToUse, amount, isSideToken);
-        if (isSideToken) {
+        bool _isSideToken = isSideToken(tokenToUse);
+        verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
+        if (_isSideToken) {
             sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
         } else {
             mainTokenCrossing(from, tokenToUse, amount, userData);
@@ -204,7 +204,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
     }
 
-    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
         // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours) {
             // solium-disable-next-line security/no-block-members
@@ -212,7 +212,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
             spentToday = 0;
         }
         // solium-disable-next-line max-len
-        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
         spentToday = spentToday.add(amount);
     }
 
@@ -231,7 +231,7 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         uint256 _amount,
         uint32 _logIndex
     )
-        private pure returns(bytes32)
+        public pure returns(bytes32)
     {
         return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
     }
@@ -250,16 +250,16 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         return processed[compiledId];
     }
 
-    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
+    function setCrossingPayment(uint amount) external onlyOwner whenNotPaused {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment);
     }
 
-    function getCrossingPayment() public view returns(uint) {
+    function getCrossingPayment() external view returns(uint) {
         return crossingPayment;
     }
 
-    function calcMaxWithdraw() public view returns (uint) {
+    function calcMaxWithdraw() external view returns (uint) {
         uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours)
@@ -272,11 +272,11 @@ contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         emit FederationChanged(federation);
     }
 
-    function changeFederation(address newFederation) public onlyOwner whenNotPaused {
+    function changeFederation(address newFederation) external onlyOwner whenNotPaused {
         _changeFederation(newFederation);
     }
 
-    function getFederation() public view returns(address) {
+    function getFederation() external view returns(address) {
         return federation;
     }
 
