@@ -69,9 +69,9 @@ contract Federation is Ownable {
 
         uint8 transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
+            processed[transactionId] = true;
             bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex);
             require(acceptTransfer, "Federation: Bridge Accept Transfer was not successful");
-            processed[transactionId] = true;
             emit Executed(transactionId);
             return true;
         }
@@ -88,12 +88,12 @@ contract Federation is Ownable {
         return count;
     }
 
-    function hasVoted(bytes32 transactionId) public view returns(bool)
+    function hasVoted(bytes32 transactionId) external view returns(bool)
     {
         return votes[transactionId][_msgSender()];
     }
 
-    function transactionWasProcessed(bytes32 transactionId) public view returns(bool)
+    function transactionWasProcessed(bytes32 transactionId) external view returns(bool)
     {
         return processed[transactionId];
     }
@@ -111,7 +111,7 @@ contract Federation is Ownable {
         return keccak256(abi.encodePacked(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex));
     }
 
-    function addMember(address _newMember) public onlyOwner
+    function addMember(address _newMember) external onlyOwner
     {
         require(_newMember != NULL_ADDRESS, "Federation: Address cannot be empty");
         require(!isMember[_newMember], "Federation: Member already exists");
@@ -122,7 +122,7 @@ contract Federation is Ownable {
         emit MemberAddition(_newMember);
     }
 
-    function removeMember(address _oldMember) public onlyOwner
+    function removeMember(address _oldMember) external onlyOwner
     {
         require(_oldMember != NULL_ADDRESS, "Federation: Address cannot be empty");
         require(isMember[_oldMember], "Federation: Member does not exists");
@@ -139,12 +139,12 @@ contract Federation is Ownable {
         emit MemberRemoval(_oldMember);
     }
 
-    function getMembers() public view returns (address[] memory)
+    function getMembers() external view returns (address[] memory)
     {
         return members;
     }
 
-    function changeRequirement(uint _required) public onlyOwner validRequirement(members.length, _required)
+    function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required)
     {
         required = _required;
         emit RequirementChange(_required);
