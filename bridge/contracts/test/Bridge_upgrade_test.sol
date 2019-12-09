@@ -58,7 +58,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
-    function version() public pure returns (string memory) {
+    function version() external pure returns (string memory) {
         return "test";
     }
 
