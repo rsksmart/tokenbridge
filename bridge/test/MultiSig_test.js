@@ -69,6 +69,47 @@ contract('MultiSigWallet', async (accounts) => {
             assert.equal(owners.length, 1);
         });
 
+        it('removes current owner successfully', async () => {
+            let txData = this.multiSig.contract.methods.addOwner(additionalOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+
+            let isOwner = await this.multiSig.isOwner(additionalOwner)
+            assert.equal(isOwner, true);
+
+            txData = this.multiSig.contract.methods.removeOwner(multiSigOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+
+            isOwner = await this.multiSig.isOwner(multiSigOwner)
+            assert.equal(isOwner, false);
+
+            const owners = await this.multiSig.getOwners();
+            assert.equal(owners.length, 1);
+        });
+
+        it('removes the owner and updates requirements', async () => {
+            let txData = this.multiSig.contract.methods.addOwner(additionalOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+
+            let isOwner = await this.multiSig.isOwner(additionalOwner)
+            assert.equal(isOwner, true);
+
+            txData = this.multiSig.contract.methods.changeRequirement(2).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+
+            let required = await this.multiSig.required();
+            assert.equal(required, 2);
+
+            txData = this.multiSig.contract.methods.removeOwner(additionalOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+            await this.multiSig.confirmTransaction(2, { from: additionalOwner });
+
+            isOwner = await this.multiSig.isOwner(additionalOwner)
+            assert.equal(isOwner, false);
+
+            required = await this.multiSig.required();
+            assert.equal(required, 1);
+        });
+
         it('throws error with invalid parameters', async () => {
             expectThrow(this.multiSig.removeOwner());
             expectThrow(this.multiSig.removeOwner(anotherAccount));
@@ -242,6 +283,15 @@ contract('MultiSigWallet', async (accounts) => {
             let ids = await this.multiSig.getTransactionIds(0, 1, false, true);
             assert.equal(ids.length, 1);
         });
+    })
+
+    describe('send value to multisig', async () => {
+        it('transfer a payment to the multisig address', async () => {
+            const payment = 1000;
+            await web3.eth.sendTransaction( { from: multiSigOwner, to: this.multiSig.address, value: payment } )
+            let multiSigBalance = await web3.eth.getBalance(this.multiSig.address);
+            assert.equal(payment, BigInt(multiSigBalance));
+        })
     })
 
 });
