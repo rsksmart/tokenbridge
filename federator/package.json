@@ -18,7 +18,7 @@
     "start": "npx pm2 start ./src/main.js --name 'federator-token-bridge' --exp-backoff-restart-delay=30000",
     "dev": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
-    "transferTest": "node transferTest.js",
+    "integrationTest": "node integrationTest.js",
     "clean": "rm -rf ./db/*"
   },
   "keywords": [

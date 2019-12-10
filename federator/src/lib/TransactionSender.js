@@ -55,8 +55,7 @@ module.exports = class TransactionSender {
             from: from,
             nonce: this.numberToHexString(nonce),
             r: 0,
-            s: 0,
-            v: chainId
+            s: 0
         }
         return rawTx;
     }
@@ -100,12 +99,11 @@ module.exports = class TransactionSender {
     async sendTransaction(to, data, value, privateKey) {
         const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
-        const prevConfirmations = this.client.eth.transactionConfirmationBlocks;
-
         let rawTx = await this.createRawTransaction(from, to, data, value);
         
-        let retries = 3;
-        const sleepAfterRetrie=40000;
+        let retries = 1;
+        const sleepAfterRetrie = 40000;
+        let error = '';
         while(retries > 0) {
             try {
                 rawTx = await this.createRawTransaction(from, to, data, value);
@@ -116,18 +114,19 @@ module.exports = class TransactionSender {
                 }
                 this.logger.error('Transaction Receipt Status Failed', receipt);
                 this.logger.error('RawTx that failed', rawTx);
+                error = 'Transaction Receipt Status Failed';
                 retries--;
                 await utils.sleep(sleepAfterRetrie);
             } catch(err) {
                 this.logger.error('Send Signed Transaction Failed', err);
                 this.logger.error('RawTx that failed', rawTx);
+                error = err;
                 retries--;
                 await utils.sleep(sleepAfterRetrie);
             }
         }
 
-        this.client.eth.transactionConfirmationBlocks = prevConfirmations;
-        throw new CustomError('Transaction Failed after retries: ', stack);
+        throw new CustomError(`Transaction Failed after retries: ${stack}`, error);
     }
 
 }
