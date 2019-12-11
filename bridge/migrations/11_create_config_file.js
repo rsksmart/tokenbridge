@@ -34,7 +34,7 @@ module.exports = function(deployer, networkName, accounts) {
         } else {
             config.host = '';
         }
-
+        config.fromBlock = await web3.eth.getBlockNumber();
         if (networkName !== 'coverage') {
             fs.writeFileSync(`../federator/${networkName}.json`, JSON.stringify(config, null, 4));
         }
