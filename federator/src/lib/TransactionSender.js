@@ -33,7 +33,7 @@ module.exports = class TransactionSender {
 
     async getEthGasPrice() {
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: gasPrice * 1.01;
+        return gasPrice <= 1 ? 1: gasPrice * 1.05;
     }
 
     async getRskGasPrice() {
