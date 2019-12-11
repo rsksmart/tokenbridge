@@ -12,7 +12,11 @@
  *   },
  */
 const HDWalletProvider = require("@truffle/hdwallet-provider");
-const MNEMONIC = "";
+const fs = require('fs');
+
+//resulting address 0x170346689cC312D8E19959Bc68c3AD03E72C9850
+let MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', { encoding: 'utf8' }) : "";// Your metamask's recovery words
+const INFURA_API_KEY = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key',{ encoding: 'utf8' }) : "";// Your Infura API Key after its registration
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -43,29 +47,48 @@ module.exports = {
     },
     rsktestnet: {
       provider: () =>
-        new HDWalletProvider(MNEMONIC, "http://public-node.testnet.rsk.co/1.1.0"),
+        new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
       network_id: 31,
       gas: 6700000,
-      gasPrice: 62000000 // 0.06 gwei
+      gasPrice: 60000000, // 0.06 gwei
+      skipDryRun: true
+    },
+    rskmainnet: {
+      provider: () =>
+        new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
+      network_id: 30,
+      gas: 6700000,
+      gasPrice: 60000000, // 0.06 gwei
+      skipDryRun: true
     },
      //Ethereum
      ropsten: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://ropsten.infura.io/v3/" + INFURA_API_KEY),
       network_id: 3,
       gas: 4700000,
-      gasPrice: 10000000000
+      gasPrice: 10000000000,
+      skipDryRun: true
     },
     kovan: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
       network_id: 42,
       gas: 7000000,
-      gasPrice: 10000000000
+      gasPrice: 10000000000,
+      skipDryRun: true
     },
     rinkeby: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
       network_id: 4,
       gas: 7000000,
-      gasPrice: 10000000000
+      gasPrice: 10000000000,
+      skipDryRun: true
+    },
+    live: {
+      provider: () => new HDWalletProvider(MNEMONIC, "https://eth-mainnet.alchemyapi.io/jsonrpc/-vPGIFwUyjlMRF9beTLXiGQUK6Nf3k8z"),
+      network_id: 1,
+      gas: 7000000,
+      gasPrice: 4000000000,
+      skipDryRun: true
     },
   },
   compilers: {

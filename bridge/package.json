@@ -12,9 +12,7 @@
     "resolve": "^1.13.0",
     "rlp": "^2.2.3",
     "solidity-coverage": "^0.6.7",
-    "truffle": "^5.0.33",
-    "truffle-hdwallet-provider": "^1.0.17",
-    "truffle-privatekey-provider": "^1.3.0"
+    "truffle": "^5.0.33"
   },
   "scripts": {
     "start": "npm run lint && npm run migrate && npm run test",
@@ -26,7 +24,7 @@
   },
   "keywords": [
     "rsk",
-    "decentralized",
+    "federated",
     "bridge",
     "ethereum"
   ],

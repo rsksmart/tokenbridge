@@ -39,10 +39,10 @@ module.exports = class Federator {
             let fromBlock = null;
             try {
                 fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
-                fromBlock++;
             } catch(err) {
-                fromBlock = this.config.fromBlock || 0;
+                fromBlock = this.config.mainchain.fromBlock || 0;
             }
+            fromBlock = parseInt(fromBlock)+1;
             this.logger.debug('Running from Block', fromBlock);
 
             const logs = await this.mainBridgeContract.getPastEvents('Cross', {
@@ -56,8 +56,7 @@ module.exports = class Federator {
 
             return true;
         } catch (err) {
-            this.logger.error(new CustomError('Exception Running Federator', err));
-            console.log(err)
+            this.logger.error(new Error('Exception Running Federator'), err);
             process.exit();
         }
     }
@@ -109,7 +108,7 @@ module.exports = class Federator {
 
             return true;
         } catch (err) {
-            throw new Error(`Exception processing logs ${err}`);
+            throw new CustomError(`Exception processing logs`, err);
         }
     }
 
@@ -133,7 +132,7 @@ module.exports = class Federator {
             this.logger.info(`Voted Transaction: ${transactionHash} of block: ${blockHash} token ${symbol} to Federation Contract `);
             return true;
         } catch (err) {
-            this.logger.info(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`,err);
+            throw new CustomError(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`, err);
         }
     }
 
