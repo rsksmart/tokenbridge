@@ -18,12 +18,14 @@ module.exports = function(deployer, networkName, accounts) {
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
-            federation: federation
+            federation: federation,
+            multiSig: multiSig.address,
         };
         if(shouldDeployToken(networkName)) {
             const mainToken = await MainToken.deployed();
             config.testToken = mainToken.address;
             let allowTokens = await AllowTokens.deployed();
+            config.allowTokens = allowTokens.address;
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
             await multiSig.submitTransaction(allowTokens.address, 0, data);
         }
