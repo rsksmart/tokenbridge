@@ -8,6 +8,8 @@ const logConfig = require('./log-config.json');
 const abiBridge = require('./src/abis/Bridge_v0.json');
 const abiMainToken = require('./src/abis/ERC677.json');
 const abiSideToken = require('./src/abis/SideToken.json');
+const abiAllowTokens = require('./src/abis/AllowTokens.json');
+const abiMultiSig = require('./src/abis/MultiSigWallet.json');
 
 //utils
 const TransactionSender = require('./src/lib/TransactionSender.js');
@@ -276,8 +278,9 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         logger.info('------------- START TOKEN SEND TEST -----------------');
         const AnotherToken = new originWeb3.eth.Contract(abiSideToken);
-        const knownAccount = (await originWeb3.eth.getAccounts())[1];
+        const knownAccount = (await originWeb3.eth.getAccounts())[0];
 
+        logger.debug('Deploying another token contract');
         const anotherTokenContract = await AnotherToken.deploy({
             data: sideTokenBytecode,
             arguments: ['MAIN', 'MAIN', userAddress]
@@ -286,8 +289,21 @@ async function transfer(originFederators, destinationFederators, config, origin,
             gas: 6700000,
             gasPrice: 20000000000
         });
+        logger.debug('Token deployed');
+
+        logger.debug('Minting new token');
+        const anotherTokenAddress = anotherTokenContract.options.address;
         data = anotherTokenContract.methods.mint(userAddress, amount, '0x', '0x').encodeABI();
-        await transactionSender.sendTransaction(anotherTokenContract.options.address, data, 0, userPrivateKey);
+        await transactionSender.sendTransaction(anotherTokenAddress, data, 0, userPrivateKey);
+
+        logger.debug('Adding new token to list of allowed on bridge');
+        const allowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
+        const multiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.mainchain.multiSig);
+        const allowTokensAddress = allowTokensContract.options.address
+
+        data = allowTokensContract.methods.addAllowedToken(anotherTokenAddress).encodeABI();
+        const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+        await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
 
         logger.debug('Call to transferAndCall');
         data = anotherTokenContract.methods.send(originBridgeAddress, amount, '0x').encodeABI();
