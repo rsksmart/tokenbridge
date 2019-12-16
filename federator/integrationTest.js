@@ -134,7 +134,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await utils.waitBlocks(originWeb3, waitBlocks);
 
         logger.debug('Starting federator processes');
-        const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
         // Start origin federators with delay between them
         logger.debug('Fund federator wallets');
@@ -142,9 +141,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await fundFederators(config.sidechain.host, federatorKeys, config.sidechain.privateKey, destinationWeb3.utils.toWei('1'));
 
         await originFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
         logger.info('------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
@@ -191,9 +188,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         // Start destination federators with delay between them
         await destinationFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
         logger.info('------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
@@ -223,7 +218,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Cost: ', BigInt(initialUserBalance) - BigInt(crossBackCompletedBalance));
 
 
-        logger.info('------------- START TOKEN FALLBACK TEST -----------------');
+        logger.info('------------- START TEST FOR CONTRACT ERC677 TOKEN FALLBACK -----------------');
         logger.debug('Start transferAndCall');
         data = originTokenContract.methods.transferAndCall(originBridgeAddress, amount, '0x').encodeABI();
         await transactionSender.sendTransaction(originAddress, data, 0, userPrivateKey);
@@ -233,12 +228,10 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await utils.waitBlocks(originWeb3, waitBlocks);
 
         await originFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
-        logger.info('------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
+        logger.info('------------- CONTRACT ERC677 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
         logger.debug('Check balance on the other side');
         balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.info(`${destination} token balance`, balance);
@@ -246,7 +239,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         crossCompletedBalance = await originWeb3.eth.getBalance(userAddress);
         logger.debug('One way cross user balance', crossCompletedBalance);
 
-        logger.info('------------- TRANSFER BACK THE TOKENS -----------------');
+        logger.info('------------- CONTRACT ERC677 TEST TRANSFER BACK THE TOKENS -----------------');
         receiverBalanceBefore = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
 
@@ -257,12 +250,10 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await utils.waitBlocks(destinationWeb3, waitBlocks);
 
         await destinationFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
-        logger.info('------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
+        logger.info('------------- CONTRACT ERC677 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
         logger.debug('Getting final balances');
         receiverBalanceAfter = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceAfter = await destinationTokenContract.methods.balanceOf(userAddress).call();
@@ -276,7 +267,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Final user balance', crossBackCompletedBalance);
 
 
-        logger.info('------------- START TOKEN SEND TEST -----------------');
+        logger.info('------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------');
         const AnotherToken = new originWeb3.eth.Contract(abiSideToken);
         const knownAccount = (await originWeb3.eth.getAccounts())[0];
 
@@ -314,12 +305,10 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await utils.waitBlocks(originWeb3, waitBlocks);
 
         await originFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
-        logger.info('------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
+        logger.info('------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
         logger.debug('Check balance on the other side');
         balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.info(`${destination} token balance`, balance);
@@ -327,7 +316,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         crossCompletedBalance = await originWeb3.eth.getBalance(userAddress);
         logger.debug('One way cross user balance', crossCompletedBalance);
 
-        logger.info('------------- TRANSFER BACK THE TOKENS -----------------');
+        logger.info('------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------');
         receiverBalanceBefore = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
 
@@ -338,12 +327,10 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await utils.waitBlocks(destinationWeb3, waitBlocks);
 
         await destinationFederators.reduce(function(promise, item) {
-            return promise.then(function() {
-                return Promise.all([delay(5000), item.run()]);
-            })
+            return promise.then(function() { return item.run(); })
         }, Promise.resolve());
 
-        logger.info('------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
+        logger.info('------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
         logger.debug('Getting final balances');
         receiverBalanceAfter = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceAfter = await destinationTokenContract.methods.balanceOf(userAddress).call();
