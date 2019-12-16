@@ -240,7 +240,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('One way cross user balance', crossCompletedBalance);
 
         logger.info('------------- CONTRACT ERC677 TEST TRANSFER BACK THE TOKENS -----------------');
-        receiverBalanceBefore = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
 
         data = destinationTokenContract.methods.send(destinationBridgeAddress, amount, '0x').encodeABI();
@@ -317,7 +316,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('One way cross user balance', crossCompletedBalance);
 
         logger.info('------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------');
-        receiverBalanceBefore = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
 
         data = destinationTokenContract.methods.send(destinationBridgeAddress, amount, '0x').encodeABI();
