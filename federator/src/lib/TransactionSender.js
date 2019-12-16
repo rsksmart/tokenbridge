@@ -84,7 +84,7 @@ module.exports = class TransactionSender {
     }
 
     signAndSendTransaction(rawTx, privateKey) {
-        if (privateKey && privateKey.length) {            
+        if (privateKey && privateKey.length) {
             let signedTx = this.signRawTransaction(rawTx, privateKey);
             return this.sendSignedTransaction(signedTx);
         } else {
@@ -100,7 +100,7 @@ module.exports = class TransactionSender {
         const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
         let rawTx = await this.createRawTransaction(from, to, data, value);
-        
+
         let retries = 1;
         const sleepAfterRetrie = 40000;
         let error = '';
@@ -110,7 +110,7 @@ module.exports = class TransactionSender {
                 let receipt = await this.signAndSendTransaction(rawTx, privateKey);
                 if(receipt.status == 1) {
                     this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                    return receipt;    
+                    return receipt;
                 }
                 this.logger.error('Transaction Receipt Status Failed', receipt);
                 this.logger.error('RawTx that failed', rawTx);
