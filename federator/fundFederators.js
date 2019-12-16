@@ -15,7 +15,10 @@ log4js.configure(logConfig);
  *
  */
 
-let [nodeCli, script, host, keys, privateKey, amount] = process.argv;
+let host = process.argv[2];
+let keys = process.argv[3];
+let privateKey = process.argv[4];
+let amount = process.argv[5];
 
 if (process.argv.length > 2) {
     keys = keys.replace(/ /g, '').split(',') || [];
