@@ -15,12 +15,13 @@ log4js.configure(logConfig);
  *
  */
 
+let scriptPath = process.argv[1];
 let host = process.argv[2];
 let keys = process.argv[3];
 let privateKey = process.argv[4];
 let amount = process.argv[5];
 
-if (process.argv.length > 2) {
+if (scriptPath.indexOf('fundFederators') !== -1) {
     keys = keys.replace(/ /g, '').split(',') || [];
     fundFederators(host, keys, privateKey, amount);
 }
