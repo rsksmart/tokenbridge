@@ -137,7 +137,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         // Start origin federators with delay between them
         logger.debug('Fund federator wallets');
-        let federatorKeys = mainKeys && mainKeys.length ? mainkeys : [config.privateKey];
+        let federatorKeys = mainKeys && mainKeys.length ? mainKeys : [config.privateKey];
         await fundFederators(config.sidechain.host, federatorKeys, config.sidechain.privateKey, destinationWeb3.utils.toWei('1'));
 
         await originFederators.reduce(function(promise, item) {
@@ -292,8 +292,20 @@ async function transfer(originFederators, destinationFederators, config, origin,
         const allowTokensAddress = allowTokensContract.options.address
 
         data = allowTokensContract.methods.addAllowedToken(anotherTokenAddress).encodeABI();
-        const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
-        await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
+
+        if (federatorKeys.length === 1) {
+            const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
+        } else {
+            let multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0]);
+
+            let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
+            for (let i = 1; i < federatorKeys.length; i++) {
+                multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i]);
+            }
+        }
 
         logger.debug('Call to transferAndCall');
         data = anotherTokenContract.methods.send(originBridgeAddress, amount, '0x').encodeABI();
