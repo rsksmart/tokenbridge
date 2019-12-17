@@ -28,6 +28,10 @@ module.exports = function(deployer, networkName, accounts) {
             config.allowTokens = allowTokens.address;
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
             await multiSig.submitTransaction(allowTokens.address, 0, data);
+
+            // Uncomment below lines to use multiple federators
+            // await multiSig.confirmTransaction(0, { from: accounts[1] });
+            // await multiSig.confirmTransaction(0, { from: accounts[2] });
         }
         if (currentProvider.host) {
             let host = currentProvider.host.indexOf('http') == 0 ? '': 'http://';
