@@ -7,7 +7,6 @@
     "ethereumjs-tx": "^1.3.7",
     "ethereumjs-util": "^6.1.0",
     "log4js": "^5.0.0",
-    "pm2": "^4.2.0",
     "web3": "^1.2.1"
   },
   "devDependencies": {
@@ -15,10 +14,9 @@
     "mocha": "^6.2.0"
   },
   "scripts": {
-    "start": "npx pm2 start ./src/main.js --name 'federator-token-bridge' --exp-backoff-restart-delay=30000",
-    "dev": "node ./src/main.js",
+    "start": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
-    "integrationTest": "node integrationTest.js",
+    "integrationTest": "node ./integrationTest/integrationTest.js",
     "clean": "rm -rf ./db/*"
   },
   "keywords": [

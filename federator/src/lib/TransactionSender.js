@@ -9,7 +9,7 @@ module.exports = class TransactionSender {
         this.client = client;
         this.logger = logger;
         this.chainId = null;
-        this.gasLimit = this.numberToHexString(6500000);
+        this.gasLimit = this.numberToHexString(3500000);
     }
 
     async getNonce(address) {
@@ -33,12 +33,11 @@ module.exports = class TransactionSender {
 
     async getEthGasPrice() {
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: gasPrice * 1.05;
+        return gasPrice <= 1 ? 1: gasPrice * 1.5;
     }
 
     async getRskGasPrice() {
-        const block = await this.client.eth.getBlock("latest");
-        let gasPrice = parseInt(block.minimumGasPrice);
+        let gasPrice = parseInt(await this.client.eth.getGasPrice());
         return gasPrice <= 1 ? 1: gasPrice * 1.01;
     }
 
