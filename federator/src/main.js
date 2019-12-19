@@ -1,8 +1,8 @@
 const log4js = require('log4js');
 
 // Configurations
-const config = require('../config.js');
-const logConfig = require('../log-config.json');
+const config = require('../config/config.js');
+const logConfig = require('../config/log-config.json');
 log4js.configure(logConfig);
 
 // Services
