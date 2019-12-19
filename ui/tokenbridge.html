@@ -4,9 +4,7 @@
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <!-- Bootsrap
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-      -->
+
         <!-- Libraries CSS Files -->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.css" rel="stylesheet">
 
@@ -215,7 +213,6 @@
                                  <li><a href="https://www.iovlabs.org" rel="nofollow noopener noreferrer" target="_blank">About IOVlabs</a></li>
                                  <li><a href="https://www.iovlabs.org/contact.html" rel="nofollow noopener noreferrer" target="_blank">Contact IOVlabs</a></li>
                                  <li><a href="https://blog.rsk.co/" rel="nofollow noopener noreferrer" target="_blank">Blog</a></li>
-                                 <li><a href="Use-cases">Use cases</a></li>
                               </ul>
                            </div>
                         </div>
@@ -384,7 +381,7 @@
                         countdown.html('<div>Waiting for transaction to be confirmed <br /><br /><span id="time">10:00</span>')
                         countdown.show();
 
-                        let waitingTime = 60 * 10;
+                        let waitingTime = 60 * requiredConfirmations;
                         let display = $('#time');
                         startTimer(waitingTime, display);
 
