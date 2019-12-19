@@ -86,6 +86,16 @@
                 background: #1aad8d;
                 animation: lds-circle 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
             }
+            .nav-tabs .nav-link {
+                font-weight: bold;
+                color: #00B520 !important;
+            }
+            .nav-tabs .nav-link:hover {
+                color: black !important;
+            }
+            .tab-content {
+                padding: 40px 20px;
+            }
             @keyframes lds-circle {
                 0%, 100% {
                     animation-timing-function: cubic-bezier(0.5, 0, 1, 0.5);
@@ -126,59 +136,87 @@
             <section id="home">
               <div class="container">
                 <h2 class="title">Token Bridge between RSK Testnet and Kovan</h2>
-                <h4>From Network <span id ="network" class="badge badge-info"></span></h4>
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a class="nav-link active" data-toggle="tab" href="#transfer">Transfer</a>
+                    </li>
+                    <li>
+                        <a class="nav-link" data-toggle="tab" href="#side">Side Token</a>
+                    </li>
+                </ul>
 
-                <form id="crossForm" name="crossForm">
-                    <div class="form-row">
-                        <div class="col">
-                            <div class="form-group tokenAddress">
-                                <label class="tokenAddress-label" for="tokenAddress">Token Address</label>
-                                <div class="input-group">
-                                    <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
-                                    <div class="input-group-append">
-                                        <span class="input-group-text text-light bg-dark" id="tokenSymbol" style="display: none;"></span>
+                <div class="tab-content">
+                    <div id="transfer" class="tab-pane active">
+                            <h4>From Network <span id ="network" class="badge badge-info"></span></h4>
+
+                            <form id="crossForm" name="crossForm">
+                                <div class="form-row">
+                                    <div class="col">
+                                        <div class="form-group tokenAddress">
+                                            <label class="tokenAddress-label" for="tokenAddress">Token Address</label>
+                                            <div class="input-group">
+                                                <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text text-light bg-dark" id="tokenSymbol" style="display: none;"></span>
+                                                </div>
+                                            </div>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="form-group amount">
+                                            <label class="amount-label" for="amount">Amount to cross</label>
+                                            <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
+                                            <div class="invalid-feedback"></div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="invalid-feedback"></div>
+                                <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
+                            </form>
+
+                            <section id="error"  class="mt-1">
+                                    <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
+                            </section>
+                            <section id="info"  class="mt-1">
+                                    <div id="alert-info" class="alert alert-info" role="alert" style='display:none'></div>
+                            </section>
+                            <section id="success"  class="mt-1">
+                                    <div id="alert-success" class="alert alert-success" role="alert" style='display:none'></div>
+                            </section>
+
+                            <div id="countdown"></div>
+
+                            <!-- Spinner -->
+                            <div id="spinner" style="display: none;">
+                                <div class="lds-circle"><div></div></div>
                             </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group amount">
-                                <label class="amount-label" for="amount">Amount to cross</label>
-                                <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
-                                <div class="invalid-feedback"></div>
-                            </div>
-                        </div>
                     </div>
-                    <button id="cross" type="submit" class="btn btn-primary mt-3">Cross the Tokens</button>
-                </form>
+                    <div id="side" class="tab-pane">
+                        <div class="alert alert-warning">
+                            You need to connect to the other network in order to get the Address of the token in the other side
+                        </div>
 
-                <div class="mt-4 alert alert-warning">
-                    You need to connect to the other network in order to get the Address of the token in the other side
-                </div>
+                        <form id="getSideTokenForm" class="form-inline">
+                            <label class="sr-only" for="originalTokenAddress">Original Token Address</label>
+                            <input type="text" class="form-control mb-2 mr-sm-2 col-5" id="originalTokenAddress" placeholder="Token Address" required>
+                            <button id="getSideToken" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Side Token Address</button>
+                            <label class="mb-2 mr-sm-2" id="sideTokenAddress"></label>
+                        </form>
 
-                <form id="getSideTokenForm" class="form-inline">
-                    <label class="sr-only" for="originalTokenAddress">Original Token Address</label>
-                    <input type="text" class="form-control mb-2 mr-sm-2" id="originalTokenAddress" placeholder="Token Address" required>
-                    <button id="getSideToken" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Side Token Address</button>
-                    <label class="mb-2 mr-sm-2" id="sideTokenAddress"></label>
-                </form>
+                        <div id="check-balance" style="display: none;" class="mt-3">
+                            <h4>Check balance for side token</h4>
+                            <form id="getSideTokenBalance" class="form-inline">
+                                <label class="sr-only" for="sideAddress">Address</label>
+                                <input type="text" class="form-control mb-2 mr-sm-2 col-5" id="sideAddress" placeholder="Contract or Account Address" required>
+                                <button id="getSideBalance" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Balance</button>
+                                <label class="mb-2 mr-sm-2" id="sideTokenBalance"></label>
+                            </form>
+                        </div>
 
-                <section id="error"  class="mt-1">
-                        <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
-                </section>
-                <section id="info"  class="mt-1">
-                        <div id="alert-info" class="alert alert-info" role="alert" style='display:none'></div>
-                </section>
-                <section id="success"  class="mt-1">
-                        <div id="alert-success" class="alert alert-success" role="alert" style='display:none'></div>
-                </section>
-
-                <div id="countdown"></div>
-
-                <!-- Spinner -->
-                <div id="spinner" style="display: none;">
-                    <div class="lds-circle"><div></div></div>
+                        <section id="success-transfer"  class="mt-1">
+                            <div id="alert-from-transfer" class="alert alert-success" role="alert" style='display:none'></div>
+                        </section>
+                    </div>
                 </div>
             </div>
           </div>
@@ -278,11 +316,25 @@
                     bridge: '0x684a8a976635fb7ad74a0134ace990a6a0fcce84',
                     allowTokens: '0x952b706a9Ab5fD2d3B36205648ED7852676AfBE7'
                 };
+
+                // Replace with proper values contracts exist in mainnet
+                let mainnetConfig = {
+                    name: 'Mainnet',
+                    bridge: '0x0',
+                    allowTokens: '0x0'
+                };
+                let rskMainnetConfig = {
+                    name: 'RSK Mainnet',
+                    bridge: '0x0',
+                    allowTokens: '0x0'
+                };
+
                 let config = null;
                 let tokenContract = null;
                 let allowTokensContract = null;
                 let bridgeContract = null;
                 let isSideToken = false;
+                let sideTokenAddress = null;
 
                 $(document).ready(function() {
                     if(!/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())){
@@ -305,19 +357,34 @@
                         e.preventDefault();
                         getSideTokenAddress();
                     });
+                    $('#getSideTokenBalance').on('submit', function(e) {
+                        e.preventDefault();
+                        getSideTokenBalance();
+                    });
+                    cleanAlertFromTransfer();
                 });
 
                 async function getSideTokenAddress() {
                     try {
                         let tokenAddress = $('#originalTokenAddress').val().toLowerCase();
-                        let sideTokenAddress = await bridgeContract.methods.mappedTokens(tokenAddress).call();
-                        if(sideTokenAddress !== '0x0000000000000000000000000000000000000000')
+                        sideTokenAddress = await bridgeContract.methods.mappedTokens(tokenAddress).call();
+                        if(sideTokenAddress !== '0x0000000000000000000000000000000000000000') {
                             $('#sideTokenAddress').text(sideTokenAddress);
-                        else
+                            cleanAlertFromTransfer();
+                            $('#check-balance').show();
+                        } else {
                             $('#sideTokenAddress').text('Unknow Original Token Address');
+                        }
                     } catch(err) {
                         $('#sideTokenAddress').text(err.message);
                     }
+                }
+
+                async function getSideTokenBalance() {
+                    let sideTokenContract =  new web3.eth.Contract(erc20DetailedAbi, sideTokenAddress);
+                    let address = $('#sideAddress').val().toLowerCase();
+                    let balance = await sideTokenContract.methods.balanceOf(address).call();
+                    $('#sideTokenBalance').text(`Balance is: ${balance}`);
                 }
 
                 async function crossToken() {
@@ -392,6 +459,11 @@
                         countdown.hide();
                         alertSuccess.html(`Transfer confirmed. Check the transfer <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">receipt</a>`);
 
+                        $('.nav-tabs a[href="#side"]').tab('show');
+                        let alertFromTransfer = $('#alert-from-transfer');
+                        alertFromTransfer.html(`Transfer was confirmed. Look for your token ${tokenAddress} on the other side`);
+                        alertFromTransfer.show();
+
                     } catch(err) {
                         $('#spinner').hide();
                         crossTokenError(`Rejected the transaction :${err}`);
@@ -416,6 +488,12 @@
                 }
 
                 function cleanAlertSuccess() {
+                    let alertSuccess = $('#alert-success');
+                    alertSuccess.html('');
+                    alertSuccess.hide();
+                }
+
+                function cleanAlertFromTransfer() {
                     let alertSuccess = $('#alert-success');
                     alertSuccess.html('');
                     alertSuccess.hide();
@@ -592,6 +670,16 @@
                             config = rskTestnetConfig;
                             networkName = rskTestnetConfig.name;
                             break;
+
+                        // Enable for Mainnet
+                        // case 1:
+                        //     config = mainnetConfig;
+                        //     networkName = mainnetConfig.name;
+                        //     break;
+                        // case 30:
+                        //     config = rskMainnetConfig;
+                        //     networkName = rskMainnetConfig.name;
+                        //     break;
                     }
                     $('#network').text(networkName);
                     if(networkName === '')
