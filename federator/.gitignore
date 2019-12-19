@@ -1,15 +1,8 @@
 config.js
-regtest.json
-development.json
-rinkeby.json
-kovan.json
-ropsten.json
 rskregtest.json
-rsktestnet.json
-rsktestnet-rinkeby.json
-rsktestnet-kovan.json
-rskmainnet.json
+development.json
 test.json
+config/federator.key
 federator.log
 db/
 test/lib/*.txt

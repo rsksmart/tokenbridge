@@ -18,5 +18,38 @@ The bridge contracts are upgradeable as we want to move to a decentralized bridg
 ### Contracts
 The smart contracts used by the bridge and the deploy instructions are on the bridge folder
 
-### Federator 
-The code used for the federator to cross the events created by the bridge from one chain to the other
+### Federation
+There is a federation  in charge of notifying the events that happend in the bridge of one chain to the other. The federation is composed by creators of the token contracts that wants to enable their token for crossing.
+See the ['federator'](./docs/README.md) for more information about the federator.
+
+To run the federator using Docker first, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will dedcide the networks the federate must be listening, for example for the bridge in testnet a federator config.js will look like
+```
+module.exports = {
+    mainchain: require('./rsktestnet-kovan.json'),
+    sidechain: require('./kovan.json'),
+    runEvery: 1, // In minutes,
+    confirmations: 10,// Number of blocks before processing it,
+    privateKey: require('federator.key'),
+    storagePath: './db'
+}
+```
+where the mainchain is rsktestnet and the sidechain is kovan, the .json files are in the /federator/config folder and includes the addresses of the contracts in that network and the block number when they where deployed.
+The order of sidechain and mainchain is not important is just which one is going to be checked first, as federators are bi directionals.
+Inside the .json files there is also the host to that network, for example this is the rsktestnet-kovan.json
+```
+{
+    "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
+    "federation": "0x36c893a955399cf15a4a2fbef04c0e06d4d9b379",
+    "testToken": "0x5d248f520b023acb815edecd5000b98ef84cbf1b",
+    "multisig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+    "allowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
+    "host": ""<YOUR NODE HOST AND RPC PORT>"",
+    "fromBlock": 434075
+}
+```
+You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node for that network and the json rpc port. `Remember to do it for both networks`.
+Also you need to create a `federetaros.key` file with the federator private in it.
+Once you have  changed this configurations create the docker image using.
+`docker build . -t fed-tokenbridge`
+
+Then run `docker run --rm -v $PWD/federator/config:/app/federator/config --name=fed-tokenbridge fed-tokenbridge:latest` to start the image.

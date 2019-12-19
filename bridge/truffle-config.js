@@ -83,8 +83,8 @@ module.exports = {
       gasPrice: 10000000000,
       skipDryRun: true
     },
-    live: {
-      provider: () => new HDWalletProvider(MNEMONIC, "https://eth-mainnet.alchemyapi.io/jsonrpc/-vPGIFwUyjlMRF9beTLXiGQUK6Nf3k8z"),
+    ethmainnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, "https://mainnet.infura.io/v3/" + INFURA_API_KEY),
       network_id: 1,
       gas: 7000000,
       gasPrice: 4000000000,

@@ -3,21 +3,21 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 
 //configurations
-const config = require('./config.js');
-const logConfig = require('./log-config.json');
-const abiBridge = require('./src/abis/Bridge_v0.json');
-const abiMainToken = require('./src/abis/ERC677.json');
-const abiSideToken = require('./src/abis/SideToken.json');
-const abiAllowTokens = require('./src/abis/AllowTokens.json');
-const abiMultiSig = require('./src/abis/MultiSigWallet.json');
+const config = require('../config/config.js');
+const logConfig = require('../config/log-config.json');
+const abiBridge = require('../../abis/Bridge_v0.json');
+const abiMainToken = require('../../abis/ERC677.json');
+const abiSideToken = require('../../abis/SideToken.json');
+const abiAllowTokens = require('../../abis/AllowTokens.json');
+const abiMultiSig = require('../../abis/MultiSigWallet.json');
 
 //utils
-const TransactionSender = require('./src/lib/TransactionSender.js');
-const Federator = require('./src/lib/Federator.js');
-const utils = require('./src/lib/utils.js');
+const TransactionSender = require('../src/lib/TransactionSender.js');
+const Federator = require('../src/lib/Federator.js');
+const utils = require('../src/lib/utils.js');
 const fundFederators = require('./fundFederators');
 
-const sideTokenBytecode = fs.readFileSync('./sideTokenBytecode.txt', 'utf8')
+const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8')
 
 const logger = log4js.getLogger('test');
 log4js.configure(logConfig);

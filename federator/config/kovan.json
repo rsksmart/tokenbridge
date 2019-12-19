@@ -1,0 +1,9 @@
+{
+    "bridge": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
+    "federation": "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
+    "testToken": "0x37f6ef8440f2390bb78b8a3bf91d82fddbb42b32",
+    "multisig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
+    "allowTokens": "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
+    "host": "<YOUR NODE HOST AND RPC PORT>",
+    "fromBlock": 15262366
+}

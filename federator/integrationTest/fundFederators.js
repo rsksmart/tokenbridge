@@ -1,14 +1,14 @@
 const Web3 = require('web3');
 const log4js = require('log4js');
 
-const logConfig = require('./log-config.json');
-const TransactionSender = require('./src/lib/TransactionSender.js');
+const logConfig = require('../config/log-config.json');
+const TransactionSender = require('../src/lib/TransactionSender.js');
 
 const logger = log4js.getLogger('Fund Federators');
 log4js.configure(logConfig);
 
 /**
- * Use this function as an executable script to fund a wallet.
+ * Use this function as an executable script to fund a wallet on a test enviroment
  * Example invocation:
  *
  * node fundFederators.js "http://localhost:8545" "key1, key2" "pkey" "100000"

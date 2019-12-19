@@ -1,12 +1,12 @@
 var Web3 = require('web3');
 var log4js = require('log4js');
 //configurations
-const config = require('./config.js');
-const abiBridge = require('./src/abis/Bridge_v0.json');
-const erc20TokenAbi = require('./src/abis/IERC20.json');
+const config = require('../config/config.js');
+const abiBridge = require('../../abis/Bridge_v0.json');
+const erc20TokenAbi = require('../../abis/IERC20.json');
 //utils
-const TransactionSender = require('./src/lib/TransactionSender.js');
-const utils = require('./src/lib/utils.js');
+const TransactionSender = require('../src/lib/TransactionSender.js');
+const utils = require('../src/lib/utils.js');
 
 
 const logger = log4js.getLogger('test');
