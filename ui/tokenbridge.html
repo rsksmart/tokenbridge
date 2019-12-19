@@ -4,8 +4,7 @@
         <!-- Required meta tags -->
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <!-- Bootsrap -->
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
         <!-- Libraries CSS Files -->
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.css" rel="stylesheet">
 
@@ -14,16 +13,65 @@
         <link rel="icon" type="image/png" sizes="32x32" href="https://developers.rsk.co/assets/img/favicons/favicon-32x32.png">
         <link rel="icon" type="image/png" sizes="16x16" href="https://developers.rsk.co/assets/img/favicons/favicon-16x16.png">
         <link rel="shortcut icon" href="https://developers.rsk.co/assets/img/favicons/favicon.ico">
+
+        <!-- Google Fonts -->
+        <link href="https://fonts.googleapis.com/css?family=Quicksand:400,700,900&amp;display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,600,700,800&amp;display=swap" rel="stylesheet">
+        <!-- Bootstrap core CSS -->
+        <link href="https://developers.rsk.co/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Libraries CSS Files -->
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://developers.rsk.co/assets/vendor/malihu-custom-scrollbar-plugin-master/malihu-custom-scrollbar-plugin-master/jquery.mCustomScrollbar.css">
+        <!-- Main Stylesheet File -->
+        <link href="https://developers.rsk.co/assets/css/styles.css" rel="stylesheet">
+        <link href="https://developers.rsk.co/assets/css/styles_dark.css" rel="stylesheet" disabled="">
+        <link href="https://developers.rsk.co/assets/css/code.css" rel="stylesheet">
+
         <title>RSK Testnet Token Bridge</title>
         <!-- Custom Styles -->
         <style>
+            body {
+              font-family: 'Quicksand', sans-serif !important;
+              margin-top: 150px;
+            }
+            h4 {
+              font-family: 'Quicksand', sans-serif !important;
+            }
+            h2 {
+              font-family: 'Quicksand', sans-serif !important;
+              color: #00B520;
+              font-weight: 700;
+              font-size: 32px;
+            }
+            input::placeholder {
+              color: grey !important;
+              font-weight: normal;
+            }
+            #home {
+              padding-top: 100px;
+              padding-bottom: 50px;
+            }
+            #footer {
+              margin-top: 0;
+            }
+            .title {
+              text-align: center;
+              margin-bottom: 80px;
+            }
+            #countdown {
+              font-size: 16px;
+              margin: 20px 0;
+            }
+            #time {
+              font-size: 40px;
+              font-weight: bold;
+            }
             .logo {
                 width: 150px;
                 max-width: 150px;
                 height: auto;
                 transition: all 0.5s ease;
             }
-            body {margin-top: 150px;}
             /* Spinner https://loading.io/css/ */
             .lds-circle {
                 display: inline-block;
@@ -57,7 +105,7 @@
         </style>
     </head>
     <body>
-        <div id="main" class="mt-5">
+        <section id="main">
             <!-- Navigation -->
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
                 <div class="container">
@@ -74,48 +122,48 @@
                     </div>
                 </div>
             </nav>
-            <div class="container">
-                <section id="home">
-                    <h2>Token Bridge between RSK Testnet and Kovan</h2>
-                    <h4>From Network <span id ="network" class="badge badge-info"></span></h4>
+            <div class="navbar_bottom_shape"></div>
+            <section id="home">
+              <div class="container">
+                <h2 class="title">Token Bridge between RSK Testnet and Kovan</h2>
+                <h4>From Network <span id ="network" class="badge badge-info"></span></h4>
 
-                    <form id="crossForm" name="crossForm">
-                        <div class="form-row">
-                            <div class="col">
-                                <div class="form-group tokenAddress">
-                                    <label class="tokenAddress-label" for="tokenAddress">Token Address</label>
-                                    <div class="input-group">
-                                        <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
-                                        <div class="input-group-append">
-                                            <span class="input-group-text text-light bg-dark" id="tokenSymbol"></span>
-                                        </div>
+                <form id="crossForm" name="crossForm">
+                    <div class="form-row">
+                        <div class="col">
+                            <div class="form-group tokenAddress">
+                                <label class="tokenAddress-label" for="tokenAddress">Token Address</label>
+                                <div class="input-group">
+                                    <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text text-light bg-dark" id="tokenSymbol" style="display: none;"></span>
                                     </div>
-                                    <div class="invalid-feedback"></div>
                                 </div>
-                            </div>
-                            <div class="col">
-                                <div class="form-group amount">
-                                    <label class="amount-label" for="amount">Amount to cross</label>
-                                    <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
-                                    <div class="invalid-feedback"></div>
-                                </div>
+                                <div class="invalid-feedback"></div>
                             </div>
                         </div>
-                        <button id="cross" type="submit" class="btn btn-primary mt-3">Cross the Tokens</button>
-                    </form>
- 
-                    <div class="mt-4 alert alert-warning">
-                        You need to connect to the other network in order to get the Address of the token in the other side
+                        <div class="col">
+                            <div class="form-group amount">
+                                <label class="amount-label" for="amount">Amount to cross</label>
+                                <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
+                                <div class="invalid-feedback"></div>
+                            </div>
+                        </div>
                     </div>
+                    <button id="cross" type="submit" class="btn btn-primary mt-3">Cross the Tokens</button>
+                </form>
 
-                    <form id="getSideTokenForm" class="form-inline">
-                        <label class="sr-only" for="originalTokenAddress">Original Token Address</label>
-                        <input type="text" class="form-control mb-2 mr-sm-2" id="originalTokenAddress" placeholder="Token Address" required>
-                        <button id="getSideToken" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Side Token Address</button>
-                        <label class="mb-2 mr-sm-2" id="sideTokenAddress"></label>
-                    </form>
+                <div class="mt-4 alert alert-warning">
+                    You need to connect to the other network in order to get the Address of the token in the other side
+                </div>
 
-                </section>
+                <form id="getSideTokenForm" class="form-inline">
+                    <label class="sr-only" for="originalTokenAddress">Original Token Address</label>
+                    <input type="text" class="form-control mb-2 mr-sm-2" id="originalTokenAddress" placeholder="Token Address" required>
+                    <button id="getSideToken" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Side Token Address</button>
+                    <label class="mb-2 mr-sm-2" id="sideTokenAddress"></label>
+                </form>
+
                 <section id="error"  class="mt-1">
                         <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
                 </section>
@@ -125,14 +173,88 @@
                 <section id="success"  class="mt-1">
                         <div id="alert-success" class="alert alert-success" role="alert" style='display:none'></div>
                 </section>
+
+                <div id="countdown"></div>
+
                 <!-- Spinner -->
                 <div id="spinner" style="display: none;">
                     <div class="lds-circle"><div></div></div>
                 </div>
             </div>
-        </div>
-        <footer id="footer">
-            
+          </div>
+        </section>
+        <footer id="footer" class="section-bg">
+            <div class="footer-top">
+            <div class="container">
+               <div class="row">
+                  <div class="col-lg-12">
+                     <img src="https://www.rsk.co/img/powered_by_iov.svg" class="img-fluid powered_by">
+                  </div>
+               </div>
+               <div class="row">
+                  <div class="col-lg-6">
+                     <div class="row">
+                        <div class="col-sm-7">
+                           <div class="footer-info">
+                              <p>Rsk is the most secure smart contract<span class="falsebreak"><br></span> network in the world and enables<span class="falsebreak"><br></span> decentralized applications secured by the<span class="falsebreak"><br></span> Bitcoin Network to empower people and<span class="falsebreak"><br></span> improve the quality of life of millions.</p>
+                              <br>
+                              <a href="https://developers.rsk.co/" rel="nofollow noopener noreferrer" target="_blank" class="footer-button rounded" title="Start now">Start now</a>
+                           </div>
+                        </div>
+                        <div class="col-sm-5"></div>
+                     </div>
+                  </div>
+                  <div class="col-lg-6">
+                     <div class="row">
+                        <div class="col-md-6">
+                           <div class="footer-links">
+                              <ul>
+                                 <li><a href="faqs">Faqs</a></li>
+                                 <li><a href="https://www.iovlabs.org" rel="nofollow noopener noreferrer" target="_blank">About IOVlabs</a></li>
+                                 <li><a href="https://www.iovlabs.org/contact.html" rel="nofollow noopener noreferrer" target="_blank">Contact IOVlabs</a></li>
+                                 <li><a href="https://blog.rsk.co/" rel="nofollow noopener noreferrer" target="_blank">Blog</a></li>
+                              </ul>
+                           </div>
+                        </div>
+                        <div class="col-md-6">
+                           <div class="footer-links">
+                              <ul>
+                                 <li><a class="bold" href="Brand_Guidelines/RSK_BrandManual_V6.pdf" rel="nofollow noopener noreferrer" target="_blank">Brand Guidelines</a></li>
+                                 <li><a class="bold" href="terms-conditions">Terms &amp; Conditions</a></li>
+                                 <li><a class="bold mb-30" href="privacy-policy">Privacy Policy</a></li>
+                                 <a href="https://developers.doc.rsk.co/docs" rel="nofollow noopener noreferrer" target="_blank" class="footer-button" title="Documentation">Documentation</a>
+                              </ul>
+                           </div>
+                        </div>
+                     </div>
+                     <div class="social-links">
+                        <a href="https://twitter.com/rsksmart" rel="nofollow noopener noreferrer" target="_blank" class="twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.youtube.com/rsksmart" rel="nofollow noopener noreferrer" target="_blank" class="facebook"><i class="fab fa-youtube"></i></a>
+                        <a href=" https://www.facebook.com/RSKsmart/" rel="nofollow noopener noreferrer" target="_blank" class="linkedin"><i class="fab fa-facebook"></i></a>
+                        <a href="https://gitter.im/rsksmart" rel="nofollow noopener noreferrer" target="_blank" class="instagram"><i class="fab fa-gitter"></i></a>
+                        <a href="https://www.reddit.com/r/rootstock/" rel="nofollow noopener noreferrer" target="_blank" class="instagram"><i class="fab fa-reddit"></i></a>
+                        <a href="https://t.me/rskofficialcommunity" rel="nofollow noopener noreferrer" target="_blank" class="instagram"><i class="fab fa-telegram"></i></a>
+                        <a href="https://medium.com/@RSKNews" rel="nofollow noopener noreferrer" target="_blank" class="instagram"><i class="fab fa-medium"></i></a>
+                        <a href="https://t.me/rsksmartcontract" rel="nofollow noopener noreferrer" target="_blank" class="instagram"><i class="fab fa-telegram"></i></a>
+                        <a href="https://www.instagram.com/rsksmart/" rel="nofollow noopener noreferrer" target="_blank" class=""><i class="fab fa-instagram"></i></a>
+                        <a href="https://bitcointalk.org/index.php?topic=5124334" rel="nofollow noopener noreferrer" target="_blank" class=""><i class="fab fa-btc"></i></a>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="container">
+               <div class="col-md-12">
+                  <div class="row">
+                     <div class="col-md-6 col-xs-12 pl-0-mobile">
+                        <p class="copyright">Copyright © 2015 - 2019 RSK Labs. All rights reserved.</p>
+                     </div>
+                     <div class="col-md-6 col-xs-12 pl-0-mobile">
+                        <p class="credits"> RSK Public Key (69F6 F997 2497 8762 D541 8AE4 58D2 260D 5998 6758)</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
         </footer>
         <div id="js">
             <!-- jQuery first, then Popper.js, then Bootstrap JS -->
@@ -172,7 +294,7 @@
                     $('#tokenAddress').change(isTokenAllowed);
                     $('#amount').change(isAmountOk);
                     $('#amount').keypress(function(event) {
-                        if(event.key === ',') 
+                        if(event.key === ',')
                             return false;
                     });
                     $('#crossForm').on('submit', function(e) {
@@ -191,13 +313,13 @@
                         let sideTokenAddress = await bridgeContract.methods.mappedTokens(tokenAddress).call();
                         if(sideTokenAddress !== '0x0000000000000000000000000000000000000000')
                             $('#sideTokenAddress').text(sideTokenAddress);
-                        else 
+                        else
                             $('#sideTokenAddress').text('Unknow Original Token Address');
                     } catch(err) {
                         $('#sideTokenAddress').text(err.message);
                     }
                 }
-                
+
                 async function crossToken() {
                     cleanAlertSuccess();
                     let tokenAddress = $('#tokenAddress').val();
@@ -215,7 +337,7 @@
                         crossTokenError('Invalid Token Address');
                         return;
                     }
-                    
+
                     $('#cross').prop('disabled', true);
                     let  amountInWei = web3.utils.toWei(amount);
                     let alertInfo = $('#alert-info');
@@ -228,14 +350,14 @@
                         if(balanceBN.cmp(new BN(amountInWei)) < 0)
                             throw new Error(`Insuficient Balance in your account, your current balance is ${web3.utils.fromWei(balance,'ether')} ${tokenSymbol}`);
                         let gasPriceAvg = await web3.eth.getGasPrice();
-                     
+
                         let gasPriceParsed= parseInt(gasPriceAvg);
                         let multiplier = 1.01;
-                        if(networkId == 42) 
+                        if(networkId == 42)
                             multiplier = 1.5;
                         gasPrice = (gasPriceParsed * multiplier).toString();
 
-                        alertInfo.html('Requresting the token contract to approve the transfer, once its completed a second transaction crossing the tokens to the bridge will be asked...');
+                        alertInfo.html('Requesting the token contract to approve the transfer, once its completed a second transaction crossing the tokens to the bridge will be asked...');
                         alertInfo.show();
                         await tokenContract.methods.approve(bridgeContract.options.address, amountInWei).call({from: address, gasPrice:gasPrice, gas:100000});
 
@@ -246,15 +368,51 @@
                         receipt = await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInWei).send({from: address, gasPrice:gasPrice, gas:300000});
                         alertInfo.hide();
                         let alertSuccess = $('#alert-success');
-                        alertSuccess.html(`Token <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>, wait 10 blocks (around 5 minutes) to see the result reflected`);
+                        alertSuccess.html(`Token <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>`);
                         alertSuccess.show();
                         $('#cross').prop('disabled', false);
                         $('#spinner').hide();
+
+                        let { blockNumber } = receipt;
+                        let currentBlock = await web3.eth.getBlockNumber();
+                        let requiredConfirmations = 10;
+
+                        let countdown = $('#countdown');
+                        countdown.html('<div>Waiting for transaction to be confirmed <br /><br /><span id="time">10:00</span>')
+                        countdown.show();
+
+                        let waitingTime = 60 * requiredConfirmations;
+                        let display = $('#time');
+                        startTimer(waitingTime, display);
+
+                        while (currentBlock - requiredConfirmations < blockNumber) {
+                          await new Promise(resolve => setTimeout(resolve, 5000));
+                          currentBlock = await web3.eth.getBlockNumber();
+                        }
+                        countdown.hide();
+                        alertSuccess.html(`Transfer confirmed. Check the transfer <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">receipt</a>`);
 
                     } catch(err) {
                         $('#spinner').hide();
                         crossTokenError(`Rejected the transaction :${err}`);
                     };
+                }
+
+                function startTimer(duration, display) {
+                  let timer = duration, minutes, seconds;
+                  setInterval(function () {
+                      minutes = parseInt(timer / 60, 10);
+                      seconds = parseInt(timer % 60, 10);
+
+                      minutes = minutes < 10 ? "0" + minutes : minutes;
+                      seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                      display.text(minutes + ":" + seconds);
+
+                      if (--timer < 0) {
+                          timer = duration;
+                      }
+                  }, 1000);
                 }
 
                 function cleanAlertSuccess() {
@@ -326,7 +484,7 @@
                     let tokenAddress = $('#tokenAddress').val();
                     tokenAddress = tokenAddress.toLowerCase();
                     $('#tokenAddress').val(tokenAddress);
-                    $('#tokenSymbol').text('');
+                    $('#tokenSymbol').text('').hide();
                     if(tokenAddress.length != 42) {
                         markInvalidTokenAddress('Address must be 42 characters long hex string');
                         return;
@@ -345,7 +503,7 @@
                         if(symbol.length === 0)
                             throw new Error('Token does not have a symbol');
                         tokenSymbol = symbol;
-                        $('#tokenSymbol').text(tokenSymbol);
+                        $('#tokenSymbol').text(tokenSymbol).show();
 
                         let decimals = await tokenContract.methods.decimals().call();
                         if(parseInt(decimals) !== 18)
@@ -367,13 +525,13 @@
                 async function isInstalled() {
                     if (typeof ethereum === 'undefined') {
                         console.log('undefined ethereum')
-                        return Promise.reject('You have an old version of <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>' 
+                        return Promise.reject('You have an old version of <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
                         + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a> please update it. Once you update it reload the page.');
                     }
 
                     ethereum.autoRefreshOnNetworkChange = false;
                     if (typeof web3 === 'undefined') {
-                        return Promise.reject('<a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>' 
+                        return Promise.reject('<a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
                         + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a> is not installed. Once you install it reload the page.');
                     }
 
@@ -426,11 +584,11 @@
                     let networkName = '';
                     let alert = $('#alert-danger');
                     switch (newNetwork) {
-                        case 42: 
+                        case 42:
                             config = kovanConfig;
                             networkName = kovanConfig.name;
                             break;
-                        case 31: 
+                        case 31:
                             config = rskTestnetConfig;
                             networkName = rskTestnetConfig.name;
                             break;
@@ -438,7 +596,7 @@
                     $('#network').text(networkName);
                     if(networkName === '')
                         throw new Error('The current network is not compatible with the bridge. Please select RSK Testnet or Kovan');
-                    
+
                     allowTokensContract = new web3.eth.Contract(allowTokensAbi, config.allowTokens);
                     bridgeContract = new web3.eth.Contract(bridgeAbi, config.bridge);
                     networkId = newNetwork;
@@ -2611,7 +2769,7 @@ const sideTokenAbi = [
     "type": "function"
   }
 ];
-// --------- ABI  END --------------       
+// --------- ABI  END --------------
             </script>
         </div>
     </body>
