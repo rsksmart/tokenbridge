@@ -392,25 +392,31 @@
                     name: 'Kovan',
                     bridge: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
                     allowTokens: '0xe4aa0f414725c9322a1a9d80d469c5e234786653',
-                    federation: '0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944'
+                    federation: '0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944',
+                    explorer: 'https://kovan.etherscan.io'
                 };
                 let rskTestnetConfig = {
                     name: 'RSK Testnet',
                     bridge: '0x684a8a976635fb7ad74a0134ace990a6a0fcce84',
                     allowTokens: '0x952b706a9Ab5fD2d3B36205648ED7852676AfBE7',
                     federation: '0x36C893a955399CF15A4A2FbeF04c0e06d4D9b379',
+                    explorer: 'https://explorer.testnet.rsk.co'
                 };
 
                 // Replace with proper values contracts exist in mainnet
-                let mainnetConfig = {
-                    name: 'Mainnet',
+                let ethMainnetConfig = {
+                    name: 'ETH Mainnet',
                     bridge: '0x0',
-                    allowTokens: '0x0'
+                    allowTokens: '0x0',
+                    federation: '0x0',
+                    explorer: 'https://etherscan.io'
                 };
                 let rskMainnetConfig = {
                     name: 'RSK Mainnet',
                     bridge: '0x0',
-                    allowTokens: '0x0'
+                    allowTokens: '0x0',
+                    federation: '0x0',
+                    explorer: 'https://explorer.rsk.co'
                 };
 
                 let config = null;
@@ -532,9 +538,9 @@
                         let gasPriceAvg = await web3.eth.getGasPrice();
 
                         let gasPriceParsed= parseInt(gasPriceAvg);
-                        let multiplier = 1.01;
-                        if(networkId == 42)
-                            multiplier = 1.5;
+                        let multiplier = 1.5;
+                        if(networkId >=30 && networkId <= 33)
+                            multiplier = 1.01;
                         gasPrice = (gasPriceParsed * multiplier).toString();
 
                         alertInfo.html('Requesting the token contract to approve the transfer, once its completed a second transaction crossing the tokens to the bridge will be asked...');
@@ -542,13 +548,13 @@
                         await tokenContract.methods.approve(bridgeContract.options.address, amountInWei).call({from: address, gasPrice:gasPrice, gas:100000});
 
                         let receipt = await tokenContract.methods.approve(bridgeContract.options.address, amountInWei).send({from: address, gasPrice:gasPrice, gas:100000});
-                        alertInfo.html(`<a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">Approve successful</a>, transfering the tokens to the bridge...`);
+                        alertInfo.html(`<a href="${config.explorer}/tx/${receipt.transactionHash}">Approve successful</a>, transfering the tokens to the bridge...`);
                         await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInWei).call({from: address, gasPrice:gasPrice, gas:300000});
 
                         receipt = await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInWei).send({from: address, gasPrice:gasPrice, gas:300000});
                         alertInfo.hide();
                         let alertSuccess = $('#alert-success');
-                        alertSuccess.html(`Token <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>`);
+                        alertSuccess.html(`Token <a href="${config.explorer}/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>`);
                         alertSuccess.show();
                         $('#cross').prop('disabled', false);
                         $('#spinner').hide();
@@ -570,7 +576,7 @@
                           currentBlock = await web3.eth.getBlockNumber();
                         }
                         countdown.hide();
-                        alertSuccess.html(`Transfer confirmed. Check the transfer <a href="https://explorer.testnet.rsk.co/tx/${receipt.transactionHash}">receipt</a>`);
+                        alertSuccess.html(`Transfer confirmed. Check the transfer <a href="${config.explorer}/tx/${receipt.transactionHash}">receipt</a>`);
 
                         $('.nav-tabs a[href="#side"]').tab('show');
                         let alertFromTransfer = $('#alert-from-transfer');
@@ -685,7 +691,7 @@
                         isSideToken = await bridgeContract.methods.isSideToken(tokenAddress).call();
 
                         let isTokenAllowed = await allowTokensContract.methods.isTokenAllowed(tokenAddress).call();
-                        if(!isTokenAllowed)
+                        if(!isSideToken && !isTokenAllowed)
                             throw new Error('Token is not white listed, contact the RSK team to allow this token to cross');
                         tokenContract =  new web3.eth.Contract(erc20DetailedAbi, tokenAddress);
 
@@ -786,8 +792,8 @@
 
                         // Enable for Mainnet
                         // case 1:
-                        //     config = mainnetConfig;
-                        //     networkName = mainnetConfig.name;
+                        //     config = ethMainnetConfig;
+                        //     networkName = ethMainnetConfig.name;
                         //     break;
                         // case 30:
                         //     config = rskMainnetConfig;
