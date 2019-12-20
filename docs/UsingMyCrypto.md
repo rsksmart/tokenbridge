@@ -1,4 +1,4 @@
-Decentralized bridge interaction guide
+Token bridge interaction guide
 ===
 
 This guide describes the necessary steps to perform a token transfer between two blockchain networks, hereinafter referred to as **Mainchain** and **Sidechain**, through interaction with special contracts that make up a subsystem called **TokenBridge**.
@@ -21,9 +21,9 @@ The following list summarizes the tools and components that are necessary to go 
 
 In particular for this use case, it was used:
 
-* RSK (regtest node)
-* Ethereum (through Ganache)
-* MyCrypto
+* [RSK (regtest node)](https://developers.rsk.co/rsk/node/install/)
+* [Ethereum (through Ganache)](https://geth.ethereum.org/docs/install-and-build/installing-geth)
+* [MyCrypto](https://mycrypto.com/)
 
 ### Setup
 
