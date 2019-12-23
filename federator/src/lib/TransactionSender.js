@@ -100,7 +100,7 @@ module.exports = class TransactionSender {
         var from = await this.getAddress(privateKey);
         let rawTx = await this.createRawTransaction(from, to, data, value);
 
-        let retries = 1;
+        let retries = 3;
         const sleepAfterRetrie = 40000;
         let error = '';
         while(retries > 0) {
@@ -114,13 +114,13 @@ module.exports = class TransactionSender {
                 this.logger.error('Transaction Receipt Status Failed', receipt);
                 this.logger.error('RawTx that failed', rawTx);
                 error = 'Transaction Receipt Status Failed';
-                retries--;
-                await utils.sleep(sleepAfterRetrie);
             } catch(err) {
                 this.logger.error('Send Signed Transaction Failed', err);
                 this.logger.error('RawTx that failed', rawTx);
                 error = err;
-                retries--;
+            }
+            retries--;
+            if( retries > 0) {
                 await utils.sleep(sleepAfterRetrie);
             }
         }
