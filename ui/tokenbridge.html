@@ -154,7 +154,16 @@
                     <div class="navbar-collapse collapse" id="navbarResponsive">
                         <ul class="navbar-nav ml-auto">
                             <li class="nav-item">
-                            <a class="nav-link" href="https://github.com/rsksmart/tokenbridge">Repository</a>
+                                <a class="nav-link" href="https://github.com/rsksmart/tokenbridge" target="_blank">Repository</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://developers.rsk.co/tools/tokenbridge/faq" target="_blank">FAQ</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="https://developers.rsk.co/tools/tokenbridge/dappguide" target="_blank">How to use it?</a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="tokenbridge-navlink" class="nav-link" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a>
                             </li>
                         </ul>
                     </div>
@@ -436,8 +445,12 @@
 
                 $(document).ready(function() {
                     isTestnet = window.location.href.includes('testnet');
-                    if(isTestnet)
-                        $('h2.title').text('Token Bridge between RSK Testnet and Kovan');
+                    if(isTestnet) {
+                        $('#home h2.title').text('Token Bridge between RSK Testnet and Kovan');
+                        let navlink = $('#tokenbridge-navlink');
+                        navlink.prop('href', 'https://tokenbridge.rsk.co');
+                        navlink.text('Use Mainnet');
+                    }
 
                     if(!/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())){
                         alert('This site will only work correctly under chrome or chromium');
