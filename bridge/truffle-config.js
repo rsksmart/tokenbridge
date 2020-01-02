@@ -93,7 +93,7 @@ module.exports = {
   },
   compilers: {
       solc: {
-        version: "0.5.12",
+        version: "0.5.15",
         settings: {
           optimizer: {
             enabled: false,
@@ -101,7 +101,8 @@ module.exports = {
             // Lower values will optimize more for initial deployment cost, higher
             // values will optimize more for high-frequency usage.
             runs: 200
-          }
+          },
+          evmVersion: "petersburg"
         }
       }
   }

@@ -3,17 +3,17 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "_name",
+        "name": "_tokenName",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "_symbol",
+        "name": "_tokenSymbol",
         "type": "string"
       },
       {
         "internalType": "address",
-        "name": "_minter",
+        "name": "_minterAddr",
         "type": "address"
       }
     ],
