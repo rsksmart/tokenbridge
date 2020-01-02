@@ -1,5 +1,5 @@
 # Token Bridge Dapp Guide
-This Decentralized Application helps you to interact with the Token Bridge contracts, to safetly cross your tokens from RSK to Ethereum [https://tokenbridge.rsk.co/](https://tokenbridge.rsk.co/)
+This Decentralized Application helps you to interact with the Token Bridge contracts, to safetly cross your tokens from RSK to Ethereum [https://tokenbridge.rsk.co/](https://tokenbridge.rsk.co/) and between Rsk Testnet and Kovan [https://testnet.tokenbridge.rsk.co/](https://testnet.tokenbridge.rsk.co/)
 
 ### Description
 This guide describes the steps to transfer tokens using the Web Interface for the RSK Tokenbridge system. Please refer to the project documentation if you’d like to know more about how this bridge works.
