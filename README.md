@@ -26,7 +26,7 @@ Here are the ['addresses'](./docs/ContractAdddresses.md) of the deployed contrat
 
 ### Federation
 There is a federation  in charge of notifying the events that happend in the bridge of one chain to the other. The federation is composed by creators of the token contracts that wants to enable their token for crossing.
-See the ['federator'](./docs/README.md) for more information about the federator.
+See the ['federator'](./federator/README.md) for more information about the federator.
 
 To run the federator using Docker first, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will dedcide the networks the federate must be listening, for example for the bridge in testnet a federator config.js will look like
 ```

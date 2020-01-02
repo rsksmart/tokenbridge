@@ -1,4 +1,4 @@
-Token bridge interaction guide
+Token bridge interaction guide using MyCrypto
 ===
 
 This guide describes the necessary steps to perform a token transfer between two blockchain networks, hereinafter referred to as **Mainchain** and **Sidechain**, through interaction with special contracts that make up a subsystem called **TokenBridge**.

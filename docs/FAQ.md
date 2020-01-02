@@ -2,7 +2,7 @@
 
 ## What is the Token Bridge?
 The Token Bridge is an interoperability protocol which allows users to move their own RSK or Ethereum Tokens between networks in a quick and cost-efficient manner.
-The UI is available at [https://testnet.tokenbridge.rsk.co/](https://testnet.tokenbridge.rsk.co/)
+The UI is available at [https://tokenbridge.rsk.co/](https://tokenbridge.rsk.co/)
 
 ## What is a Side Token?
 Side Token is an ERC777 representation of a ERC20 tokens which is on the other network(could be  on Ethereum or RSK network). The Side Token displays the exact same properties as the standard ERC20 token and allows it to be used in all the same places that offer ERC20 compatibility.
