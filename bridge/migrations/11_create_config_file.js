@@ -15,17 +15,17 @@ module.exports = function(deployer, networkName, accounts) {
         const bridge = await Bridge.deployed();
         const federation = await bridge.getFederation();
         const multiSig = await MultiSigWallet.deployed();
+        const allowTokens = await AllowTokens.deployed();
         const currentProvider = deployer.networks[networkName];
         const config = {
             bridge: bridge.address,
             federation: federation,
             multiSig: multiSig.address,
+            allowTokens: allowTokens.address
         };
         if(shouldDeployToken(networkName)) {
             const mainToken = await MainToken.deployed();
             config.testToken = mainToken.address;
-            let allowTokens = await AllowTokens.deployed();
-            config.allowTokens = allowTokens.address;
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
             await multiSig.submitTransaction(allowTokens.address, 0, data);
 
