@@ -182,7 +182,7 @@
                         <a class="nav-link" data-toggle="tab" href="#side">Side Token</a>
                     </li>
                     <li>
-                        <a class="nav-link" data-toggle="tab" href="#status">Status</a>
+                        <a class="nav-link" data-toggle="tab" href="#status">Service Stats</a>
                     </li>
                 </ul>
 
@@ -194,7 +194,7 @@
                                 <div class="form-row">
                                     <div class="col">
                                         <div class="form-group tokenAddress">
-                                            <label class="tokenAddress-label" for="tokenAddress">Token Address</label>
+                                            <label class="tokenAddress-label" for="tokenAddress">RRC20 Token Contract Address</label>
                                             <div class="input-group">
                                                 <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
                                                 <div class="input-group-append">
@@ -563,8 +563,8 @@
                         let gasPriceParsed= parseInt(gasPriceAvg);
                         let multiplier = 1.5;
                         if(networkId >=30 && networkId <= 33)
-                            multiplier = 1.01;
-                        gasPrice = (gasPriceParsed * multiplier).toString();
+                            multiplier = 1.03;
+                        gasPrice = Math.ceil(gasPriceParsed * multiplier).toString();
 
                         alertInfo.html('Requesting the token contract to approve the transfer, once its completed a second transaction crossing the tokens to the bridge will be asked...');
                         alertInfo.show();
