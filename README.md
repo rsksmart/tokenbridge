@@ -14,6 +14,10 @@ See the [FAQ](./docs/FAQ.md) to know more about how it works!
 The bridge contracts are upgradeable as we want to move to a decentralized bridge in the future. Here is the first.
 [POC of the trustless decentralized bridge](https://github.com/rsksmart/tokenbridge/releases/tag/decentralized-poc-v0.1)
 
+## Report Security Vulnerabilities
+
+We have a [vulnerability reporting guideline](https://github.com/rsksmart/tokenbridge/blob/master/SECURITY.md) for details on how to contact us to report a vulnerability.
+
 ## Usage
 
 You can use the ['Token Bridge Dapp'](https://tokenbridge.rsk.co/) together with [Nifty Wallet](https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid) or [Metamask with custom network](https://github.com/rsksmart/rskj/wiki/Configure-Metamask-to-connect-with-RSK) to move tokens between networks. This is the [Dapp guide](./docs/DappGuide.md) if you don't know how to use it.
