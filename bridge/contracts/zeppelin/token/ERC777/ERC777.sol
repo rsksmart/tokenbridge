@@ -377,7 +377,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory data,
         bytes memory operatorData
     )
-        private
+        internal
     {
         require(from != address(0), "ERC777: burn from the zero address");
 
@@ -399,7 +399,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory userData,
         bytes memory operatorData
     )
-        private
+        internal
     {
         _balances[from] = _balances[from].sub(amount, "ERC777: transfer amount exceeds balance");
         _balances[to] = _balances[to].add(amount);
@@ -408,7 +408,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         emit Transfer(from, to, amount);
     }
 
-    function _approve(address holder, address spender, uint256 value) private {
+    function _approve(address holder, address spender, uint256 value) internal {
         // TODO: restore this require statement if this function becomes internal, or is called at a new callsite. It is
         // currently unnecessary.
         //require(holder != address(0), "ERC777: approve from the zero address");
@@ -435,7 +435,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory userData,
         bytes memory operatorData
     )
-        private
+        internal
     {
         address implementer = _erc1820.getInterfaceImplementer(from, TOKENS_SENDER_INTERFACE_HASH);
         if (implementer != address(0)) {
@@ -463,13 +463,15 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory operatorData,
         bool requireReceptionAck
     )
-        private
+        internal returns(bool)
     {
         address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
         if (implementer != address(0)) {
             IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
+            return true;
         } else if (requireReceptionAck) {
-            require(!to.isContract(), "ERC777: token recipient contract has no implementer for ERC777TokensRecipient");
+            require(!to.isContract(), "ERC777: recipient contract has no implementer for ERC777TokensRecipient");
         }
+        return false;
     }
 }
