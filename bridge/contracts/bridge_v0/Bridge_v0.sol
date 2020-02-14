@@ -1,22 +1,22 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "./zeppelin/upgradable/Initializable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
-import "./zeppelin/upgradable/utils/ReentrancyGuard.sol";
-import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
+import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "./zeppelin/introspection/IERC1820Registry.sol";
-import "./zeppelin/token/ERC20/ERC20Detailed.sol";
-import "./zeppelin/token/ERC20/SafeERC20.sol";
-import "./zeppelin/utils/Address.sol";
-import "./zeppelin/math/SafeMath.sol";
+import "../zeppelin/introspection/IERC1820Registry.sol";
+import "../zeppelin/token/ERC20/ERC20Detailed.sol";
+import "../zeppelin/token/ERC20/SafeERC20.sol";
+import "../zeppelin/utils/Address.sol";
+import "../zeppelin/math/SafeMath.sol";
 
-import "./IBridge.sol";
+import "../IBridge.sol";
 import "./SideToken.sol";
 import "./SideTokenFactory.sol";
-import "./AllowTokens.sol";
+import "../AllowTokens.sol";
 
 contract Bridge_v0 is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;

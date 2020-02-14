@@ -7,22 +7,24 @@ import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
 import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
+import "../zeppelin/introspection/IERC1820Registry.sol";
 import "../zeppelin/token/ERC20/ERC20Detailed.sol";
 import "../zeppelin/token/ERC20/SafeERC20.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
 import "../IBridge.sol";
-import "../bridge_v0/SideToken.sol";
-import "../bridge_v0/SideTokenFactory.sol";
+import "./SideToken_v1.sol";
+import "./SideTokenFactory_v1.sol";
 import "../AllowTokens.sol";
 
-contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using Address for address;
 
     address constant private NULL_ADDRESS = address(0);
+    bytes32 constant private NULL_HASH = bytes32(0);
     IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address private federation;
@@ -31,25 +33,26 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     uint256 public lastDay;
     uint256 public spentToday;
 
-    mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => SideToken_v1) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
-    SideTokenFactory public sideTokenFactory;
+    SideTokenFactory_v1 public sideTokenFactory;
 
     event FederationChanged(address _newFederation);
 
-    // solium-disable-next-line max-len
-    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix) public initializer {
-        require(bytes(_symbolPrefix).length > 0, "Empty symbol prefix");
-        require(_allowTokens != address(0), "Missing AllowTokens contract address");
-        require(_manager != address(0), "Manager is empty");
+    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
+    public initializer {
+        require(bytes(_symbolPrefix).length > 0, "Bridge: Empty symbol prefix");
+        require(_allowTokens != NULL_ADDRESS, "Bridge: Missing AllowTokens contract address");
+        require(_manager != NULL_ADDRESS, "Bridge: Manager address is empty");
+        require(_federation != NULL_ADDRESS, "Bridge: Federation address is empty");
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
-        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        sideTokenFactory = SideTokenFactory_v1(_sideTokenFactory);
         // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
@@ -59,13 +62,14 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     }
 
     function version() external pure returns (string memory) {
-        return "test";
+        return "v1";
     }
 
     modifier onlyFederation() {
         require(msg.sender == federation, "Bridge: Caller is not the Federation");
         _;
     }
+
     function acceptTransfer(
         address tokenAddress,
         address receiver,
@@ -74,17 +78,24 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) external  onlyFederation whenNotPaused nonReentrant returns(bool) {
-        require(!transactionWasProcessed(blockHash, transactionHash, receiver, amount, logIndex), "Transaction already processed");
+    ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
+        require(tokenAddress != NULL_ADDRESS, "Bridge: Token Address cant be null");
+        require(receiver != NULL_ADDRESS, "Bridge: Receiver Address cant be null");
+        require(amount > 0, "Bridge: Amount cant be 0");
+        require(bytes(symbol).length > 0, "Bridge: Symbol cant be empty");
+        require(blockHash != NULL_HASH, "Bridge: Block Hash cant be null");
+        require(transactionHash != NULL_HASH, "Bridge: Transaction Hash cant be null");
 
-        processToken(tokenAddress, symbol);
-        processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
+        require(!processed[compiledId], "Bridge: Transaction was already processed");
+        processed[compiledId] = true;
+
+        createSideToken(tokenAddress, symbol);
 
         if (isMappedToken(tokenAddress)) {
-            SideToken sideToken = mappedTokens[tokenAddress];
+            SideToken_v1 sideToken = mappedTokens[tokenAddress];
             sideToken.mint(receiver, amount, "", "");
-        }
-        else {
+        } else {
             require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
             ERC20Detailed token = ERC20Detailed(tokenAddress);
             token.safeTransfer(receiver, amount);
@@ -109,16 +120,27 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     }
 
     /**
-     * ERC-677 and ERC-223 implementation for Receiving Tokens Contracts
+     * ERC-677 implementation for Receiving Tokens Contracts
      * See https://github.com/ethereum/EIPs/issues/677 for details
-     * See https://github.com/ethereum/EIPs/issues/223 for details
      */
-    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused returns (bool) {
-        require(crossingPayment == 0, "Bridge: Need payment, use receiveTokens instead");
+    function onTokenTransfer(address from, uint amount, bytes calldata userData) external whenNotPaused nonReentrant returns (bool) {
+        return _tokenFallback(from, amount, userData);
+    }
+
+    function _tokenFallback(address from, uint amount, bytes memory userData) private returns (bool) {
+        require(crossingPayment == 0, "Bridge: Needs payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
         crossTokens(_msgSender(), from, amount, userData);
         return true;
+    }
+
+    /**
+     * ERC-223 implementation for Receiving Tokens Contracts
+     * See https://github.com/ethereum/EIPs/issues/223 for details
+     */
+    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused nonReentrant returns (bool) {
+        return _tokenFallback(from, amount, userData);
     }
 
     /**
@@ -132,21 +154,21 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused{
+    ) external whenNotPaused {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: This contract is not the address receiving the tokens");
-        require(crossingPayment == 0, "Bridge: Need payment, use receiveTokens instead");
+        require(crossingPayment == 0, "Bridge: Needs payment, use receiveTokens instead");
         verifyIsERC20Detailed(_msgSender());
         //This can only be used with trusted contracts
         crossTokens(_msgSender(), from, amount, userData);
     }
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
-        bool isSideToken = isSideToken(tokenToUse);
-        verifyWithAllowTokens(tokenToUse, amount, isSideToken);
-        if (isSideToken) {
-            sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
+        bool _isSideToken = isSideToken(tokenToUse);
+        verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
+        if (_isSideToken) {
+            sideTokenCrossingBack(from, SideToken_v1(tokenToUse), amount, userData);
         } else {
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
@@ -155,11 +177,13 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     function sendIncentiveToEventsCrossers(uint256 payment) private {
         require(payment >= crossingPayment, "Bridge: Insufficient coins sent for crossingPayment");
         //Send the payment to the MultiSig of the Federation
-        address payable receiver = address(uint160(owner()));
-        receiver.transfer(payment);
+        if(payment > 0) {
+            address payable receiver = address(uint160(owner()));
+            receiver.transfer(payment);
+        }
     }
 
-    function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
+    function sideTokenCrossingBack(address from, SideToken_v1 tokenToUse, uint256 amount, bytes memory userData) private {
         tokenToUse.burn(amount, userData);
         emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData);
     }
@@ -169,13 +193,13 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
     }
 
-    function processToken(address token, string memory symbol) private {
+    function createSideToken(address token, string memory symbol) private {
         if (knownTokens[token])
-            return;
+            return; //Crossing Back
 
-        SideToken sideToken = mappedTokens[token];
+        SideToken_v1 sideToken = mappedTokens[token];
 
-        if (address(sideToken) == address(0)) {
+        if (address(sideToken) == NULL_ADDRESS) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
             sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol);
             mappedTokens[token] = sideToken;
@@ -191,7 +215,7 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
     }
 
-    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isSideToken) private  {
+    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
         // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours) {
             // solium-disable-next-line security/no-block-members
@@ -199,26 +223,26 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
             spentToday = 0;
         }
         // solium-disable-next-line max-len
-        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isSideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
+        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Transfer doesn't comply with AllowTokens limits");
         spentToday = spentToday.add(amount);
     }
 
-    function isSideToken(address token) private view returns (bool) {
-        return originalTokens[token] != address(0);
+    function isSideToken(address token) public view returns (bool) {
+        return originalTokens[token] != NULL_ADDRESS;
     }
 
     function isMappedToken(address token) private view returns (bool) {
-        return address(mappedTokens[token]) != address(0);
+        return address(mappedTokens[token]) != NULL_ADDRESS;
     }
 
-    function getTransactionCompiledId(
+    function getTransactionId(
         bytes32 _blockHash,
         bytes32 _transactionHash,
         address _receiver,
         uint256 _amount,
         uint32 _logIndex
     )
-        private pure returns(bytes32)
+        public pure returns(bytes32)
     {
         return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
     }
@@ -232,35 +256,21 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
     )
         public view returns(bool)
     {
-        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         return processed[compiledId];
     }
 
-    function processTransaction(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    )
-        private
-    {
-        bytes32 compiledId = getTransactionCompiledId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-
-        processed[compiledId] = true;
-    }
-
-    function setCrossingPayment(uint amount) public onlyOwner whenNotPaused {
+    function setCrossingPayment(uint amount) external onlyOwner whenNotPaused {
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment);
     }
 
-    function getCrossingPayment() public view returns(uint) {
+    function getCrossingPayment() external view returns(uint) {
         return crossingPayment;
     }
 
-    function calcMaxWithdraw() public view returns (uint) {
+    function calcMaxWithdraw() external view returns (uint) {
         uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
         if (now > lastDay + 24 hours)
@@ -268,20 +278,16 @@ contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, Upgrad
         return allowTokens.calcMaxWithdraw(spent);
     }
 
-    function newMethodTest() public whenNotPaused view returns(bool) {
-        return true;
-    }
-
     function _changeFederation(address newFederation) private {
         federation = newFederation;
         emit FederationChanged(federation);
     }
 
-    function changeFederation(address newFederation) public onlyOwner whenNotPaused {
+    function changeFederation(address newFederation) external onlyOwner whenNotPaused {
         _changeFederation(newFederation);
     }
 
-    function getFederation() public view returns(address) {
+    function getFederation() external view returns(address) {
         return federation;
     }
 
