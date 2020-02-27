@@ -1,13 +1,13 @@
 pragma solidity ^0.5.0;
 
-import "./IBridge.sol";
-import "./zeppelin/ownership/Ownable.sol";
+import "./IBridge_v0.sol";
+import "../zeppelin/ownership/Ownable.sol";
 
-contract Federation is Ownable {
+contract Federation_v0 is Ownable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    IBridge public bridge;
+    IBridge_v0 public bridge;
     address[] public members;
     uint public required;
 
@@ -44,7 +44,7 @@ contract Federation is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
-        bridge = IBridge(_bridge);
+        bridge = IBridge_v0(_bridge);
     }
 
     function voteTransaction(
