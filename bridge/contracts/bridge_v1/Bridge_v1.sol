@@ -13,12 +13,12 @@ import "../zeppelin/token/ERC20/SafeERC20.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
-import "../IBridge.sol";
+import "./IBridge_v1.sol";
 import "./SideToken_v1.sol";
 import "./SideTokenFactory_v1.sol";
 import "../AllowTokens.sol";
 
-contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using Address for address;
@@ -39,10 +39,12 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     SideTokenFactory_v1 public sideTokenFactory;
+    //Bridge_v1 variables
+    uint256 constant private MAX_GRANULARITY = 1000000000000000000;
 
     event FederationChanged(address _newFederation);
 
-    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
+    function initialize(address _manager, address _federation, address _allowTokens, string memory _symbolPrefix)
     public initializer {
         require(bytes(_symbolPrefix).length > 0, "Bridge: Empty symbol prefix");
         require(_allowTokens != NULL_ADDRESS, "Bridge: Missing AllowTokens contract address");
@@ -52,7 +54,6 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
-        sideTokenFactory = SideTokenFactory_v1(_sideTokenFactory);
         // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
@@ -77,7 +78,9 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         string calldata symbol,
         bytes32 blockHash,
         bytes32 transactionHash,
-        uint32 logIndex
+        uint32 logIndex,
+        uint8 decimals,
+        uint256 granularity
     ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token Address cant be null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver Address cant be null");
@@ -85,23 +88,81 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         require(bytes(symbol).length > 0, "Bridge: Symbol cant be empty");
         require(blockHash != NULL_HASH, "Bridge: Block Hash cant be null");
         require(transactionHash != NULL_HASH, "Bridge: Transaction Hash cant be null");
+        require(decimals >= 0 && decimals <= 18, "Bridge: Decimals not between 0 and 18");
+        require(granularity >= 0 && granularity <= MAX_GRANULARITY, "Bridge: Granularity not between 0 and 10^18");
 
-        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
-        require(!processed[compiledId], "Bridge: Transaction was already processed");
-        processed[compiledId] = true;
+        _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
-        createSideToken(tokenAddress, symbol);
-
-        if (isMappedToken(tokenAddress)) {
-            SideToken_v1 sideToken = mappedTokens[tokenAddress];
-            sideToken.mint(receiver, amount, "", "");
+        if (knownTokens[tokenAddress]) {
+            _acceptCrossBackToToken(receiver, tokenAddress, decimals, granularity, amount);
         } else {
-            require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
-            ERC20Detailed token = ERC20Detailed(tokenAddress);
-            token.safeTransfer(receiver, amount);
+            createSideToken(tokenAddress, symbol, decimals);
+            _acceptCrossToSideToken(receiver, tokenAddress, decimals, granularity, amount);
         }
-        emit AcceptedCrossTransfer(tokenAddress, receiver, amount);
         return true;
+    }
+
+    function _acceptCrossToSideToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount)
+    private returns (uint256 formattedAmount, uint8 calculatedDecimals, uint256 calculatedGranularity) {
+        SideToken_v1 sideToken = mappedTokens[tokenAddress];
+        uint256 tokenGranularity = sideToken.granularity();
+        if(decimals == 18) {
+            if(granularity == 0) {
+                //tokenAddress is a ERC20 with 18 decimals
+                calculatedGranularity = 1;
+            } else {
+                //tokenAddress is a ERC777 token
+                calculatedGranularity = granularity;
+            }
+            formattedAmount = amount;
+        } else {
+            //tokenAddress is a ERC20 with other than 18 decimals
+            calculatedGranularity = uint256(10)**(18-decimals);
+            formattedAmount = amount.mul(granularity);
+        }
+        calculatedDecimals = 18;
+        require(calculatedGranularity == tokenGranularity, "Bridge: granularity does not match the side token granularity");
+        sideToken.mint(receiver, formattedAmount, "", "");
+        // solium-disable-next-line max-len
+        emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, calculatedGranularity);
+    }
+
+    function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount)
+    private returns (uint256 formattedAmount, uint8 calculatedDecimals, uint256 calculatedGranularity) {
+        require(decimals == 18, "Bridge: Crossing back token doesn't have 18 decimals");
+        require(granularity > 0 && granularity <= MAX_GRANULARITY, "Bridge: Crossing back token doesn't have valid granularity");
+        ERC20Detailed token = ERC20Detailed(tokenAddress);
+        uint8 tokenDecimals = token.decimals();
+        //As side tokens are ERC777 we need to convert granularity to decimals
+        calculatedDecimals = granularityToDecimals(granularity);
+        require(tokenDecimals == calculatedDecimals, "Bridge: decimals does not match the original token");
+        calculatedGranularity = 1;
+        formattedAmount = amount.div(granularity);
+        token.safeTransfer(receiver, formattedAmount);
+        // solium-disable-next-line max-len
+        emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, calculatedGranularity);
+    }
+
+    function granularityToDecimals(uint256 granularity) public pure returns (uint8) {
+        if(granularity == 1) return 18;
+        if(granularity == 10) return 17;
+        if(granularity == 100) return 16;
+        if(granularity == 1000) return 15;
+        if(granularity == 10000) return 14;
+        if(granularity == 100000) return 13;
+        if(granularity == 1000000) return 12;
+        if(granularity == 10000000) return 11;
+        if(granularity == 100000000) return 10;
+        if(granularity == 1000000000) return 9;
+        if(granularity == 10000000000) return 8;
+        if(granularity == 100000000000) return 7;
+        if(granularity == 1000000000000) return 6;
+        if(granularity == 10000000000000) return 5;
+        if(granularity == 100000000000000) return 4;
+        if(granularity == 1000000000000000) return 3;
+        if(granularity == 10000000000000000) return 2;
+        if(granularity == 100000000000000000) return 1;
+        if(granularity == 1000000000000000000) return 0;
     }
 
     /**
@@ -185,33 +246,34 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function sideTokenCrossingBack(address from, SideToken_v1 tokenToUse, uint256 amount, bytes memory userData) private {
         tokenToUse.burn(amount, userData);
-        emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData);
+        // solium-disable-next-line max-len
+        emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData, tokenToUse.decimals(), tokenToUse.granularity());
     }
 
     function mainTokenCrossing(address from, address tokenToUse, uint256 amount, bytes memory userData) private {
         knownTokens[tokenToUse] = true;
-        emit Cross(tokenToUse, from, amount, (ERC20Detailed(tokenToUse)).symbol(), userData);
+        ERC20Detailed token = ERC20Detailed(tokenToUse);
+        //TODO support 32 bytes symbol
+        //TODO support decimals as uint256
+        //TODO support granularity if ERC777
+        emit Cross(tokenToUse, from, amount, token.symbol(), userData, token.decimals(), 1);
     }
 
-    function createSideToken(address token, string memory symbol) private {
-        if (knownTokens[token])
-            return; //Crossing Back
-
-        SideToken_v1 sideToken = mappedTokens[token];
-
-        if (address(sideToken) == NULL_ADDRESS) {
+    function createSideToken(address token, string memory symbol, uint8 decimals) private {
+        if (address(mappedTokens[token]) == NULL_ADDRESS) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-            sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol);
-            mappedTokens[token] = sideToken;
-            address sideTokenAddress = address(sideToken);
+            uint256 granularity = uint256(10)**(decimals - 18);
+            address sideTokenAddress = sideTokenFactory.createSideToken(newSymbol, newSymbol, granularity);
+            mappedTokens[token] = SideToken_v1(sideTokenAddress);
             originalTokens[sideTokenAddress] = token;
-            emit NewSideToken(sideTokenAddress, token, newSymbol);
+            emit NewSideToken(sideTokenAddress, token, newSymbol, granularity);
         }
     }
 
     function verifyIsERC20Detailed(address tokenToUse) private view {
         ERC20Detailed detailedTokenToUse = ERC20Detailed(tokenToUse);
-        require(detailedTokenToUse.decimals() == 18, "Bridge: Token has decimals other than 18");
+        uint8 decimals = detailedTokenToUse.decimals();
+        require(decimals >= 0 && decimals <= 18, "Bridge: Token does not have decimals  between 0 and 18");
         require(bytes(detailedTokenToUse.symbol()).length != 0, "Bridge: Token doesn't have a symbol");
     }
 
@@ -229,10 +291,6 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
 
     function isSideToken(address token) public view returns (bool) {
         return originalTokens[token] != NULL_ADDRESS;
-    }
-
-    function isMappedToken(address token) private view returns (bool) {
-        return address(mappedTokens[token]) != NULL_ADDRESS;
     }
 
     function getTransactionId(
@@ -259,6 +317,20 @@ contract Bridge_v1 is Initializable, IBridge, IERC777Recipient, UpgradablePausab
         bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
 
         return processed[compiledId];
+    }
+
+    function _processTransaction(
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        address _receiver,
+        uint256 _amount,
+        uint32 _logIndex
+    )
+        private
+    {
+        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
+        require(!processed[compiledId], "Bridge: Transaction was already processed");
+        processed[compiledId] = true;
     }
 
     function setCrossingPayment(uint amount) external onlyOwner whenNotPaused {

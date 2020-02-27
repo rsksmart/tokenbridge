@@ -12,12 +12,12 @@ import "../zeppelin/token/ERC20/SafeERC20.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
-import "../IBridge.sol";
+import "../bridge_v0/IBridge_v0.sol";
 import "../bridge_v0/SideToken.sol";
 import "../bridge_v0/SideTokenFactory.sol";
 import "../AllowTokens.sol";
 
-contract Bridge_upgrade_test is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for ERC20Detailed;
     using Address for address;
