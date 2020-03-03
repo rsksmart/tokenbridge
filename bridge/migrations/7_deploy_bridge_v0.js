@@ -1,8 +1,8 @@
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
-const Federation = artifacts.require("Federation");
+const Federation = artifacts.require("Federation_v0");
 const AllowTokens = artifacts.require('AllowTokens');
-const SideTokenFactory = artifacts.require('SideTokenFactory');
+const SideTokenFactory = artifacts.require('SideTokenFactory_v0');
 const Bridge_v0 = artifacts.require('Bridge_v0');
 
 //example https://github.com/OpenZeppelin/openzeppelin-sdk/tree/master/examples/truffle-migrate/migrations

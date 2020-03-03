@@ -8,8 +8,8 @@ const Bridge_v0 = Contracts.getFromLocal('Bridge_v0');
 const Bridge_upgrade_test = Contracts.getFromLocal('Bridge_upgrade_test');
 
 //Normal Contracts
-const SideTokenFactory = artifacts.require('./SideTokenFactory');
-const SideToken = artifacts.require('./SideToken');
+const SideTokenFactory = artifacts.require('./SideTokenFactory_v0');
+const SideToken = artifacts.require('./SideToken_v0');
 const AllowTokens = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 

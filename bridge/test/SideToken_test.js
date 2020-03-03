@@ -1,14 +1,15 @@
-const SideToken = artifacts.require('./SideToken');
+const SideToken = artifacts.require('./SideToken_v1');
 
 const expectThrow = require('./utils').expectThrow;
 
-contract('SideToken', async function (accounts) {
+contract('SideToken_v1', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];
 
     beforeEach(async function () {
-        this.token = await SideToken.new("SIDE", "SIDE", tokenCreator);
+        this.token = await SideToken.new()
+        this.token.initialize("SIDE", "SIDE", tokenCreator, 1);
     });
 
     it('initial state', async function () {

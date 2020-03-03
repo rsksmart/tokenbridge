@@ -64,18 +64,7 @@ contract ERC777 is Context, IERC777, IERC20 {
     /**
      * @dev `defaultOperators` may be an empty array.
      */
-    constructor(
-        string memory name,
-        string memory symbol,
-        address[] memory defaultOperators
-    ) public {
-        init(name, symbol, defaultOperators);
-    }
-
-    /**
-     * @dev `defaultOperators` may be an empty array.
-     */
-    function init(
+    function _init(
         string memory name,
         string memory symbol,
         address[] memory defaultOperators

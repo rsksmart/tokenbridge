@@ -12,9 +12,9 @@ import "../zeppelin/token/ERC20/SafeERC20.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
-import "../bridge_v0/IBridge_v0.sol";
-import "../bridge_v0/SideToken.sol";
-import "../bridge_v0/SideTokenFactory.sol";
+import "../IBridge_v0.sol";
+import "../SideToken_v0.sol";
+import "../SideTokenFactory_v0.sol";
 import "../AllowTokens.sol";
 
 contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
@@ -31,12 +31,12 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
     uint256 public lastDay;
     uint256 public spentToday;
 
-    mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => SideToken_v0) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
-    SideTokenFactory public sideTokenFactory;
+    SideTokenFactory_v0 public sideTokenFactory;
 
     event FederationChanged(address _newFederation);
 
@@ -49,7 +49,7 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
-        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        sideTokenFactory = SideTokenFactory_v0(_sideTokenFactory);
         // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
@@ -81,7 +81,7 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
         processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
         if (isMappedToken(tokenAddress)) {
-            SideToken sideToken = mappedTokens[tokenAddress];
+            SideToken_v0 sideToken = mappedTokens[tokenAddress];
             sideToken.mint(receiver, amount, "", "");
         }
         else {
@@ -146,7 +146,7 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
         bool isSideToken = isSideToken(tokenToUse);
         verifyWithAllowTokens(tokenToUse, amount, isSideToken);
         if (isSideToken) {
-            sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
+            sideTokenCrossingBack(from, SideToken_v0(tokenToUse), amount, userData);
         } else {
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
@@ -159,7 +159,7 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
         receiver.transfer(payment);
     }
 
-    function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
+    function sideTokenCrossingBack(address from, SideToken_v0 tokenToUse, uint256 amount, bytes memory userData) private {
         tokenToUse.burn(amount, userData);
         emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData);
     }
@@ -173,7 +173,7 @@ contract Bridge_upgrade_test is Initializable, IBridge_v0, IERC777Recipient, Upg
         if (knownTokens[token])
             return;
 
-        SideToken sideToken = mappedTokens[token];
+        SideToken_v0 sideToken = mappedTokens[token];
 
         if (address(sideToken) == address(0)) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
