@@ -1,22 +1,22 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "../zeppelin/upgradable/Initializable.sol";
+import "./zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
-import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
-import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "./zeppelin/upgradable/utils/ReentrancyGuard.sol";
+import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "../zeppelin/introspection/IERC1820Registry.sol";
-import "../zeppelin/token/ERC20/ERC20Detailed.sol";
-import "../zeppelin/token/ERC20/SafeERC20.sol";
-import "../zeppelin/utils/Address.sol";
-import "../zeppelin/math/SafeMath.sol";
+import "./zeppelin/introspection/IERC1820Registry.sol";
+import "./zeppelin/token/ERC20/ERC20Detailed.sol";
+import "./zeppelin/token/ERC20/SafeERC20.sol";
+import "./zeppelin/utils/Address.sol";
+import "./zeppelin/math/SafeMath.sol";
 
 import "./IBridge_v1.sol";
 import "./SideToken_v1.sol";
 import "./SideTokenFactory_v1.sol";
-import "../AllowTokens.sol";
+import "./AllowTokens.sol";
 
 contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -43,8 +43,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     uint256 constant private MAX_GRANULARITY = 1000000000000000000;
 
     event FederationChanged(address _newFederation);
+    event test(uint);
 
-    function initialize(address _manager, address _federation, address _allowTokens, string memory _symbolPrefix)
+    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
     public initializer {
         require(bytes(_symbolPrefix).length > 0, "Bridge: Empty symbol prefix");
         require(_allowTokens != NULL_ADDRESS, "Bridge: Missing AllowTokens contract address");
@@ -54,9 +55,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
-        // solium-disable-next-line security/no-block-members
-        lastDay = now;
-        spentToday = 0;
+        sideTokenFactory = SideTokenFactory_v1(_sideTokenFactory);
         _changeFederation(_federation);
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
@@ -117,7 +116,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
             formattedAmount = amount;
         } else {
             //tokenAddress is a ERC20 with other than 18 decimals
-            calculatedGranularity = uint256(10)**(18-decimals);
+            calculatedGranularity = decimalsToGranularity(decimals);
             formattedAmount = amount.mul(granularity);
         }
         calculatedDecimals = 18;
@@ -143,6 +142,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, calculatedGranularity);
     }
 
+    function decimalsToGranularity(uint8 decimals) public pure returns (uint256) {
+        return uint256(10)**(18-decimals);
+    }
     function granularityToDecimals(uint256 granularity) public pure returns (uint8) {
         if(granularity == 1) return 18;
         if(granularity == 10) return 17;
@@ -178,30 +180,6 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         ERC20Detailed(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         crossTokens(tokenToUse, _msgSender(), amount, "");
         return true;
-    }
-
-    /**
-     * ERC-677 implementation for Receiving Tokens Contracts
-     * See https://github.com/ethereum/EIPs/issues/677 for details
-     */
-    function onTokenTransfer(address from, uint amount, bytes calldata userData) external whenNotPaused nonReentrant returns (bool) {
-        return _tokenFallback(from, amount, userData);
-    }
-
-    function _tokenFallback(address from, uint amount, bytes memory userData) private returns (bool) {
-        require(crossingPayment == 0, "Bridge: Needs payment, use receiveTokens instead");
-        verifyIsERC20Detailed(_msgSender());
-        //This can only be used with trusted contracts
-        crossTokens(_msgSender(), from, amount, userData);
-        return true;
-    }
-
-    /**
-     * ERC-223 implementation for Receiving Tokens Contracts
-     * See https://github.com/ethereum/EIPs/issues/223 for details
-     */
-    function tokenFallback(address from, uint amount, bytes calldata userData) external whenNotPaused nonReentrant returns (bool) {
-        return _tokenFallback(from, amount, userData);
     }
 
     /**
@@ -262,7 +240,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     function createSideToken(address token, string memory symbol, uint8 decimals) private {
         if (address(mappedTokens[token]) == NULL_ADDRESS) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-            uint256 granularity = uint256(10)**(decimals - 18);
+            uint256 granularity = decimalsToGranularity(decimals);
+            emit test(decimals);
+            emit test(granularity);
             address sideTokenAddress = sideTokenFactory.createSideToken(newSymbol, newSymbol, granularity);
             mappedTokens[token] = SideToken_v1(sideTokenAddress);
             originalTokens[sideTokenAddress] = token;

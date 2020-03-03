@@ -117,6 +117,6 @@ module.exports = {
     promisify: promisify,
     expectThrow: expectThrow,
     calculatePrefixesSuffixes: calculatePrefixesSuffixes,
-    increaseTimestamp: increaseTimestamp,
+    increaseTimestamp: increaseTimestamp
 };
 

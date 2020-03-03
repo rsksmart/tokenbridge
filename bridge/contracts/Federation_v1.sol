@@ -1,21 +1,21 @@
 pragma solidity ^0.5.0;
 
-import "./IBridge_v0.sol";
-import "../zeppelin/ownership/Ownable.sol";
+import "./IBridge_v1.sol";
+import "./zeppelin/ownership/Ownable.sol";
 
-contract Federation_v0 is Ownable {
+contract Federation_v1 is Ownable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    IBridge_v0 public bridge;
+    IBridge_v1 public bridge;
     address[] public members;
     uint public required;
 
     mapping (address => bool) public isMember;
     mapping (bytes32 => mapping (address => bool)) public votes;
     mapping(bytes32 => bool) public processed;
-
-    event Voted(address indexed sender, bytes32 indexed transactionId);
+    // solium-disable-next-line max-len
+    event Voted(address indexed sender, bytes32 indexed transactionId, address originalTokenAddress, address receiver, uint256 amount, string symbol, bytes32 blockHash, bytes32 indexed transactionHash, uint32 logIndex, uint8 decimals, uint256 granularity);
     event Executed(bytes32 indexed transactionId);
     event MemberAddition(address indexed member);
     event MemberRemoval(address indexed member);
@@ -44,7 +44,7 @@ contract Federation_v0 is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
-        bridge = IBridge_v0(_bridge);
+        bridge = IBridge_v1(_bridge);
     }
 
     function voteTransaction(
@@ -54,10 +54,13 @@ contract Federation_v0 is Ownable {
         string calldata symbol,
         bytes32 blockHash,
         bytes32 transactionHash,
-        uint32 logIndex)
+        uint32 logIndex,
+        uint8 decimals,
+        uint256 granularity)
     external onlyMember returns(bool)
     {
-        bytes32 transactionId = getTransactionId(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex);
+        // solium-disable-next-line max-len
+        bytes32 transactionId = getTransactionId(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
         if (processed[transactionId])
             return true;
 
@@ -65,12 +68,13 @@ contract Federation_v0 is Ownable {
             return true;
 
         votes[transactionId][_msgSender()] = true;
-        emit Voted(_msgSender(), transactionId);
+        // solium-disable-next-line max-len
+        emit Voted(_msgSender(), transactionId, originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
 
         uint8 transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
-            bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex);
+            bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
             require(acceptTransfer, "Federation: Bridge Accept Transfer was not successful");
             emit Executed(transactionId);
             return true;
@@ -105,10 +109,13 @@ contract Federation_v0 is Ownable {
         string memory symbol,
         bytes32 blockHash,
         bytes32 transactionHash,
-        uint32 logIndex)
+        uint32 logIndex,
+        uint8 decimals,
+        uint256 granularity)
     public pure returns(bytes32)
     {
-        return keccak256(abi.encodePacked(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex));
+        // solium-disable-next-line max-len
+        return keccak256(abi.encodePacked(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity));
     }
 
     function addMember(address _newMember) external onlyOwner

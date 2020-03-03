@@ -1,22 +1,22 @@
 pragma solidity ^0.5.0;
 
 // Import base Initializable contract
-import "../zeppelin/upgradable/Initializable.sol";
+import "./zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
-import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
-import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "./zeppelin/upgradable/utils/ReentrancyGuard.sol";
+import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "../zeppelin/introspection/IERC1820Registry.sol";
-import "../zeppelin/token/ERC20/ERC20Detailed.sol";
-import "../zeppelin/token/ERC20/SafeERC20.sol";
-import "../zeppelin/utils/Address.sol";
-import "../zeppelin/math/SafeMath.sol";
+import "./zeppelin/introspection/IERC1820Registry.sol";
+import "./zeppelin/token/ERC20/ERC20Detailed.sol";
+import "./zeppelin/token/ERC20/SafeERC20.sol";
+import "./zeppelin/utils/Address.sol";
+import "./zeppelin/math/SafeMath.sol";
 
 import "./IBridge_v0.sol";
-import "./SideToken.sol";
-import "./SideTokenFactory.sol";
-import "../AllowTokens.sol";
+import "./SideToken_v0.sol";
+import "./SideTokenFactory_v0.sol";
+import "./AllowTokens.sol";
 
 contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -33,12 +33,12 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
     uint256 public lastDay;
     uint256 public spentToday;
 
-    mapping (address => SideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => SideToken_v0) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) processed; // ProcessedHash => true
     AllowTokens public allowTokens;
-    SideTokenFactory public sideTokenFactory;
+    SideTokenFactory_v0 public sideTokenFactory;
 
     event FederationChanged(address _newFederation);
 
@@ -52,7 +52,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
-        sideTokenFactory = SideTokenFactory(_sideTokenFactory);
+        sideTokenFactory = SideTokenFactory_v0(_sideTokenFactory);
         // solium-disable-next-line security/no-block-members
         lastDay = now;
         spentToday = 0;
@@ -93,7 +93,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         createSideToken(tokenAddress, symbol);
 
         if (isMappedToken(tokenAddress)) {
-            SideToken sideToken = mappedTokens[tokenAddress];
+            SideToken_v0 sideToken = mappedTokens[tokenAddress];
             sideToken.mint(receiver, amount, "", "");
         } else {
             require(knownTokens[tokenAddress], "Bridge: Token address is not in knownTokens");
@@ -157,7 +157,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         bool _isSideToken = isSideToken(tokenToUse);
         verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
         if (_isSideToken) {
-            sideTokenCrossingBack(from, SideToken(tokenToUse), amount, userData);
+            sideTokenCrossingBack(from, SideToken_v0(tokenToUse), amount, userData);
         } else {
             mainTokenCrossing(from, tokenToUse, amount, userData);
         }
@@ -172,7 +172,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         }
     }
 
-    function sideTokenCrossingBack(address from, SideToken tokenToUse, uint256 amount, bytes memory userData) private {
+    function sideTokenCrossingBack(address from, SideToken_v0 tokenToUse, uint256 amount, bytes memory userData) private {
         tokenToUse.burn(amount, userData);
         emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData);
     }
@@ -186,7 +186,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         if (knownTokens[token])
             return; //Crossing Back
 
-        SideToken sideToken = mappedTokens[token];
+        SideToken_v0 sideToken = mappedTokens[token];
 
         if (address(sideToken) == NULL_ADDRESS) {
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
