@@ -10,7 +10,7 @@ contract SideTokenFactory_v1 is Secondary, Ownable, CloneFactory {
 
     address constant private NULL_ADDRESS = address(0);
 
-    event createdSideToken(address sideToken, string symbol, uint256 granularity);
+    event SideTokenCreated(address indexed sideToken, string symbol, uint256 granularity, address templateAddress);
     event TemplateUpdated(address newSideTokenTemplate);
 
     constructor(address templateAddress) public {
@@ -18,17 +18,16 @@ contract SideTokenFactory_v1 is Secondary, Ownable, CloneFactory {
     }
 
     function setTemplateAddress(address templateAddress) public onlyOwner {
-        require(templateAddress != NULL_ADDRESS, "SideTokenFactory: Template address can't be empty");
+        require(templateAddress != NULL_ADDRESS, "SideTokenFactory: Template can't be empty");
         sideTokenTemplate = templateAddress;
         emit TemplateUpdated(sideTokenTemplate);
     }
 
     function createSideToken(string calldata name, string calldata symbol, uint256 granularity) external onlyPrimary returns(address) {
-        require(granularity > 0, "SideTokenFactory: Decimals granularity needs to be bigger than 0");
-        require(sideTokenTemplate != NULL_ADDRESS, "SideTokenFactory: Template address hasn't been initialized");
+        require(sideTokenTemplate != NULL_ADDRESS, "SideTokenFactory: Template hasn't been initialized");
         address sideToken = createClone(sideTokenTemplate);
         SideToken_v1(sideToken).initialize(name, symbol, primary(), granularity);
-        emit createdSideToken(sideToken, symbol, granularity);
+        emit SideTokenCreated(sideToken, symbol, granularity, sideTokenTemplate);
         return sideToken;
     }
 }

@@ -42,7 +42,7 @@ contract('SideTokenFactory_v1', async function (accounts) {
     it('should create side token', async function () {
         let receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1);
         utils.checkRcpt(receipt);
-        assert.equal(receipt.logs[0].event, 'createdSideToken');
+        assert.equal(receipt.logs[0].event, 'SideTokenCreated');
         let sideTokenAddress = receipt.logs[0].args[0];
         assert.isTrue(sideTokenAddress != 0);
         assert.equal(receipt.logs[0].args[1], "SID");
@@ -66,7 +66,7 @@ contract('SideTokenFactory_v1', async function (accounts) {
 
         receipt = await this.sideTokenFactory.createSideToken("OTHERSYMBOL", "OTHERSYMBOL", 1, { from: tokenCreator});
         utils.checkRcpt(receipt);
-        assert.equal(receipt.logs[0].event, 'createdSideToken');
+        assert.equal(receipt.logs[0].event, 'SideTokenCreated');
         let newSideTokenAddress = receipt.logs[0].args[0];
         assert.isTrue(newSideTokenAddress != 0);
         assert.isTrue(newSideTokenAddress != sideTokenAddress);
@@ -78,7 +78,6 @@ contract('SideTokenFactory_v1', async function (accounts) {
         assert.equal(await this.sideTokenFactory.primary(), anAccount);
 
         let receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1, { from: anAccount });
-
         let sideTokenAddress = receipt.logs[0].args[0];
         let sideToken = await SideToken.at(sideTokenAddress);
 
@@ -90,7 +89,10 @@ contract('SideTokenFactory_v1', async function (accounts) {
         let address = await this.sideTokenFactory.sideTokenTemplate();
         assert.equal(address.toLowerCase(), this.sideToken.address.toLowerCase());
         let newAddress = randomHex(20);
-        await this.sideTokenFactory.setTemplateAddress(newAddress);
+        let receipt = await this.sideTokenFactory.setTemplateAddress(newAddress);
+        utils.checkRcpt(receipt);
+        assert.equal(receipt.logs[0].event, 'TemplateUpdated');
+        assert.equal(receipt.logs[0].args[0].toLowerCase(), newAddress.toLowerCase());
         address = await this.sideTokenFactory.sideTokenTemplate();
         assert.equal(address.toLowerCase(), newAddress.toLowerCase());
         

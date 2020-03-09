@@ -492,7 +492,7 @@ contract('Federation_v1', async function (accounts) {
 
         it('should fail if not federation member', async function() {
             await utils.expectThrow(this.federation.voteTransaction(originalTokenAddress,
-                anAccount, amount, symbol, blockHash, transactionHash, logIndex));
+                anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity));
         });
 
         it('voteTransaction should be successfull if already voted', async function() {

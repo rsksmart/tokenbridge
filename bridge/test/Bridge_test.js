@@ -1,4 +1,5 @@
 const MainToken = artifacts.require('./MainToken');
+const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
 const SideToken = artifacts.require('./SideToken_v1');
 const Bridge = artifacts.require('./Bridge_v1');
 const AllowTokens = artifacts.require('./AllowTokens');
@@ -117,6 +118,14 @@ contract('Bridge_v1', async function (accounts) {
                 utils.checkRcpt(receipt);
 
                 assert.equal(receipt.logs[0].event, 'Cross');
+                assert.equal(receipt.logs[0].args[0], this.token.address);
+                assert.equal(receipt.logs[0].args[1], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], amount);
+                assert.equal(receipt.logs[0].args[3], await this.token.symbol());
+                assert.equal(receipt.logs[0].args[4], null);
+                assert.equal(receipt.logs[0].args[5].toString(), (await this.token.decimals()).toString());
+                assert.equal(receipt.logs[0].args[6].toString(), '1');
+
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
@@ -125,15 +134,126 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(isKnownToken, true);
             });
 
+            it('receiveTokens approve and transferFrom Alternative ERC20 Detailed', async function () {
+                const amount = web3.utils.toWei('1000');
+                const decimals = '10';
+                const symbol = "ERC20";
+                let erc20Alternative = await AlternativeERC20Detailed.new("AlternativeERC20Detailed", utils.ascii_to_hexa(symbol), decimals, amount, { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(erc20Alternative.address, { from: bridgeManager });
+
+                const originalTokenBalance = await erc20Alternative.balanceOf(tokenOwner);
+                let receipt = await erc20Alternative.approve(this.bridge.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
+                receipt = await this.bridge.receiveTokens(erc20Alternative.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
+
+                assert.equal(receipt.logs[0].event, 'Cross');
+                assert.equal(receipt.logs[0].args[0], erc20Alternative.address);
+                assert.equal(receipt.logs[0].args[1], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], amount);
+                assert.equal(receipt.logs[0].args[3], symbol);
+                assert.equal(receipt.logs[0].args[4], null);
+                assert.equal(receipt.logs[0].args[5].toString(), decimals);
+                assert.equal(receipt.logs[0].args[6].toString(), '1');
+
+                const tokenBalance = await erc20Alternative.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
+                const bridgeBalance = await erc20Alternative.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(erc20Alternative.address);
+                assert.equal(isKnownToken, true);
+            });
+
+            it('receiveTokens approve and transferFrom for ERC777', async function () {
+                const amount = web3.utils.toWei('1000');
+                let erc777 = await SideToken.new();
+                let granularity = '1000';
+                erc777.initialize("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                
+                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
+                let receipt = await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
+                receipt = await this.bridge.receiveTokens(erc777.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
+
+                assert.equal(receipt.logs[0].event, 'Cross');
+                assert.equal(receipt.logs[0].args[0], erc777.address);
+                assert.equal(receipt.logs[0].args[1], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], amount);
+                assert.equal(receipt.logs[0].args[3], await erc777.symbol());
+                assert.equal(receipt.logs[0].args[4], null);
+                assert.equal(receipt.logs[0].args[5].toString(), (await erc777.decimals()).toString());
+                assert.equal(receipt.logs[0].args[6].toString(), granularity);
+
+                const tokenBalance = await erc777.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
+                const bridgeBalance = await erc777.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                assert.equal(isKnownToken, true);
+            });
+
             it('tokensReceived for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
                 let erc777 = await SideToken.new();
-                erc777.initialize("ERC777", "777", tokenOwner, 1, { from: tokenOwner });
+                let granularity = '100';
+                erc777.initialize("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let receipt = await erc777.send(this.bridge.address, amount, "0x", { from: tokenOwner });
-                utils.checkRcpt(receipt);
+                let userData = '0x1100';
+                let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
+                utils.checkRcpt(result);
+
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,uint256,string,bytes,uint8,uint256)');
+                assert.equal(result.receipt.rawLogs[2].topics[0], eventSignature);
+                let decodedLog = web3.eth.abi.decodeLog([
+                    {
+                      "indexed": true,
+                      "name": "_tokenAddress",
+                      "type": "address"
+                    },
+                    {
+                      "indexed": true,
+                      "name": "_to",
+                      "type": "address"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_amount",
+                      "type": "uint256"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_symbol",
+                      "type": "string"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_userData",
+                      "type": "bytes"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_decimals",
+                      "type": "uint8"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_granularity",
+                      "type": "uint256"
+                    }
+                  ], result.receipt.rawLogs[2].data, result.receipt.rawLogs[2].topics.slice(1));
+
+                assert.equal(decodedLog._tokenAddress, erc777.address);
+                assert.equal(decodedLog._to, tokenOwner);
+                assert.equal(decodedLog._amount, amount);
+                assert.equal(decodedLog._symbol, await erc777.symbol());
+                assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._decimals.toString(), (await erc777.decimals()).toString());
+                assert.equal(decodedLog._granularity.toString(), (await erc777.granularity()).toString());
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
@@ -340,6 +460,61 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(mirrorAnAccountBalance, this.amount * 2);
             });
 
+            it('accept transfer with decimals other than 18', async function () {
+                let decimals = 6;
+                let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithDecimals.address, {from: bridgeManager});
+
+                let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation });
+                utils.checkRcpt(receipt);
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithDecimals.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "rMAIN");
+
+                let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                assert.equal(originalTokenAddress, tokenWithDecimals.address);
+
+                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(mirrorBridgeBalance, 0);
+                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                let expectedAmount = new BN(this.amount.toString());
+                expectedAmount = expectedAmount.mul(new BN(10).pow(new BN(18-decimals)));
+                assert.equal(mirrorAnAccountBalance.toString(), expectedAmount.toString());
+            });
+
+            it('accept transfer from ERC777 with granularity', async function () {
+                const granularity = '100';
+                let tokenWithGranularity = await SideToken.new();
+                tokenWithGranularity.initialize("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
+                tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
+
+                let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation });
+                utils.checkRcpt(receipt);
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "rMAIN");
+
+                const sideTokenGranularity = await sideToken.granularity();
+                assert.equal(sideTokenGranularity.toString(), granularity);
+
+                let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                assert.equal(originalTokenAddress, tokenWithGranularity.address);
+
+                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(mirrorBridgeBalance, 0);
+                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
+            });
+
             it('accept transfer only federation', async function () {
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
@@ -413,6 +588,30 @@ contract('Bridge_v1', async function (accounts) {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, "0x",
                 this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+            });
+
+            it('should fail invalid decimals', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, '19', this.granularity, { from: federation }));
+            });
+
+            it('should fail granularity 0', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('0'), { from: federation }));
+            });
+
+            it('should fail more than max granularity', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('10000000000000000000'), { from: federation }));
+            });
+            
+            it('should overflow granularity multiplication', async function () {
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, web3.utils.toWei('100000000000000000000000000000000000000000000000000'), "MAIN",
+                this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: federation }));
             });
 
         });
