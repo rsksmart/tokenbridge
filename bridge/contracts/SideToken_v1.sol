@@ -54,8 +54,7 @@ contract SideToken_v1 is ERC777, Initializable {
 
         if(!_callTokensReceived(from, from, recipient, amount, data, "", false)) {
             if (recipient.isContract()) {
-                IERC677Receiver receiver = IERC677Receiver(recipient);
-                receiver.onTokenTransfer(from, amount, data);
+                IERC677Receiver(recipient).onTokenTransfer(from, amount, data);
             }
         }
 
