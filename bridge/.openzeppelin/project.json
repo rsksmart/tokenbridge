@@ -3,18 +3,19 @@
   "name": "bridge",
   "version": "1.0.0",
   "contracts": {
-    "Bridge": "Bridge_v0"
+    "Bridge": "Bridge_v1"
   },
   "dependencies": {},
   "compiler": {
     "manager": "openzeppelin",
     "solcVersion": "0.5.16",
     "compilerSettings": {
+      "evmVersion": "petersburg",
       "optimizer": {
         "enabled": false,
-        "runs": 200
-      },
-      "evmVersion": "petersburg"
+        "runs": "200"
+      }
     }
-  }
+  },
+  "telemetryOptIn": false
 }
