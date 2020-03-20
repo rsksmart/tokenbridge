@@ -3,18 +3,22 @@ pragma solidity ^0.5.0;
 import "./zeppelin/token/ERC777/ERC777.sol";
 import "./zeppelin/upgradable/Initializable.sol";
 import "./IERC677Receiver.sol";
+import "./ISideToken.sol";
 
-contract SideToken_v1 is ERC777, Initializable {
+contract SideToken_v1 is ISideToken, ERC777, Initializable {
     using Address for address;
     using SafeMath for uint256;
 
     address public minter;
     uint256 private _granularity;
 
-    function initialize (string calldata tokenName, string calldata tokenSymbol, address minterAddr, uint256 granularity)
+    function initialize(string calldata tokenName, string calldata tokenSymbol, address minterAddr, uint256 granularity)
     external initializer {
         require(minterAddr != address(0), "SideToken: Minter address is null");
         require(granularity >= 1, "SideToken: Granularity must be equal or bigger than 1");
+        if(granularity > 1) {
+            require(granularity.div(10).mul(10) == granularity, "SideToken: Granularity not mul 10");
+        }
         minter = minterAddr;
         _granularity = granularity;
         _init(tokenName, tokenSymbol, new address[](0));

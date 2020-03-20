@@ -12,7 +12,7 @@ contract('SideToken_v1', async function (accounts) {
     describe('granularity 1', async function () {
         beforeEach(async function () {
             this.token = await SideToken.new();
-            this.token.initialize("SIDE", "SIDE", tokenCreator, 1);
+            await this.token.initialize("SIDE", "SIDE", tokenCreator, 1);
         });
 
         it('initial state', async function () {
@@ -154,23 +154,24 @@ contract('SideToken_v1', async function (accounts) {
 
     describe('granularity 1000', async function () {
         beforeEach(async function () {
+            this.granularity = '1000'
             this.token = await SideToken.new()
-            this.token.initialize("SIDE", "SIDE", tokenCreator, 1000);
+            await this.token.initialize("SIDE", "SIDE", tokenCreator, this.granularity);
         });
 
         it('initial state', async function () {
             const granularity = await this.token.granularity();
-            assert.equal(granularity, 1000);
+            assert.equal(granularity.toString(), this.granularity);
         });
 
         it('mint', async function () {
-            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+            await this.token.mint(anAccount, this.granularity, '0x', '0x', { from: tokenCreator });
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
-            assert.equal(anAccountBalance, 1000);
+            assert.equal(anAccountBalance.toString(), this.granularity);
 
             const totalSupply = await this.token.totalSupply();
-            assert.equal(totalSupply, 1000);
+            assert.equal(totalSupply, this.granularity);
         });
 
         it('mint throws if less than granularity', async function () {
@@ -186,13 +187,13 @@ contract('SideToken_v1', async function (accounts) {
             await this.token.transfer(anotherAccount, 1000, { from: anAccount });
 
             const anAccountBalance = await this.token.balanceOf(anAccount);
-            assert.equal(anAccountBalance, 9000);
+            assert.equal(anAccountBalance.toString(), '9000');
 
             const anotherAccountBalance = await this.token.balanceOf(anotherAccount);
-            assert.equal(anotherAccountBalance, 1000);
+            assert.equal(anotherAccountBalance.toString(), '1000');
 
             const totalSupply = await this.token.totalSupply();
-            assert.equal(totalSupply, 10000);
+            assert.equal(totalSupply.toString(), '10000');
         });
 
         it('transfer throws if  less tan hgranularity', async function () {

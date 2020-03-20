@@ -2,22 +2,24 @@ pragma solidity ^0.5.0;
 
 import "./zeppelin/ownership/Secondary.sol";
 import "./zeppelin/ownership/Ownable.sol";
+import "./ISideTokenFactory.sol";
 import "./SideToken_v1.sol";
 import "./CloneFactory.sol";
 
-contract SideTokenFactory_v1 is Secondary, Ownable, CloneFactory {
+contract SideTokenFactory_v1 is ISideTokenFactory, Secondary, Ownable, CloneFactory {
     address public sideTokenTemplate;
 
     address constant private NULL_ADDRESS = address(0);
 
-    event SideTokenCreated(address indexed sideToken, string symbol, uint256 granularity, address templateAddress);
-    event TemplateUpdated(address newSideTokenTemplate);
-
     constructor(address templateAddress) public {
-        setTemplateAddress(templateAddress);
+        _setTemplateAddress(templateAddress);
     }
 
-    function setTemplateAddress(address templateAddress) public onlyOwner {
+    function setTemplateAddress(address templateAddress) external onlyOwner {
+        _setTemplateAddress(templateAddress);
+    }
+
+    function _setTemplateAddress(address templateAddress) internal {
         require(templateAddress != NULL_ADDRESS, "SideTokenFactory: Template can't be empty");
         sideTokenTemplate = templateAddress;
         emit TemplateUpdated(sideTokenTemplate);

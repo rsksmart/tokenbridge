@@ -446,7 +446,7 @@ contract('Federation_v1', async function (accounts) {
         });
 
         it('voteTransaction should be successful with 3/3 feds require 3', async function() {
-            this.federation.addMember(fedMember3);
+            await this.federation.addMember(fedMember3);
             await this.federation.changeRequirement(3);
             let receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity,
                 {from: fedMember1});

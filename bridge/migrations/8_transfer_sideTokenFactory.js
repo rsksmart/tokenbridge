@@ -6,6 +6,7 @@ module.exports = function(deployer, networkName, accounts) {
         .then(async ()=> {
             const sideTokenFactory = await SideTokenFactory.deployed();
             const bridge = await Bridge.deployed();
+            console.log("Bridge Address", bridge.address)
             await sideTokenFactory.transferPrimary(bridge.address);
         });
 }

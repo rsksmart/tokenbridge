@@ -190,7 +190,6 @@ contract('Bridge_upgrade_test', async (accounts) => {
                     await this.sideTokenFactory.transferPrimary(this.proxy.address, { from: deployerAddress })
                     let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
                     randomHex(32), randomHex(32), 0).send({ from: federationAddress });
-                    utils.checkGas(tx.cumulativeGasUsed);
 
                     let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
                     let sideToken = await SideToken.at(sideTokenAddress);

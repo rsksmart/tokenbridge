@@ -9,7 +9,7 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const utils = require('./utils');
 const BN = web3.utils.BN;
 const randomHex = web3.utils.randomHex;
-const ONE_DAY = 24*3600
+const ONE_DAY = 24*3600;
 
 contract('Bridge_v1', async function (accounts) {
     const bridgeOwner = accounts[0];
@@ -26,34 +26,11 @@ contract('Bridge_v1', async function (accounts) {
         this.sideToken = await SideToken.new();
         this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e', { from: bridgeOwner });
+        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
     });
 
     describe('Main network', async function () {
-        
-        describe('decimals', async function () {
-            it('decimals to granularity', async function () {
-                let resultGranularity = await this.bridge.decimalsToGranularity(18);
-                assert.equal(resultGranularity.toString(), '1');
-                resultGranularity = await this.bridge.decimalsToGranularity(9);
-                assert.equal(resultGranularity.toString(), '1000000000');
-                resultGranularity = await this.bridge.decimalsToGranularity(6);
-                assert.equal(resultGranularity.toString(), '1000000000000');
-                resultGranularity = await this.bridge.decimalsToGranularity(0);
-                assert.equal(resultGranularity.toString(), new BN('1000000000000000000').toString());
-            });
-            it('granularity to decimals', async function () {
-                let resultGranularity = await this.bridge.granularityToDecimals('1');
-                assert.equal(resultGranularity, 18);
-                resultGranularity = await this.bridge.granularityToDecimals('1000000000');
-                assert.equal(resultGranularity, 9);
-                resultGranularity = await this.bridge.granularityToDecimals('1000000000000');
-                assert.equal(resultGranularity, 6);
-                resultGranularity = await this.bridge.granularityToDecimals('1000000000000000000');
-                assert.equal(resultGranularity, 0);
-            });
-        });
 
         describe('owner', async function () {
             it('check manager', async function () {
@@ -489,7 +466,7 @@ contract('Bridge_v1', async function (accounts) {
             it('accept transfer from ERC777 with granularity', async function () {
                 const granularity = '100';
                 let tokenWithGranularity = await SideToken.new();
-                tokenWithGranularity.initialize("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
+                await tokenWithGranularity.initialize("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                 tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
 
