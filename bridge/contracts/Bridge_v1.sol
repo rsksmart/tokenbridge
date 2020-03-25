@@ -288,8 +288,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         return allowTokens.calcMaxWithdraw(spent);
     }
 
-    function changeFederation(address newFederation) external onlyOwner {
+    function changeFederation(address newFederation) external onlyOwner returns(bool) {
         _changeFederation(newFederation);
+        return true;
     }
 
     function _changeFederation(address newFederation) internal {
@@ -302,8 +303,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         return federation;
     }
 
-    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
+    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner returns(bool) {
         _changeSideTokenFactory(newSideTokenFactory);
+        return true;
     }
 
     function _changeSideTokenFactory(address newSideTokenFactory) internal {
@@ -314,10 +316,11 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     //This method is only for testnet to erase the Chain Link toke and recreate it with the new version that is ERC677 compatible.
     //It wont be in the mainnet release
-    function clearSideToken(address originalToken) external onlyOwner {
+    function clearSideToken(address originalToken) external onlyOwner returns(bool){
         address sideToken = address(mappedTokens[originalToken]);
         originalTokens[sideToken] = NULL_ADDRESS;
         mappedTokens[originalToken] = ISideToken(NULL_ADDRESS);
+        return true;
     }
 
     // function startUpgrade() external onlyOwner {
