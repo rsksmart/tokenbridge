@@ -16,8 +16,6 @@ function expectThrow (promise) {
   }, (err) => {
       return err;
   });
-  
-  assert.fail('Expected throw not received');
 }
 
 
