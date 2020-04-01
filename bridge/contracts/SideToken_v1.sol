@@ -17,7 +17,7 @@ contract SideToken_v1 is ISideToken, ERC777, Initializable {
         require(minterAddr != address(0), "SideToken: Minter address is null");
         require(granularity >= 1, "SideToken: Granularity must be equal or bigger than 1");
         if(granularity > 1) {
-            require(granularity.div(10).mul(10) == granularity, "SideToken: Granularity not mul 10");
+            require(granularity.mod(10) == 0, "SideToken: Granularity not 10^");
         }
         minter = minterAddr;
         _granularity = granularity;
@@ -70,7 +70,7 @@ contract SideToken_v1 is ISideToken, ERC777, Initializable {
     /// @notice Internal function that ensures `amount` is multiple of the granularity
     /// @param amount The quantity that want's to be checked
     function requireMultiple(uint256 amount) internal view {
-        require(amount.div(_granularity).mul(_granularity) == amount, "SideToken: Amount is not a multiple of Granularity");
+        require(amount.mod(_granularity) == 0, "SideToken: Amount is not a multiple of Granularity");
     }
 
     function _move(

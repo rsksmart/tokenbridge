@@ -1,6 +1,7 @@
 //We are actually gona use Bridge_v1 but truffle only knows the address of the proxy by using Bridge_v0
 const Bridge = artifacts.require("Bridge_v0");
 const MainToken = artifacts.require('MainToken');
+const Federation_v1 = artifacts.require('Federation_v1');
 const AllowTokens = artifacts.require("AllowTokens");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 
@@ -14,19 +15,19 @@ module.exports = function(deployer, networkName, accounts) {
     deployer
     .then(async () => {
         const bridge = await Bridge.deployed();
-        const federation = await bridge.getFederation();
+        const federation = await Federation_v1.deployed();
         const multiSig = await MultiSigWallet.deployed();
         const allowTokens = await AllowTokens.deployed();
         const currentProvider = deployer.networks[networkName];
         const config = {
-            bridge: bridge.address,
-            federation: federation,
-            multiSig: multiSig.address,
-            allowTokens: allowTokens.address
+            bridge: bridge.address.toLowerCase(),
+            federation: federation.address.toLowerCase(),
+            multiSig: multiSig.address.toLowerCase(),
+            allowTokens: allowTokens.address.toLowerCase()
         };
         if(shouldDeployToken(networkName)) {
             const mainToken = await MainToken.deployed();
-            config.testToken = mainToken.address;
+            config.testToken = mainToken.address.toLowerCase();
             let data = allowTokens.contract.methods.addAllowedToken(mainToken.address).encodeABI();
             await multiSig.submitTransaction(allowTokens.address, 0, data);
 

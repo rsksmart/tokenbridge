@@ -19,6 +19,36 @@
         "internalType": "uint256",
         "name": "_amount",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "_decimals",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_granularity",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_formattedAmount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "_calculatedDecimals",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_calculatedGranularity",
+        "type": "uint256"
       }
     ],
     "name": "AcceptedCrossTransfer",
@@ -54,8 +84,20 @@
       {
         "indexed": false,
         "internalType": "bytes",
-        "name": "userData",
+        "name": "_userData",
         "type": "bytes"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "_decimals",
+        "type": "uint8"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_granularity",
+        "type": "uint256"
       }
     ],
     "name": "Cross",
@@ -107,6 +149,12 @@
         "internalType": "string",
         "name": "_newSymbol",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_granularity",
+        "type": "uint256"
       }
     ],
     "name": "NewSideToken",
@@ -168,6 +216,19 @@
       }
     ],
     "name": "PauserRemoved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "_newSideTokenFactory",
+        "type": "address"
+      }
+    ],
+    "name": "SideTokenFactoryChanged",
     "type": "event"
   },
   {
@@ -297,7 +358,7 @@
     "name": "mappedTokens",
     "outputs": [
       {
-        "internalType": "contract SideToken",
+        "internalType": "contract ISideToken",
         "name": "",
         "type": "address"
       }
@@ -390,7 +451,7 @@
     "name": "sideTokenFactory",
     "outputs": [
       {
-        "internalType": "contract SideTokenFactory",
+        "internalType": "contract ISideTokenFactory",
         "name": "",
         "type": "address"
       }
@@ -458,30 +519,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "sender",
-        "type": "address"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [],
-    "name": "initialize",
-    "outputs": [],
-    "payable": false,
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_manager",
         "type": "address"
       },
@@ -506,6 +543,30 @@
         "type": "string"
       }
     ],
+    "name": "initialize",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [],
     "name": "initialize",
     "outputs": [],
     "payable": false,
@@ -564,6 +625,16 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint8",
+        "name": "decimals",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "granularity",
+        "type": "uint256"
       }
     ],
     "name": "acceptTransfer",
@@ -602,37 +673,6 @@
     ],
     "payable": true,
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "constant": false,
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "userData",
-        "type": "bytes"
-      }
-    ],
-    "name": "tokenFallback",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -833,7 +873,13 @@
       }
     ],
     "name": "changeFederation",
-    "outputs": [],
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -851,6 +897,48 @@
     ],
     "payable": false,
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "newSideTokenFactory",
+        "type": "address"
+      }
+    ],
+    "name": "changeSideTokenFactory",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      }
+    ],
+    "name": "clearSideToken",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

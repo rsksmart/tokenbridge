@@ -83,7 +83,7 @@ module.exports = class TransactionSender {
         return address;
     }
 
-    signAndSendTransaction(rawTx, privateKey) {
+    async signAndSendTransaction(rawTx, privateKey) {
         if (privateKey && privateKey.length) {
             let signedTx = this.signRawTransaction(rawTx, privateKey);
             return this.sendSignedTransaction(signedTx);

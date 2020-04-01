@@ -1,7 +1,7 @@
 {
   "name": "bridge",
   "private": "true",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
     "@openzeppelin/cli": "^2.8.2",
@@ -20,7 +20,7 @@
     "migrate": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && npx truffle migrate --reset",
     "test": "npx truffle test",
     "coverage": "npx truffle run coverage",
-    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json && rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
+    "deployIntegrationTest": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json && rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
   },
   "keywords": [
     "rsk",

@@ -1,7 +1,7 @@
 {
   "name": "federator",
   "private": "true",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Mutitoken Bridge Federator",
   "dependencies": {
     "ethereumjs-tx": "^1.3.7",
@@ -16,7 +16,7 @@
   "scripts": {
     "start": "node ./src/main.js",
     "test": "mocha --recursive \"test/**/*.test.js\" ",
-    "integrationTest": "node ./integrationTest/integrationTest.js",
+    "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
     "clean": "rm -rf ./db/*"
   },
   "keywords": [

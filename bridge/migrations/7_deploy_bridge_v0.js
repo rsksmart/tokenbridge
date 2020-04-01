@@ -33,7 +33,7 @@ module.exports = function(deployer, networkName, accounts) {
         const sideTokenFactory = await SideTokenFactory.deployed();
         const federation = await Federation.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-        let initArgs = [ multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
+        let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
         if (networkName === 'soliditycoverage') {
             return deployer
