@@ -1,5 +1,5 @@
 const Federation = require('./contracts/Federation');
-const Bridge = require('./contracts/Bridge_v0');
+const Bridge = require('./contracts/Bridge');
 const config = require('../../config.js');
 
 const mappings = {

@@ -41,7 +41,7 @@ library Utils {
             require(granularity >= 1 && granularity <= 1000000000000000000, "Utils: Invalid granularity");
         }
         if(granularity > 1) {
-            require(granularity.div(10).mul(10) == granularity, "Utils: Granularity not mul 10");
+            require(granularity.mod(10) == 0, "Utils: Granularity not 10^");
         }
         return granularity;
     }

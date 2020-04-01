@@ -22,20 +22,20 @@ contract Federation_v1 is Ownable {
     event RequirementChange(uint required);
 
     modifier onlyMember() {
-        require(isMember[_msgSender()], "Federation: Caller is not a member of the federation");
+        require(isMember[_msgSender()], "Federation: Caller not a Federator");
         _;
     }
 
     modifier validRequirement(uint membersCount, uint _required) {
         // solium-disable-next-line max-len
-        require(_required <= membersCount && _required != 0 && membersCount != 0, "Federation: Required value is invalid for the current members count");
+        require(_required <= membersCount && _required != 0 && membersCount != 0, "Federation: Invalid requirements");
         _;
     }
 
     constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
-            require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Members addresses are invalid");
+            require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
             isMember[_members[i]] = true;
             emit MemberAddition(_members[i]);
         }
@@ -44,6 +44,7 @@ contract Federation_v1 is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
+        require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
         bridge = IBridge_v1(_bridge);
     }
 
@@ -75,7 +76,7 @@ contract Federation_v1 is Ownable {
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
             bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
-            require(acceptTransfer, "Federation: Bridge Accept Transfer was not successful");
+            require(acceptTransfer, "Federation: Bridge acceptTransfer error");
             emit Executed(transactionId);
             return true;
         }
@@ -120,9 +121,9 @@ contract Federation_v1 is Ownable {
 
     function addMember(address _newMember) external onlyOwner
     {
-        require(_newMember != NULL_ADDRESS, "Federation: Address cannot be empty");
+        require(_newMember != NULL_ADDRESS, "Federation: Empty member");
         require(!isMember[_newMember], "Federation: Member already exists");
-        require(members.length < MAX_MEMBER_COUNT, "Federation: Already at full capacity");
+        require(members.length < MAX_MEMBER_COUNT, "Federation: Max members reached");
 
         isMember[_newMember] = true;
         members.push(_newMember);
@@ -131,8 +132,8 @@ contract Federation_v1 is Ownable {
 
     function removeMember(address _oldMember) external onlyOwner
     {
-        require(_oldMember != NULL_ADDRESS, "Federation: Address cannot be empty");
-        require(isMember[_oldMember], "Federation: Member does not exists");
+        require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
+        require(isMember[_oldMember], "Federation: Member doesn't exists");
         require(members.length > 1, "Federation: Can't remove all the members");
 
         isMember[_oldMember] = false;

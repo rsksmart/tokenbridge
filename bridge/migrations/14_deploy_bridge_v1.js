@@ -28,7 +28,7 @@ module.exports = function(deployer, networkName, accounts) {
     if(networkName == 'rskregtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')
         symbol = 'r';
 
-    deployer.then(async () => {
+    return deployer.then(async () => {
         const utils = await Utils.new();
         await Bridge_v1.link("Utils", utils.address);
         

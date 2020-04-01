@@ -94,7 +94,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         require(decimals <= 18, "Bridge: Decimals bigger 18");
         require(granularity >= 1 && granularity <= 1000000000000000000, "Bridge: Granularity not between 1 and 10^18");
         if(granularity > 1) {
-            require(granularity.div(10).mul(10) == granularity, "Bridge: Granularity not mul 10");
+            require(granularity.mod(10) == 0, "Bridge: Granularity not 10^");
         }
 
         _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);

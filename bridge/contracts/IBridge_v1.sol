@@ -33,7 +33,8 @@ interface IBridge_v1 {
      */
     function acceptTransfer(
         address originalTokenAddress,
-        address receiver, uint256 amount,
+        address receiver,
+        uint256 amount,
         string calldata symbol,
         bytes32 blockHash,
         bytes32 transactionHash,
