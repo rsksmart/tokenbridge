@@ -43,13 +43,16 @@
               font-weight: 700;
               font-size: 32px;
             }
+            .navbar-dark.bg-dark {
+                background-color: white!important;
+            }
             input::placeholder {
               color: grey !important;
               font-weight: normal;
             }
             #home {
-              padding-top: 100px;
-              padding-bottom: 50px;
+              padding-top: 30px;
+              padding-bottom: 30px;
             }
             #footer {
               margin-top: 0;
@@ -124,6 +127,13 @@
               line-height: 14px;
               margin: 0 20px;
             }
+            #tokenListTab {
+              font-size: 14px;
+            }
+            #tokenListTab .btn{
+              font-size: 14px;
+              padding: 0px;
+            }
             @keyframes lds-circle {
                 0%, 100% {
                     animation-timing-function: cubic-bezier(0.5, 0, 1, 0.5);
@@ -176,48 +186,77 @@
                 
                 <ul class="nav nav-tabs">
                     <li class="active">
-                        <a class="nav-link active" data-toggle="tab" href="#transfer">Transfer</a>
+                        <a class="nav-link active" data-toggle="tab" href="#transferTab">Transfer</a>
                     </li>
                     <li>
-                        <a class="nav-link" data-toggle="tab" href="#side">Side Token</a>
+                        <a class="nav-link" data-toggle="tab" href="#tokenListTab">Token List</a>
                     </li>
                     <li>
-                        <a class="nav-link" data-toggle="tab" href="#status">Service Stats</a>
+                        <a class="nav-link" data-toggle="tab" href="#infoTab">Info</a>
                     </li>
                 </ul>
 
                 <div class="tab-content">
-                    <div id="transfer" class="tab-pane active">
-                            <h4>From Network <span id ="network" class="badge badge-info"></span></h4>
-
+                    <div id="transferTab" class="tab-pane active">
                             <form id="crossForm" name="crossForm">
                                 <div class="form-row">
-                                    <div class="col">
-                                        <div class="form-group tokenAddress">
-                                            <label class="tokenAddress-label" for="tokenAddress">ERC20 Token Contract Address</label>
+                                    <div class="col-md-2">
+                                        <div class="form-group fromNetwork">
+                                            <label for="fromNetwork">From</label>
                                             <div class="input-group">
-                                                <input id="tokenAddress" name="tokenAddress" type="text" class="form-control" placeholder="Token Address" required>
-                                                <div class="input-group-append">
-                                                    <span class="input-group-text text-light bg-dark" id="tokenSymbol" style="display: none;"></span>
-                                                </div>
+                                                <input type="text" readonly class="font-weight-bold form-control-plaintext" id="fromNetwork" name="fromNetwork" value="" data-toggle="tooltip" data-placement="bottom" title="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="form-group tokenAddress">
+                                            <label for="tokenAddress">Token to Cross</label>
+                                            <div class="input-group">
+                                                <select class="custom-select form-control" id="tokenAddress" name="tokenAddress" required>
+                                                    <!-- Dinamic content made with JS -->
+                                                </select>
                                             </div>
                                             <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
-                                    <div class="col">
+                                    <div class="col-md-2">
                                         <div class="form-group amount">
-                                            <label class="amount-label" for="amount">Amount to cross</label>
+                                            <label for="amount">Amount to cross</label>
                                             <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
                                             <div class="invalid-feedback"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1 text-center">
+                                        <div class="form-group">
+                                            <i class="form-control-plaintext fas fa-arrow-right" style="margin-top: 35px;" name="arrow"></i>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group toNetwork">
+                                            <label class="toNetwork-label" for="toNetwork">To</label>
+                                            <div class="input-group">
+                                                <input type="text" readonly class="font-weight-bold form-control-plaintext" id="toNetwork" name="toNetwork" value="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="form-group willReceive">
+                                            <label class="willReceive-label" for="willReceive">Will Receive</label>
+                                            <div class="input-group">
+                                                <div class="font-weight-bold form-control-plaintext" id="willReceive" name="willReceive"></div>
+                                                <div class="input-group-append">
+                                                    <!-- Trigger -->
+                                                    <button id="willReceive-copy" style="display:none;" class="copy btn btn-outline-secondary" type="button" data-clipboard-text="" data-toggle="tooltip" data-placement="bottom" title="Copy the address">
+                                                        <i class="far fa-copy"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                                 <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
                             </form>
 
-                            <section id="error"  class="mt-1">
-                                    <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
-                            </section>
                             <section id="info"  class="mt-1">
                                     <div id="alert-info" class="alert alert-info" role="alert" style='display:none'></div>
                             </section>
@@ -232,33 +271,12 @@
                                 <div class="lds-circle"><div></div></div>
                             </div>
                     </div>
-                    <div id="side" class="tab-pane">
-                        <div class="alert alert-warning">
-                            You need to connect to the other network in order to get the Address of the token in the other side
-                        </div>
 
-                        <form id="getSideTokenForm" class="form-inline">
-                            <label class="sr-only" for="originalTokenAddress">Original Token Address</label>
-                            <input type="text" class="form-control mb-2 mr-sm-2 col-5" id="originalTokenAddress" placeholder="Token Address" required>
-                            <button id="getSideToken" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Side Token Address</button>
-                            <label class="mb-2 mr-sm-2" id="sideTokenAddress"></label>
-                        </form>
-
-                        <div id="check-balance" style="display: none;" class="mt-3">
-                            <h4>Check balance for side token</h4>
-                            <form id="getSideTokenBalance" class="form-inline">
-                                <label class="sr-only" for="sideAddress">Address</label>
-                                <input type="text" class="form-control mb-2 mr-sm-2 col-5" id="sideAddress" placeholder="Contract or Account Address" required>
-                                <button id="getSideBalance" type="submit" class="btn btn-primary mb-2 ml-2 mr-2">Get Balance</button>
-                                <label class="mb-2 mr-sm-2" id="sideTokenBalance"></label>
-                            </form>
-                        </div>
-
-                        <section id="success-transfer"  class="mt-1">
-                            <div id="alert-from-transfer" class="alert alert-success" role="alert" style='display:none'></div>
-                        </section>
+                    <div id="tokenListTab" class="tab-pane">    
+                        <!-- Dinamic content made with JS -->
                     </div>
-                    <div id="status" class="tab-pane">
+
+                    <div id="infoTab" class="tab-pane">
                         <div class="row mb-5">
                             <div class="col-md-4 col-sm-4 mb-5 config-section">
                                 <span class="config-value mb-2" id="config-max">-</span>
@@ -276,9 +294,9 @@
                             </div>
                             <div class="col-md-4 col-sm-4 mb-5 config-section">
                                 <span class="config-value mb-2" id="config-to-spend">-</span>
-                                <span class="config-title">Daily transfer left</span>
+                                <span class="config-title">Daily transfer limit</span>
                                 <p>
-                                    How many more tokens can be tranferred today
+                                    How many tokens can be tranferred today
                                 </p>
                             </div>
                             <div class="col-md-4 col-sm-4 mb-5 config-section">
@@ -314,7 +332,10 @@
                             <span class="config-address mb-2" id="config-federators-addresses"></span>
                         </div>
                     </div>
-                </div>
+                </div> <!--- End Tab Content -->
+                <section id="error"  class="mt-1">
+                    <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
+                </section>
             </div>
           </div>
         </section>
@@ -396,44 +417,15 @@
             <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
             <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-             <!-- Upodated Web3.js as MetaMsak uses 0.20.7 version -->
+            <!-- Updated Web3.js as MetaMsak uses 0.20.7 version -->
             <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+            <!-- Copy to Clipboard https://clipboardjs.com/ -->
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
             <!-- Custom Js -->
             <script type="text/javascript">
                 let address = '';
                 let networkId = '';
                 let tokenSymbol = '';
-                let kovanConfig = {
-                    name: 'Kovan',
-                    bridge: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
-                    allowTokens: '0xe4aa0f414725c9322a1a9d80d469c5e234786653',
-                    federation: '0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944',
-                    explorer: 'https://kovan.etherscan.io'
-                };
-                let rskTestnetConfig = {
-                    name: 'RSK Testnet',
-                    bridge: '0x684a8a976635fb7ad74a0134ace990a6a0fcce84',
-                    allowTokens: '0x952b706a9Ab5fD2d3B36205648ED7852676AfBE7',
-                    federation: '0x36C893a955399CF15A4A2FbeF04c0e06d4D9b379',
-                    explorer: 'https://explorer.testnet.rsk.co'
-                };
-
-                // Replace with proper values contracts exist in mainnet
-                let ethMainnetConfig = {
-                    name: 'ETH Mainnet',
-                    bridge: "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-                    allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
-                    federation: "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
-                    explorer: 'https://etherscan.io'
-                };
-                let rskMainnetConfig = {
-                    name: 'RSK Mainnet',
-                    bridge: "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
-                    allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
-                    federation: "0xac42761c37d4467ff69082249b9e67d6b35d50cb",
-                    explorer: 'https://explorer.rsk.co'
-                };
-
                 let config = null;
                 let tokenContract = null;
                 let allowTokensContract = null;
@@ -444,6 +436,9 @@
                 let isTestnet = true;
 
                 $(document).ready(function() {
+                    new ClipboardJS('.copy');
+                    $('[data-toggle="tooltip"]').tooltip()
+                    
                     isTestnet = window.location.href.includes('testnet');
                     if(isTestnet) {
                         $('#home h2.title').text('Token Bridge between RSK Testnet and Kovan');
@@ -460,7 +455,17 @@
                     .catch( (err) => {
                         onMetaMaskConnectionError(err);
                     });
-                    $('#tokenAddress').change(isTokenAllowed);
+                    $('#tokenAddress').change(function(event) {
+                        let token = TOKENS.find(element => element.token == event.currentTarget.value);
+                        if(token) {
+                            $('#willReceive').html(`<a target="_blank" href="${config.crossToNetwork.explorer}/address/${token[config.crossToNetwork.networkId].address}">${token[config.crossToNetwork.networkId].symbol}</a>`);
+                            $('#willReceive-copy').show();
+                            $('#willReceive-copy').attr('data-clipboard-text', token[config.crossToNetwork.networkId].address);
+                        } else {
+                            $('#willReceive').html('');
+                            $('#willReceive-copy').hide();
+                        }
+                    });
                     $('#amount').change(isAmountOk);
                     $('#amount').keypress(function(event) {
                         if(event.key === ',')
@@ -470,45 +475,14 @@
                         e.preventDefault();
                         crossToken();
                     });
-                    $('#getSideTokenForm').on('submit', function(e) {
-                        e.preventDefault();
-                        getSideTokenAddress();
-                    });
-                    $('#getSideTokenBalance').on('submit', function(e) {
-                        e.preventDefault();
-                        getSideTokenBalance();
-                    });
                     cleanAlertFromTransfer();
                 });
-
-                async function getSideTokenAddress() {
-                    try {
-                        let tokenAddress = $('#originalTokenAddress').val().toLowerCase();
-                        sideTokenAddress = await bridgeContract.methods.mappedTokens(tokenAddress).call();
-                        if(sideTokenAddress !== '0x0000000000000000000000000000000000000000') {
-                            $('#sideTokenAddress').text(sideTokenAddress);
-                            cleanAlertFromTransfer();
-                            $('#check-balance').show();
-                        } else {
-                            $('#sideTokenAddress').text('Unknow Original Token Address');
-                        }
-                    } catch(err) {
-                        $('#sideTokenAddress').text(err.message);
-                    }
-                }
-
-                async function getSideTokenBalance() {
-                    let sideTokenContract =  new web3.eth.Contract(erc20DetailedAbi, sideTokenAddress);
-                    let address = $('#sideAddress').val().toLowerCase();
-                    let balance = await sideTokenContract.methods.balanceOf(address).call();
-                    $('#sideTokenBalance').text(`Balance is: ${balance}`);
-                }
 
                 async function setConfiguration() {
                   try {
                     let [fee, maxWithdraw, maxAllowed, minAllowed, federators, isValidatingAllowedTokens] = await Promise.all([
                       bridgeContract.methods.getCrossingPayment().call(),
-                      bridgeContract.methods.calcMaxWithdraw().call(),
+                      allowTokensContract.methods.dailyLimit().call(),
                       allowTokensContract.methods.getMaxTokensAllowed().call(),
                       allowTokensContract.methods.getMinTokensAllowed().call(),
                       federationContract.methods.getMembers().call(),
@@ -516,9 +490,9 @@
                     ]);
 
                     $('#config-fee').text(fee);
-                    $('#config-min').text(web3.utils.fromWei(minAllowed, 'ether'));
-                    $('#config-max').text(web3.utils.fromWei(maxAllowed, 'ether'));
-                    $('#config-to-spend').text(web3.utils.fromWei(maxWithdraw, 'ether'));
+                    $('#config-min').text(parseInt(web3.utils.fromWei(minAllowed, 'ether')).toLocaleString());
+                    $('#config-max').text(parseInt(web3.utils.fromWei(maxAllowed, 'ether')).toLocaleString());
+                    $('#config-to-spend').text(parseInt(web3.utils.fromWei(maxWithdraw, 'ether')).toLocaleString());
                     $('#config-federators-count').text(federators.length);
                     $('#config-federators-addresses').text(federators.join('\n'));
                     $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
@@ -531,19 +505,22 @@
 
                 async function crossToken() {
                     cleanAlertSuccess();
-                    let tokenAddress = $('#tokenAddress').val();
+                    let tokenToCross = $('#tokenAddress').val();
+                    let token = TOKENS.find(element => element.token == tokenToCross);
+                    if(!token) {
+                        crossTokenError('Choose a token to cross');
+                        return;
+                    }
+                    let tokenAddress = token[networkId].address;
+                    tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
                     let amount = $('#amount').val();
-                    if(!tokenAddress || !amount) {
-                        crossTokenError('Complete the Token Address and Amount fields');
+                    if(!amount) {
+                        crossTokenError('Complete the Amount field');
                         return;
                     }
 
                     if($('#amount').hasClass('is-invalid')) {
                         crossTokenError('Invalid Amount');
-                        return;
-                    }
-                    if($('#tokenAddress').hasClass('is-invalid')) {
-                        crossTokenError('Invalid Token Address');
                         return;
                     }
 
@@ -601,8 +578,8 @@
                         countdown.hide();
                         alertSuccess.html(`Transfer confirmed. Check the transfer <a href="${config.explorer}/tx/${receipt.transactionHash}">receipt</a>`);
 
-                        $('.nav-tabs a[href="#side"]').tab('show');
                         let alertFromTransfer = $('#alert-from-transfer');
+                        //TODO change to show the explorer or mention metamask
                         alertFromTransfer.html(`Transfer was confirmed. Look for your token ${tokenAddress} on the other side`);
                         alertFromTransfer.show();
 
@@ -691,57 +668,6 @@
                     $('#amount').prop("disabled", false);
                 }
 
-                function markInvalidTokenAddress(errorDescription) {
-                    let invalidFeedBack = $('.tokenAddress .invalid-feedback');
-                    invalidFeedBack.text(errorDescription);
-                    invalidFeedBack.show();
-                    $('#tokenAddress').addClass('is-invalid');
-                    $('#tokenAddress').prop("disabled", false);
-                }
-
-                async function isTokenAllowed() {
-                    cleanAlertSuccess();
-                    let tokenAddress = $('#tokenAddress').val();
-                    tokenAddress = tokenAddress.toLowerCase();
-                    $('#tokenAddress').val(tokenAddress);
-                    $('#tokenSymbol').text('').hide();
-                    if(tokenAddress.length != 42) {
-                        markInvalidTokenAddress('Address must be 42 characters long hex string');
-                        return;
-                    }
-                    $('#tokenAddress').prop("disabled", true);
-                    try {
-                        isSideToken = await bridgeContract.methods.isSideToken(tokenAddress).call();
-
-                        let isTokenAllowed = await allowTokensContract.methods.isTokenAllowed(tokenAddress).call();
-                        if(!isSideToken && !isTokenAllowed)
-                            throw new Error('Token is not white listed, contact the RSK team to allow this token to cross');
-                        tokenContract =  new web3.eth.Contract(erc20DetailedAbi, tokenAddress);
-
-                        tokenSymbol = '';
-                        let symbol = await tokenContract.methods.symbol().call();
-                        if(symbol.length === 0)
-                            throw new Error('Token does not have a symbol');
-                        tokenSymbol = symbol;
-                        $('#tokenSymbol').text(tokenSymbol).show();
-
-                        let decimals = await tokenContract.methods.decimals().call();
-                        if(parseInt(decimals) !== 18)
-                            throw new Error(`Token ${tokenSymbol} does not have 18 decimals`);
-
-                        let balance = await tokenContract.methods.balanceOf(address).call();
-                        if(balance == 0)
-                            throw new Error(`You have 0 ${tokenSymbol} tokens`);
-
-                        $('.tokenAddress .invalid-feedback').hide();
-                        $('#tokenAddress').removeClass('is-invalid');
-                        $('#tokenAddress').prop("disabled", false);
-
-                    } catch(err) {
-                        markInvalidTokenAddress(err.message);
-                    }
-                }
-
                 async function isInstalled() {
                     if (typeof ethereum === 'undefined') {
                         console.log('undefined ethereum')
@@ -760,10 +686,11 @@
                     alert.hide();
                     window.web3 = new Web3(web3.currentProvider);
                     await ethereum.enable();
-                    address = await getAccounts()
+                    address = await getAccounts();
                     let newNetworkId = await web3.eth.net.getId();
                     await updateNetwork(newNetworkId);
                     web3.currentProvider.publicConfigStore.on('update', updateCallback);
+                    return newNetworkId;
                 }
 
                 function onMetaMaskConnectionError(err) {
@@ -801,39 +728,102 @@
 
                 function updateNetwork(newNetwork) {
                     newNetwork = parseInt(newNetwork);
-                    let networkName = '';
                     let alert = $('#alert-danger');
+                    config = null;
                     if(isTestnet) { 
                         switch (newNetwork) {
                         case 42:
-                            config = kovanConfig;
-                            networkName = kovanConfig.name;
+                            config = KOVAN_CONFIG;
                             break;
                         case 31:
-                            config = rskTestnetConfig;
-                            networkName = rskTestnetConfig.name;
+                            config = RSK_TESTNET_CONFIG;
                             break;
                         }
                     } else {
                         switch (newNetwork) {
                         case 1:
-                            config = ethMainnetConfig;
-                            networkName = ethMainnetConfig.name;
+                            config = ETH_CONFIG;
                             break;
                         case 30:
-                            config = rskMainnetConfig;
-                            networkName = rskMainnetConfig.name;
+                            config = RSK_MAINNET_CONFIG;
                             break;
                         }
                     }
-                    $('#network').text(networkName);
+                    let networkName = config ? config.name : '';
+                    $('#fromNetwork').val(networkName);
                     if(networkName === '')
                         throw new Error('The current network is not compatible with the bridge. Please select RSK Mainnet, Ethereum, Rsk Testnet or Kovan');
 
-                    allowTokensContract = new web3.eth.Contract(allowTokensAbi, config.allowTokens);
-                    bridgeContract = new web3.eth.Contract(bridgeAbi, config.bridge);
-                    federationContract = new web3.eth.Contract(federationAbi, config.federation);
+                    $('#toNetwork').val(config.crossToNetwork.name);
+                    allowTokensContract = new web3.eth.Contract(ALLOW_TOKENS_ABI, config.allowTokens);
+                    bridgeContract = new web3.eth.Contract(BRIDGE_ABI, config.bridge);
+                    federationContract = new web3.eth.Contract(FEDERATION_ABI, config.federation);
                     networkId = newNetwork;
+
+                    updateTokenAddressDropdown(networkId);
+                    updateTokenListTab(config);
+                }
+
+                function updateTokenAddressDropdown(networkId) {
+                    let selectHtml = `<option value="">Choose a token...</option>`;
+                    for(let aToken of TOKENS) {
+                        if(aToken[networkId] != undefined) {
+                            selectHtml += `\n<option value="${aToken.token}">${aToken[networkId].symbol} (${aToken.name})</option>`
+                        }
+                    }
+                    $('#tokenAddress').html(selectHtml);
+                }
+
+                function updateTokenListTab(config) {
+                    let tabHtml = `<div class="row">`;
+                    tabHtml += `\n    <div class="col-sm-5 text-center">`;
+                    tabHtml += `\n        <h3>${config.name}</h3>`;
+                    tabHtml += `\n    </div>`;
+                    tabHtml += `\n    <div class="col-sm-2 text-center"></div>`;
+                    tabHtml += `\n    <div class="col-sm-5 text-center">`;
+                    tabHtml += `\n        <h3>${config.crossToNetwork.name}</h3>`;
+                    tabHtml += `\n    </div>`;
+                    tabHtml += `\n</div>`;
+                    for(let aToken of TOKENS) {
+                        if(aToken[networkId] != undefined) {
+                            tabHtml += `\n<div class="row mb-3">`;
+                            tabHtml += `\n    <div class="col-sm-6 row">`;
+                            tabHtml += `\n      <div class="col-sm-2 font-weight-bold">`;
+                            tabHtml += `\n            ${aToken[config.networkId].symbol}`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n      <div class="col-sm-8">`;
+                            tabHtml += `\n        <a href="${config.explorer}/address/${aToken[config.networkId].address}" target="_blank">`;
+                            tabHtml += `\n            ${aToken[config.networkId].address}`;
+                            tabHtml += `\n        </a>`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n      <div class="col-sm-2">`;
+                            tabHtml += `\n        <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[config.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
+                            tabHtml += `\n            <i class="far fa-copy"></i>`;
+                            tabHtml += `\n        </button>`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n    </div>`;
+                            tabHtml += `\n    <div class="col-sm-6 row">`;
+                            tabHtml += `\n      <div class="col-sm-1">`;
+                            tabHtml += `\n        <i class="fas fa-arrows-alt-h"></i>`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n      <div class="col-sm-2 font-weight-bold">`;
+                            tabHtml += `\n            ${aToken[config.crossToNetwork.networkId].symbol}`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n      <div class="col-sm-8">`;
+                            tabHtml += `\n        <a href="${config.crossToNetwork.explorer}/address/${aToken[config.crossToNetwork.networkId].address}" target="_blank">`;
+                            tabHtml += `\n            ${aToken[config.crossToNetwork.networkId].address}`;
+                            tabHtml += `\n        </a>`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n      <div class="col-sm-1">`;
+                            tabHtml += `\n        <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[config.crossToNetwork.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
+                            tabHtml += `\n            <i class="far fa-copy"></i>`;
+                            tabHtml += `\n        </button>`;
+                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n    </div>`;
+                            tabHtml += `\n</div>`;
+                        }
+                    }
+                    $('#tokenListTab').html(tabHtml);
                 }
 
                 async function getAccounts() {
@@ -843,18 +833,106 @@
                     return accounts[0];
                 }
 
-// --------- ABI --------------
-const bridgeAbi = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_to","type":"address"},{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"AcceptedCrossTransfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_to","type":"address"},{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"},{"indexed":false,"internalType":"string","name":"_symbol","type":"string"},{"indexed":false,"internalType":"bytes","name":"userData","type":"bytes"}],"name":"Cross","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"CrossingPaymentChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"_newFederation","type":"address"}],"name":"FederationChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_newSideTokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_originalTokenAddress","type":"address"},{"indexed":false,"internalType":"string","name":"_newSymbol","type":"string"}],"name":"NewSideToken","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"PauserAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"PauserRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"constant":false,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"addPauser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"allowTokens","outputs":[{"internalType":"contract AllowTokens","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isPauser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"knownTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lastDay","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"mappedTokens","outputs":[{"internalType":"contract SideToken","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"originalTokens","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"pause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"renouncePauser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"sideTokenFactory","outputs":[{"internalType":"contract SideTokenFactory","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"spentToday","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbolPrefix","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"unpause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"}],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_manager","type":"address"},{"internalType":"address","name":"_federation","type":"address"},{"internalType":"address","name":"_allowTokens","type":"address"},{"internalType":"address","name":"_sideTokenFactory","type":"address"},{"internalType":"string","name":"_symbolPrefix","type":"string"}],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"acceptTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"tokenToUse","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"}],"name":"tokenFallback","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"tokensReceived","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"isSideToken","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"_blockHash","type":"bytes32"},{"internalType":"bytes32","name":"_transactionHash","type":"bytes32"},{"internalType":"address","name":"_receiver","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint32","name":"_logIndex","type":"uint32"}],"name":"getTransactionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"_blockHash","type":"bytes32"},{"internalType":"bytes32","name":"_transactionHash","type":"bytes32"},{"internalType":"address","name":"_receiver","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint32","name":"_logIndex","type":"uint32"}],"name":"transactionWasProcessed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"setCrossingPayment","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getCrossingPayment","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"calcMaxWithdraw","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newFederation","type":"address"}],"name":"changeFederation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getFederation","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}];
+                // --------- CONFIGS ----------
+                let KOVAN_CONFIG = {
+                    networkId: 42,
+                    name: 'Kovan',
+                    bridge: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
+                    allowTokens: '0xe4aa0f414725c9322a1a9d80d469c5e234786653',
+                    federation: '0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944',
+                    explorer: 'https://kovan.etherscan.io'
+                };
+                let RSK_TESTNET_CONFIG = {
+                    networkId: 31,
+                    name: 'RSK Testnet',
+                    bridge: '0x684a8a976635fb7ad74a0134ace990a6a0fcce84',
+                    allowTokens: '0x952b706a9Ab5fD2d3B36205648ED7852676AfBE7',
+                    federation: '0x36C893a955399CF15A4A2FbeF04c0e06d4D9b379',
+                    explorer: 'https://explorer.testnet.rsk.co',
+                    crossToNetwork: KOVAN_CONFIG
+                };
+                KOVAN_CONFIG.crossToNetwork = RSK_TESTNET_CONFIG;
 
-const allowTokensAbi = [{"inputs":[{"internalType":"address","name":"_manager","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"}],"name":"AllowedTokenAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"}],"name":"AllowedTokenRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"_enabled","type":"bool"}],"name":"AllowedTokenValidation","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"dailyLimit","type":"uint256"}],"name":"DailyLimitChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_maxTokens","type":"uint256"}],"name":"MaxTokensAllowedChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_minTokens","type":"uint256"}],"name":"MinTokensAllowedChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"allowedTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dailyLimit","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"isValidatingAllowedTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getMaxTokensAllowed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getMinTokensAllowed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"isTokenAllowed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"addAllowedToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"removeAllowedToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"enableAllowedTokensValidation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"disableAllowedTokensValidation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"maxTokens","type":"uint256"}],"name":"setMaxTokensAllowed","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"minTokens","type":"uint256"}],"name":"setMinTokensAllowed","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_dailyLimit","type":"uint256"}],"name":"changeDailyLimit","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"tokenToUse","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"spentToday","type":"uint256"},{"internalType":"bool","name":"isSideToken","type":"bool"}],"name":"isValidTokenTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"spentToday","type":"uint256"}],"name":"calcMaxWithdraw","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
+                // Replace with proper values contracts exist in mainnet
+                let ETH_CONFIG = {
+                    networkId: 1,
+                    name: 'ETH Mainnet',
+                    bridge: "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
+                    allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
+                    federation: "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
+                    explorer: 'https://etherscan.io'
+                };
+                let RSK_MAINNET_CONFIG = {
+                    networkId: 30,
+                    name: 'RSK Mainnet',
+                    bridge: "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
+                    allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
+                    federation: "0xac42761c37d4467ff69082249b9e67d6b35d50cb",
+                    explorer: 'https://explorer.rsk.co',
+                    crossToNetwork: ETH_CONFIG
+                };
+                ETH_CONFIG.crossToNetwork = RSK_MAINNET_CONFIG;
+                // --------- CONFIGS  END --------------
 
-const erc20DetailedAbi = [{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"}];
+                // --------- ABI --------------
+                const BRIDGE_ABI = [{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_to","type":"address"},{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"AcceptedCrossTransfer","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_to","type":"address"},{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"},{"indexed":false,"internalType":"string","name":"_symbol","type":"string"},{"indexed":false,"internalType":"bytes","name":"userData","type":"bytes"}],"name":"Cross","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"CrossingPaymentChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"_newFederation","type":"address"}],"name":"FederationChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_newSideTokenAddress","type":"address"},{"indexed":true,"internalType":"address","name":"_originalTokenAddress","type":"address"},{"indexed":false,"internalType":"string","name":"_newSymbol","type":"string"}],"name":"NewSideToken","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Paused","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"PauserAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"account","type":"address"}],"name":"PauserRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"address","name":"account","type":"address"}],"name":"Unpaused","type":"event"},{"constant":false,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"addPauser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"allowTokens","outputs":[{"internalType":"contract AllowTokens","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"isPauser","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"knownTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"lastDay","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"mappedTokens","outputs":[{"internalType":"contract SideToken","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"originalTokens","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"pause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"paused","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"renouncePauser","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"sideTokenFactory","outputs":[{"internalType":"contract SideTokenFactory","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"spentToday","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbolPrefix","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"unpause","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"}],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_manager","type":"address"},{"internalType":"address","name":"_federation","type":"address"},{"internalType":"address","name":"_allowTokens","type":"address"},{"internalType":"address","name":"_sideTokenFactory","type":"address"},{"internalType":"string","name":"_symbolPrefix","type":"string"}],"name":"initialize","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"version","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"tokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"acceptTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"tokenToUse","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"receiveTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":true,"stateMutability":"payable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"}],"name":"tokenFallback","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"},{"internalType":"bytes","name":"","type":"bytes"}],"name":"tokensReceived","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"isSideToken","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"_blockHash","type":"bytes32"},{"internalType":"bytes32","name":"_transactionHash","type":"bytes32"},{"internalType":"address","name":"_receiver","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint32","name":"_logIndex","type":"uint32"}],"name":"getTransactionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"_blockHash","type":"bytes32"},{"internalType":"bytes32","name":"_transactionHash","type":"bytes32"},{"internalType":"address","name":"_receiver","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"},{"internalType":"uint32","name":"_logIndex","type":"uint32"}],"name":"transactionWasProcessed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"setCrossingPayment","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getCrossingPayment","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"calcMaxWithdraw","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newFederation","type":"address"}],"name":"changeFederation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getFederation","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"}];
 
-const sideTokenAbi = [{"inputs":[{"internalType":"string","name":"_tokenName","type":"string"},{"internalType":"string","name":"_tokenSymbol","type":"string"},{"internalType":"address","name":"_minterAddr","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"tokenHolder","type":"address"}],"name":"AuthorizedOperator","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"data","type":"bytes"},{"indexed":false,"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"Burned","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"data","type":"bytes"},{"indexed":false,"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"Minted","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"tokenHolder","type":"address"}],"name":"RevokedOperator","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"operator","type":"address"},{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"amount","type":"uint256"},{"indexed":false,"internalType":"bytes","name":"data","type":"bytes"},{"indexed":false,"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"Sent","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"value","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"operator","type":"address"}],"name":"authorizeOperator","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"tokenHolder","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"burn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":true,"inputs":[],"name":"defaultOperators","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"granularity","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"operator","type":"address"},{"internalType":"address","name":"tokenHolder","type":"address"}],"name":"isOperatorFor","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"minter","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"operatorBurn","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"},{"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"operatorSend","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"operator","type":"address"}],"name":"revokeOperator","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"data","type":"bytes"}],"name":"send","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"holder","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"account","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"bytes","name":"userData","type":"bytes"},{"internalType":"bytes","name":"operatorData","type":"bytes"}],"name":"mint","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+                const ALLOW_TOKENS_ABI = [{"inputs":[{"internalType":"address","name":"_manager","type":"address"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"}],"name":"AllowedTokenAdded","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"_tokenAddress","type":"address"}],"name":"AllowedTokenRemoved","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"bool","name":"_enabled","type":"bool"}],"name":"AllowedTokenValidation","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"dailyLimit","type":"uint256"}],"name":"DailyLimitChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_maxTokens","type":"uint256"}],"name":"MaxTokensAllowedChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"_minTokens","type":"uint256"}],"name":"MinTokensAllowedChanged","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"allowedTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"dailyLimit","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"isValidatingAllowedTokens","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getMaxTokensAllowed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"getMinTokensAllowed","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"isTokenAllowed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"addAllowedToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"token","type":"address"}],"name":"removeAllowedToken","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"enableAllowedTokensValidation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"disableAllowedTokensValidation","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"maxTokens","type":"uint256"}],"name":"setMaxTokensAllowed","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"minTokens","type":"uint256"}],"name":"setMinTokensAllowed","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_dailyLimit","type":"uint256"}],"name":"changeDailyLimit","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"tokenToUse","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"spentToday","type":"uint256"},{"internalType":"bool","name":"isSideToken","type":"bool"}],"name":"isValidTokenTransfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"spentToday","type":"uint256"}],"name":"calcMaxWithdraw","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}];
 
-const federationAbi = [{"inputs":[{"internalType":"address[]","name":"_members","type":"address[]"},{"internalType":"uint256","name":"_required","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"Executed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberAddition","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberRemoval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"required","type":"uint256"}],"name":"RequirementChange","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"Voted","type":"event"},{"constant":true,"inputs":[],"name":"MAX_MEMBER_COUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"bridge","outputs":[{"internalType":"contract IBridge","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isMember","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"members","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"processed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"required","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"},{"internalType":"address","name":"","type":"address"}],"name":"votes","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_bridge","type":"address"}],"name":"setBridge","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"originalTokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"voteTransaction","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"getTransactionCount","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"hasVoted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"transactionWasProcessed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"originalTokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"getTransactionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_newMember","type":"address"}],"name":"addMember","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_oldMember","type":"address"}],"name":"removeMember","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getMembers","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_required","type":"uint256"}],"name":"changeRequirement","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+                const ERC20_ABI = [{"inputs":[{"internalType":"string","name":"name","type":"string"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"uint8","name":"decimals","type":"uint8"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"constant":true,"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"sender","type":"address"},{"internalType":"address","name":"recipient","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"}];
 
-// --------- ABI  END --------------
+                const FEDERATION_ABI = [{"inputs":[{"internalType":"address[]","name":"_members","type":"address[]"},{"internalType":"uint256","name":"_required","type":"uint256"}],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"Executed","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberAddition","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"member","type":"address"}],"name":"MemberRemoval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"previousOwner","type":"address"},{"indexed":true,"internalType":"address","name":"newOwner","type":"address"}],"name":"OwnershipTransferred","type":"event"},{"anonymous":false,"inputs":[{"indexed":false,"internalType":"uint256","name":"required","type":"uint256"}],"name":"RequirementChange","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"sender","type":"address"},{"indexed":true,"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"Voted","type":"event"},{"constant":true,"inputs":[],"name":"MAX_MEMBER_COUNT","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"bridge","outputs":[{"internalType":"contract IBridge","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"isMember","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"isOwner","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"members","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"internalType":"address","name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"name":"processed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[],"name":"renounceOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"required","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"newOwner","type":"address"}],"name":"transferOwnership","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"","type":"bytes32"},{"internalType":"address","name":"","type":"address"}],"name":"votes","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_bridge","type":"address"}],"name":"setBridge","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"originalTokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"voteTransaction","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"getTransactionCount","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"hasVoted","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"bytes32","name":"transactionId","type":"bytes32"}],"name":"transactionWasProcessed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"originalTokenAddress","type":"address"},{"internalType":"address","name":"receiver","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"string","name":"symbol","type":"string"},{"internalType":"bytes32","name":"blockHash","type":"bytes32"},{"internalType":"bytes32","name":"transactionHash","type":"bytes32"},{"internalType":"uint32","name":"logIndex","type":"uint32"}],"name":"getTransactionId","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"payable":false,"stateMutability":"pure","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_newMember","type":"address"}],"name":"addMember","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"internalType":"address","name":"_oldMember","type":"address"}],"name":"removeMember","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"getMembers","outputs":[{"internalType":"address[]","name":"","type":"address[]"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"internalType":"uint256","name":"_required","type":"uint256"}],"name":"changeRequirement","outputs":[],"payable":false,"stateMutability":"nonpayable","type":"function"}];
+                // --------- ABI  END --------------
+
+                // --------- TOKENS --------------
+                const DOC_TOKEN = { token: 'DOC', name: 'Dollar on Chain',
+                    30:{symbol:'DOC', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db'},
+                    31:{symbol:'DOC', address:'0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0'},
+                    1:{symbol:'eDOC', address:'0x69f6d4D4813F8e2e618DAE7572e04b6D5329E207'},
+                    42:{symbol:'eDOC', address:'0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa'}
+                };
+
+                const DAI_TOKEN = { token: 'DAI', name: 'Dai Stablecoin',
+                    30:{symbol:'rDAI', address:'0x6b1a73d547f4009a26b8485b63d7015d248ad406'},
+                    31:{symbol:'rKovDAI', address:'0x0d86fca9be034a363cf12c9834af08d54a10451c'},
+                    1:{symbol:'DAI', address:'0x6b175474e89094c44da98b954eedeac495271d0f'},
+                    42:{symbol:'DAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40'}
+                };
+
+                const INV_TOKEN = { token: 'INV', name: 'Invest',
+                    30:{symbol:'INV', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db'},
+                    1:{symbol:'eINV', address:'0x09a8f2041be23e8ec3c72790c9a92089bc70fbca'},
+                };
+
+                const BITPRO_TOKEN = { token: 'BITPRO', name: 'BitPro',
+                    31:{symbol:'BITPRO', address:'0x4da7997a819bb46b6758b9102234c289dd2ad3bf'},
+                    42:{symbol:'eBITPRO', address:'0xB3c9ec8833bfA0d382a183EcED27aBc079520928'},
+                };
+
+                const RIF_TOKEN = { token: 'RIF', name: 'RIF',
+                    30:{symbol:'RIF', address:'0x2acc95758f8b5f583470ba265eb685a8f45fc9d5'},
+                    31:{symbol:'tRIF', address:'0x19f64674d8a5b4e652319f5e239efd3bc969a1fe'},
+                    1:{symbol:'eRIF', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a'},
+                    42:{symbol:'etRIF', address:'0x69f6d4d4813f8e2e618dae7572e04b6d5329e207'}
+                };
+
+                const TUSD_TOKEN = { token: 'TUSD', name: 'True USD',
+                    31:{symbol:'rKovTUSD', address:'0x0a8d098e31a60da2b9c874d97de6e6b385c28e9d'},
+                    42:{symbol:'TUSD', address:'0x0000000000085d4780B73119b644AE5ecd22b376'},
+                };
+
+                const WETH_TOKEN = { token: 'WETH', name: 'Wrapped Ether',
+                    31:{symbol:'rKovWETH', address:'0x79055c1e06fbc5893d664d6e7521aa0bd9a514e9'},
+                    42:{symbol:'WETH', address:'0xb39862d7d1b11cd9b781b1473e142cbb545a6871'},
+                };
+
+                const ZRX_TOKEN = { token: 'ZRX', name: '0x Protocol',
+                    31:{symbol:'rKovZRX', address:'0x823b3d62cb5a4ed97f26ed9888ea721b569afe27'},
+                    42:{symbol:'ZRX', address:'0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa'},
+                };
+
+                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, TUSD_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
+                // --------- TOKENS  END --------------
             </script>
         </div>
     </body>
