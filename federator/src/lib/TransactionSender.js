@@ -20,7 +20,7 @@ module.exports = class TransactionSender {
         if (!number) {
             return '0x0';
         }
-        return `0x${parseInt(number).toString(16)}`;
+        return `0x${Math.ceil(parseInt(number)).toString(16)}`;
     }
 
     getGasPrice(chainId) {
@@ -37,8 +37,9 @@ module.exports = class TransactionSender {
     }
 
     async getRskGasPrice() {
-        let gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: gasPrice * 1.01;
+        let block = await web3.eth.getBlock();
+        let gasPrice= parseInt(block.minimumGasPrice);
+        return gasPrice <= 1 ? 1: gasPrice * 1.05;
     }
 
     async createRawTransaction(from, to, data, value) {
