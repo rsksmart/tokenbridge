@@ -149,6 +149,27 @@
                     transform: rotateY(3600deg);
                 }
             }
+            .indicator span {
+                position: relative;
+                margin-left: 5px;
+                padding-left: 3px;
+            }
+            .indicator.btn-outline-danger span:before {
+                background-color: #dc3545;
+            }
+            .indicator span:before {
+                position: absolute;
+                right: 98%;
+                top: 50%;
+                -webkit-transform: translate(-5px,-50%);
+                transform: translate(-5px,-50%);
+                content: "";
+                display: block;
+                width: 6px;
+                height: 6px;
+                border-radius: 50%;
+                background: #40d512;
+            }
             /* End Spinner */
         </style>
     </head>
@@ -157,9 +178,14 @@
             <!-- Navigation -->
             <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
                 <div class="container">
-                    <a class="navbar-brand" href="https://rsk.co"><img id="logo" src="https://developers.rsk.co/assets/img/rsk_logo.svg" class="logo" alt="RSK Token Bridge"></a>
+                    <a class="navbar-brand" href="https://rsk.co">
+                        <img id="logo" src="https://developers.rsk.co/assets/img/rsk_logo.svg" class="logo" alt="RSK Token Bridge">
+                    </a>
+                    <div class="indicator btn disabled btn-outline-danger badge-pill" style="margin-top:20px;">
+                        <span aria-describedby="tooltip-status">Unknown Network</span>
+                    </div>
                     <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
+                        <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="navbar-collapse collapse" id="navbarResponsive">
                         <ul class="navbar-nav ml-auto">
@@ -173,9 +199,18 @@
                                 <a class="nav-link" href="https://developers.rsk.co/tools/tokenbridge/dappguide" target="_blank">How to use it?</a>
                             </li>
                             <li class="nav-item">
-                                <a id="tokenbridge-navlink" class="nav-link" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a>
+                                <a id="get-rbtc-navlink" class="nav-link" href="https://coinswitch.rsk.co/" target="_blank">Get RBTC</a>
+                            </li>
+                            <li class="nav-item">
+                                <a id="network-navlink" class="nav-link" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a>
                             </li>
                         </ul>
+                        <div style="margin-top:15px">
+                            <button id="logIn" type="button" class="btn btn-primary badge-pill text-truncate" style="width: 90px;">
+                                log in
+                            </button>
+                        </div>
+                        </form>
                     </div>
                 </div>
             </nav>
@@ -201,15 +236,15 @@
                             <form id="crossForm" name="crossForm">
                                 <div class="form-row">
                                     <div class="col-md-2">
-                                        <div class="form-group fromNetwork">
+                                        <div class="form-group">
                                             <label for="fromNetwork">From</label>
                                             <div class="input-group">
-                                                <input type="text" readonly class="font-weight-bold form-control-plaintext" id="fromNetwork" name="fromNetwork" value="" data-toggle="tooltip" data-placement="bottom" title="">
+                                                <input type="text" readonly class="font-weight-bold form-control-plaintext fromNetwork" id="fromNetwork" name="fromNetwork" value="" data-toggle="tooltip" data-placement="bottom" title="">
                                             </div>
                                         </div>
                                     </div>
                                     <div class="col-md-3">
-                                        <div class="form-group tokenAddress">
+                                        <div class="form-group">
                                             <label for="tokenAddress">Token to Cross</label>
                                             <div class="input-group">
                                                 <select class="custom-select form-control" id="tokenAddress" name="tokenAddress" required>
@@ -222,7 +257,7 @@
                                     <div class="col-md-2">
                                         <div class="form-group amount">
                                             <label for="amount">Amount to cross</label>
-                                            <input id="amount" name="amount" type="number" class="form-control" placeholder="Amount" required>
+                                            <input name="amount" type="number" class="form-control" placeholder="Amount" required>
                                             <div class="invalid-feedback"></div>
                                         </div>
                                     </div>
@@ -232,10 +267,10 @@
                                         </div>
                                     </div>
                                     <div class="col-md-2">
-                                        <div class="form-group toNetwork">
+                                        <div class="form-group">
                                             <label class="toNetwork-label" for="toNetwork">To</label>
                                             <div class="input-group">
-                                                <input type="text" readonly class="font-weight-bold form-control-plaintext" id="toNetwork" name="toNetwork" value="">
+                                                <input type="text" readonly class="font-weight-bold form-control-plaintext toNetwork" id="toNetwork" name="toNetwork" value="">
                                             </div>
                                         </div>
                                     </div>
@@ -257,11 +292,29 @@
                                 <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
                             </form>
 
-                            <section id="info"  class="mt-1">
-                                    <div id="alert-info" class="alert alert-info" role="alert" style='display:none'></div>
-                            </section>
+                            <div id="console" style="display: none;">
+                                <h5>Steps:</h5>
+                                <ul>
+                                    <li id="validate-balance">
+                                        Validate your current balance <span class="icon-status ml-1"></span>
+                                    </li>
+                                    <li id="approve-transfer">
+                                        Request the token contract to approve the transfer <span class="icon-status ml-1"></span>
+                                    </li>
+                                    <li id="transfer-tokens">
+                                        Transfer the tokens to the bridge <span class="icon-status ml-1"></span>
+                                    </li>
+                                    <li id="wait-confirmations">
+                                        Wait for <span id="confirmations"></span> block confirmations on the bridge <span class="icon-status ml-1"></span>
+                                    </li>
+                                    <li id="check-balance">
+                                        Your token crossed to the other network<span></span>
+                                    </li>
+                                </ul>
+                            </div>
+
                             <section id="success"  class="mt-1">
-                                    <div id="alert-success" class="alert alert-success" role="alert" style='display:none'></div>
+                                <div id="alert-success" class="alert alert-success" role="alert" style='display:none'></div>
                             </section>
 
                             <div id="countdown"></div>
@@ -339,6 +392,21 @@
             </div>
           </div>
         </section>
+        <!-- Modal -->
+        <div id="myModal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">log in</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                    </div>
+                </div>
+            </div>
+        </div>
         <footer id="footer" class="section-bg">
             <div class="footer-top">
             <div class="container">
@@ -423,17 +491,22 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js"></script>
             <!-- Custom Js -->
             <script type="text/javascript">
+                //User
                 let address = '';
                 let networkId = '';
-                let tokenSymbol = '';
+                //Network configuration
                 let config = null;
-                let tokenContract = null;
+                let isTestnet = true;
                 let allowTokensContract = null;
                 let bridgeContract = null;
                 let federationContract = null;
+                let minTokensAllowed = 1;
+                let maxTokensAllowed = 10000;
+                let maxDailyLimit = 100000;
+                // Selected Token To Cross
+                let tokenContract = null;
                 let isSideToken = false;
                 let sideTokenAddress = null;
-                let isTestnet = true;
 
                 $(document).ready(function() {
                     new ClipboardJS('.copy');
@@ -442,19 +515,21 @@
                     isTestnet = window.location.href.includes('testnet');
                     if(isTestnet) {
                         $('#home h2.title').text('Token Bridge between RSK Testnet and Kovan');
-                        let navlink = $('#tokenbridge-navlink');
+                        let navlink = $('#network-navlink');
                         navlink.prop('href', 'https://tokenbridge.rsk.co');
                         navlink.text('Use Mainnet');
+                        navlink = $('#get-rbtc-navlink');
+                        navlink.prop('href', 'https://faucet.rsk.co/');
                     }
 
                     if(!/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())){
                         alert('This site will only work correctly under chrome or chromium');
                     }
-                    isInstalled()
-                    .then(() => setConfiguration())
-                    .catch( (err) => {
-                        onMetaMaskConnectionError(err);
-                    });
+
+                    disableInputs(true);
+
+                    $('#logIn').attr('onclick', 'onLogInClick()');
+
                     $('#tokenAddress').change(function(event) {
                         let token = TOKENS.find(element => element.token == event.currentTarget.value);
                         if(token) {
@@ -466,8 +541,8 @@
                             $('#willReceive-copy').hide();
                         }
                     });
-                    $('#amount').change(isAmountOk);
-                    $('#amount').keypress(function(event) {
+                    $('.amount input').change(isAmountOk);
+                    $('.amount input').keypress(function(event) {
                         if(event.key === ',')
                             return false;
                     });
@@ -475,10 +550,33 @@
                         e.preventDefault();
                         crossToken();
                     });
-                    cleanAlertFromTransfer();
                 });
 
-                async function setConfiguration() {
+                async function waitBlocks(numberOfBlocks) {
+                    var startBlock = await web3.eth.getBlockNumber();
+                    var currentBlock = startBlock;
+                    while(numberOfBlocks > currentBlock - startBlock) {
+                        var newBlock = await web3.eth.getBlockNumber();
+                        if(newBlock != currentBlock){
+                            currentBlock = newBlock;
+                        } else {
+                            await sleep(20000);
+                        }
+                    }
+                }
+
+                function onLogInClick() {
+                    if(!networkId) {
+                        $('#logIn').html('<i class="fas fa-sync fa-spin">');
+                        $('#logIn').attr('onclick', '');
+                        isInstalled()
+                        .catch( (err) => {
+                            onMetaMaskConnectionError(err);
+                        });
+                    }
+                }
+
+                async function setInfoTab() {
                   try {
                     let [fee, maxWithdraw, maxAllowed, minAllowed, federators, isValidatingAllowedTokens] = await Promise.all([
                       bridgeContract.methods.getCrossingPayment().call(),
@@ -489,85 +587,129 @@
                       allowTokensContract.methods.isValidatingAllowedTokens().call(),
                     ]);
 
+                    minTokensAllowed = parseInt(web3.utils.fromWei(minAllowed, 'ether'));
+                    maxTokensAllowed = parseInt(web3.utils.fromWei(maxAllowed, 'ether'));
+                    maxDailyLimit = parseInt(web3.utils.fromWei(maxWithdraw, 'ether'));
+
                     $('#config-fee').text(fee);
-                    $('#config-min').text(parseInt(web3.utils.fromWei(minAllowed, 'ether')).toLocaleString());
-                    $('#config-max').text(parseInt(web3.utils.fromWei(maxAllowed, 'ether')).toLocaleString());
-                    $('#config-to-spend').text(parseInt(web3.utils.fromWei(maxWithdraw, 'ether')).toLocaleString());
+                    $('#config-min').text(minTokensAllowed.toLocaleString());
+                    $('#config-max').text(maxTokensAllowed.toLocaleString());
+                    $('#config-to-spend').text(maxDailyLimit.toLocaleString());
                     $('#config-federators-count').text(federators.length);
                     $('#config-federators-addresses').text(federators.join('\n'));
                     $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
                     $('#config-whitelisted-enabled').text(isValidatingAllowedTokens);
 
                   } catch (err) {
-                    console.log('Error setting configuration ', err);
+                    console.error('Error setting info tab ', err);
                   }
                 }
 
+                function stepIcon(currentStep, html ='') {
+                    $(`#${currentStep} .icon-status`).html(html);
+                }
+                function iconProcessing(currentStep, html ='') {
+                    stepIcon(currentStep, `<i class="fas fa-sync fa-spin text-primary"> ${html}`);
+                }
+                function iconSuccess(currentStep, html ='') {
+                    stepIcon(currentStep, `<i class="fas fa-check text-success"></i> ${html}`);
+                }
+                function iconFail(currentStep, html ='') {
+                    stepIcon(currentStep, `<i class="fas fa-times text-danger"></i> ${html}`);
+                }
+
                 async function crossToken() {
-                    cleanAlertSuccess();
+                    const BN = web3.utils.BN;
+                    stepIcon('validate-balance','');
+                    stepIcon('approve-transfer','');
+                    stepIcon('ransfer-tokens','');
+                    stepIcon('wait-confirmations','');
+                    $('#check-balance span').html('');
+                    cleanAlertError();
+                    
                     let tokenToCross = $('#tokenAddress').val();
                     let token = TOKENS.find(element => element.token == tokenToCross);
                     if(!token) {
                         crossTokenError('Choose a token to cross');
                         return;
                     }
-                    let tokenAddress = token[networkId].address;
+                    const tokenAddress = token[networkId].address;
                     tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
-                    let amount = $('#amount').val();
+
+                    let amount = $('.amount input').val();
                     if(!amount) {
                         crossTokenError('Complete the Amount field');
                         return;
                     }
-
-                    if($('#amount').hasClass('is-invalid')) {
+                    if($('.amount input').hasClass('is-invalid')) {
                         crossTokenError('Invalid Amount');
                         return;
                     }
 
-                    $('#cross').prop('disabled', true);
-                    let  amountInWei = web3.utils.toWei(amount);
-                    let alertInfo = $('#alert-info');
-                    let gasPrice = '1';
-                    $('#spinner').show();
-                    let BN = web3.utils.BN;
-                    let balance = await tokenContract.methods.balanceOf(address).call();
+                    disableInputs(true);
+                    $('#console').show();
+                    let currentStep = '';
                     try {
-                        let balanceBN = new BN(balance);
-                        if(balanceBN.cmp(new BN(amountInWei)) < 0)
-                            throw new Error(`Insuficient Balance in your account, your current balance is ${web3.utils.fromWei(balance,'ether')} ${tokenSymbol}`);
-                        let gasPriceAvg = await web3.eth.getGasPrice();
+                        currentStep = 'validate-balance';
+                        iconProcessing(currentStep);
+                        const balance = await tokenContract.methods.balanceOf(address).call();
+                        const balanceBN = new BN(balance);
+                        const decimalBase = new BN((10 ** token[networkId].decimals).toString());
+                        const amountInDecimal = new BN(amount).mul(decimalBase);
+                        if(balanceBN.cmp(amountInDecimal) < 0) {
+                            let divmod = balanceBN.divmod(decimalBase);
+                            throw new Error(`Insuficient Balance in your account, your current balance is ${divmod.div.toString()},${divmod.mod.toString()} ${token[networkId].symbol}`);
+                        }
 
-                        let gasPriceParsed= parseInt(gasPriceAvg);
-                        let multiplier = 1.5;
-                        if(networkId >=30 && networkId <= 33)
-                            multiplier = 1.03;
-                        gasPrice = Math.ceil(gasPriceParsed * multiplier).toString();
+                        let maxWithdraw = parseInt(web3.utils.fromWei(await bridgeContract.methods.calcMaxWithdraw().call(), 'ether'));
+                        if(parseInt(amount) > maxWithdraw) {
+                            throw new Error(`Amount bigger than the daily limit. Daily limit left ${maxWithdraw} tokens`);
+                        }
 
-                        alertInfo.html('Requesting the token contract to approve the transfer, once its completed a second transaction crossing the tokens to the bridge will be asked...');
-                        alertInfo.show();
-                        await tokenContract.methods.approve(bridgeContract.options.address, amountInWei).call({from: address, gasPrice:gasPrice, gas:100000});
+                        let gasPriceParsed = 0;
+                        if(networkId >= 30 && networkId <= 33) {
+                            let block = await web3.eth.getBlock('latest');
+                            gasPriceParsed= parseInt(block.minimumGasPrice);
+                            gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.03;
+                        } else {
+                            let gasPriceAvg = await web3.eth.getGasPrice();
+                            gasPriceParsed= parseInt(gasPriceAvg);
+                            gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.3;
+                            
+                        }
+                        let gasPrice = `0x${Math.ceil(parseInt(gasPriceParsed)).toString(16)}`;
+                        iconSuccess(currentStep);
 
-                        let receipt = await tokenContract.methods.approve(bridgeContract.options.address, amountInWei).send({from: address, gasPrice:gasPrice, gas:100000});
-                        alertInfo.html(`<a href="${config.explorer}/tx/${receipt.transactionHash}">Approve successful</a>, transfering the tokens to the bridge...`);
-                        await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInWei).call({from: address, gasPrice:gasPrice, gas:300000});
+                        currentStep = 'approve-transfer';
+                        iconProcessing(currentStep);
+                        await tokenContract.methods.approve(bridgeContract.options.address, amountInDecimal).call({from: address, gasPrice:gasPrice, gas:100000});
 
-                        receipt = await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInWei).send({from: address, gasPrice:gasPrice, gas:300000});
-                        alertInfo.hide();
-                        let alertSuccess = $('#alert-success');
-                        alertSuccess.html(`Token <a href="${config.explorer}/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>`);
-                        alertSuccess.show();
+                        let receipt = await tokenContract.methods.approve(bridgeContract.options.address, amountInDecimal).send({from: address, gasPrice:gasPrice, gas:100000});
+                        iconSuccess(currentStep,`<a href="${config.explorer}/tx/${receipt.transactionHash}">Approve successful</a>`);
+                        //alertInfo.html(`<a href="${config.explorer}/tx/${receipt.transactionHash}">Approve successful</a>, transfering the tokens to the bridge...`);
+                        currentStep = 'transfer-tokens';
+                        iconProcessing(currentStep);
+                        await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInDecimal).call({from: address, gasPrice:gasPrice, gas:300000});
+
+                        receipt = await bridgeContract.methods.receiveTokens(tokenContract.options.address, amountInDecimal).send({from: address, gasPrice:gasPrice, gas:300000});
+                        iconSuccess(currentStep, `<a href="${config.explorer}/tx/${receipt.transactionHash}">Transfer to the bridge successfully</a>`);
+                        //let alertSuccess = $('#alert-success');
+                        //alertSuccess.html(`Token <a href="${config.explorer}/tx/${receipt.transactionHash}">transfer to the bridge successfully sent</a>`);
+                        //alertSuccess.show();
                         $('#cross').prop('disabled', false);
-                        $('#spinner').hide();
+                        //$('#spinner').hide();
 
+                        currentStep = 'wait-confirmations';
+                        iconProcessing(currentStep);
                         let { blockNumber } = receipt;
                         let currentBlock = await web3.eth.getBlockNumber();
-                        let requiredConfirmations = 10;
+                        let requiredConfirmations = config.confirmations;
 
                         let countdown = $('#countdown');
                         countdown.html('<div>Waiting for transaction to be confirmed <br /><br /><span id="time">10:00</span>')
                         countdown.show();
 
-                        let waitingTime = 60 * requiredConfirmations;
+                        let waitingTime = 30 * requiredConfirmations;
                         let display = $('#time');
                         startTimer(waitingTime, display);
 
@@ -576,16 +718,18 @@
                           currentBlock = await web3.eth.getBlockNumber();
                         }
                         countdown.hide();
-                        alertSuccess.html(`Transfer confirmed. Check the transfer <a href="${config.explorer}/tx/${receipt.transactionHash}">receipt</a>`);
+                        iconSuccess(currentStep)
 
-                        let alertFromTransfer = $('#alert-from-transfer');
+                        //alertSuccess.html(`Transfer confirmed. Check the transfer <a href="${config.explorer}/tx/${receipt.transactionHash}">receipt</a>`);
+                        $('#check-balance span').html(`<a href="${config.explorer}/tx/${receipt.transactionHash}">receipt</a><span class="icon-status ml-1">${iconSuccess()}</span>`)
+                        //let alertFromTransfer = $('#alert-from-transfer');
                         //TODO change to show the explorer or mention metamask
-                        alertFromTransfer.html(`Transfer was confirmed. Look for your token ${tokenAddress} on the other side`);
-                        alertFromTransfer.show();
+                        //alertFromTransfer.html(`Transfer was confirmed. Look for your token ${tokenAddress} on the other side`);
+                        //alertFromTransfer.show();
 
                     } catch(err) {
-                        $('#spinner').hide();
-                        crossTokenError(`Rejected the transaction :${err}`);
+                        iconFail(currentStep);
+                        crossTokenError(`Couln't cross the tokens. ${err.message}`);
                     };
                 }
 
@@ -612,49 +756,42 @@
                     alertSuccess.hide();
                 }
 
-                function cleanAlertFromTransfer() {
-                    let alertSuccess = $('#alert-success');
-                    alertSuccess.html('');
-                    alertSuccess.hide();
+                function cleanAlertError() {
+                    let alertError = $('#alert-danger');
+                    alertError.html('');
+                    alertError.hide();
                 }
 
                 function crossTokenError(err) {
                     let alertError = $('#alert-danger');
                     alertError.html(err);
                     alertError.show();
+                    alertError.focus();
                     $('#cross').prop('disabled', false);
-                    alertInfo = $('#alert-info');
-                    alertInfo.hide();
-                    alertInfo.html('');
-                    $('#spinner').hide();
+                    disableInputs(false);
                 }
 
                 async function isAmountOk() {
-                    cleanAlertSuccess();
+                    //cleanAlertSuccess();
                     let amount = $(this).val();
                     if(!amount || amount <= 0) {
                         markInvalidAmount('Amount must be bigger than 0');
                         return;
                     }
                     let BN = web3.utils.BN;
-                    let weiAmount = new BN(web3.utils.toWei(amount));
-                    $('#amount').prop("disabled", true);
+                    let parsedAmount = parseInt(amount);
+                    $('.amount input').prop("disabled", true);
                     try {
-                        let minTokensAllowed = await allowTokensContract.methods.getMinTokensAllowed().call();
-                        if(weiAmount.cmp(new BN(minTokensAllowed)) < 0) {
-                            throw new Error(`Amount lower than minimum allowed ${web3.utils.fromWei(minTokensAllowed, 'ether')} tokens per transfer`);
+                        if(parsedAmount < minTokensAllowed) {
+                            throw new Error(`Minimum amount ${minTokensAllowed} token`);
                         }
-                        let maxTokensAllowed = await allowTokensContract.methods.getMaxTokensAllowed().call();
-                        if(weiAmount.cmp(new BN(maxTokensAllowed)) > 0) {
-                            throw new Error(`Amount higher than max allowed ${web3.utils.fromWei(maxTokensAllowed, 'ether')} tokens per transfer`);
+                        if(parsedAmount > maxTokensAllowed) {
+                            throw new Error(`Max amount ${maxTokensAllowed} tokens`);
                         }
-                        let maxDailyLimit = await bridgeContract.methods.calcMaxWithdraw().call();
-                        if(weiAmount.cmp(new BN(maxDailyLimit)) > 0) {
-                            throw new Error(`Amount higher than daily limit, max withrow posible for the day is ${web3.utils.fromWei(maxDailyLimit, 'ether')}`);
-                        }
+                        
                         $('.amount .invalid-feedback').hide();
-                        $('#amount').removeClass('is-invalid');
-                        $('#amount').prop("disabled", false);
+                        $('.amount input').removeClass('is-invalid');
+                        $('.amount input').prop("disabled", false);
                     } catch(err) {
                         markInvalidAmount(err.message);
                     }
@@ -662,10 +799,10 @@
 
                 function markInvalidAmount(errorDescription) {
                     let invalidAmount = $('.amount .invalid-feedback');
-                    invalidAmount.text(errorDescription);
+                    invalidAmount.html(errorDescription);
                     invalidAmount.show();
-                    $('#amount').addClass('is-invalid');
-                    $('#amount').prop("disabled", false);
+                    $('.amount input').addClass('is-invalid');
+                    $('.amount input').prop("disabled", false);
                 }
 
                 async function isInstalled() {
@@ -681,24 +818,20 @@
                         + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a> is not installed. Once you install it reload the page.');
                     }
 
-                    let alert = $('#alert-danger');
-                    alert.html('');
-                    alert.hide();
                     window.web3 = new Web3(web3.currentProvider);
                     await ethereum.enable();
-                    address = await getAccounts();
                     let newNetworkId = await web3.eth.net.getId();
-                    await updateNetwork(newNetworkId);
+                    await updateCallback({networkVersion: newNetworkId, selectedAddress: await getAccounts()});
                     web3.currentProvider.publicConfigStore.on('update', updateCallback);
                     return newNetworkId;
                 }
 
                 function onMetaMaskConnectionError(err) {
-                    let alert = $('#alert-danger');
-                    alert.html(err);
-                    alert.show();
-                    $('#cross').prop('disabled', true);
-                    $('#getSideToken').prop('disabled', true);
+                    $('#myModal .modal-body').html(`<p>${err.message}</p>`);
+                    $('#myModal').modal('show');
+                    $('#logIn').attr('onclick', 'onLogInClick()');
+                    $('#logIn').text('log in');
+                    disableInputs(true);
                     tokenContract = null;
                     allowTokensContract = null;
                     bridgeContract = null;
@@ -707,29 +840,38 @@
                     networkId = '';
                 }
 
+                function disableInputs(disable) {
+                    $('#cross').prop('disabled', disable);
+                    $('#tokenAddress').prop('disabled', disable);
+                    $('.amount input').prop('disabled', disable);
+                }
+
                 function onMetaMaskConnectionSuccess() {
-                    let alert = $('#alert-danger');
-                    alert.html('');
-                    alert.hide();
-                    $('#cross').prop('disabled', false);
-                    $('#getSideToken').prop('disabled', false);
+                    disableInputs(false);
                 }
 
                 async function updateCallback(updatedInfo) {
                     try {
-                        await getAccounts();
                         updateNetwork(updatedInfo.networkVersion);
-                        address = updatedInfo.selectedAddress;
+                        updateAddress(updatedInfo.selectedAddress);
                         onMetaMaskConnectionSuccess();
                     } catch(err) {
                         onMetaMaskConnectionError(err);
                     };
                 }
 
-                function updateNetwork(newNetwork) {
+                function updateAddress(newAddress) {
+                    address = newAddress;
+                    $('#logIn').text(newAddress);
+
+                }
+
+                async function updateNetwork(newNetwork) {
                     newNetwork = parseInt(newNetwork);
-                    let alert = $('#alert-danger');
+                    if(networkId == newNetwork) return;
+
                     config = null;
+                    networkId = null;
                     if(isTestnet) { 
                         switch (newNetwork) {
                         case 42:
@@ -749,19 +891,29 @@
                             break;
                         }
                     }
-                    let networkName = config ? config.name : '';
-                    $('#fromNetwork').val(networkName);
-                    if(networkName === '')
-                        throw new Error('The current network is not compatible with the bridge. Please select RSK Mainnet, Ethereum, Rsk Testnet or Kovan');
-
-                    $('#toNetwork').val(config.crossToNetwork.name);
+                    if(config == null) {
+                        $('.fromNetwork').val('');
+                        $('.indicator span').html('Unknown Network');
+                        $('.indicator').removeClass('btn-outline-success');
+                        $('.indicator').addClass('btn-outline-danger');
+                        throw new Error(`Wrong Network.<br /> Please connect your wallet to <b>${isTestnet ? 'Rsk Testnet or Kovan' : 'RSK Mainnet or Ethereum'}</b>`);
+                    }
+                    networkId = newNetwork;
                     allowTokensContract = new web3.eth.Contract(ALLOW_TOKENS_ABI, config.allowTokens);
                     bridgeContract = new web3.eth.Contract(BRIDGE_ABI, config.bridge);
                     federationContract = new web3.eth.Contract(FEDERATION_ABI, config.federation);
-                    networkId = newNetwork;
-
+                    
+                    $('#myModal').modal('hide');
+                    $('.fromNetwork').val(config.name);
+                    $('.indicator span').html(config.name);
+                    $('.indicator').removeClass('btn-outline-danger');
+                    $('.indicator').addClass('btn-outline-success');
+                    $('.toNetwork').val(config.crossToNetwork.name);
+                    $('#confirmations').val(config.confirmations);
+                    
                     updateTokenAddressDropdown(networkId);
                     updateTokenListTab(config);
+                    await setInfoTab();
                 }
 
                 function updateTokenAddressDropdown(networkId) {
@@ -840,7 +992,8 @@
                     bridge: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
                     allowTokens: '0xe4aa0f414725c9322a1a9d80d469c5e234786653',
                     federation: '0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944',
-                    explorer: 'https://kovan.etherscan.io'
+                    explorer: 'https://kovan.etherscan.io',
+                    confirmations:10
                 };
                 let RSK_TESTNET_CONFIG = {
                     networkId: 31,
@@ -849,6 +1002,7 @@
                     allowTokens: '0x952b706a9Ab5fD2d3B36205648ED7852676AfBE7',
                     federation: '0x36C893a955399CF15A4A2FbeF04c0e06d4D9b379',
                     explorer: 'https://explorer.testnet.rsk.co',
+                    confirmations:10,
                     crossToNetwork: KOVAN_CONFIG
                 };
                 KOVAN_CONFIG.crossToNetwork = RSK_TESTNET_CONFIG;
@@ -860,7 +1014,8 @@
                     bridge: "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
                     allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
                     federation: "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
-                    explorer: 'https://etherscan.io'
+                    explorer: 'https://etherscan.io',
+                    confirmations:120
                 };
                 let RSK_MAINNET_CONFIG = {
                     networkId: 30,
@@ -869,6 +1024,7 @@
                     allowTokens: "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
                     federation: "0xac42761c37d4467ff69082249b9e67d6b35d50cb",
                     explorer: 'https://explorer.rsk.co',
+                    confirmations:120,
                     crossToNetwork: ETH_CONFIG
                 };
                 ETH_CONFIG.crossToNetwork = RSK_MAINNET_CONFIG;
@@ -886,49 +1042,49 @@
 
                 // --------- TOKENS --------------
                 const DOC_TOKEN = { token: 'DOC', name: 'Dollar on Chain',
-                    30:{symbol:'DOC', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db'},
-                    31:{symbol:'DOC', address:'0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0'},
-                    1:{symbol:'eDOC', address:'0x69f6d4D4813F8e2e618DAE7572e04b6D5329E207'},
-                    42:{symbol:'eDOC', address:'0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa'}
+                    30:{symbol:'DOC', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db', decimals:18},
+                    31:{symbol:'DOC', address:'0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0', decimals:18},
+                    1:{symbol:'eDOC', address:'0x69f6d4D4813F8e2e618DAE7572e04b6D5329E207', decimals:18},
+                    42:{symbol:'eDOC', address:'0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa', decimals:18}
                 };
 
                 const DAI_TOKEN = { token: 'DAI', name: 'Dai Stablecoin',
-                    30:{symbol:'rDAI', address:'0x6b1a73d547f4009a26b8485b63d7015d248ad406'},
-                    31:{symbol:'rKovDAI', address:'0x0d86fca9be034a363cf12c9834af08d54a10451c'},
-                    1:{symbol:'DAI', address:'0x6b175474e89094c44da98b954eedeac495271d0f'},
-                    42:{symbol:'DAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40'}
+                    30:{symbol:'rDAI', address:'0x6b1a73d547f4009a26b8485b63d7015d248ad406', decimals:18},
+                    31:{symbol:'rKovDAI', address:'0x0d86fca9be034a363cf12c9834af08d54a10451c', decimals:18},
+                    1:{symbol:'DAI', address:'0x6b175474e89094c44da98b954eedeac495271d0f', decimals:18},
+                    42:{symbol:'DAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40', decimals:18}
                 };
 
                 const INV_TOKEN = { token: 'INV', name: 'Invest',
-                    30:{symbol:'INV', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db'},
-                    1:{symbol:'eINV', address:'0x09a8f2041be23e8ec3c72790c9a92089bc70fbca'},
+                    30:{symbol:'INV', address:'0xe700691da7b9851f2f35f8b8182c69c53ccad9db', decimals:18},
+                    1:{symbol:'eINV', address:'0x09a8f2041be23e8ec3c72790c9a92089bc70fbca', decimals:18},
                 };
 
                 const BITPRO_TOKEN = { token: 'BITPRO', name: 'BitPro',
-                    31:{symbol:'BITPRO', address:'0x4da7997a819bb46b6758b9102234c289dd2ad3bf'},
-                    42:{symbol:'eBITPRO', address:'0xB3c9ec8833bfA0d382a183EcED27aBc079520928'},
+                    31:{symbol:'BITPRO', address:'0x4da7997a819bb46b6758b9102234c289dd2ad3bf', decimals:18},
+                    42:{symbol:'eBITPRO', address:'0xB3c9ec8833bfA0d382a183EcED27aBc079520928', decimals:18},
                 };
 
                 const RIF_TOKEN = { token: 'RIF', name: 'RIF',
-                    30:{symbol:'RIF', address:'0x2acc95758f8b5f583470ba265eb685a8f45fc9d5'},
-                    31:{symbol:'tRIF', address:'0x19f64674d8a5b4e652319f5e239efd3bc969a1fe'},
-                    1:{symbol:'eRIF', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a'},
-                    42:{symbol:'etRIF', address:'0x69f6d4d4813f8e2e618dae7572e04b6d5329e207'}
+                    30:{symbol:'RIF', address:'0x2acc95758f8b5f583470ba265eb685a8f45fc9d5', decimals:18},
+                    31:{symbol:'tRIF', address:'0x19f64674d8a5b4e652319f5e239efd3bc969a1fe', decimals:18},
+                    1:{symbol:'eRIF', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a', decimals:18},
+                    42:{symbol:'etRIF', address:'0x69f6d4d4813f8e2e618dae7572e04b6d5329e207', decimals:18}
                 };
 
                 const TUSD_TOKEN = { token: 'TUSD', name: 'True USD',
-                    31:{symbol:'rKovTUSD', address:'0x0a8d098e31a60da2b9c874d97de6e6b385c28e9d'},
-                    42:{symbol:'TUSD', address:'0x0000000000085d4780B73119b644AE5ecd22b376'},
+                    31:{symbol:'rKovTUSD', address:'0x0a8d098e31a60da2b9c874d97de6e6b385c28e9d', decimals:18},
+                    42:{symbol:'TUSD', address:'0x0000000000085d4780B73119b644AE5ecd22b376', decimals:18},
                 };
 
                 const WETH_TOKEN = { token: 'WETH', name: 'Wrapped Ether',
-                    31:{symbol:'rKovWETH', address:'0x79055c1e06fbc5893d664d6e7521aa0bd9a514e9'},
-                    42:{symbol:'WETH', address:'0xb39862d7d1b11cd9b781b1473e142cbb545a6871'},
+                    31:{symbol:'rKovWETH', address:'0x79055c1e06fbc5893d664d6e7521aa0bd9a514e9', decimals:18},
+                    42:{symbol:'WETH', address:'0xb39862d7d1b11cd9b781b1473e142cbb545a6871', decimals:18},
                 };
 
                 const ZRX_TOKEN = { token: 'ZRX', name: '0x Protocol',
-                    31:{symbol:'rKovZRX', address:'0x823b3d62cb5a4ed97f26ed9888ea721b569afe27'},
-                    42:{symbol:'ZRX', address:'0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa'},
+                    31:{symbol:'rKovZRX', address:'0x823b3d62cb5a4ed97f26ed9888ea721b569afe27', decimals:18},
+                    42:{symbol:'ZRX', address:'0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa', decimals:18},
                 };
 
                 const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, TUSD_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
