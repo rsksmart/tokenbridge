@@ -19,6 +19,24 @@ async function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve,ms));
 }
 
+async function waitForReceipt(txHash) {
+    let timeElapsed = 0;
+    let interval = 10000;
+    return new Promise((resolve, reject) => {
+        const checkInterval = setInterval(async () => {
+            timeElapsed += interval;
+            let receipt = await web3.eth.getTransactionReceipt(txHash);
+            if(receipt != null) {
+                clearInterval(checkInterval);
+                resolve(receipt);
+            }
+            if(timeElapsed > 70000) {
+                reject(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`);
+            }
+        }, interval);
+    });
+}
+
 function hexStringToBuffer(hexString) {
     return ethUtils.toBuffer(ethUtils.addHexPrefix(hexString));
 }
@@ -82,5 +100,6 @@ module.exports = {
     stripHexPrefix: stripHexPrefix,
     memoryUsage: memoryUsage,
     calculatePrefixesSuffixes: calculatePrefixesSuffixes,
-    zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000'
+    zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    waitForReceipt: waitForReceipt
 }
