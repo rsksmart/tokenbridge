@@ -37,7 +37,7 @@ module.exports = class TransactionSender {
     }
 
     async getRskGasPrice() {
-        let block = await web3.eth.getBlock();
+        let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
         return gasPrice <= 1 ? 1: gasPrice * 1.05;
     }
@@ -100,33 +100,23 @@ module.exports = class TransactionSender {
         const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
         let rawTx = await this.createRawTransaction(from, to, data, value);
-
-        let retries = 3;
-        const sleepAfterRetrie = 40000;
         let error = '';
-        while(retries > 0) {
-            try {
-                rawTx = await this.createRawTransaction(from, to, data, value);
-                let receipt = await this.signAndSendTransaction(rawTx, privateKey);
-                if(receipt.status == 1) {
-                    this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                    return receipt;
-                }
-                this.logger.error('Transaction Receipt Status Failed', receipt);
-                this.logger.error('RawTx that failed', rawTx);
-                error = 'Transaction Receipt Status Failed';
-            } catch(err) {
-                this.logger.error('Send Signed Transaction Failed', err);
-                this.logger.error('RawTx that failed', rawTx);
-                error = err;
+        let errorInfo = '';
+        try {
+            let receipt = await this.signAndSendTransaction(rawTx, privateKey);
+            if(receipt.status == 1) {
+                this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
+                return receipt;
             }
-            retries--;
-            if( retries > 0) {
-                await utils.sleep(sleepAfterRetrie);
-            }
+            error = 'Transaction Receipt Status Failed';
+            errorInfo = receipt;
+        } catch(err) {
+            error = 'Send Signed Transaction Failed';
+            errorInfo = err;
         }
-
-        throw new CustomError(`Transaction Failed after retries: ${stack}`, error);
+        this.logger.error(error, errorInfo);
+        this.logger.error('RawTx that failed', rawTx);
+        throw new CustomError(`Transaction Failed: ${error} ${stack}`, errorInfo);      
     }
 
 }

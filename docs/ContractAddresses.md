@@ -2,7 +2,7 @@
 # MainNet Addresses and Links
 
 ## List of Abis
-[abis used](../abis)
+[Abis used](../abis)
 
 ## List of Addresses
 ### On RSk
@@ -31,19 +31,20 @@
 - https://ethgasstation.info/
 
 ## Dapp 
-[https://tokenbridge.rsk.co/](https://tokenbridge.rsk.co/)
+Between Rsk Mainnet and Ethereum [https://tokenbridge.rsk.co/](https://tokenbridge.rsk.co/)
 
 
 # Testnet Addresses and Links
 
 ## List of Addresses
-### On RSk
+
+### On RSK Testnet
   - "bridge": [0x684a8a976635fb7ad74a0134ace990a6a0fcce84](https://explorer.testnet.rsk.co/address/0x684a8a976635fb7ad74a0134ace990a6a0fcce84)
   - "federation": [0x36c893a955399cf15a4a2fbef04c0e06d4d9b379](https://explorer.testnet.rsk.co/address/0x36c893a955399cf15a4a2fbef04c0e06d4d9b379)
   - "allowTokens": [0x952b706a9ab5fd2d3b36205648ed7852676afbe7](https://explorer.testnet.rsk.co/address/0x952b706a9ab5fd2d3b36205648ed7852676afbe7)
   - "multiSigWallet": [0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a](https://explorer.testnet.rsk.co/address/0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a)
   - "tRIF": [0x19f64674d8a5b4e652319f5e239efd3bc969a1fe](https://explorer.testnet.rsk.co/address/0x19f64674d8a5b4e652319f5e239efd3bc969a1fe)
-
+  
 ### On Kovan
   - "bridge": ["0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d"](https://kovan.etherscan.io/address/0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d)
   - "federation": ["0x8c1901c031cdf42a846c0c422a3b5a2c943f4944"](https://kovan.etherscan.io/address/0x8c1901c031cdf42a846c0c422a3b5a2c943f4944)
