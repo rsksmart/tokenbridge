@@ -21,7 +21,12 @@ We have a [vulnerability reporting guideline](https://github.com/rsksmart/tokenb
 ## Usage
 
 You can use the ['Token Bridge Dapp'](https://tokenbridge.rsk.co/) together with [Nifty Wallet](https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid) or [Metamask with custom network](https://github.com/rsksmart/rskj/wiki/Configure-Metamask-to-connect-with-RSK) to move tokens between networks. This is the [Dapp guide](./docs/DappGuide.md) if you don't know how to use it.
-Or you can use a wallet or web3js with the abi of the contracts. See the ['interaction guide using MyCrypto'](./docs/UsingMyCrypto.md) for more information on how to use the bridge.
+Or you can use a wallet with the abi of the contracts. See the ['interaction guide using MyCrypto'](./docs/UsingMyCrypto.md) for more information on how to use the bridge.
+
+## Contracts deployed on RSK, Ethereum, RSK Testnet and Kovan
+
+Here are the ['addresses'](./docs/ContractAdddresses.md) of the deployed contrats in the different networks.
+
 
 ## Developers
 
@@ -29,13 +34,14 @@ Or you can use a wallet or web3js with the abi of the contracts. See the ['inter
 
 The smart contracts used by the bridge and the deploy instructions are on the ['bridge folder'](./bridge/README.md)
 The ABI to interact with the contracts are in the ['abis folder'](./abis)
-Here are the ['addresses'](./docs/ContractAdddresses.md) of the deployed contrats in the different networks.
+
 
 ### Federation
 
 There is a federation  in charge of notifying the events that happend in the bridge of one chain to the other. The federation is composed by creators of the token contracts that wants to enable their token for crossing.
 See the ['federator'](./federator/README.md) for more information about the federator.
 
+#### Run a Federator
 To run the federator using Docker first, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will dedcide the networks the federate must be listening, for example for the bridge in testnet a federator config.js will look like
 
 ```json
