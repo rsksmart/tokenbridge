@@ -4,6 +4,7 @@ const abiBridge = require('../../../abis/Bridge_v0.json');
 const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
+const utils = require('./utils');
 
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
@@ -23,41 +24,50 @@ module.exports = class Federator {
     }
 
     async run() {
-        try {
-            const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-            const toBlock = currentBlock - this.config.confirmations || 120;
-            this.logger.info('Running to Block', toBlock);
-
-            if (toBlock <= 0) {
-                return false;
-            }
-
-            if (!fs.existsSync(this.config.storagePath)) {
-                fs.mkdirSync(this.config.storagePath);
-            }
-
-            let fromBlock = null;
+        let retries = 3;
+        const sleepAfterRetrie = 3000;
+        while(retries > 0) {
             try {
-                fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
-            } catch(err) {
-                fromBlock = this.config.mainchain.fromBlock || 0;
+                const currentBlock = await this.mainWeb3.eth.getBlockNumber();
+                const toBlock = currentBlock - this.config.confirmations || 120;
+                this.logger.info('Running to Block', toBlock);
+
+                if (toBlock <= 0) {
+                    return false;
+                }
+
+                if (!fs.existsSync(this.config.storagePath)) {
+                    fs.mkdirSync(this.config.storagePath);
+                }
+
+                let fromBlock = null;
+                try {
+                    fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
+                } catch(err) {
+                    fromBlock = this.config.mainchain.fromBlock || 0;
+                }
+                fromBlock = parseInt(fromBlock)+1;
+                this.logger.debug('Running from Block', fromBlock);
+
+                const logs = await this.mainBridgeContract.getPastEvents('Cross', {
+                    fromBlock,
+                    toBlock
+                });
+                if (!logs) return;
+
+                this.logger.info(`Found ${logs.length} logs`);
+                await this._processLogs(logs);
+
+                return true;
+            } catch (err) {
+                this.logger.error(new Error('Exception Running Federator'), err);
+                retries--;
+                if( retries > 0) {
+                    await utils.sleep(sleepAfterRetrie);
+                } else {
+                    process.exit();
+                }
             }
-            fromBlock = parseInt(fromBlock)+1;
-            this.logger.debug('Running from Block', fromBlock);
-
-            const logs = await this.mainBridgeContract.getPastEvents('Cross', {
-                fromBlock,
-                toBlock
-            });
-            if (!logs) return;
-
-            this.logger.info(`Found ${logs.length} logs`);
-            await this._processLogs(logs);
-
-            return true;
-        } catch (err) {
-            this.logger.error(new Error('Exception Running Federator'), err);
-            process.exit();
         }
     }
 
