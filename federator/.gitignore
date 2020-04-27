@@ -4,5 +4,4 @@ development.json
 test.json
 config/federator.key
 federator.log
-db/
 test/lib/*.txt

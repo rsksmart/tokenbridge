@@ -42,9 +42,11 @@ async function run() {
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.privateKey);
 
         //Wait for confirmations
-        let waitBlocks = config.confirmationsfirmations;
+        let waitBlocks = config.confirmations;
         logger.debug(`Wait for ${waitBlocks} blocks`);
         await utils.waitBlocks(rskWeb3, waitBlocks);
+        logger.debug(`Wait for poll ${config.runEvery} minutes`);
+        await utils.sleep(config.runEvery * 60 * 1000);
 
         logger.debug('get the side token address');
         let sideBridgeContract = new ethWeb3.eth.Contract(abiBridge, config.sidechain.bridge);
