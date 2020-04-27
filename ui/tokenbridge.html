@@ -633,7 +633,7 @@
                                 resolve(receipt);
                             }
                             if(timeElapsed > 90_000) {
-                                reject(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`);
+                                reject(new Error(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`));
                             }
                         }, interval);
                     });
@@ -771,7 +771,7 @@
                                     iconSuccess(currentStep,`<a target="_blank" href="${config.explorer}/tx/${txHash}">Approve successful see Tx</a>`);
                                     resolve(receipt);
                                 }
-                                reject(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`);
+                                reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
                             });
                         });
                     }).then(async () => {
@@ -786,7 +786,7 @@
                                     iconSuccess(currentStep, `<a target="_blank" href="${config.explorer}/tx/${txHash}">Transfer successful see Tx</a>`);
                                     resolve(receipt);
                                 }
-                                reject(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`);
+                                reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
                             });
                         });
                     }).then(async (receipt) => {
@@ -857,19 +857,18 @@
                 }
 
                 async function isInstalled() {
-                    if (typeof ethereum === 'undefined') {
-                        console.log('undefined ethereum')
-                        return Promise.reject('You have an old version of <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
-                        + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a> please update it. Once you update it reload the page.');
+                    if (typeof window.ethereum === 'undefined') {
+                        console.log('undefined ethereum');
+                        return Promise.reject(new Error('You have an old version or not installed a wallet extension. Please install <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
+                        + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a>. Once you have installed or updated it reload the page.'));
                     }
-
-                    ethereum.autoRefreshOnNetworkChange = false;
-                    if (typeof web3 === 'undefined') {
-                        return Promise.reject('<a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
-                        + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a> is not installed. Once you install it reload the page.');
+                    
+                    if(window.ethereum.enable) {
+                        window.ethereum.enable();
                     }
+                    window.ethereum.autoRefreshOnNetworkChange = false;
 
-                    window.web3 = new Web3(web3.currentProvider);
+                    window.web3 = new Web3(window.ethereum);
                     let selectedAddress = await getAccounts();
                     let newNetworkId = await web3.eth.net.getId();
                     await updateCallback({networkVersion: newNetworkId, selectedAddress: selectedAddress});
