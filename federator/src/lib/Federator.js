@@ -53,10 +53,10 @@ module.exports = class Federator {
                     fromBlock,
                     toBlock
                 });
-                if (!logs) return;
+                if (!logs) throw new Error('Failed to obtain the logs');
 
                 this.logger.info(`Found ${logs.length} logs`);
-                await this._processLogs(logs);
+                await this._processLogs(logs, toBlock);
 
                 return true;
             } catch (err) {
@@ -71,12 +71,11 @@ module.exports = class Federator {
         }
     }
 
-    async _processLogs(logs = []) {
+    async _processLogs(logs, toBlock) {
         try {
-            let lastBlockNumber = null;
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
             const from = await transactionSender.getAddress(this.config.privateKey);
-
+            
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
@@ -110,11 +109,8 @@ module.exports = class Federator {
                 } else {
                     this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol} was already processed`);
                 }
-
-                lastBlockNumber = log.blockNumber;
             }
-
-            this._saveProgress(this.lastBlockPath, lastBlockNumber);
+            this._saveProgress(this.lastBlockPath, toBlock);
 
             return true;
         } catch (err) {
