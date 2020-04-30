@@ -13,7 +13,7 @@ First **log in** with your wallet (metamask or nifty) and select the network of 
   <img src="./images/dapp-image1-1.png"/>
 </p>
 
-If everything is correct, you will see the following screen:
+If all goes well, the following screen would show:
 
 <p align="center">
   <img src="./images/dapp-image1-2.png"/>
@@ -25,7 +25,7 @@ Then **select the token** that you want to transfer. For example, tRIF token (yo
   <img src="./images/dapp-image2.png"/>
 </p>
 
-Once you have selected it, enter the amount you want to transfer, then click **Cross the Tokens button**.
+Once selected, enter the amount you want to transfer, then click **Cross the Tokens button**.
 
 <p align="center">
   <img src="./images/dapp-image3.png" />
@@ -37,7 +37,7 @@ As soon as the process starts, you will see a **list of the steps needed** to cr
   <img src="./images/dapp-image4.png" />
 </p>
 
-The second and third step will show a message pop-up to confirm the transaction, **submit the transaction**. The following image gives an example of the confirmation popup. This **steps require around 30 seconds each** for the transaction to be mined.
+The second and third step will show a message pop-up to **confirm the transaction**, and **submit the transaction**. The following image gives an example of the confirmation popup. Each **step requires around 30 seconds each** for the transaction to be mined.
 
 <p align="center">
   <img src="./images/dapp-image5.png" width="300" />
@@ -45,7 +45,7 @@ The second and third step will show a message pop-up to confirm the transaction,
 
 
 Once all the steps are done, you have to **wait around 5 minutes in testnet or 1 hour in mainnet** for the tokens to cross. You can **check the  token contract on the other network** by clicking on the symbol (red arrow on the image).
-You can also change the network on you wallet (in this case we would change to Kovan). To do this, add the token to your wallet using the address of the crossed token contract (red arrow on the image) in your wallet.
+You can also change the network on your wallet (in this case we would change to Kovan). To do this, add the token to your wallet using the address of the crossed token contract (red arrow on the image) in your wallet.
 
 <p align="center">
   <img src="./images/dapp-image6.png" />
@@ -54,4 +54,4 @@ You can also change the network on you wallet (in this case we would change to K
 
 This address can be used to verify the balance and confirm that the tokens were effectively transferred to the other network. 
 
-If you want to **cross back the tokens is the same process** but you'll need to select the other network in your wallet, in this case it's the Kovan network.
+If you want to **cross back the tokens follow the same process** but you'll need to select the other network in your wallet, in this case, it's the Kovan network.
