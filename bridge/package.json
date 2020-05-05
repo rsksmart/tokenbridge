@@ -4,14 +4,14 @@
   "version": "1.0.0",
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
-    "@openzeppelin/cli": "^2.6.0",
+    "@openzeppelin/cli": "^2.8.2",
     "@openzeppelin/test-helpers": "^0.5.4",
-    "@openzeppelin/upgrades": "^2.6.0",
+    "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.26",
     "ethlint": "^1.2.5",
     "resolve": "^1.13.0",
     "rlp": "^2.2.3",
-    "solidity-coverage": "^0.7.5",
+    "solidity-coverage": "^0.6.7",
     "truffle": "^5.1.24"
   },
   "scripts": {
