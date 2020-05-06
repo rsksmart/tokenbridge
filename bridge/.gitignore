@@ -2,10 +2,7 @@ infura.key
 mnemonic.key
 build
 .openzeppelin/.session
-.openzeppelin/dev-33.json
-.openzeppelin/dev-31.json
-.openzeppelin/dev-30.json
-.openzeppelin/dev-5777.json
+.openzeppelin/dev-*.json
 .openzeppelin/kovan.json
 .openzeppelin/mainnet.json
 coverage/

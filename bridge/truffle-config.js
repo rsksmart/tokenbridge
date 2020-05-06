@@ -38,7 +38,7 @@ module.exports = {
       gas: 6700000,
       gasPrice: 60000000 // 0.06 gwei
     },
-    coverage: {
+    soliditycoverage: {
       host: "localhost",
       network_id: "*",
       port: 8555,         // <-- If you change this, also set the port option in .solcover.js.
@@ -91,6 +91,7 @@ module.exports = {
       skipDryRun: true
     },
   },
+  plugins: ["solidity-coverage"],
   compilers: {
       solc: {
         version: "0.5.15",
