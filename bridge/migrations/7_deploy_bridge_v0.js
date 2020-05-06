@@ -35,7 +35,7 @@ module.exports = function(deployer, networkName, accounts) {
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
         let initArgs = [ multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
-        if (networkName === 'coverage') {
+        if (networkName === 'soliditycoverage') {
             return deployer
                 .deploy(Bridge_v0, initArgs[0], initArgs[1], initArgs[2], initArgs[3], initArgs[4]);
         }
