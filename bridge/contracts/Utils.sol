@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./zeppelin/math/SafeMath.sol";
 
-library Utils {
+contract Utils {
     using SafeMath for uint256;
 
     function getSymbol(address tokenToUse) public view returns (string memory symbol) {

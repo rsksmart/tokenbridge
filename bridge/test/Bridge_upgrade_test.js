@@ -13,6 +13,7 @@ const SideTokenFactory_v1 = artifacts.require('./SideTokenFactory_v1');
 const SideToken_v1 = artifacts.require('./SideToken_v1');
 const AllowTokens = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
+const UtilsContract = artifacts.require('./Utils');
 
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
@@ -158,6 +159,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.sideToken_v1 = await SideToken_v1.new();
                     this.sideTokenFactory_v1 = await SideTokenFactory_v1.new(this.sideToken_v1.address);
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
+                    this.utilsContract = await UtilsContract.new();
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
@@ -165,9 +167,15 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(result, true);
                 });
 
+                it('should have new method changeUtils', async () => {
+                    let result = await this.proxy.methods.changeUtils(this.utilsContract.address).call({from: managerAddress});
+                    assert.equal(result, true);
+                });
+
                 describe('after changeSideTokenFactory', () => {
                     beforeEach(async () => {
                         await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).send({from: managerAddress});
+                        await this.proxy.methods.changeUtils(this.utilsContract.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
