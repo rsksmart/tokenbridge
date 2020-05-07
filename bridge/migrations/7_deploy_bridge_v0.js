@@ -36,8 +36,9 @@ module.exports = function(deployer, networkName, accounts) {
         let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
         if (networkName === 'soliditycoverage') {
-            return deployer
-                .deploy(Bridge_v0, initArgs[0], initArgs[1], initArgs[2], initArgs[3], initArgs[4]);
+            //soldity coverage doesn't play along with oppen zeppelin sdk
+            //so we deploy the un initialized contract just to create the objects
+            return deployer.deploy(Bridge_v0);
         }
 
         await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);

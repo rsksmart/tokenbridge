@@ -4,6 +4,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const Bridge = artifacts.require('./Bridge_v1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 const SideToken = artifacts.require('./SideToken_v1');
+const UtilsContract = artifacts.require('./Utils');
 
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
@@ -180,8 +181,10 @@ contract('Federation_v1', async function (accounts) {
             await this.allowTokens.addAllowedToken(originalTokenAddress);
             this.sideToken = await SideToken.new();
             this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
+            this.utilsContract = await UtilsContract.new();
             this.bridge = await Bridge.new();
-            await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federation.address, this.allowTokens.address, this.sideTokenFactory.address, 'e');
+            await this.bridge.methods['initialize(address,address,address,address,address,string)'](deployer, this.federation.address,
+                this.allowTokens.address, this.sideTokenFactory.address, this.utilsContract.address, 'e');
             await this.sideTokenFactory.transferPrimary(this.bridge.address);
             await this.federation.setBridge(this.bridge.address);
         });

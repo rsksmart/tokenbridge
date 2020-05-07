@@ -43,19 +43,28 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     //bool public isUpgrading;
+    Utils private utils;
 
 
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
+    event UtilsChanged(address _newSideTokenFactory);
 
-    function initialize(address _manager, address _federation, address _allowTokens, address _sideTokenFactory, string memory _symbolPrefix)
-    public initializer {
+    function initialize(
+        address _manager,
+        address _federation,
+        address _allowTokens,
+        address _sideTokenFactory,
+        address _utils,
+        string memory _symbolPrefix
+    ) public initializer {
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
         _changeFederation(_federation);
+        _changeUtils(_utils);
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
@@ -116,7 +125,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         string memory symbol
     ) private {
 
-        (uint256 calculatedGranularity,uint256 formattedAmount) = Utils.calculateGranularityAndAmount(decimals, granularity, amount);
+        (uint256 calculatedGranularity,uint256 formattedAmount) = utils.calculateGranularityAndAmount(decimals, granularity, amount);
         ISideToken sideToken = mappedTokens[tokenAddress];
         if (address(sideToken) == NULL_ADDRESS) {
             sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
@@ -129,9 +138,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount) private {
         require(decimals == 18, "Bridge: Invalid decimals cross back");
-        uint8 tokenDecimals = Utils.getDecimals(tokenAddress);
+        uint8 tokenDecimals = utils.getDecimals(tokenAddress);
         //As side tokens are ERC777 we need to convert granularity to decimals
-        uint8 calculatedDecimals = Utils.granularityToDecimals(granularity);
+        uint8 calculatedDecimals = utils.granularityToDecimals(granularity);
         require(tokenDecimals == calculatedDecimals, "Bridge: Decimals differ from original");
         uint256 formattedAmount = amount.div(granularity);
         IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
@@ -199,9 +208,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     function mainTokenCrossing(address from, address tokenToUse, uint256 amount, bytes memory userData) private {
         knownTokens[address(tokenToUse)] = true;
-        uint8 decimals = Utils.getDecimals(tokenToUse);
-        string memory symbol = Utils.getSymbol(tokenToUse);
-        uint256 granularity = Utils.getGranularity(tokenToUse);
+        uint8 decimals = utils.getDecimals(tokenToUse);
+        string memory symbol = utils.getSymbol(tokenToUse);
+        uint256 granularity = utils.getGranularity(tokenToUse);
 
         emit Cross(tokenToUse, from, amount, symbol, userData, decimals, granularity);
     }
@@ -312,6 +321,17 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory is empty");
         sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
+    }
+
+    function changeUtils(address newUtils) external onlyOwner returns(bool) {
+        _changeUtils(newUtils);
+        return true;
+    }
+
+    function _changeUtils(address newUtils) internal {
+        require(newUtils != NULL_ADDRESS, "Bridge: Utils is empty");
+        utils = Utils(newUtils);
+        emit UtilsChanged(newUtils);
     }
 
     //This method is only for testnet to erase the Chain Link toke and recreate it with the new version that is ERC677 compatible.

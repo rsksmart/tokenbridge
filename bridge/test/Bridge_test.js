@@ -5,6 +5,7 @@ const Bridge = artifacts.require('./Bridge_v1');
 const AllowTokens = artifacts.require('./AllowTokens');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
+const UtilsContract = artifacts.require('./Utils');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
@@ -25,8 +26,10 @@ contract('Bridge_v1', async function (accounts) {
         await this.allowTokens.addAllowedToken(this.token.address, {from: bridgeManager});
         this.sideToken = await SideToken.new();
         this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
+        this.utilsContract = await UtilsContract.new();
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
+        await this.bridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
+            federation, this.allowTokens.address, this.sideTokenFactory.address, this.utilsContract.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
     });
 
@@ -382,8 +385,11 @@ contract('Bridge_v1', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenTemplate = await SideToken.new();
             this.mirrorSideTokenFactory = await SideTokenFactory.new(this.mirrorSideTokenTemplate.address);
+            this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
+                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, this.mirrorUtilsContract.address,
+                'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
@@ -683,15 +689,17 @@ contract('Bridge_v1', async function (accounts) {
             this.allowTokens = await AllowTokens.new(this.multiSig.address);
             this.mirrorSideToken = await SideToken.new();
             this.mirrorSideTokenFactory = await SideTokenFactory.new(this.mirrorSideToken.address);
+            this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
             this.decimals = (await this.mirrorSideToken.decimals()).toString();
             this.granularity = 1;
 
-            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,string)'](
+            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,address,string)'](
                 this.multiSig.address,
                 this.fedMultiSig.address,
                 this.allowTokens.address,
                 this.mirrorSideTokenFactory.address,
+                this.mirrorUtilsContract.address,
                 'r'
             ).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
