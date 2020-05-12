@@ -65,7 +65,7 @@ function getSidechainFederators(keys, sideConfig) {
             let federator = new Federator({
                 ...sideConfig,
                 privateKey: key,
-                storagePath: `${config.storagePath}/rev-fed-${i + 1}`
+                storagePath: `${config.storagePath}/side-fed-${i + 1}`
             },
             log4js.getLogger('FEDERATOR'));
             federators.push(federator);
@@ -73,7 +73,7 @@ function getSidechainFederators(keys, sideConfig) {
     } else {
         let federator = new Federator({
             ...sideConfig,
-            storagePath: `${config.storagePath}/rev-fed`,
+            storagePath: `${config.storagePath}/side-fed`,
         }, log4js.getLogger('FEDERATOR'));
         federators.push(federator);
     }

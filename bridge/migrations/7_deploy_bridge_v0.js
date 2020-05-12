@@ -41,6 +41,15 @@ module.exports = function(deployer, networkName, accounts) {
             return deployer.deploy(Bridge_v0);
         }
 
-        await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
-      });
+        try{
+            //running truffle test re runs migrations and OZ exploits if aleready upgraded the contract, check if we already have run a migration
+            await Bridge_v0.deployed();
+        } catch(err) {
+            //If we haven't deployed it then re deploy.
+            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
+
+            //Set the multisig as the Owner of the ProxyAdmin
+            await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });
+        }
+      })
 };
