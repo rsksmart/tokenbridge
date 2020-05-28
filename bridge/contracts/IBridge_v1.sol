@@ -43,17 +43,6 @@ interface IBridge_v1 {
         uint256 granularity
     ) external returns(bool);
 
-    /**
-     * Check if transaction has been procesed
-     */
-    function transactionWasProcessed(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    ) external view returns(bool);
-
     event Cross(address indexed _tokenAddress, address indexed _to, uint256 _amount, string _symbol, bytes _userData,
         uint8 _decimals, uint256 _granularity);
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _newSymbol, uint256 _granularity);

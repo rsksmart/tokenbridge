@@ -20,7 +20,7 @@ contract UpgradablePauserRole is Initializable, Context {
     }
 
     modifier onlyPauser() {
-        require(isPauser(_msgSender()), "PauserRole: caller does not have the Pauser role");
+        require(isPauser(_msgSender()), "PauserRole: caller doesn't have the role");
         _;
     }
 

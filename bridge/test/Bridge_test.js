@@ -912,5 +912,43 @@ contract('Bridge_v1', async function (accounts) {
         });
     });
 
+    describe('Upgrading methods', async function() {
+        it('Should start upgrade the bridge contract', async function() {
+            let isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, false);
+
+            await this.bridge.startUpgrade({ from: bridgeManager });
+            isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, true);
+        });
+
+        it('Should not set upgrading of the bridge contract if not the owner', async function() {
+            let isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, false);
+
+            await utils.expectThrow(this.bridge.startUpgrade());
+            assert.equal(isUpgrading, false);
+        });
+
+        it('Should end upgrade of the bridge contract', async function() {
+            await this.bridge.startUpgrade({ from: bridgeManager });
+            let isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, true);
+
+            await this.bridge.endUpgrade({ from: bridgeManager });
+            isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, false);
+        });
+
+        it('Should not end upgrade of the bridge contract if not the owner', async function() {
+            await this.bridge.startUpgrade({ from: bridgeManager });
+            let isUpgrading = await this.bridge.isUpgrading();
+            assert.equal(isUpgrading, true);
+
+            await utils.expectThrow(this.bridge.endUpgrade());
+            assert.equal(isUpgrading, true);
+        });
+    })
+
 });
 

@@ -147,7 +147,7 @@ contract ERC777 is Context, IERC777, IERC20 {
      * Also emits a {Sent} event.
      */
     function transfer(address recipient, uint256 amount) external returns (bool) {
-        require(recipient != address(0), "ERC777: transfer to the zero address");
+        require(recipient != address(0), "ERC777: transfer to zero address");
 
         address from = _msgSender();
 
@@ -232,7 +232,7 @@ contract ERC777 is Context, IERC777, IERC20 {
     )
     external
     {
-        require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator for holder");
+        require(isOperatorFor(_msgSender(), sender), "ERC777: caller is not an operator");
         _send(_msgSender(), sender, recipient, amount, data, operatorData, true);
     }
 
@@ -242,7 +242,7 @@ contract ERC777 is Context, IERC777, IERC20 {
      * Emits {Burned} and {Transfer} events.
      */
     function operatorBurn(address account, uint256 amount, bytes calldata data, bytes calldata operatorData) external {
-        require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator for holder");
+        require(isOperatorFor(_msgSender(), account), "ERC777: caller is not an operator");
         _burn(_msgSender(), account, amount, data, operatorData);
     }
 
@@ -278,8 +278,8 @@ contract ERC777 is Context, IERC777, IERC20 {
     * Emits {Sent}, {Transfer} and {Approval} events.
     */
     function transferFrom(address holder, address recipient, uint256 amount) external returns (bool) {
-        require(recipient != address(0), "ERC777: transfer to the zero address");
-        require(holder != address(0), "ERC777: transfer from the zero address");
+        require(recipient != address(0), "ERC777: transfer to zero address");
+        require(holder != address(0), "ERC777: transfer from zero address");
 
         address spender = _msgSender();
 
@@ -319,7 +319,7 @@ contract ERC777 is Context, IERC777, IERC20 {
     )
     internal
     {
-        require(account != address(0), "ERC777: mint to the zero address");
+        require(account != address(0), "ERC777: mint to zero address");
 
         // Update state variables
         _totalSupply = _totalSupply.add(amount);
@@ -352,8 +352,8 @@ contract ERC777 is Context, IERC777, IERC20 {
     )
         private
     {
-        require(from != address(0), "ERC777: send from the zero address");
-        require(to != address(0), "ERC777: send to the zero address");
+        require(from != address(0), "ERC777: send from zero address");
+        require(to != address(0), "ERC777: send to zero address");
 
         _callTokensToSend(operator, from, to, amount, userData, operatorData);
 
@@ -379,7 +379,7 @@ contract ERC777 is Context, IERC777, IERC20 {
     )
         internal
     {
-        require(from != address(0), "ERC777: burn from the zero address");
+        require(from != address(0), "ERC777: burn from zero address");
 
         _callTokensToSend(operator, from, address(0), amount, data, operatorData);
 
@@ -412,7 +412,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         // TODO: restore this require statement if this function becomes internal, or is called at a new callsite. It is
         // currently unnecessary.
         //require(holder != address(0), "ERC777: approve from the zero address");
-        require(spender != address(0), "ERC777: approve to the zero address");
+        require(spender != address(0), "ERC777: approve to zero address");
 
         _allowances[holder][spender] = value;
         emit Approval(holder, spender, value);

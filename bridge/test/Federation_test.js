@@ -208,7 +208,8 @@ contract('Federation_v1', async function (accounts) {
             let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 
@@ -231,7 +232,8 @@ contract('Federation_v1', async function (accounts) {
             let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
             assert.equal(transactionWasProcessed, false);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, false);
         });
 
@@ -253,7 +255,8 @@ contract('Federation_v1', async function (accounts) {
             let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
             assert.equal(transactionWasProcessed, false);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, false);
         });
 
@@ -276,7 +279,8 @@ contract('Federation_v1', async function (accounts) {
             let transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember1});
             assert.equal(transactionWasProcessed, false);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, false);
         });
 
@@ -311,7 +315,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 
@@ -347,7 +352,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 
@@ -376,7 +382,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 
@@ -406,7 +413,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 
@@ -435,7 +443,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
 
             receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity,
@@ -474,7 +483,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, false);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, false);
 
             receipt = await this.federation.voteTransaction(originalTokenAddress, anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity,
@@ -489,7 +499,8 @@ contract('Federation_v1', async function (accounts) {
             transactionWasProcessed = await this.federation.transactionWasProcessed(transactionId, {from: fedMember2});
             assert.equal(transactionWasProcessed, true);
 
-            transactionWasProcessed = await this.bridge.transactionWasProcessed(blockHash, transactionHash, anAccount, amount, logIndex);
+            bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
+            transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
         });
 

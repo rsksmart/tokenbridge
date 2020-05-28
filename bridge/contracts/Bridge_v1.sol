@@ -38,12 +38,12 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     mapping (address => ISideToken) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
-    mapping(bytes32 => bool) processed; // ProcessedHash => true
+    mapping(bytes32 => bool) public processed; // ProcessedHash => true
     AllowTokens public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
-    //bool public isUpgrading;
-    Utils private utils;
+    bool public isUpgrading;
+    Utils public utils;
 
 
     event FederationChanged(address _newFederation);
@@ -78,10 +78,10 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         _;
     }
 
-    // modifier whenNotUpgrading() {
-    //     require(isUpgrading == false, "Bridge: Upgrading");
-    //     _;
-    // }
+    modifier whenNotUpgrading() {
+        require(isUpgrading == false, "Bridge: Upgrading");
+        _;
+    }
 
     function acceptTransfer(
         address tokenAddress,
@@ -94,12 +94,12 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         uint8 decimals,
         uint256 granularity
     ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
-        require(tokenAddress != NULL_ADDRESS, "Bridge: Token cant be null");
-        require(receiver != NULL_ADDRESS, "Bridge: Receiver cant be null");
-        require(amount > 0, "Bridge: Amount cant be 0");
-        require(bytes(symbol).length > 0, "Bridge: Symbol cant be empty");
-        require(blockHash != NULL_HASH, "Bridge: BlockHash cant be null");
-        require(transactionHash != NULL_HASH, "Bridge: Transaction cant be null");
+        require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
+        require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
+        require(amount > 0, "Bridge: Amount 0");
+        require(bytes(symbol).length > 0, "Bridge: Empty symbol");
+        require(blockHash != NULL_HASH, "Bridge: BlockHash is null");
+        require(transactionHash != NULL_HASH, "Bridge: Transaction is null");
         require(decimals <= 18, "Bridge: Decimals bigger 18");
         require(granularity >= 1 && granularity <= 1000000000000000000, "Bridge: Granularity not between 1 and 10^18");
         if(granularity > 1) {
@@ -138,11 +138,8 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount) private {
         require(decimals == 18, "Bridge: Invalid decimals cross back");
-        uint8 tokenDecimals = utils.getDecimals(tokenAddress);
         //As side tokens are ERC777 we need to convert granularity to decimals
-        uint8 calculatedDecimals = utils.granularityToDecimals(granularity);
-        require(tokenDecimals == calculatedDecimals, "Bridge: Decimals differ from original");
-        uint256 formattedAmount = amount.div(granularity);
+        (uint8 calculatedDecimals, uint256 formattedAmount) = utils.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
         IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
         emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
     }
@@ -151,10 +148,15 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external payable whenNotPaused nonReentrant returns(bool) {
+    function receiveTokens(address tokenToUse, uint256 amount) external payable whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Sender can't be a contract");
-        sendIncentiveToEventsCrossers(msg.value);
+        //Send the payment to the MultiSig of the Federation
+        require(msg.value >= crossingPayment, "Bridge: Insufficient crossingPayment");
+        if(msg.value > 0) {
+            address payable receiver = address(uint160(owner()));
+            receiver.transfer(msg.value);
+        }
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         crossTokens(tokenToUse, _msgSender(), amount, "");
@@ -172,7 +174,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused {
+    ) external whenNotPaused whenNotUpgrading {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: No to address");
@@ -182,37 +184,19 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     }
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
-        bool _isSideToken = isSideToken(tokenToUse);
+        bool _isSideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
         if (_isSideToken) {
-            sideTokenCrossingBack(from, ISideToken(tokenToUse), amount, userData);
+            //Side Token Crossing
+            ISideToken(tokenToUse).burn(amount, userData);
+            // solium-disable-next-line max-len
+            emit Cross(originalTokens[tokenToUse], from, amount, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
         } else {
-            mainTokenCrossing(from, tokenToUse, amount, userData);
+            //Main Token Crossing
+            knownTokens[tokenToUse] = true;
+            (uint8 decimals, uint256 granularity, string memory symbol) = utils.getTokenInfo(tokenToUse);
+            emit Cross(tokenToUse, from, amount, symbol, userData, decimals, granularity);
         }
-    }
-
-    function sendIncentiveToEventsCrossers(uint256 payment) private {
-        require(payment >= crossingPayment, "Bridge: Insufficient crossingPayment");
-        //Send the payment to the MultiSig of the Federation
-        if(payment > 0) {
-            address payable receiver = address(uint160(owner()));
-            receiver.transfer(payment);
-        }
-    }
-
-    function sideTokenCrossingBack(address from, ISideToken tokenToUse, uint256 amount, bytes memory userData) private {
-        tokenToUse.burn(amount, userData);
-        // solium-disable-next-line max-len
-        emit Cross(originalTokens[address(tokenToUse)], from, amount, tokenToUse.symbol(), userData, tokenToUse.decimals(), tokenToUse.granularity());
-    }
-
-    function mainTokenCrossing(address from, address tokenToUse, uint256 amount, bytes memory userData) private {
-        knownTokens[address(tokenToUse)] = true;
-        uint8 decimals = utils.getDecimals(tokenToUse);
-        string memory symbol = utils.getSymbol(tokenToUse);
-        uint256 granularity = utils.getGranularity(tokenToUse);
-
-        emit Cross(tokenToUse, from, amount, symbol, userData, decimals, granularity);
     }
 
     function _createSideToken(address token, string memory symbol, uint256 granularity) private returns (ISideToken sideToken){
@@ -236,10 +220,6 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         spentToday = spentToday.add(amount);
     }
 
-    function isSideToken(address token) public view returns (bool) {
-        return originalTokens[token] != NULL_ADDRESS;
-    }
-
     function getTransactionId(
         bytes32 _blockHash,
         bytes32 _transactionHash,
@@ -252,20 +232,6 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
     }
 
-    function transactionWasProcessed(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    )
-        public view returns(bool)
-    {
-        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-
-        return processed[compiledId];
-    }
-
     function _processTransaction(
         bytes32 _blockHash,
         bytes32 _transactionHash,
@@ -276,7 +242,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         private
     {
         bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-        require(!processed[compiledId], "Bridge:Already processed");
+        require(!processed[compiledId], "Bridge: Already processed");
         processed[compiledId] = true;
     }
 
@@ -334,7 +300,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         emit UtilsChanged(newUtils);
     }
 
-    //This method is only for testnet to erase the Chain Link toke and recreate it with the new version that is ERC677 compatible.
+    //This method is only for testnet to erase the Chain Link Token and recreate it with the new version that is ERC677 compatible.
     //It wont be in the mainnet release
     function clearSideToken(address originalToken) external onlyOwner returns(bool){
         address sideToken = address(mappedTokens[originalToken]);
@@ -343,13 +309,13 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         return true;
     }
 
-    // function startUpgrade() external onlyOwner {
-    //     isUpgrading = true;
-    // }
+    function startUpgrade() external onlyOwner {
+        isUpgrading = true;
+    }
 
-    // function endUpgrade() external onlyOwner {
-    //     isUpgrading = false;
-    // }
+    function endUpgrade() external onlyOwner {
+        isUpgrading = false;
+    }
 
 }
 
