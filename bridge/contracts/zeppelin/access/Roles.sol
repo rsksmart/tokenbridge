@@ -21,7 +21,7 @@ library Roles {
      * @dev Remove an account's access to this role.
      */
     function remove(Role storage role, address account) internal {
-        require(has(role, account), "Roles: account does not have role");
+        require(has(role, account), "Roles: account doesn't have role");
         role.bearer[account] = false;
     }
 

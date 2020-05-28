@@ -72,7 +72,7 @@ contract UpgradableOwnable is Initializable, Context {
      * @dev Transfers ownership of the contract to a new account (`newOwner`).
      */
     function _transferOwnership(address newOwner) internal {
-        require(newOwner != address(0), "Ownable: new owner is the zero address");
+        require(newOwner != address(0), "Ownable: new owner is zero address");
         emit OwnershipTransferred(_owner, newOwner);
         _owner = newOwner;
     }

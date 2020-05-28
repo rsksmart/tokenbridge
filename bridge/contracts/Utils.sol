@@ -5,6 +5,12 @@ import "./zeppelin/math/SafeMath.sol";
 contract Utils {
     using SafeMath for uint256;
 
+    function getTokenInfo(address tokenToUse) public view returns (uint8 decimals, uint256 granularity, string memory symbol) {
+        decimals = getDecimals(tokenToUse);
+        granularity = getGranularity(tokenToUse);
+        symbol = getSymbol(tokenToUse);
+    }
+
     function getSymbol(address tokenToUse) public view returns (string memory symbol) {
         //support 32 bytes or string symbol
         (bool success, bytes memory data) = tokenToUse.staticcall(abi.encodeWithSignature("symbol()"));
@@ -100,6 +106,15 @@ contract Utils {
             calculatedGranularity = decimalsToGranularity(decimals);
             formattedAmount = amount.mul(calculatedGranularity);
         }
+    }
+
+    function calculateDecimalsAndAmount(address tokenAddress, uint256 granularity, uint256 amount)
+        public view returns (uint8 calculatedDecimals, uint256 formattedAmount) {
+        uint8 tokenDecimals = getDecimals(tokenAddress);
+        //As side tokens are ERC777 we need to convert granularity to decimals
+        calculatedDecimals = granularityToDecimals(granularity);
+        require(tokenDecimals == calculatedDecimals, "Utils: Token decimals differ from decimals obtained from granularity");
+        formattedAmount = amount.div(granularity);
     }
 
 }
