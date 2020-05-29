@@ -179,8 +179,7 @@ contract('Federation_v1', async function (accounts) {
         beforeEach(async function () {
             this.allowTokens = await AllowTokens.new(deployer);
             await this.allowTokens.addAllowedToken(originalTokenAddress);
-            this.sideToken = await SideToken.new();
-            this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
+            this.sideTokenFactory = await SideTokenFactory.new();
             this.utilsContract = await UtilsContract.new();
             this.bridge = await Bridge.new();
             await this.bridge.methods['initialize(address,address,address,address,address,string)'](deployer, this.federation.address,

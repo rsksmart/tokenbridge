@@ -2,9 +2,6 @@ pragma solidity ^0.5.0;
 
 interface ISideToken {
 
-    function initialize(string calldata tokenName, string calldata tokenSymbol, address minterAddr, uint256 granularity)
-    external;
-
     function name() external view returns (string memory);
 
     function symbol() external view returns (string memory);

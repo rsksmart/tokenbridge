@@ -12,16 +12,15 @@ contract SideToken_v1 is ISideToken, ERC777, Initializable {
     address public minter;
     uint256 private _granularity;
 
-    function initialize(string calldata tokenName, string calldata tokenSymbol, address minterAddr, uint256 granularity)
-    external initializer {
-        require(minterAddr != address(0), "SideToken: Minter address is null");
-        require(granularity >= 1, "SideToken: Granularity must be equal or bigger than 1");
-        if(granularity > 1) {
-            require(granularity.mod(10) == 0, "SideToken: Granularity not 10^");
+    constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr, uint256 _newGranularity)
+    ERC777(_tokenName, _tokenSymbol, new address[](0)) public {
+        require(_minterAddr != address(0), "SideToken: Minter address is null");
+        require(_newGranularity >= 1, "SideToken: Granularity must be equal or bigger than 1");
+        if(_newGranularity > 1) {
+            require(_newGranularity.mod(10) == 0, "SideToken: Granularity not 10^");
         }
-        minter = minterAddr;
-        _granularity = granularity;
-        _init(tokenName, tokenSymbol, new address[](0));
+        minter = _minterAddr;
+        _granularity = _newGranularity;
     }
 
     modifier onlyMinter() {

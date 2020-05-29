@@ -2,7 +2,7 @@ config.js
 rskregtest.json
 development.json
 test.json
-db/*
+db
 config/federator.key
 federator.log
 test/lib/*.txt

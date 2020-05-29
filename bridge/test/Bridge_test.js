@@ -24,8 +24,7 @@ contract('Bridge_v1', async function (accounts) {
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
         this.allowTokens = await AllowTokens.new(bridgeManager);
         await this.allowTokens.addAllowedToken(this.token.address, {from: bridgeManager});
-        this.sideToken = await SideToken.new();
-        this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
+        this.sideTokenFactory = await SideTokenFactory.new();
         this.utilsContract = await UtilsContract.new();
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
@@ -146,9 +145,9 @@ contract('Bridge_v1', async function (accounts) {
 
             it('receiveTokens approve and transferFrom for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
-                let erc777 = await SideToken.new();
-                let granularity = '1000';
-                erc777.initialize("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const granularity = '1000';
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 
@@ -177,9 +176,9 @@ contract('Bridge_v1', async function (accounts) {
 
             it('tokensReceived for ERC777', async function () {
                 const amount = web3.utils.toWei('1000');
-                let erc777 = await SideToken.new();
-                let granularity = '100';
-                erc777.initialize("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const granularity = '100';
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -248,8 +247,7 @@ contract('Bridge_v1', async function (accounts) {
                 const payment = 1000;
                 await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
 
-                let erc777 = await SideToken.new();
-                erc777.initialize("ERC777", "777", tokenOwner, 1, { from: tokenOwner });
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, 1, { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -383,8 +381,7 @@ contract('Bridge_v1', async function (accounts) {
     describe('Mirror Side', async function () {
         beforeEach(async function () {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
-            this.mirrorSideTokenTemplate = await SideToken.new();
-            this.mirrorSideTokenFactory = await SideTokenFactory.new(this.mirrorSideTokenTemplate.address);
+            this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
             await this.mirrorBridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
@@ -471,8 +468,7 @@ contract('Bridge_v1', async function (accounts) {
 
             it('accept transfer from ERC777 with granularity', async function () {
                 const granularity = '100';
-                let tokenWithGranularity = await SideToken.new();
-                await tokenWithGranularity.initialize("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
+                let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                 tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
 
@@ -684,15 +680,15 @@ contract('Bridge_v1', async function (accounts) {
         const multiSigOnwerB = accounts[8];
 
         beforeEach(async function () {
+            this.granularity = 1;
             this.multiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.fedMultiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.allowTokens = await AllowTokens.new(this.multiSig.address);
-            this.mirrorSideToken = await SideToken.new();
-            this.mirrorSideTokenFactory = await SideTokenFactory.new(this.mirrorSideToken.address);
+            this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
-            this.decimals = (await this.mirrorSideToken.decimals()).toString();
-            this.granularity = 1;
+            this.decimals = "18";
+            
 
             let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,address,string)'](
                 this.multiSig.address,
