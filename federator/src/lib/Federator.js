@@ -49,15 +49,27 @@ module.exports = class Federator {
                 fromBlock = parseInt(fromBlock)+1;
                 this.logger.debug('Running from Block', fromBlock);
 
-                const logs = await this.mainBridgeContract.getPastEvents('Cross', {
-                    fromBlock,
-                    toBlock
-                });
-                if (!logs) throw new Error('Failed to obtain the logs');
+                const recordsPerPage = 1000;
+                const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
+                this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
 
-                this.logger.info(`Found ${logs.length} logs`);
-                await this._processLogs(logs, toBlock);
+                var fromPageBlock = fromBlock;
+                for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) { 
+                    var toPagedBlock = fromPageBlock + recordsPerPage-1;
+                    if(currentPage == numberOfPages) {
+                        toPagedBlock = toBlock
+                    }
+                    this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+                    const logs = await this.mainBridgeContract.getPastEvents('Cross', {
+                        fromPageBlock,
+                        toPagedBlock
+                    });
+                    if (!logs) throw new Error('Failed to obtain the logs');
 
+                    this.logger.info(`Found ${logs.length} logs`);
+                    await this._processLogs(logs, toPagedBlock);
+                    fromPageBlock = toPagedBlock + 1;
+                }
                 return true;
             } catch (err) {
                 this.logger.error(new Error('Exception Running Federator'), err);
