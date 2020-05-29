@@ -1,4 +1,4 @@
-const Utils = artifacts.require('./Utils');
+const UtilsContract = artifacts.require('./Utils');
 const MainToken = artifacts.require('./MainToken');
 const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
 const SideToken = artifacts.require('./SideToken_v1');
@@ -10,7 +10,7 @@ contract('Utils Contract', async function (accounts) {
     const owner = accounts[0];
 
     beforeEach(async function () {
-        this.utilsLib = await Utils.new();
+        this.utilsLib = await UtilsContract.new();
     });
         
     describe('decimals conversion', async function () {
@@ -92,15 +92,13 @@ contract('Utils Contract', async function (accounts) {
 
     describe('getGranularity', async function () {
         it('from ERC777', async function () {
-            let token = await SideToken.new();
             let granularity = '1';
-            await token.initialize("SIDE", "SIDE", owner, granularity);
+            let token = await SideToken.new("SIDE", "SIDE", owner, granularity);
             let resultGranularity = await this.utilsLib.getGranularity(token.address);
             assert.equal(resultGranularity.toString(), granularity);
 
             granularity = '1000000000000000000';
-            token = await SideToken.new();
-            await token.initialize("SIDE", "SIDE", owner, granularity);
+            token = await SideToken.new("SIDE", "SIDE", owner, granularity);
             resultGranularity = await this.utilsLib.getGranularity(token.address);
             assert.equal(resultGranularity.toString(), granularity);
         });
@@ -110,9 +108,8 @@ contract('Utils Contract', async function (accounts) {
         });
 
         it('Throw if bigger than 18 decimals', async function () {
-            let token = await SideToken.new();
             let granularity = '10000000000000000000';
-            await token.initialize("SIDE", "SIDE", owner, granularity);
+            let token = await SideToken.new("SIDE", "SIDE", owner, granularity);
             await utils.expectThrow(this.utilsLib.getGranularity(token.address));
         });
 

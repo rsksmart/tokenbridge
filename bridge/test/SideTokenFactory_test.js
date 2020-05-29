@@ -9,8 +9,7 @@ contract('SideTokenFactory_v1', async function (accounts) {
     const anAccount = accounts[1];
 
     beforeEach(async function () {
-        this.sideToken = await SideToken.new();
-        this.sideTokenFactory = await SideTokenFactory.new(this.sideToken.address);
+        this.sideTokenFactory = await SideTokenFactory.new();
     });
 
     it('creates a new side token with correct parameters', async function () {
@@ -29,14 +28,6 @@ contract('SideTokenFactory_v1', async function (accounts) {
     it('fails to create a new side token due to wrong caller', async function() {
         assert.equal(await this.sideTokenFactory.primary(), tokenCreator);
         await utils.expectThrow(this.sideTokenFactory.createSideToken("SIDE", "SIDE", 1, { from: anAccount }));
-    });
-
-    it('fails to create a new side token due to template is not initialized', async function() {
-        await utils.expectThrow(SideTokenFactory.new(utils.NULL_ADDRESS));
-    });
-
-    it('fails to set a new side token template if empty', async function() {
-        await utils.expectThrow(this.sideTokenFactory.setTemplateAddress('0x'));
     });
 
     it('should create side token', async function () {
@@ -84,17 +75,5 @@ contract('SideTokenFactory_v1', async function (accounts) {
         const minter = await sideToken.minter();
         assert.equal(minter, anAccount);
     });
-
-    it('should change the Side Token Template', async function() {
-        let address = await this.sideTokenFactory.sideTokenTemplate();
-        assert.equal(address.toLowerCase(), this.sideToken.address.toLowerCase());
-        let newAddress = randomHex(20);
-        let receipt = await this.sideTokenFactory.setTemplateAddress(newAddress);
-        utils.checkRcpt(receipt);
-        assert.equal(receipt.logs[0].event, 'TemplateUpdated');
-        assert.equal(receipt.logs[0].args[0].toLowerCase(), newAddress.toLowerCase());
-        address = await this.sideTokenFactory.sideTokenTemplate();
-        assert.equal(address.toLowerCase(), newAddress.toLowerCase());
-        
-    });
+    
 });

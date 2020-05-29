@@ -225,18 +225,13 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Deploying another token contract');
         const anotherTokenContract = await AnotherToken.deploy({
             data: sideTokenBytecode,
-            arguments: []
+            arguments: ["MAIN", "MAIN", userAddress, "1"]
         }).send({
             from: knownAccount,
             gas: 6700000,
             gasPrice: 20000000000
         });
         logger.debug('Token deployed');
-        anotherTokenContract.methods.initialize("MAIN", "MAIN", userAddress, 1).send({
-            from: knownAccount,
-            gas: 500000,
-            gasPrice: 20000000000
-        });
         logger.debug('Minting new token');
         const anotherTokenAddress = anotherTokenContract.options.address;
         data = anotherTokenContract.methods.mint(userAddress, amount, '0x', '0x').encodeABI();

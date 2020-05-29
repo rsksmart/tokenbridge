@@ -156,8 +156,7 @@ contract('Bridge upgrade test', async (accounts) => {
             describe('after upgrade using OZ', () => {
                 beforeEach(async () => {
                     this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
-                    this.sideToken_v1 = await SideToken_v1.new();
-                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new(this.sideToken_v1.address);
+                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
                     this.utilsContract = await UtilsContract.new();
                 });
@@ -269,8 +268,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.proxy = await Bridge_v1.at(this.proxy.address);
 
                     //this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
-                    this.sideToken_v1 = await SideToken_v1.new();
-                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new(this.sideToken_v1.address);
+                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
                     this.utilsContract = await UtilsContract.new();
                 });

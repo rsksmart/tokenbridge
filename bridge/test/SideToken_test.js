@@ -11,8 +11,7 @@ contract('SideToken_v1', async function (accounts) {
 
     describe('granularity 1', async function () {
         beforeEach(async function () {
-            this.token = await SideToken.new();
-            await this.token.initialize("SIDE", "SIDE", tokenCreator, 1);
+            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, 1);
         });
 
         it('initial state', async function () {
@@ -147,16 +146,15 @@ contract('SideToken_v1', async function (accounts) {
         it('transferAndCalls throws if receiver does not implement IERC677Receiver', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
 
-            let receiver = await SideToken.new();
+            let receiver = await SideToken.new("SIDE", "SIDE", tokenCreator, '1');
             await expectThrow(this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }));
         });
     });
 
     describe('granularity 1000', async function () {
         beforeEach(async function () {
-            this.granularity = '1000'
-            this.token = await SideToken.new()
-            await this.token.initialize("SIDE", "SIDE", tokenCreator, this.granularity);
+            this.granularity = '1000';
+            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, this.granularity);
         });
 
         it('initial state', async function () {
