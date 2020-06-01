@@ -14,6 +14,9 @@ function shouldDeployToken(network) {
 module.exports = function(deployer, networkName, accounts) {
     deployer
     .then(async () => {
+        if (networkName === 'soliditycoverage') {
+            return;
+        }
         const bridge = await Bridge.deployed();
         const federation = await Federation_v1.deployed();
         const multiSig = await MultiSigWallet.deployed();

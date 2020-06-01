@@ -38,6 +38,9 @@ module.exports = function(deployer, networkName, accounts) {
         // }
 
         // await ozDeploy({ network, txParams }, 'Bridge_v1', 'Bridge');
+        if (networkName === 'soliditycoverage') {
+            return deployer.deploy(Bridge_v1);
+        }
 
         const networkConfig = require(`../.openzeppelin/dev-${await web3.eth.net.getId()}.json`);
         console.log(networkConfig);
