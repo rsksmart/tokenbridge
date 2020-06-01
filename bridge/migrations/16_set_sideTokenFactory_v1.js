@@ -7,6 +7,9 @@ const MultiSigWallet = artifacts.require("MultiSigWallet");
 module.exports = function(deployer, networkName, accounts) {
     deployer
         .then(async ()=> {
+            if (networkName === 'soliditycoverage') {
+                return;
+            }
             const multiSig = await MultiSigWallet.deployed();
             const sideTokenFactory = await SideTokenFactory.deployed();
             const bridge = await Bridge.deployed();
