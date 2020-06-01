@@ -1,11 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "./zeppelin/token/ERC777/ERC777.sol";
-import "./zeppelin/upgradable/Initializable.sol";
 import "./IERC677Receiver.sol";
 import "./ISideToken.sol";
 
-contract SideToken_v1 is ISideToken, ERC777, Initializable {
+contract SideToken_v1 is ISideToken, ERC777 {
     using Address for address;
     using SafeMath for uint256;
 
