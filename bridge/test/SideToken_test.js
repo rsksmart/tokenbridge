@@ -203,6 +203,12 @@ contract('SideToken_v1', async function (accounts) {
             await this.token.mint(anAccount, 10000, '0x', '0x', { from: tokenCreator });
             await expectThrow(this.token.transfer(anotherAccount, 1100, { from: anAccount }));
         });
+
+        it('burn throws if not multiple of granularity', async function () {
+            await this.token.mint(anAccount, 1000000, '0x', '0x', { from: tokenCreator });
+
+            await expectThrow(this.token.burn(anAccount, 1, '0x', '0x', { from: tokenCreator }));
+        });
         
     });
 

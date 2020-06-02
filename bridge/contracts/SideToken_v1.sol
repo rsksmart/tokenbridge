@@ -15,9 +15,6 @@ contract SideToken_v1 is ISideToken, ERC777 {
     ERC777(_tokenName, _tokenSymbol, new address[](0)) public {
         require(_minterAddr != address(0), "SideToken: Minter address is null");
         require(_newGranularity >= 1, "SideToken: Granularity must be equal or bigger than 1");
-        if(_newGranularity > 1) {
-            require(_newGranularity.mod(10) == 0, "SideToken: Granularity not 10^");
-        }
         minter = _minterAddr;
         _granularity = _newGranularity;
     }
@@ -67,8 +64,8 @@ contract SideToken_v1 is ISideToken, ERC777 {
     //
     /// @notice Internal function that ensures `amount` is multiple of the granularity
     /// @param amount The quantity that want's to be checked
-    function requireMultiple(uint256 amount) internal view {
-        require(amount.mod(_granularity) == 0, "SideToken: Amount is not a multiple of Granularity");
+    function requireGranularityMultiple(uint256 amount) internal view {
+        require(amount.mod(_granularity) == 0, "SideToken: Balance is not a multiple of Granularity");
     }
 
     function _move(
@@ -81,7 +78,8 @@ contract SideToken_v1 is ISideToken, ERC777 {
     )
     internal
     {
-        requireMultiple(amount);
+        requireGranularityMultiple(balanceOf(from).sub(amount));
+        requireGranularityMultiple(balanceOf(to).add(amount));
         super._move(operator, from, to, amount, userData, operatorData);
     }
 
@@ -94,7 +92,7 @@ contract SideToken_v1 is ISideToken, ERC777 {
     )
     internal
     {
-        requireMultiple(amount);
+        requireGranularityMultiple(balanceOf(from).sub(amount));
         super._burn(operator, from, amount, data, operatorData);
     }
 
@@ -107,7 +105,7 @@ contract SideToken_v1 is ISideToken, ERC777 {
     )
     internal
     {
-        requireMultiple(amount);
+        requireGranularityMultiple(balanceOf(account).add(amount));
         super._mint(operator, account, amount, userData, operatorData);
     }
 

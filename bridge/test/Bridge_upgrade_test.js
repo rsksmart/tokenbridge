@@ -229,7 +229,6 @@ contract('Bridge upgrade test', async (accounts) => {
                     //See the open zeppelin SDK admin contracts https://docs.openzeppelin.com/upgrades/2.8/api#ProxyAdmin-changeProxyAdmin-contract-AdminUpgradeabilityProxy-address-
                     /* Upgrade the contract at the address of our instance to the new logic */
                     let bridge_v1 = await Bridge_v1.new();
-                    console.log('bridge_v1',bridge_v1.address);
                     await this.project.proxyAdmin.contract.methods.upgrade(this.proxy.address, bridge_v1.address).send({from: deployerAddress});
 
                     //Check the Proxy Adminis still the AdminUpgradeabilityProxy  admin 

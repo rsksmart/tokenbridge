@@ -19,11 +19,6 @@ const proxyAdminAbi = require('../../abis/ProxyAdmin.json');
 // }
 
 module.exports = function(deployer, networkName, accounts) {
-    let symbol = 'e';
-
-    if(networkName == 'rskregtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')
-        symbol = 'r';
-
     return deployer.then(async () => {
         const multiSig = await MultiSigWallet.deployed();
         const bridgeProxy = await Bridge.deployed();
@@ -43,14 +38,9 @@ module.exports = function(deployer, networkName, accounts) {
         }
 
         const networkConfig = require(`../.openzeppelin/dev-${await web3.eth.net.getId()}.json`);
-        console.log(networkConfig);
         const proxyAdmin = new web3.eth.Contract(proxyAdminAbi, networkConfig.proxyAdmin.address);
 
         let bridge_v1 = await deployer.deploy(Bridge_v1);
-        console.log(bridgeProxy.address);
-        console.log(bridge_v1.address);
-        console.log(proxyAdmin.options.address);
-
 
         const data = proxyAdmin.methods.upgrade(bridgeProxy.address, bridge_v1.address).encodeABI();
         await multiSig.submitTransaction(proxyAdmin.options.address, 0, data, { from: accounts[0] });
