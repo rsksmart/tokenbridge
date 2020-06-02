@@ -91,7 +91,7 @@ module.exports = class Federator {
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
-                const { _to: receiver, _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress, _userData:data,
+                const { _to: receiver, _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress,
                     _decimals: decimals, _granularity:granularity } = log.returnValues;
 
                 let transactionId = await this.federationContract.methods.getTransactionId(

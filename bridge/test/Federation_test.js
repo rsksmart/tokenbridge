@@ -3,7 +3,6 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const AllowTokens = artifacts.require('./AllowTokens');
 const Bridge = artifacts.require('./Bridge_v1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
-const SideToken = artifacts.require('./SideToken_v1');
 const UtilsContract = artifacts.require('./Utils');
 
 const utils = require('./utils');

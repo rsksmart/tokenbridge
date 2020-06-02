@@ -702,7 +702,6 @@
                 }
 
                 async function crossToken() {
-                    const BN = web3.utils.BN;
                     stepIcon('validate-balance','');
                     stepIcon('approve-transfer','');
                     stepIcon('transfer-tokens','');
@@ -741,7 +740,7 @@
                         if(balanceInDecimal.isLessThan(amountInDecimal)) {
                             throw new Error(`Insuficient Balance in your account, your current balance is ${balanceInDecimal.dividedBy(decimalBase)} ${token[config.networkId].symbol}`);
                         }
-                        let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call)
+                        let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call);
                         let maxWithdraw = parseInt(web3.utils.fromWei(maxWithdrawInWei, 'ether'));
                         if(parseInt(amount) > maxWithdraw) {
                             throw new Error(`Amount bigger than the daily limit. Daily limit left ${maxWithdraw} tokens`);
@@ -829,7 +828,6 @@
                         markInvalidAmount('Amount must be bigger than 0');
                         return;
                     }
-                    let BN = web3.utils.BN;
                     let parsedAmount = parseInt(amount);
                     $('.amount input').prop("disabled", true);
                     try {

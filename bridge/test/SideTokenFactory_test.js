@@ -2,7 +2,6 @@ const SideToken = artifacts.require('./SideToken_v1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 
 const utils = require('./utils');
-const randomHex = web3.utils.randomHex;
 
 contract('SideTokenFactory_v1', async function (accounts) {
     const tokenCreator = accounts[0];

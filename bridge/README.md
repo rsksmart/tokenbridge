@@ -1,11 +1,14 @@
 # Token Bridge Contracts
 
-## Install Truffle
+## Install dependencies
 
 ```
-npm install -g truffle@5.0.33
 npm install
 ```
+
+## Install and run ganache
+https://www.trufflesuite.com/ganache
+
 
 ## Running test
 

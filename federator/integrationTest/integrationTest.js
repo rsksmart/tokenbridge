@@ -17,7 +17,7 @@ const Federator = require('../src/lib/Federator.js');
 const utils = require('../src/lib/utils.js');
 const fundFederators = require('./fundFederators');
 
-const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8')
+const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8');
 
 const logger = log4js.getLogger('test');
 log4js.configure(logConfig);
@@ -240,7 +240,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Adding new token to list of allowed on bridge');
         const allowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
         const multiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.mainchain.multiSig);
-        const allowTokensAddress = allowTokensContract.options.address
+        const allowTokensAddress = allowTokensContract.options.address;
 
         data = allowTokensContract.methods.addAllowedToken(anotherTokenAddress).encodeABI();
 

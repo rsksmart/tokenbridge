@@ -466,7 +466,18 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(mirrorAnAccountBalance.toString(), expectedAmount.toString());
             });
 
-            it('accept transfer from ERC777 with granularity', async function () {
+            it('accept transfer with decimals bigger than 18', async function () {
+                let decimals = 19;
+                let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithDecimals.address, {from: bridgeManager});
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation }) 
+                );
+            });
+
+            it('accept transfer first time from ERC777 with granularity', async function () {
                 const granularity = '100';
                 let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                 tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
@@ -492,6 +503,73 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(mirrorBridgeBalance, 0);
                 const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                 assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
+            });
+
+            it('accept transfer second time from ERC777 with granularity', async function () {
+                const granularity = '100';
+                let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
+                tokenWithGranularity.mint(tokenOwner, new BN(this.amount).mul(new BN('2')).toString(), '0x', '0x', { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
+
+                await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation });
+
+                let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    randomHex(32), randomHex(32), 1, this.decimals, granularity, { from: federation });
+                utils.checkRcpt(receipt);
+
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "rMAIN");
+
+                const sideTokenGranularity = await sideToken.granularity();
+                assert.equal(sideTokenGranularity.toString(), granularity);
+
+                let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                assert.equal(originalTokenAddress, tokenWithGranularity.address);
+
+                const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(mirrorBridgeBalance, 0);
+                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(mirrorAnAccountBalance.toString(), new BN(this.amount).mul(new BN('2')).toString());
+            });
+
+            it('accept transfer from ERC777 with granularity not power of 10', async function () {
+                const granularity = '20';
+                let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, '1', { from: tokenOwner });
+                tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                );
+            });
+
+            it('accept transfer from ERC777 with granularity bigger than  10^18', async function () {
+                const granularity = '10000000000000000000';
+                let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, '1', { from: tokenOwner });
+                tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                    );
+            });
+
+            it('accept transfer from ERC777 with granularity less than 1', async function () {
+                const granularity = '0';
+                let tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, '1', { from: tokenOwner });
+                tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithGranularity.address, {from: bridgeManager});
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                    );
             });
 
             it('accept transfer only federation', async function () {
