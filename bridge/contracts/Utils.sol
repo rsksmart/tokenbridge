@@ -24,18 +24,16 @@ contract Utils {
         return symbol;
     }
 
-    function getDecimals(address tokenToUse) public view returns (uint8 decimals) {
+    function getDecimals(address tokenToUse) public view returns (uint8) {
         //support decimals as uint256 or uint8
         (bool success, bytes memory data) = tokenToUse.staticcall(abi.encodeWithSignature("decimals()"));
         require(success, "Utils: No decimals");
-        require(data.length == 1 || data.length == 32, "Utils: Decimals not uint8 or uint256");
-        if (data.length == 1) {
-            decimals = abi.decode(data, (uint8));
-        } else if (data.length == 32) {
-            decimals = uint8(abi.decode(data, (uint256)));
-        }
-        require(decimals <= 18, "Utils: Decimals not in 0 to 18");
-        return decimals;
+        require(data.length == 32, "Utils: Decimals not uint<M>");
+        // uint<M>: enc(X) is the big-endian encoding of X,
+        //padded on the higher-order (left) side with zero-bytes such that the length is 32 bytes.
+        uint256 decimalsDecoded = abi.decode(data, (uint256));
+        require(decimalsDecoded <= 18, "Utils: Decimals not in 0 to 18");
+        return uint8(decimalsDecoded);
     }
 
     function getGranularity(address tokenToUse) public view returns (uint256 granularity) {
@@ -44,10 +42,8 @@ contract Utils {
         granularity = 1;
         if(success) {
             granularity = abi.decode(data, (uint256));
-            require(granularity >= 1 && granularity <= 1000000000000000000, "Utils: Invalid granularity");
-        }
-        if(granularity > 1) {
-            require(granularity.mod(10) == 0, "Utils: Granularity not 10^");
+            //Verify granularity is power of 10 to keep it compatible with ERC20 decimals
+            granularityToDecimals(granularity);
         }
         return granularity;
     }

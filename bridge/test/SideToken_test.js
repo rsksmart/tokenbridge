@@ -1,5 +1,6 @@
 const SideToken = artifacts.require('./SideToken_v1');
 const mockERC677Receiver = artifacts.require('./mockERC677Receiver');
+const mockERC777Recipient = artifacts.require('./mockERC777Recipient');
 
 const utils = require('./utils');
 const expectThrow = utils.expectThrow;
@@ -8,6 +9,21 @@ contract('SideToken_v1', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];
+
+    describe('constructor', async function () {
+
+        it('should create side token', async function () {
+            let token = await SideToken.new("SIDE", "SIDE", tokenCreator, 1);
+            assert.isNotEmpty(token.address)
+        });
+        it('should fail empty minter address', async function () {
+            await utils.expectThrow(SideToken.new("SIDE", "SIDE", '0x', 1));
+        });
+
+        it('should fail empty granularity', async function () {
+            await utils.expectThrow(SideToken.new("SIDE", "SIDE", tokenCreator, 0));
+        });
+    });
 
     describe('granularity 1', async function () {
         beforeEach(async function () {
@@ -98,6 +114,11 @@ contract('SideToken_v1', async function (accounts) {
             const totalSupply = await this.token.totalSupply();
             assert.equal(totalSupply, 1000);
         });
+
+        it('transferAndCalls to empty account', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+            await expectThrow(this.token.transferAndCall('0x', 400, '0x', { from: anAccount }));
+        });
         
         it('transfer and call to contract', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
@@ -149,6 +170,72 @@ contract('SideToken_v1', async function (accounts) {
             let receiver = await SideToken.new("SIDE", "SIDE", tokenCreator, '1');
             await expectThrow(this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }));
         });
+
+        it('transfer and call to ERC777 contract', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+
+            let receiver = await mockERC777Recipient.new();
+            let result = await this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount });
+            utils.checkRcpt(result);
+
+            let eventSignature = web3.eth.abi.encodeEventSignature('Success(address,address,address,uint256,bytes,bytes)');
+
+            let decodedLog = web3.eth.abi.decodeLog([
+                {
+                    "indexed": false,
+                    "internalType": "address",
+                    "name": "operator",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "address",
+                    "name": "from",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "address",
+                    "name": "to",
+                    "type": "address"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "uint256",
+                    "name": "amount",
+                    "type": "uint256"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "bytes",
+                    "name": "userData",
+                    "type": "bytes"
+                },
+                {
+                    "indexed": false,
+                    "internalType": "bytes",
+                    "name": "operatorData",
+                    "type": "bytes"
+                }
+              ], result.receipt.rawLogs[2].data, result.receipt.rawLogs[2].topics.slice(1));
+
+            assert.equal(result.receipt.rawLogs[2].topics[0], eventSignature);
+            assert.equal(decodedLog.operator, anAccount);
+            assert.equal(decodedLog.from, anAccount);
+            assert.equal(decodedLog.to, receiver.address);
+            assert.equal(decodedLog.amount, 400);
+            assert.equal(decodedLog.userData, '0x000001');
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 600);
+
+            const anotherAccountBalance = await this.token.balanceOf(receiver.address);
+            assert.equal(anotherAccountBalance, 400);
+
+            const totalSupply = await this.token.totalSupply();
+            assert.equal(totalSupply, 1000);
+        });
+
     });
 
     describe('granularity 1000', async function () {
