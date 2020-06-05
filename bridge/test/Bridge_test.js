@@ -1022,7 +1022,49 @@ contract('Bridge_v1', async function (accounts) {
             await utils.expectThrow(this.bridge.endUpgrade());
             assert.equal(isUpgrading, true);
         });
-    })
+
+        describe('when Upgrading', async function() {
+            beforeEach(async function() {
+                await this.bridge.startUpgrade({ from: bridgeManager });
+            });
+
+            it('should reject receiveTokens ERC20', async function () {
+                const amount = web3.utils.toWei('1000');
+                await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
+                await utils.expectThrow(this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner }));
+            });
+
+            it('should reject tokensReceived for ERC777', async function () {
+                const amount = web3.utils.toWei('1000');
+                const granularity = '100';
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                
+                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                await utils.expectThrow(erc777.send(this.bridge.address, amount, '0x1100', { from: tokenOwner }));
+            });
+
+            it('should accept transfer for the token', async function () {
+                const amount = web3.utils.toWei('1000');
+                let receipt = await this.bridge.acceptTransfer(this.token.address, anAccount, amount, "MAIN",
+                randomHex(32), randomHex(32), 1, '18', '1', { from: federation });
+                utils.checkRcpt(receipt);
+
+                let sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
+                let sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, "eMAIN");
+
+                let originalTokenAddress = await this.bridge.originalTokens(sideTokenAddress);
+                assert.equal(originalTokenAddress, this.token.address);
+
+                const mirrorBridgeBalance = await sideToken.balanceOf(this.bridge.address);
+                assert.equal(mirrorBridgeBalance, 0);
+                const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(mirrorAnAccountBalance, amount);
+            });
+        });
+    });
 
 });
 

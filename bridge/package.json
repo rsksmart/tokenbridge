@@ -1,6 +1,6 @@
 {
   "name": "bridge",
-  "private": "true",
+  "private": true,
   "version": "1.1.0",
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
@@ -11,7 +11,7 @@
     "ethlint": "^1.2.5",
     "resolve": "^1.13.0",
     "solidity-coverage": "^0.7.5",
-    "truffle": "^5.1.24"
+    "truffle": "^5.1.27"
   },
   "scripts": {
     "start": "npm run lint && npm run migrate && npm run test",

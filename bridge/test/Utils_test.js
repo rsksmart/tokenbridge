@@ -26,14 +26,10 @@ contract('Utils Contract', async function (accounts) {
         });
         
         it('granularity to decimals', async function () {
-            let resultDecimals = await this.utilsLib.granularityToDecimals('1');
-            assert.equal(resultDecimals, 18);
-            resultDecimals = await this.utilsLib.granularityToDecimals('1000000000');
-            assert.equal(resultDecimals, 9);
-            resultDecimals = await this.utilsLib.granularityToDecimals('1000000000000');
-            assert.equal(resultDecimals, 6);
-            resultDecimals = await this.utilsLib.granularityToDecimals('1000000000000000000');
-            assert.equal(resultDecimals, 0);
+            for(var i = 0; i < 19; i++) {
+                let resultDecimals = await this.utilsLib.granularityToDecimals((10**i).toString());
+                assert.equal(resultDecimals.toString(), (18-i).toString());
+            }
         });
     });
     describe('getDecimals', async function () {
@@ -48,6 +44,10 @@ contract('Utils Contract', async function (accounts) {
 
         it('Throw if is not a contract', async function () {
             await utils.expectThrow(this.utilsLib.getDecimals(owner));
+        });
+
+        it('Throw if does not have decimals()', async function () {
+            await utils.expectThrow(this.utilsLib.getDecimals(this.utilsLib.address));
         });
 
         it('Throw if bigger than 18', async function () {
@@ -75,6 +75,10 @@ contract('Utils Contract', async function (accounts) {
 
         it('Throw if is not a contract', async function () {
             await utils.expectThrow(this.utilsLib.getSymbol(owner));
+        });
+
+        it('Throw if does not have symbol()', async function () {
+            await utils.expectThrow(this.utilsLib.getSymbol(this.utilsLib.address));
         });
 
         it('Throw if empty', async function () {
@@ -107,6 +111,11 @@ contract('Utils Contract', async function (accounts) {
             await utils.expectThrow(this.utilsLib.getGranularity(owner));
         });
 
+        it('granularity = 1 if does not have granularity()', async function () {
+            let result = await this.utilsLib.getGranularity(this.utilsLib.address);
+            assert.equal(result, '1');
+        });
+
         it('Throw if bigger than 18 decimals', async function () {
             let granularity = '10000000000000000000';
             let token = await SideToken.new("SIDE", "SIDE", owner, granularity);
@@ -118,6 +127,49 @@ contract('Utils Contract', async function (accounts) {
             let resultGranularity = await this.utilsLib.getGranularity(token.address);
             assert.equal(resultGranularity, '1');
         });
+    });
+
+    it('should calculate granularity and amount ERC20', async function () {
+        let decimals = 9;
+        let amount = 1000;
+        let granularity = '1';
+
+        let result = await this.utilsLib.calculateGranularityAndAmount(decimals, granularity, amount);
+  
+        assert.equal(result.calculatedGranularity.toString(), (10**decimals).toString());
+        assert.equal(result.formattedAmount.toString(), (amount*(10**(18-decimals))).toString());
+    });
+
+    it('should calculate granularity and amount ERC777', async function () {
+        let decimals = 18;
+        let amount = 1000;
+        let granularity = 100;
+
+        let result = await this.utilsLib.calculateGranularityAndAmount(decimals, granularity, amount);
+  
+        assert.equal(result.calculatedGranularity.toString(), granularity);
+        assert.equal(result.formattedAmount.toString(), amount.toString());
+    });
+
+    it('should calculate Decimals and amount', async function () {
+        let decimals = 16;
+        let amount = 10000;
+        let granularity = 100;
+        let token = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000'), { from: owner });
+
+        let result = await this.utilsLib.calculateDecimalsAndAmount(token.address, granularity, amount);
+
+        assert.equal(result.calculatedDecimals.toString(), decimals.toString());
+        assert.equal(result.formattedAmount.toString(), (amount / granularity).toString());
+    });
+
+    it('should fail calculate Decimals and amount', async function () {
+        let decimals = 16;
+        let amount = 10000;
+        let granularity = 10000;
+        let token = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000'), { from: owner });
+
+        utils.expectThrow(this.utilsLib.calculateDecimalsAndAmount(token.address, granularity, amount));
     });
 
 });
