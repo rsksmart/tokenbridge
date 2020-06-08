@@ -8,6 +8,7 @@
     "@openzeppelin/test-helpers": "^0.5.4",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.26",
+    "eth-gas-reporter": "^0.2.17",
     "ethlint": "^1.2.5",
     "resolve": "^1.13.0",
     "solidity-coverage": "^0.7.5",

@@ -6,6 +6,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const UtilsContract = artifacts.require('./Utils');
+const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
@@ -33,6 +34,11 @@ contract('Bridge_v1', async function (accounts) {
     });
 
     describe('Main network', async function () {
+
+        it('should retrieve the version', async function () {
+            const result = await this.bridge.version();
+            assert.equal(result, "v1");
+        });
 
         describe('owner', async function () {
             it('check manager', async function () {
@@ -304,6 +310,13 @@ contract('Bridge_v1', async function (accounts) {
                 await utils.expectThrow(this.bridge.receiveTokens(newToken.address, amount, { from: tokenOwner }));
             });
 
+            it('receiveTokens should reject contract call', async function () {
+                let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
+                const amount = web3.utils.toWei('1000');
+                await this.token.approve(otherContract.address, amount, { from: tokenOwner });
+                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, amount));
+            });
+
             it('rejects to receive tokens greater than  max tokens allowed', async function() {
                 let maxTokensAllowed = await this.allowTokens.getMaxTokensAllowed();
                 let amount = maxTokensAllowed.add(new BN('1'));
@@ -466,12 +479,23 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(mirrorAnAccountBalance.toString(), expectedAmount.toString());
             });
 
-            it('accept transfer with decimals bigger than 18', async function () {
+            it('fail accept transfer with decimals bigger than 18', async function () {
                 let decimals = 19;
                 let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
                 await this.allowTokens.addAllowedToken(tokenWithDecimals.address, {from: bridgeManager});
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation }) 
+                );
+            });
+
+            it('fail accept transfer with receiver empty address', async function () {
+                let decimals = 18;
+                let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                await this.allowTokens.addAllowedToken(tokenWithDecimals.address, {from: bridgeManager});
+
+                await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, utils.NULL_ADDRESS, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation }) 
                 );
@@ -682,6 +706,17 @@ contract('Bridge_v1', async function (accounts) {
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
             });
+
+            it('clearSideToken ONLY TESTNET should be successful', async function () {
+                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                assert.notEqual(sideTokenAddress, utils.NULL_ADDRESS);
+                await this.mirrorBridge.clearSideToken(this.token.address, { from: bridgeManager });
+                let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
+                let sideTokenAddressNow = await this.mirrorBridge.mappedTokens(this.token.address);
+                assert.equal(sideTokenAddressNow, utils.NULL_ADDRESS);
+                assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
+            });
+
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
                     let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -1063,6 +1098,34 @@ contract('Bridge_v1', async function (accounts) {
                 const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                 assert.equal(mirrorAnAccountBalance, amount);
             });
+        });
+    });
+
+    describe('change SideTokenFactory', async function() {
+        
+        it('should reject empty address', async function () {
+            await utils.expectThrow(this.bridge.changeSideTokenFactory(utils.NULL_ADDRESS, { from: bridgeManager }));
+        });
+
+        it('should be successful', async function () {
+            let newAddress = randomHex(20);
+            await this.bridge.changeSideTokenFactory(newAddress, { from: bridgeManager });
+            let result = await this.bridge.sideTokenFactory();
+            assert.equal(result.toLowerCase(), newAddress.toLowerCase());
+        });
+    });
+
+    describe('change Utils Contract', async function() {
+        
+        it('should reject empty address', async function () {
+            await utils.expectThrow(this.bridge.utils(utils.NULL_ADDRESS, { from: bridgeManager }));
+        });
+
+        it('should be successful', async function () {
+            let newAddress = randomHex(20);
+            await this.bridge.changeUtils(newAddress, { from: bridgeManager });
+            let result = await this.bridge.utils();
+            assert.equal(result.toLowerCase(), newAddress.toLowerCase());
         });
     });
 

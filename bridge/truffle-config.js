@@ -92,6 +92,10 @@ module.exports = {
     },
   },
   plugins: ["solidity-coverage"],
+  mocha: {
+    reporter: 'eth-gas-reporter',
+    //reporterOptions : { ... } // See options below
+  },
   compilers: {
       solc: {
         version: "0.5.17",
