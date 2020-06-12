@@ -10,12 +10,11 @@
     "web3": "^1.2.5"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "mocha": "^6.2.3"
+    "jest": "^26.0.1"
   },
   "scripts": {
     "start": "node ./src/main.js",
-    "test": "mocha --recursive \"test/**/*.test.js\" ",
+    "test": "jest --detectOpenHandles test/",
     "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
     "clean": "rm -rf ./db/*"
   },

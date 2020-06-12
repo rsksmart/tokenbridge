@@ -29,7 +29,7 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-                const toBlock = currentBlock - this.config.confirmations || 120;
+                const toBlock = currentBlock - (this.config.confirmations || 120);
                 this.logger.info('Running to Block', toBlock);
 
                 if (toBlock <= 0) {

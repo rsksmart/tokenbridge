@@ -1,6 +1,10 @@
 const Federation = require('./contracts/Federation');
 const Bridge = require('./contracts/Bridge');
-const config = require('../../config.js');
+const fs = require('fs');
+const path = require('path');
+
+const configFile = fs.readFileSync(path.join(__dirname,'../config.js'), 'utf8');
+const config = JSON.parse(configFile);
 
 const mappings = {
     [config.mainchain.federation]: Federation,
