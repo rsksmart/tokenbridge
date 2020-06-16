@@ -101,81 +101,11 @@ contract('SideToken_v1', async function (accounts) {
             assert.equal(totalSupply, 1000);
         });
 
-        it('transferAndCall to account', async function () {
-            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-            await this.token.transferAndCall(anotherAccount, 400, '0x', { from: anAccount });
-
-            const anAccountBalance = await this.token.balanceOf(anAccount);
-            assert.equal(anAccountBalance, 600);
-
-            const anotherAccountBalance = await this.token.balanceOf(anotherAccount);
-            assert.equal(anotherAccountBalance, 400);
-
-            const totalSupply = await this.token.totalSupply();
-            assert.equal(totalSupply, 1000);
-        });
-
-        it('transferAndCalls to empty account', async function () {
-            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-            await expectThrow(this.token.transferAndCall('0x', 400, '0x', { from: anAccount }));
-        });
-        
-        it('transfer and call to contract', async function () {
-            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-
-            let receiver = await mockERC677Receiver.new();
-            let result = await this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount });
-            utils.checkRcpt(result);
-
-            let eventSignature = web3.eth.abi.encodeEventSignature('Success(address,uint256,bytes)');
-            //console.log(result.receipt.rawLogs);
-            let decodedLog = web3.eth.abi.decodeLog([
-                {
-                  "indexed": false,
-                  "internalType": "address",
-                  "name": "_sender",
-                  "type": "address"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "uint256",
-                  "name": "_value",
-                  "type": "uint256"
-                },
-                {
-                  "indexed": false,
-                  "internalType": "bytes",
-                  "name": "_data",
-                  "type": "bytes"
-                }
-              ], result.receipt.rawLogs[2].data, result.receipt.rawLogs[2].topics.slice(1));
-            assert.equal(result.receipt.rawLogs[2].topics[0], eventSignature);
-            assert.equal(decodedLog._sender, anAccount);
-            assert.equal(decodedLog._value, 400);
-            assert.equal(decodedLog._data, '0x000001');
-
-            const anAccountBalance = await this.token.balanceOf(anAccount);
-            assert.equal(anAccountBalance, 600);
-
-            const anotherAccountBalance = await this.token.balanceOf(receiver.address);
-            assert.equal(anotherAccountBalance, 400);
-
-            const totalSupply = await this.token.totalSupply();
-            assert.equal(totalSupply, 1000);
-        });
-
-        it('transferAndCalls throws if receiver does not implement IERC677Receiver', async function () {
-            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-
-            let receiver = await SideToken.new("SIDE", "SIDE", tokenCreator, '1');
-            await expectThrow(this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }));
-        });
-
-        it('transfer and call to ERC777 contract', async function () {
+        it('send to ERC777 contract', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
 
             let receiver = await mockERC777Recipient.new();
-            let result = await this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount });
+            let result = await this.token.send(receiver.address, 400, '0x000001',{ from: anAccount });
             utils.checkRcpt(result);
 
             let eventSignature = web3.eth.abi.encodeEventSignature('Success(address,address,address,uint256,bytes,bytes)');
@@ -234,6 +164,68 @@ contract('SideToken_v1', async function (accounts) {
 
             const totalSupply = await this.token.totalSupply();
             assert.equal(totalSupply, 1000);
+        });
+
+        it('transferAndCall to account', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+            await expectThrow(this.token.transferAndCall(anotherAccount, 400, '0x', { from: anAccount }));
+        });
+
+        it('transferAndCalls to empty account', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+            await expectThrow(this.token.transferAndCall('0x', 400, '0x', { from: anAccount }));
+        });
+        
+        it('transferAndCalls to contract', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+
+            let receiver = await mockERC677Receiver.new();
+            const data = '0x000001';
+            let result = await this.token.transferAndCall(receiver.address, 400, data,{ from: anAccount });
+            utils.checkRcpt(result);
+
+            let eventSignature = web3.eth.abi.encodeEventSignature('Success(address,uint256,bytes)');
+            console.log(result.receipt.rawLogs);
+            let decodedLog = web3.eth.abi.decodeLog([
+                {
+                  "indexed": false,
+                  "internalType": "address",
+                  "name": "_sender",
+                  "type": "address"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "uint256",
+                  "name": "_value",
+                  "type": "uint256"
+                },
+                {
+                  "indexed": false,
+                  "internalType": "bytes",
+                  "name": "_data",
+                  "type": "bytes"
+                }
+              ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[2].topics.slice(1));
+            assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
+            assert.equal(decodedLog._sender, anAccount);
+            assert.equal(decodedLog._value, 400);
+            assert.equal(decodedLog._data, data);
+
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            assert.equal(anAccountBalance, 600);
+
+            const anotherAccountBalance = await this.token.balanceOf(receiver.address);
+            assert.equal(anotherAccountBalance, 400);
+
+            const totalSupply = await this.token.totalSupply();
+            assert.equal(totalSupply, 1000);
+        });
+
+        it('transferAndCalls throws if receiver does not implement IERC677Receiver', async function () {
+            await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
+
+            let receiver = await SideToken.new("SIDE", "SIDE", tokenCreator, '1');
+            await expectThrow(this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }));
         });
 
     });
