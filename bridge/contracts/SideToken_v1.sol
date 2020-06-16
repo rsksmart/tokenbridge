@@ -11,6 +11,8 @@ contract SideToken_v1 is ISideToken, ERC777 {
     address public minter;
     uint256 private _granularity;
 
+    event Transfer(address,address,uint256,bytes);
+
     constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr, uint256 _newGranularity)
     ERC777(_tokenName, _tokenSymbol, new address[](0)) public {
         require(_minterAddr != address(0), "SideToken: Minter address is null");
@@ -44,18 +46,11 @@ contract SideToken_v1 is ISideToken, ERC777 {
     function transferAndCall(address recipient, uint amount, bytes calldata data)
         external returns (bool success)
     {
-        require(recipient != address(0), "SideToken: transfer to the zero address");
         address from = _msgSender();
 
-        _callTokensToSend(from, from, recipient, amount, "", "");
-
-        _move(from, from, recipient, amount, data, "");
-
-        if(!_callTokensReceived(from, from, recipient, amount, data, "", false)) {
-            if (recipient.isContract()) {
-                IERC677Receiver(recipient).onTokenTransfer(from, amount, data);
-            }
-        }
+        _send(from, from, recipient, amount, data, "", false);
+        emit Transfer(from, recipient, amount, data);
+        IERC677Receiver(recipient).onTokenTransfer(from, amount, data);
 
         return true;
     }

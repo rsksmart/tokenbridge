@@ -10,6 +10,6 @@ contract mockReceiveTokensCall {
     }
 
     function callReceiveTokens(address tokenToUse, uint256 amount) public {
-       IBridge_v1(bridge).receiveTokens(tokenToUse, amount);
+        IBridge_v1(bridge).receiveTokens(tokenToUse, amount);
     }
 }

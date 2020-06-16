@@ -156,7 +156,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         }
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
-        crossTokens(tokenToUse, _msgSender(), amount, "");
+        crossTokens(tokenToUse, sender, amount, "");
         return true;
     }
 
@@ -182,8 +182,8 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool _isSideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
-        verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
         if (_isSideToken) {
+            verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
             //Side Token Crossing
             ISideToken(tokenToUse).burn(amount, userData);
             // solium-disable-next-line max-len
@@ -192,6 +192,10 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
             //Main Token Crossing
             knownTokens[tokenToUse] = true;
             (uint8 decimals, uint256 granularity, string memory symbol) = utils.getTokenInfo(tokenToUse);
+            uint formattedAmount = amount;
+            if(decimals != 18)
+                formattedAmount = amount.mul(uint256(10)**(18-decimals));
+            verifyWithAllowTokens(tokenToUse, formattedAmount, _isSideToken);
             emit Cross(tokenToUse, from, amount, symbol, userData, decimals, granularity);
         }
     }

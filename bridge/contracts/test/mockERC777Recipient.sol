@@ -11,12 +11,12 @@ contract mockERC777Recipient is IERC777Recipient {
     }
 
     event Success(
-        address operator,
-        address from,
-        address to,
-        uint amount,
-        bytes userData,
-        bytes operatorData);
+    address operator,
+    address from,
+    address to,
+    uint amount,
+    bytes userData,
+    bytes operatorData);
 
     /**
      * ERC-677's only method implementation

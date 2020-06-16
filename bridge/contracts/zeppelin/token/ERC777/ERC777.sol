@@ -350,7 +350,7 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory operatorData,
         bool requireReceptionAck
     )
-        private
+        internal
     {
         require(from != address(0), "ERC777: send from zero address");
         require(to != address(0), "ERC777: send to zero address");
@@ -463,15 +463,13 @@ contract ERC777 is Context, IERC777, IERC20 {
         bytes memory operatorData,
         bool requireReceptionAck
     )
-        internal returns(bool)
+        private
     {
-        address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
+         address implementer = _erc1820.getInterfaceImplementer(to, TOKENS_RECIPIENT_INTERFACE_HASH);
         if (implementer != address(0)) {
             IERC777Recipient(implementer).tokensReceived(operator, from, to, amount, userData, operatorData);
-            return true;
         } else if (requireReceptionAck) {
-            require(!to.isContract(), "ERC777: recipient contract has no implementer for ERC777TokensRecipient");
+            require(!to.isContract(), "ERC777: token recipient contract has no implementer for ERC777TokensRecipient");
         }
-        return false;
     }
 }
