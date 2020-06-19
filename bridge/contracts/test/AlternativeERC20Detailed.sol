@@ -7,12 +7,12 @@ contract AlternativeERC20Detailed is ERC20 {
     bytes32 private _symbol;
     uint256 private _decimals;
 
-    constructor(string memory name, bytes32 symbol, uint256 decimals, uint256 totalSupply) public
+    constructor(string memory aName, bytes32 aSymbol, uint256 someDecimals, uint256 aTotalSupply) public
     {
-        _name = name;
-        _symbol = symbol;
-        _decimals = decimals;
-        _mint(msg.sender, totalSupply);
+        _name = aName;
+        _symbol = aSymbol;
+        _decimals = someDecimals;
+        _mint(msg.sender, aTotalSupply);
     }
 
     function name() public view returns (string memory) {

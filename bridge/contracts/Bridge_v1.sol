@@ -44,11 +44,12 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     //Bridge_v1 variables
     bool public isUpgrading;
     Utils public utils;
-
+    uint256 constant public crossingPaymentDivider = 10000; // Porcentage with up to 2 decimals
 
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
     event UtilsChanged(address _newSideTokenFactory);
+    event Upgrading(bool isUpgrading);
 
     function initialize(
         address _manager,
@@ -79,7 +80,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     }
 
     modifier whenNotUpgrading() {
-        require(isUpgrading == false, "Bridge: Upgrading");
+        require(!isUpgrading, "Bridge: Upgrading");
         _;
     }
 
@@ -101,7 +102,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         require(blockHash != NULL_HASH, "Bridge: BlockHash is null");
         require(transactionHash != NULL_HASH, "Bridge: Transaction is null");
         require(decimals <= 18, "Bridge: Decimals bigger 18");
-        utils.granularityToDecimals(granularity);//Check if granularity is valid
+        require(utils.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
 
         _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
@@ -145,15 +146,9 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external payable whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
+    function receiveTokens(address tokenToUse, uint256 amount) external whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Sender can't be a contract");
-        //Send the payment to the MultiSig of the Federation
-        require(msg.value >= crossingPayment, "Bridge: Insufficient crossingPayment");
-        if(msg.value > 0) {
-            address payable receiver = address(uint160(owner()));
-            receiver.transfer(msg.value);
-        }
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         crossTokens(tokenToUse, sender, amount, "");
@@ -174,29 +169,38 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     ) external whenNotPaused whenNotUpgrading {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
-        require(to == address(this), "Bridge: No to address");
-        require(crossingPayment == 0, "Bridge: Needs payment");
+        require(to == address(this), "Bridge: Not to address");
+        address tokenToUse = _msgSender();
         //This can only be used with trusted contracts
-        crossTokens(_msgSender(), from, amount, userData);
+        crossTokens(tokenToUse, from, amount, userData);
     }
 
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
-        bool _isSideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
-        if (_isSideToken) {
-            verifyWithAllowTokens(tokenToUse, amount, _isSideToken);
+        bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
+        //Send the payment to the MultiSig of the Federation
+        uint256 fee = 0;
+        if(crossingPayment > 0) {
+            fee = amount.mul(crossingPayment).div(crossingPaymentDivider);
+            IERC20(tokenToUse).safeTransfer(owner(), fee);
+        }
+        uint256 amountMinusFees = amount - fee;
+        if (isASideToken) {
+            verifyWithAllowTokens(tokenToUse, amount, isASideToken);
             //Side Token Crossing
-            ISideToken(tokenToUse).burn(amount, userData);
+            ISideToken(tokenToUse).burn(amountMinusFees, userData);
             // solium-disable-next-line max-len
-            emit Cross(originalTokens[tokenToUse], from, amount, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
+            emit Cross(originalTokens[tokenToUse], from, amountMinusFees, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
         } else {
             //Main Token Crossing
             knownTokens[tokenToUse] = true;
             (uint8 decimals, uint256 granularity, string memory symbol) = utils.getTokenInfo(tokenToUse);
             uint formattedAmount = amount;
-            if(decimals != 18)
+            if(decimals != 18) {
                 formattedAmount = amount.mul(uint256(10)**(18-decimals));
-            verifyWithAllowTokens(tokenToUse, formattedAmount, _isSideToken);
-            emit Cross(tokenToUse, from, amount, symbol, userData, decimals, granularity);
+            }
+            //We consider the amount before fees converted to 18 decimals to check the limits
+            verifyWithAllowTokens(tokenToUse, formattedAmount, isASideToken);
+            emit Cross(tokenToUse, from, amountMinusFees, symbol, userData, decimals, granularity);
         }
     }
 
@@ -248,6 +252,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     }
 
     function setCrossingPayment(uint amount) external onlyOwner whenNotPaused {
+        require(amount < crossingPaymentDivider, "Bridge: bigger than 100%");
         crossingPayment = amount;
         emit CrossingPaymentChanged(crossingPayment);
     }
@@ -312,10 +317,12 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
 
     function startUpgrade() external onlyOwner {
         isUpgrading = true;
+        emit Upgrading(isUpgrading);
     }
 
     function endUpgrade() external onlyOwner {
         isUpgrading = false;
+        emit Upgrading(isUpgrading);
     }
 
 }

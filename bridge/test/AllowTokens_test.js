@@ -31,6 +31,10 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isValidatingAllowedTokens, false);
         });
 
+        it('fails isTokenAllowed if null address provided', async function() {
+            await utils.expectThrow(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS));
+        })
+
         it('fail if disableAllowedTokensValidation caller is not the owner', async function() {
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             utils.expectThrow(this.allowTokens.disableAllowedTokensValidation({ from: tokenDeployer }));
@@ -139,7 +143,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('fail if max is lesser than min', async function() {
             await this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: manager });
-            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('9'), { from: tokenDeployer }));
+            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('9'), { from: manager }));
         });
     });
 
@@ -168,7 +172,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('fail if min is bigger than max', async function() {
             await this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('1'), { from: manager });
-            utils.expectThrow(this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: tokenDeployer }));
+            utils.expectThrow(this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: manager }));
         });
     });
 

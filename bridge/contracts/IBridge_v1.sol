@@ -13,7 +13,7 @@ interface IBridge_v1 {
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external payable returns(bool);
+    function receiveTokens(address tokenToUse, uint256 amount) external returns(bool);
 
     /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction

@@ -5,7 +5,7 @@ import "./zeppelin/math/SafeMath.sol";
 contract Utils {
     using SafeMath for uint256;
 
-    function getTokenInfo(address tokenToUse) public view returns (uint8 decimals, uint256 granularity, string memory symbol) {
+    function getTokenInfo(address tokenToUse) external view returns (uint8 decimals, uint256 granularity, string memory symbol) {
         decimals = getDecimals(tokenToUse);
         granularity = getGranularity(tokenToUse);
         symbol = getSymbol(tokenToUse);
@@ -89,7 +89,7 @@ contract Utils {
         require(false, "Utils: invalid granularity");
     }
 
-    function calculateGranularityAndAmount(uint8 decimals, uint256 granularity, uint256 amount) public pure
+    function calculateGranularityAndAmount(uint8 decimals, uint256 granularity, uint256 amount) external pure
         returns(uint256 calculatedGranularity, uint256 formattedAmount) {
 
         if(decimals == 18) {
@@ -105,7 +105,7 @@ contract Utils {
     }
 
     function calculateDecimalsAndAmount(address tokenAddress, uint256 granularity, uint256 amount)
-        public view returns (uint8 calculatedDecimals, uint256 formattedAmount) {
+        external view returns (uint8 calculatedDecimals, uint256 formattedAmount) {
         uint8 tokenDecimals = getDecimals(tokenAddress);
         //As side tokens are ERC777 we need to convert granularity to decimals
         calculatedDecimals = granularityToDecimals(granularity);
