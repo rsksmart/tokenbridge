@@ -59,25 +59,25 @@ contract('Bridge_v1', async function (accounts) {
                 assert.equal(manager, bridgeManager);
             });
 
-            it('setCrossingPayment successful', async function () {
-                const payment = 299; //2.99%
-                const crossingPaymentDivider = (await this.bridge.crossingPaymentDivider()).toNumber();
-                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
-                let result = await this.bridge.getCrossingPayment();
+            it('setFeePercentage successful', async function () {
+                const payment = 999; //9.99%
+                const feePercentageDivider = (await this.bridge.feePercentageDivider()).toNumber();
+                await this.bridge.setFeePercentage(payment, { from: bridgeManager});
+                let result = await this.bridge.getFeePercentage();
                 assert.equal(result, payment);
-                assert.equal((2.99/100).toFixed(4), payment/crossingPaymentDivider);
+                assert.equal((9.99/100).toFixed(4), payment/feePercentageDivider);
             });
 
-            it('setCrossingPayment should fail if not the owner', async function () {
+            it('setFeePercentage should fail if not the owner', async function () {
                 const payment = 1000;
-                await utils.expectThrow(this.bridge.setCrossingPayment(payment, { from: tokenOwner}));
-                let result = await this.bridge.getCrossingPayment();
+                await utils.expectThrow(this.bridge.setFeePercentage(payment, { from: tokenOwner}));
+                let result = await this.bridge.getFeePercentage();
                 assert.equal(result, 0);
             });
 
-            it('setCrossingPayment should fail if 100% or more', async function () {
-                const payment = await this.bridge.crossingPaymentDivider();
-                await utils.expectThrow(this.bridge.setCrossingPayment(payment, { from: bridgeManager}));
+            it('setFeePercentage should fail if 10% or more', async function () {
+                const payment = await this.bridge.feePercentageDivider()/10;
+                await utils.expectThrow(this.bridge.setFeePercentage(payment, { from: bridgeManager}));
             });
 
 
@@ -335,9 +335,9 @@ contract('Bridge_v1', async function (accounts) {
             it('tokensReceived for ERC777 with payment', async function () {
                 const amount = new BN(web3.utils.toWei('1000'));
                 const payment = new BN('185'); //1.85%
-                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
-                const crossingPaymentDivider = await this.bridge.crossingPaymentDivider();
-                const fees = amount.mul(payment).div(crossingPaymentDivider);
+                await this.bridge.setFeePercentage(payment, { from: bridgeManager});
+                const feePercentageDivider = await this.bridge.feePercentageDivider();
+                const fees = amount.mul(payment).div(feePercentageDivider);
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
                 
@@ -441,10 +441,10 @@ contract('Bridge_v1', async function (accounts) {
             it('receiveTokens with payment successful', async function () {
                 const payment = new BN('33');
                 const amount = new BN(web3.utils.toWei('1000'));
-                const crossingPaymentDivider = await this.bridge.crossingPaymentDivider();
-                const fees = amount.mul(payment).div(crossingPaymentDivider);
+                const feePercentageDivider = await this.bridge.feePercentageDivider();
+                const fees = amount.mul(payment).div(feePercentageDivider);
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
-                await this.bridge.setCrossingPayment(payment, { from: bridgeManager});
+                await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
                 let receipt = await this.bridge.receiveTokens(this.token.address, amount, { from: tokenOwner });
@@ -1073,30 +1073,30 @@ contract('Bridge_v1', async function (accounts) {
             assert.equal(mirrorBridgeBalance, 0);
         });
 
-        it('should not allow to set a crossing payment due to missing signatures', async function() {
-            let crossingPayment = await this.mirrorBridge.getCrossingPayment();
+        it('should not allow to set a feePercentage due to missing signatures', async function() {
+            let feePercentage = await this.mirrorBridge.getFeePercentage();
 
-            let data = this.mirrorBridge.contract.methods.setCrossingPayment(2000).encodeABI();
+            let data = this.mirrorBridge.contract.methods.setFeePercentage('200').encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
 
             let tx = await this.multiSig.transactions(2);
             assert.equal(tx.executed, false);
 
-            let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
-            assert.equal(crossingPayment.toString(), crossingPaymentAfter.toString());
+            let feePercentageAfter = await this.mirrorBridge.getFeePercentage();
+            assert.equal(feePercentage.toString(), feePercentageAfter.toString());
         });
 
-        it('should allow to set a crossing payment', async function() {
-            let newPayment = '2000';
-            let data = this.mirrorBridge.contract.methods.setCrossingPayment(newPayment).encodeABI();
+        it('should allow to set a feePercentage', async function() {
+            let newPayment = '200'; //2%
+            let data = this.mirrorBridge.contract.methods.setFeePercentage(newPayment).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
 
             let tx = await this.multiSig.transactions(2);
             assert.equal(tx.executed, true);
 
-            let crossingPaymentAfter = await this.mirrorBridge.getCrossingPayment();
-            assert.equal(crossingPaymentAfter.toString(), newPayment);
+            let feePercentageAfter = await this.mirrorBridge.getFeePercentage();
+            assert.equal(feePercentageAfter.toString(), newPayment);
         });
 
         it('should allow to set a new federation', async function() {

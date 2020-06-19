@@ -30,7 +30,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address private federation;
-    uint256 private crossingPayment;
+    uint256 private feePercentage;
     string public symbolPrefix;
     uint256 public lastDay;
     uint256 public spentToday;
@@ -44,7 +44,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     //Bridge_v1 variables
     bool public isUpgrading;
     Utils public utils;
-    uint256 constant public crossingPaymentDivider = 10000; // Porcentage with up to 2 decimals
+    uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
 
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
@@ -179,8 +179,8 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
         uint256 fee = 0;
-        if(crossingPayment > 0) {
-            fee = amount.mul(crossingPayment).div(crossingPaymentDivider);
+        if(feePercentage > 0) {
+            fee = amount.mul(feePercentage).div(feePercentageDivider);
             IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
         uint256 amountMinusFees = amount - fee;
@@ -251,14 +251,14 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         processed[compiledId] = true;
     }
 
-    function setCrossingPayment(uint amount) external onlyOwner whenNotPaused {
-        require(amount < crossingPaymentDivider, "Bridge: bigger than 100%");
-        crossingPayment = amount;
-        emit CrossingPaymentChanged(crossingPayment);
+    function setFeePercentage(uint amount) external onlyOwner whenNotPaused {
+        require(amount < (feePercentageDivider/10), "Bridge: bigger than 10%");
+        feePercentage = amount;
+        emit FeePercentageChanged(feePercentage);
     }
 
-    function getCrossingPayment() external view returns(uint) {
-        return crossingPayment;
+    function getFeePercentage() external view returns(uint) {
+        return feePercentage;
     }
 
     function calcMaxWithdraw() external view returns (uint) {
