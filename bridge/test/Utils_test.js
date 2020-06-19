@@ -5,6 +5,7 @@ const SideToken = artifacts.require('./SideToken_v1');
 
 const BN = web3.utils.BN;
 const utils = require('./utils');
+const { expectThrow } = require('./utils');
 
 contract('Utils Contract', async function (accounts) {
     const owner = accounts[0];
@@ -24,12 +25,20 @@ contract('Utils Contract', async function (accounts) {
             resultGranularity = await this.utilsLib.decimalsToGranularity(0);
             assert.equal(resultGranularity.toString(), new BN('1000000000000000000').toString());
         });
+
+        it('decimals to granularity should fail over 18 decimals', async function () {
+            await expectThrow(this.utilsLib.decimalsToGranularity(19));
+        });
         
         it('granularity to decimals', async function () {
             for(var i = 0; i < 19; i++) {
                 let resultDecimals = await this.utilsLib.granularityToDecimals((10**i).toString());
                 assert.equal(resultDecimals.toString(), (18-i).toString());
             }
+        });
+
+        it('granularity to decimals should fail over 18 decimals', async function () {
+            await expectThrow(this.utilsLib.granularityToDecimals((10**19).toString()));
         });
     });
     describe('getDecimals', async function () {

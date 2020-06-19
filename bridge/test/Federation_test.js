@@ -20,8 +20,16 @@ contract('Federation_v1', async function (accounts) {
     });
 
     it('should fail if required is not the same as memebers length', async function () {
-       await utils.expectThrow(Federation.new([fedMember1, fedMember2], 3))
+       await utils.expectThrow(Federation.new([fedMember1, fedMember2], 3));
     });
+
+    it('should fail if repeated memebers', async function () {
+        await utils.expectThrow(Federation.new([fedMember1, fedMember1], 2));
+     });
+
+     it('should fail if null memeber', async function () {
+        await utils.expectThrow(Federation.new([fedMember1, utils.NULL_ADDRESS], 2));
+     });
 
     beforeEach(async function () {
         this.members  = [fedMember1, fedMember2];
@@ -50,6 +58,17 @@ contract('Federation_v1', async function (accounts) {
             assert.equal(isMember, false);
         });
 
+        it('setBridge should work correctly', async function() {
+            await this.federation.setBridge(anAccount);
+
+            let bridge = await this.federation.bridge();
+            assert.equal(bridge, anAccount);
+        });
+
+        it('setBridge should fail if empty', async function() {
+            await utils.expectThrow(this.federation.setBridge(utils.NULL_ADDRESS));
+        });
+
         describe('addMember', async function() {
             it('should be succesful', async function() {
                 let receipt = await this.federation.addMember(fedMember3);
@@ -71,6 +90,10 @@ contract('Federation_v1', async function (accounts) {
                 assert.equal(isMember, false);
                 let members = await this.federation.getMembers();
                 assert.equal(members.length, this.members.length);
+            });
+
+            it('should fail if empty', async function() {
+                await utils.expectThrow(this.federation.addMember(utils.NULL_ADDRESS));
             });
 
             it('should fail if already exists', async function() {
@@ -117,8 +140,12 @@ contract('Federation_v1', async function (accounts) {
                 assert.equal(members.length, this.members.length);
             });
 
+            it('should fail if nulll address', async function() {
+                await utils.expectThrow(this.federation.removeMember(utils.NULL_ADDRESS));
+            });
+
             it('should fail if doesnt exists', async function() {
-                await utils.expectThrow(this.federation.removeMember(anAccount, { from: fedMember1 }));
+                await utils.expectThrow(this.federation.removeMember(anAccount));
 
                 let isMember = await this.federation.isMember(anAccount);
                 assert.equal(isMember, false);

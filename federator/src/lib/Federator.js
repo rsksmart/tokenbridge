@@ -29,7 +29,15 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-                const toBlock = currentBlock - (this.config.confirmations || 120);
+                const chainId = await this.mainWeb3.eth.net.getId();
+                let confirmations = 0; //for rsk regtest and ganache
+                if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
+                    confirmations = 10
+                }
+                if(chainId == 30 || chainId == 1) { // rsk mainnet and ethereum mainnet
+                    confirmations = 60
+                }
+                const toBlock = currentBlock - confirmations;
                 this.logger.info('Running to Block', toBlock);
 
                 if (toBlock <= 0) {
@@ -48,6 +56,10 @@ module.exports = class Federator {
                 }
                 fromBlock = parseInt(fromBlock)+1;
                 this.logger.debug('Running from Block', fromBlock);
+                if(fromBlock > toBlock){
+                    this.logger.error(`From block ${fromBlock} is bigger than the current block on the chain ${toBlock}`);
+                    process.exit();
+                }
 
                 const recordsPerPage = 1000;
                 const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);

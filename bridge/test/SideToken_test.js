@@ -185,7 +185,6 @@ contract('SideToken_v1', async function (accounts) {
             utils.checkRcpt(result);
 
             let eventSignature = web3.eth.abi.encodeEventSignature('Success(address,uint256,bytes)');
-            console.log(result.receipt.rawLogs);
             let decodedLog = web3.eth.abi.decodeLog([
                 {
                   "indexed": false,

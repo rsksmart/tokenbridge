@@ -51,7 +51,6 @@ contract SideToken_v1 is ISideToken, ERC777 {
         _send(from, from, recipient, amount, data, "", false);
         emit Transfer(from, recipient, amount, data);
         IERC677Receiver(recipient).onTokenTransfer(from, amount, data);
-
         return true;
     }
 
