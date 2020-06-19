@@ -72,11 +72,12 @@ contract('Bridge upgrade test', async (accounts) => {
             });
 
             it('should accept send Transaction', async () => {
-                const anAmount = web3.utils.toWei('5000');
-                let tx = await this.proxy.methods.setCrossingPayment(anAmount).send({ from: managerAddress });
+                const crossingPayment = web3.utils.toWei('5000');
+                const tx = await this.proxy.methods.setCrossingPayment(crossingPayment).send({ from: managerAddress });
+                assert.equal(tx.status, true);
                 utils.checkGas(tx.cumulativeGasUsed);
-                let crossingPayment = await this.proxy.methods.getCrossingPayment().call();
-                assert.equal(crossingPayment, anAmount);
+                const result = await this.proxy.methods.getCrossingPayment().call();
+                assert.equal(result.toString(), crossingPayment);
             });
 
             it('should receive tokens', async () => {
@@ -85,6 +86,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 await this.token.approve(this.proxy.address, amount, { from: anAccount });
 
                 let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
+                assert.equal(tx.status, true);
                 utils.checkGas(tx.cumulativeGasUsed);
 
                 assert.equal(tx.events.Cross.event, 'Cross');
@@ -112,6 +114,25 @@ contract('Bridge upgrade test', async (accounts) => {
                 assert.equal(result,  this.sideTokenFactory_v0.address);
                 result = await newProxy.methods.getFederation().call();
                 assert.equal(result,  federationAddress);
+            });
+
+            it('should have new method setFeePercentage after update', async () => {
+                const crossingPayment = web3.utils.toWei('5000');
+                let tx = await this.proxy.methods.setCrossingPayment(crossingPayment).send({from: managerAddress});
+                assert.equal(tx.status, true);
+                let result = await this.proxy.methods.getCrossingPayment().call();
+                assert.equal(result.toString(), crossingPayment);
+
+                newProxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
+
+                result = await newProxy.methods.getFeePercentage().call();
+                // This is the previous value from getCRossingPayment
+                assert.equal(result.toString(), crossingPayment);
+
+                let feePercentage = '20'; //0.2%
+                await newProxy.methods.setFeePercentage(feePercentage).send({from: managerAddress});
+                result = await newProxy.methods.getFeePercentage().call();
+                assert.equal(result.toString(), feePercentage);
             });
 
             describe('upgrade governance', () => {

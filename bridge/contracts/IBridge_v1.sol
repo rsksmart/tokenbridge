@@ -5,7 +5,7 @@ import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 interface IBridge_v1 {
     function version() external pure returns (string memory);
 
-    function getCrossingPayment() external view returns(uint);
+    function getFeePercentage() external view returns(uint);
 
     function calcMaxWithdraw() external view returns (uint);
 
@@ -48,5 +48,5 @@ interface IBridge_v1 {
     event NewSideToken(address indexed _newSideTokenAddress, address indexed _originalTokenAddress, string _newSymbol, uint256 _granularity);
     event AcceptedCrossTransfer(address indexed _tokenAddress, address indexed _to, uint256 _amount, uint8 _decimals, uint256 _granularity,
         uint256 _formattedAmount, uint8 _calculatedDecimals, uint256 _calculatedGranularity);
-    event CrossingPaymentChanged(uint256 _amount);
+    event FeePercentageChanged(uint256 _amount);
 }
