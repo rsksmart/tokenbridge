@@ -8,7 +8,9 @@ const MultiSigWallet = artifacts.require("MultiSigWallet");
 const fs = require('fs');
 
 function shouldDeployToken(network) {
-    return !network.toLowerCase().includes('mainnet');
+    return !network.toLowerCase().includes('mainnet') &&
+        !network.toLowerCase().includes('kovan') &&
+        !network.toLowerCase().includes('testnet');
 }
 
 module.exports = function(deployer, networkName, accounts) {
@@ -46,8 +48,6 @@ module.exports = function(deployer, networkName, accounts) {
             config.host = '';
         }
         config.fromBlock = await web3.eth.getBlockNumber();
-        if (networkName !== 'soliditycoverage') {
-            fs.writeFileSync(`../federator/config/${networkName}.json`, JSON.stringify(config, null, 4));
-        }
+        fs.writeFileSync(`../federator/config/${networkName}.json`, JSON.stringify(config, null, 4));
     });
 };

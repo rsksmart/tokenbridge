@@ -1,9 +1,8 @@
 {
     "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
-    "federation": "0x36c893a955399cf15a4a2fbef04c0e06d4d9b379",
-    "testToken": "0x5d248f520b023acb815edecd5000b98ef84cbf1b",
-    "multisig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+    "federation": "0x925606edc5863c079b712daed560c31eff8335b9",
+    "multiSig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
     "allowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
-    "host": "<YOUR NODE HOST AND RPC PORT>",
-    "fromBlock": 434075
+    "host": "YOUR HOST URL AND PORT",
+    "fromBlock": 957252
 }

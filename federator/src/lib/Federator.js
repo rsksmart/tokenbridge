@@ -35,7 +35,7 @@ module.exports = class Federator {
                     confirmations = 10
                 }
                 if(chainId == 30 || chainId == 1) { // rsk mainnet and ethereum mainnet
-                    confirmations = 60
+                    confirmations = 120
                 }
                 const toBlock = currentBlock - confirmations;
                 this.logger.info('Running to Block', toBlock);
@@ -73,8 +73,8 @@ module.exports = class Federator {
                     }
                     this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
                     const logs = await this.mainBridgeContract.getPastEvents('Cross', {
-                        fromPageBlock,
-                        toPagedBlock
+                        fromBlock: fromPageBlock,
+                        toBlock: toPagedBlock
                     });
                     if (!logs) throw new Error('Failed to obtain the logs');
 
@@ -86,6 +86,7 @@ module.exports = class Federator {
             } catch (err) {
                 this.logger.error(new Error('Exception Running Federator'), err);
                 retries--;
+                this.logger.debug(`Run ${3-retries} retrie`);
                 if( retries > 0) {
                     await utils.sleep(sleepAfterRetrie);
                 } else {

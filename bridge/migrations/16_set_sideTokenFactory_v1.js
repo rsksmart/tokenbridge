@@ -14,8 +14,6 @@ module.exports = function(deployer, networkName, accounts) {
             const sideTokenFactory = await SideTokenFactory.deployed();
             const bridge = await Bridge.deployed();
             
-            await sideTokenFactory.transferPrimary(bridge.address);
-
             const bridge_v1 = new web3.eth.Contract(Bridge_v1.abi, bridge.address);
             let data = bridge_v1.methods.changeSideTokenFactory(sideTokenFactory.address).encodeABI();
 

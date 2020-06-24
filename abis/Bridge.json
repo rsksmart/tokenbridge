@@ -108,12 +108,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
+        "internalType": "address",
+        "name": "_newFederation",
+        "type": "address"
       }
     ],
-    "name": "CrossingPaymentChanged",
+    "name": "FederationChanged",
     "type": "event"
   },
   {
@@ -121,12 +121,12 @@
     "inputs": [
       {
         "indexed": false,
-        "internalType": "address",
-        "name": "_newFederation",
-        "type": "address"
+        "internalType": "uint256",
+        "name": "_amount",
+        "type": "uint256"
       }
     ],
-    "name": "FederationChanged",
+    "name": "FeePercentageChanged",
     "type": "event"
   },
   {
@@ -249,6 +249,19 @@
     "inputs": [
       {
         "indexed": false,
+        "internalType": "bool",
+        "name": "isUpgrading",
+        "type": "bool"
+      }
+    ],
+    "name": "Upgrading",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
         "internalType": "address",
         "name": "_newSideTokenFactory",
         "type": "address"
@@ -281,6 +294,21 @@
         "internalType": "contract AllowTokens",
         "name": "",
         "type": "address"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "feePercentageDivider",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -740,8 +768,8 @@
         "type": "bool"
       }
     ],
-    "payable": true,
-    "stateMutability": "payable",
+    "payable": false,
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -834,7 +862,7 @@
         "type": "uint256"
       }
     ],
-    "name": "setCrossingPayment",
+    "name": "setFeePercentage",
     "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
@@ -843,7 +871,7 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "getCrossingPayment",
+    "name": "getFeePercentage",
     "outputs": [
       {
         "internalType": "uint256",

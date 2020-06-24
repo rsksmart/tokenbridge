@@ -19,29 +19,26 @@ const proxyAdminAbi = require('../../abis/ProxyAdmin.json');
 // }
 
 module.exports = function(deployer, networkName, accounts) {
-    return deployer.then(async () => {
+    return deployer.deploy(Bridge_v1)
+    .then(async (bridge_v1) => {
         const multiSig = await MultiSigWallet.deployed();
         const bridgeProxy = await Bridge.deployed();
-
         // const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-
-        // if (networkName === 'soliditycoverage') {
-        //     //soldity coverage doesn't play along with oppen zeppelin sdk
-        //     //so we deploy the un initialized contract just to create the objects
-        //     return deployer
-        //        .deploy(Bridge_v1);
-        // }
 
         // await ozDeploy({ network, txParams }, 'Bridge_v1', 'Bridge');
         if (networkName === 'soliditycoverage') {
             return deployer.deploy(Bridge_v1);
         }
+        let jsonName = networkName;
+        const chainId = await web3.eth.net.getId();
+        if((chainId >= 30 && chainId <=33) || chainId == 5777) {
+            jsonName = `dev-${chainId}`;
+        }
+        const networkConfig = require(`../.openzeppelin/${jsonName}.json`);
 
-        const networkConfig = require(`../.openzeppelin/dev-${await web3.eth.net.getId()}.json`);
-        const proxyAdmin = new web3.eth.Contract(proxyAdminAbi, networkConfig.proxyAdmin.address);
-
-        let bridge_v1 = await deployer.deploy(Bridge_v1);
-
+        const proxyAdminAddress = networkConfig.proxyAdmin.address;
+        const proxyAdmin = new web3.eth.Contract(proxyAdminAbi, proxyAdminAddress);
+        
         const data = proxyAdmin.methods.upgrade(bridgeProxy.address, bridge_v1.address).encodeABI();
         await multiSig.submitTransaction(proxyAdmin.options.address, 0, data, { from: accounts[0] });
       });
