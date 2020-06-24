@@ -14,9 +14,6 @@ module.exports = function(deployer, networkName, accounts) {
             const federation = await Federation.deployed();
             const bridge = await Bridge.deployed();
 
-            await federation.setBridge(bridge.address);
-            await federation.transferOwnership(multiSig.address);
-
             const bridge_v1 = new web3.eth.Contract(Bridge_v1.abi, bridge.address);
             let data = bridge_v1.methods.changeFederation(federation.address).encodeABI();
             await multiSig.submitTransaction(bridge.address, 0, data, { from: accounts[0] });

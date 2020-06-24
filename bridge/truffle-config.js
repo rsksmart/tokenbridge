@@ -27,7 +27,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       network_id: "*",
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 20000000000
     },
     //RSK
@@ -35,7 +35,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 4444,
       network_id: "33",
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000 // 0.06 gwei
     },
     soliditycoverage: {
@@ -49,7 +49,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
       network_id: 31,
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000, // 0.06 gwei
       skipDryRun: true
     },
@@ -57,7 +57,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
       network_id: 30,
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000, // 0.06 gwei
       skipDryRun: true
     },
@@ -72,22 +72,22 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
       network_id: 42,
-      gas: 7000000,
+      gas: 6300000,
       gasPrice: 10000000000,
       skipDryRun: true
     },
     rinkeby: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
       network_id: 4,
-      gas: 7000000,
+      gas: 6300000,
       gasPrice: 10000000000,
       skipDryRun: true
     },
     ethmainnet: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://mainnet.infura.io/v3/" + INFURA_API_KEY),
       network_id: 1,
-      gas: 7000000,
-      gasPrice: 4000000000,
+      gas: 6300000,
+      gasPrice: 3500000000,
       skipDryRun: true
     },
   },
