@@ -54,6 +54,10 @@ module.exports = class Federator {
                 } catch(err) {
                     fromBlock = this.config.mainchain.fromBlock || 0;
                 }
+                if(fromBlock == toBlock){
+                    this.logger.warn(`Current chain Height ${toBlock} is the same as last block processed`);
+                    return false;
+                }
                 fromBlock = parseInt(fromBlock)+1;
                 this.logger.debug('Running from Block', fromBlock);
                 if(fromBlock > toBlock){
