@@ -32,5 +32,8 @@
   "devDependencies": {
     "chalk": "^3.0.0",
     "table": "^5.4.6"
+  },
+  "engines": {
+    "node": ">=12"
   }
 }
