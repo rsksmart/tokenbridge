@@ -288,9 +288,12 @@
                                 </div>
                                 <div class="col-md-2">
                                     <div class="form-group willReceive">
-                                        <label class="willReceive-label" for="willReceive">Will Receive</label>
+                                        <label class="willReceive-label" for="willReceive">Will Receive aprox</label>
                                         <div class="input-group">
-                                            <div class="font-weight-bold form-control-plaintext" id="willReceive" name="willReceive"></div>
+                                            <div class="font-weight-bold form-control-plaintext" id="willReceive" name="willReceive">
+                                                <span id="willReceiveAmount" name="willReceiveAmount"></span>
+                                                <span id="willReceiveToken" name="willReceiveToken"></span>
+                                            </div>
                                             <div class="input-group-append">
                                                 <!-- Trigger -->
                                                 <button id="willReceive-copy" style="display:none;" class="copy btn btn-outline-secondary" type="button" data-clipboard-text="" data-toggle="tooltip" data-placement="bottom" title="Copy the address">
@@ -302,6 +305,9 @@
                                 </div>
                             </div>
                             <div>
+                                <p>Token Bridge Fee <span id="fee"></p>
+                            </div> 
+                            <div>
                                 <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
                             </div>
                         </form>
@@ -310,7 +316,7 @@
                             <h5>Steps:</h5>
                             <ul>
                                 <li id="validate-balance">
-                                    Validate your current balance <span class="icon-status ml-1"></span>
+                                    Validate your current Token balance <span class="icon-status ml-1"></span>
                                 </li>
                                 <li id="approve-transfer">
                                     Request the token contract to approve the transfer <span class="icon-status ml-1"></span>
@@ -585,6 +591,8 @@
                 let tokenContract = null;
                 let isSideToken = false;
                 let sideTokenAddress = null;
+                let fee = 0;
+                let feePercentageDivider = 10_000;
 
                 $(document).ready(function() {
                     new ClipboardJS('.copy');
@@ -615,7 +623,7 @@
                             let html = `<a target="_blank" href="${config.crossToNetwork.explorer}/address/${token[config.crossToNetwork.networkId].address}">`;
                             html += `\n   <span><img src="${token.icon}" class="token-logo"></span>${token[config.crossToNetwork.networkId].symbol}`;
                             html += `\n </a>`
-                            $('#willReceive').html(html);
+                            $('#willReceiveToken').html(html);
                             $('#willReceive-copy').show();
                             $('#willReceive-copy').attr('data-clipboard-text', token[config.crossToNetwork.networkId].address);
                         } else {
@@ -668,8 +676,7 @@
                 async function setInfoTab() {
                   try {
                     // Dinamically get the values, this is comented as the public node some times throws errors
-                    // let [fee, maxWithdraw, maxAllowed, minAllowed, federators, isValidatingAllowedTokens] = await Promise.all([
-                    //   retry3Times(bridgeContract.methods.getCrossingPayment().call),
+                    // let [maxWithdraw, maxAllowed, minAllowed, federators, isValidatingAllowedTokens] = await Promise.all([
                     //   retry3Times(allowTokensContract.methods.dailyLimit().call),
                     //   retry3Times(allowTokensContract.methods.getMaxTokensAllowed().call),
                     //   retry3Times(allowTokensContract.methods.getMinTokensAllowed().call),
@@ -684,11 +691,14 @@
                     minTokensAllowed = 1;
                     maxTokensAllowed = 10_000;
                     maxDailyLimit = 100_000;
-                    let fee = 0; 
+                    let feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call); 
+                    fee = feePercentage/feePercentageDivider;
+                    let feeFormated = (fee*100).toFixed(2) + '%';
                     let isValidatingAllowedTokens = true;
                     let federators = await retry3Times(federationContract.methods.getMembers().call);
 
-                    $('#config-fee').text(fee);
+                    $('#fee').html(feeFormated);
+                    $('#config-fee').text(feeFormated);
                     $('#config-min').text(minTokensAllowed.toLocaleString());
                     $('#config-max').text(maxTokensAllowed.toLocaleString());
                     $('#config-to-spend').text(maxDailyLimit.toLocaleString());
@@ -844,6 +854,8 @@
                     }
                     let parsedAmount = parseInt(amount);
                     $('.amount input').prop("disabled", true);
+                    let aproxReceivedAmount = fee == 0 ? parsedAmount : (parsedAmount - parsedAmount*fee).toFixed(3);
+                    $('#willReceiveAmount').html(aproxReceivedAmount);
                     try {
                         if(parsedAmount < minTokensAllowed) {
                             throw new Error(`Minimum amount ${minTokensAllowed} token`);
@@ -1166,7 +1178,17 @@
                     42:{symbol:'ZRX', address:'0x2002d3812f58e35f0ea1ffbf80a75a38c32175fa', decimals:18},
                 };
 
-                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, TUSD_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
+                const LINK_TOKEN = { token: 'LINK', name: 'Chainlink Token', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
+                    31:{symbol:'rKovLINK', address:'0x8bbbd80981fe76d44854d8df305e8985c19f0e78', decimals:18},
+                    42:{symbol:'LINK', address:'0xa36085F69e2889c224210F603D836748e7dC0088', decimals:18},
+                };
+
+                const USDT_TOKEN = { token: 'USDT', name: 'Tether USD', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
+                    31:{symbol:'rUSDT', address:'0xC1bc21AC22b584861bCCD30D4896E0BEBAf857e0', decimals:18},
+                    42:{symbol:'USDT', address:'0x8d77e5a50a8b3a01de25db7a7331e094b5508ae3', decimals:6},
+                };
+
+                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
                 // --------- TOKENS  END --------------
             </script>
         </div>
