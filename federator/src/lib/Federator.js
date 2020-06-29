@@ -54,17 +54,13 @@ module.exports = class Federator {
                 } catch(err) {
                     fromBlock = this.config.mainchain.fromBlock || 0;
                 }
-                if(fromBlock == toBlock){
-                    this.logger.warn(`Current chain Height ${toBlock} is the same as last block processed`);
+                if(fromBlock >= toBlock){
+                    this.logger.warn(`Current chain Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
                     return false;
                 }
                 fromBlock = parseInt(fromBlock)+1;
                 this.logger.debug('Running from Block', fromBlock);
-                if(fromBlock > toBlock){
-                    this.logger.error(`From block ${fromBlock} is bigger than the current block on the chain ${toBlock}`);
-                    process.exit();
-                }
-
+                
                 const recordsPerPage = 1000;
                 const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
                 this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);

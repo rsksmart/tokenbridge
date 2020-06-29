@@ -8,7 +8,7 @@
         <!-- Libraries CSS Files -->
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.css" integrity="sha384-Ex0vLvgbKZTFlqEetkjk2iUgM+H5udpQKFKjBoGFwPaHRGhiWyVI6jLz/3fBm5ht" crossorigin="anonymous">
         <link rel="stylesheet" href="https://developers.rsk.co/assets/vendor/malihu-custom-scrollbar-plugin-master/malihu-custom-scrollbar-plugin-master/jquery.mCustomScrollbar.css"  integrity="sha384-CYaEEtxzTAPwgXImMFjvDG8NlVsVmTew5NzIxq4MbFYF+wIzEcbPmkEa4iWMqVN3" crossorigin="anonymous">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css" integrity="sha384-2SvkxRa9G/GlZMyFexHk+WN9p0n2T+r38dvBmw5l2/J3gjUcxs9R1GwKs0seeSh3" crossorigin="anonymous">
 
         <!-- Bootstrap core CSS -->
         <link rel="stylesheet" href="https://developers.rsk.co/assets/vendor/bootstrap/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
@@ -1184,11 +1184,16 @@
                 };
 
                 const USDT_TOKEN = { token: 'USDT', name: 'Tether USD', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
-                    31:{symbol:'rUSDT', address:'0xC1bc21AC22b584861bCCD30D4896E0BEBAf857e0', decimals:18},
-                    42:{symbol:'USDT', address:'0x8d77e5a50a8b3a01de25db7a7331e094b5508ae3', decimals:6},
+                    31:{symbol:'rUSDT', address:'0xcdc8ccbbfb6407c53118fe47259e8d00c81f42cd', decimals:18},
+                    42:{symbol:'USDT', address:'0x13512979ade267ab5100878e2e0f485b568328a4', decimals:6},
                 };
 
-                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
+                const USDC_TOKEN = { token: 'USDC', name: 'USD Coin', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+                    31:{symbol:'rUSDC', address:'0x6117c9529f15c52e2d3188d5285c745b757b5825', decimals:18},
+                    42:{symbol:'USDC', address:'0xe22da380ee6b445bb8273c81944adeb6e8450422', decimals:6},
+                };
+
+                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, INV_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN ];
                 // --------- TOKENS  END --------------
             </script>
         </div>
