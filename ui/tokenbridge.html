@@ -609,8 +609,9 @@
                         navlink.prop('href', 'https://faucet.rsk.co/');
                     }
 
-                    if(!/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())){
-                        alert('This site will only work correctly under chrome or chromium');
+                    if(!/chrom(e|ium)/.test(navigator.userAgent.toLowerCase())
+                        && navigator.userAgent.indexOf("Firefox") == -1 ) {
+                        alert('This site will only work correctly under chrome, chromium or firefox');
                     }
 
                     disableInputs(true);

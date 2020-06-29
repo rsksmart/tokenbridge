@@ -116,10 +116,6 @@ contract('Utils Contract', async function (accounts) {
             assert.equal(resultGranularity.toString(), granularity);
         });
 
-        it('Throw if is not a contract', async function () {
-            await utils.expectThrow(this.utilsLib.getGranularity(owner));
-        });
-
         it('granularity = 1 if does not have granularity()', async function () {
             let result = await this.utilsLib.getGranularity(this.utilsLib.address);
             assert.equal(result, '1');
