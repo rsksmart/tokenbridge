@@ -14,7 +14,6 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require('fs');
 
-//resulting address 0x170346689cC312D8E19959Bc68c3AD03E72C9850
 let MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', { encoding: 'utf8' }) : "";// Your metamask's recovery words
 const INFURA_API_KEY = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key',{ encoding: 'utf8' }) : "";// Your Infura API Key after its registration
 
@@ -106,8 +105,7 @@ module.exports = {
             // Lower values will optimize more for initial deployment cost, higher
             // values will optimize more for high-frequency usage.
             runs: 200
-          },
-          evmVersion: "petersburg"
+          }
         }
       }
   }

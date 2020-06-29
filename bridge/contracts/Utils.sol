@@ -1,9 +1,15 @@
 pragma solidity ^0.5.0;
 
 import "./zeppelin/math/SafeMath.sol";
+import "./zeppelin/introspection/IERC1820Registry.sol";
+import "./zeppelin/token/ERC777/IERC777.sol";
 
 contract Utils {
     using SafeMath for uint256;
+
+    IERC1820Registry constant private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    // keccak256("ERC777Token")
+    bytes32 constant private TOKENS_ERC777_HASH = 0xac7fbab5f54a3ca8194167523c6753bfeb96a445279294b6125b68cce2177054;
 
     function getTokenInfo(address tokenToUse) external view returns (uint8 decimals, uint256 granularity, string memory symbol) {
         decimals = getDecimals(tokenToUse);
@@ -37,11 +43,11 @@ contract Utils {
     }
 
     function getGranularity(address tokenToUse) public view returns (uint256 granularity) {
-        //support granularity if ERC777
-        (bool success, bytes memory data) = tokenToUse.staticcall(abi.encodeWithSignature("granularity()"));
         granularity = 1;
-        if(success) {
-            granularity = abi.decode(data, (uint256));
+        //support granularity if ERC777
+        address implementer = _erc1820.getInterfaceImplementer(tokenToUse, TOKENS_ERC777_HASH);
+        if (implementer != address(0)) {
+            granularity = IERC777(implementer).granularity();
             //Verify granularity is power of 10 to keep it compatible with ERC20 decimals
             granularityToDecimals(granularity);
         }
