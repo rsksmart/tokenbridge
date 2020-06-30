@@ -7,7 +7,6 @@ contract('MainToken', async function (accounts) {
 
     it('initial balances', async function () {
         const balance = await this.token.balanceOf(accounts[0]);
-        
         assert.equal(balance, 10000);
         
         const totalSupply = await this.token.totalSupply();

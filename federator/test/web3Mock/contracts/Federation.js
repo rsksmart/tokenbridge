@@ -7,8 +7,16 @@ methods.transactionCount = () => ({
     call: () => Promise.resolve(defaults.data.transactionCount)
 });
 
-methods.getTransactionIds = () => ({
-    call: () => Promise.resolve(defaults.data.transactionIds)
+methods.getTransactionId = () => ({
+    call: () => Promise.resolve(defaults.data.transactionId)
+});
+
+methods.transactionWasProcessed = () => ({
+    call: () => Promise.resolve(false)
+});
+
+methods.voteTransaction = () => ({
+    encodeABI: () => '0x0'
 });
 
 methods.confirmations = () => ({
@@ -21,6 +29,10 @@ methods.confirmTransaction = () => ({
 
 methods.submitTransaction = () => ({
     encodeABI: () => '0x0'
+});
+
+methods.hasVoted = () => ({
+    call: () => false
 });
 
 class MultiSig extends Contract {

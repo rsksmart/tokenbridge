@@ -31,6 +31,10 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isValidatingAllowedTokens, false);
         });
 
+        it('fails isTokenAllowed if null address provided', async function() {
+            await utils.expectThrow(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS));
+        })
+
         it('fail if disableAllowedTokensValidation caller is not the owner', async function() {
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             utils.expectThrow(this.allowTokens.disableAllowedTokensValidation({ from: tokenDeployer }));
@@ -76,6 +80,15 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isTokenAllowed, previousIsTokenAllowed);
         });
 
+        it('fail if addAllowedToken address is empty', async function() {
+            utils.expectThrow(this.allowTokens.addAllowedToken('0x', { from: manager }));
+        });
+
+        it('fail if addAllowedToken address was already added', async function() {
+            await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
+            utils.expectThrow(this.allowTokens.addAllowedToken(this.token.address, { from: manager }));
+        });
+
         it('removes allowed token', async function() {
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
@@ -89,12 +102,17 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isAllowed, false);
         });
 
-        it('fail if addAllowedToken caller is not the owner', async function() {
+        it('fail if removeAllowedToken caller is not the owner', async function() {
+            await this.allowTokens.addAllowedToken(this.token.address, { from: manager });
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }));
 
             let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isTokenAllowed, previousIsTokenAllowed);
+        });
+
+        it('fail if removeAllowedToken address is not in the whitelist', async function() {
+            utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: manager }));
         });
 
 
@@ -122,6 +140,11 @@ contract('AllowTokens', async function (accounts) {
             let maxTokens = await this.allowTokens.getMaxTokensAllowed();
             assert.equal(maxTokens.toString(), previousMaxTokens.toString());
         });
+
+        it('fail if max is lesser than min', async function() {
+            await this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: manager });
+            utils.expectThrow(this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('9'), { from: manager }));
+        });
     });
 
     describe('Min tokens allowed', async function() {
@@ -146,6 +169,11 @@ contract('AllowTokens', async function (accounts) {
             let minTokens = await this.allowTokens.getMinTokensAllowed();
             assert.equal(minTokens.toString(), previousMinTokens.toString());
         });
+
+        it('fail if min is bigger than max', async function() {
+            await this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('1'), { from: manager });
+            utils.expectThrow(this.allowTokens.setMinTokensAllowed(web3.utils.toWei('10'), { from: manager }));
+        });
     });
 
     describe('Max Daily Limit tokens', async function() {
@@ -169,6 +197,12 @@ contract('AllowTokens', async function (accounts) {
 
             let dailyLimit = await this.allowTokens.dailyLimit();
             assert.equal(dailyLimit.toString(), previousDailyLimit.toString());
+        });
+
+        it ('fail daily limit lesser than max', async function() {
+            let newDailyLimit = web3.utils.toWei('4999');
+            await this.allowTokens.setMaxTokensAllowed(web3.utils.toWei('5000'), { from: manager });
+            await utils.expectThrow(this.allowTokens.changeDailyLimit(newDailyLimit, { from: manager }));
         });
 
         it('calcMaxWithdraw', async function() {

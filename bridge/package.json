@@ -1,6 +1,6 @@
 {
   "name": "bridge",
-  "private": "true",
+  "private": true,
   "version": "1.0.0",
   "description": "Decentralized Bridge Contracts",
   "dependencies": {
@@ -8,11 +8,11 @@
     "@openzeppelin/test-helpers": "^0.5.4",
     "@openzeppelin/upgrades": "^2.8.0",
     "@truffle/hdwallet-provider": "^1.0.26",
+    "eth-gas-reporter": "^0.2.17",
     "ethlint": "^1.2.5",
     "resolve": "^1.13.0",
-    "rlp": "^2.2.3",
     "solidity-coverage": "^0.7.5",
-    "truffle": "^5.1.24"
+    "truffle": "^5.1.27"
   },
   "scripts": {
     "start": "npm run lint && npm run migrate && npm run test",
@@ -20,7 +20,8 @@
     "migrate": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && npx truffle migrate --reset",
     "test": "npx truffle test",
     "coverage": "npx truffle run coverage",
-    "deploy": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json && rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
+    "prepublish": "npx truffle compile && node ./datagen.js",
+    "deployIntegrationTest": "rm -f ./.openzeppelin/dev-5777.json && rm -f ./.openzeppelin/dev-33.json && rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
   },
   "keywords": [
     "rsk",
@@ -32,5 +33,8 @@
   "devDependencies": {
     "chalk": "^3.0.0",
     "table": "^5.4.6"
+  },
+  "engines": {
+    "node": ">=12"
   }
 }

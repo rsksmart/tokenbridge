@@ -5,7 +5,7 @@ const log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
 const logConfig = require('../config/log-config.json');
-const abiBridge = require('../../abis/Bridge_v0.json');
+const abiBridge = require('../../abis/Bridge.json');
 const abiMainToken = require('../../abis/ERC677.json');
 const abiSideToken = require('../../abis/SideToken.json');
 const abiAllowTokens = require('../../abis/AllowTokens.json');
@@ -17,7 +17,7 @@ const Federator = require('../src/lib/Federator.js');
 const utils = require('../src/lib/utils.js');
 const fundFederators = require('./fundFederators');
 
-const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8')
+const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8');
 
 const logger = log4js.getLogger('test');
 log4js.configure(logConfig);
@@ -65,7 +65,7 @@ function getSidechainFederators(keys, sideConfig) {
             let federator = new Federator({
                 ...sideConfig,
                 privateKey: key,
-                storagePath: `${config.storagePath}/rev-fed-${i + 1}`
+                storagePath: `${config.storagePath}/side-fed-${i + 1}`
             },
             log4js.getLogger('FEDERATOR'));
             federators.push(federator);
@@ -73,7 +73,7 @@ function getSidechainFederators(keys, sideConfig) {
     } else {
         let federator = new Federator({
             ...sideConfig,
-            storagePath: `${config.storagePath}/rev-fed`,
+            storagePath: `${config.storagePath}/side-fed`,
         }, log4js.getLogger('FEDERATOR'));
         federators.push(federator);
     }
@@ -147,6 +147,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.info('------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
         logger.debug('Get the destination token address');
         let destinationBridgeAddress = config.sidechain.bridge;
+        logger.debug(`${destination} bridge address`, destinationBridgeAddress);
         let destinationBridgeContract = new destinationWeb3.eth.Contract(abiBridge, destinationBridgeAddress);
         let destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
         logger.info(`${destination} token address`, destinationTokenAddress);
@@ -157,7 +158,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.info(`${destination} token balance`, balance);
 
         let crossCompletedBalance = await originWeb3.eth.getBalance(userAddress);
-        logger.debug('One way cross user balance', crossCompletedBalance);
+        logger.debug('One way cross user balance (ETH or RBTC)', crossCompletedBalance);
 
         // Transfer back
         logger.info('------------- TRANSFER BACK THE TOKENS -----------------');
@@ -217,55 +218,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Final user balance', crossBackCompletedBalance);
         logger.debug('Cost: ', BigInt(initialUserBalance) - BigInt(crossBackCompletedBalance));
 
-
-        logger.info('------------- START TEST FOR CONTRACT ERC677 TOKEN FALLBACK -----------------');
-        logger.debug('Start transferAndCall');
-        data = originTokenContract.methods.transferAndCall(originBridgeAddress, amount, '0x').encodeABI();
-        await transactionSender.sendTransaction(originAddress, data, 0, userPrivateKey);
-        logger.debug('transferAndCall completed');
-
-        logger.debug(`Wait for ${waitBlocks} blocks`);
-        await utils.waitBlocks(originWeb3, waitBlocks);
-
-        await originFederators.reduce(function(promise, item) {
-            return promise.then(function() { return item.run(); })
-        }, Promise.resolve());
-
-        logger.info('------------- CONTRACT ERC677 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
-        logger.debug('Check balance on the other side');
-        balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
-        logger.info(`${destination} token balance`, balance);
-
-        crossCompletedBalance = await originWeb3.eth.getBalance(userAddress);
-        logger.debug('One way cross user balance', crossCompletedBalance);
-
-        logger.info('------------- CONTRACT ERC677 TEST TRANSFER BACK THE TOKENS -----------------');
-        senderBalanceBefore = await destinationTokenContract.methods.balanceOf(userAddress).call();
-
-        data = destinationTokenContract.methods.send(destinationBridgeAddress, amount, '0x').encodeABI();
-        await transactionSender.sendTransaction(destinationTokenAddress, data, 0, userPrivateKey);
-
-        logger.debug(`Wait for ${waitBlocks} blocks`);
-        await utils.waitBlocks(destinationWeb3, waitBlocks);
-
-        await destinationFederators.reduce(function(promise, item) {
-            return promise.then(function() { return item.run(); })
-        }, Promise.resolve());
-
-        logger.info('------------- CONTRACT ERC677 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
-        logger.debug('Getting final balances');
-        receiverBalanceAfter = await originTokenContract.methods.balanceOf(userAddress).call();
-        senderBalanceAfter = await destinationTokenContract.methods.balanceOf(userAddress).call();
-        logger.debug(`bridge balance:${bridgeBalanceAfter}, receiver balance:${receiverBalanceAfter}, sender balance:${senderBalanceAfter} `);
-
-        if (senderBalanceBefore === BigInt(senderBalanceAfter)) {
-            logger.warn(`Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfter}`);
-        }
-
-        crossBackCompletedBalance = await originWeb3.eth.getBalance(userAddress);
-        logger.debug('Final user balance', crossBackCompletedBalance);
-
-
         logger.info('------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------');
         const AnotherToken = new originWeb3.eth.Contract(abiSideToken);
         const knownAccount = (await originWeb3.eth.getAccounts())[0];
@@ -273,14 +225,13 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Deploying another token contract');
         const anotherTokenContract = await AnotherToken.deploy({
             data: sideTokenBytecode,
-            arguments: ['MAIN', 'MAIN', userAddress]
+            arguments: ["MAIN", "MAIN", userAddress, "1"]
         }).send({
             from: knownAccount,
             gas: 6700000,
             gasPrice: 20000000000
         });
         logger.debug('Token deployed');
-
         logger.debug('Minting new token');
         const anotherTokenAddress = anotherTokenContract.options.address;
         data = anotherTokenContract.methods.mint(userAddress, amount, '0x', '0x').encodeABI();
@@ -289,7 +240,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Adding new token to list of allowed on bridge');
         const allowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
         const multiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.mainchain.multiSig);
-        const allowTokensAddress = allowTokensContract.options.address
+        const allowTokensAddress = allowTokensContract.options.address;
 
         data = allowTokensContract.methods.addAllowedToken(anotherTokenAddress).encodeABI();
 
@@ -354,7 +305,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Final user balance', crossBackCompletedBalance);
 
     } catch(err) {
-        logger.error('Unhandled Error on transfer()', err.stack);
+        logger.error('Unhandled error:', err.stack);
         process.exit();
     }
 }

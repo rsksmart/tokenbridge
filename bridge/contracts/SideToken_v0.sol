@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./zeppelin/token/ERC777/ERC777.sol";
 
-contract SideToken is ERC777 {
+contract SideToken_v0 is ERC777 {
     address public minter;
 
     constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr)
