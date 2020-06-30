@@ -1,6 +1,7 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const expectThrow = require('./utils').expectThrow;
+const NULL_ADDRESS = require('./utils').NULL_ADDRESS;
 
 contract('MultiSigWallet', async (accounts) => {
     const multiSigOwner = accounts[0];
@@ -28,8 +29,8 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(MultiSigWallet.new([], 1));
-            expectThrow(MultiSigWallet.new([additionalOwner], 0));
+            await expectThrow(MultiSigWallet.new([NULL_ADDRESS], 1), {from: multiSigOwner});
+            await expectThrow(MultiSigWallet.new([multiSigOwner], 0, {from: multiSigOwner}));
         });
     })
 
@@ -46,8 +47,16 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.addOwner());
-            expectThrow(this.multiSig.addOwner(multiSigOwner));
+            await expectThrow(this.multiSig.addOwner(multiSigOwner, {from: multiSigOwner}));
+            let txData = this.multiSig.contract.methods.addOwner(NULL_ADDRESS).encodeABI();
+            let txId = 0;
+            await this.multiSig.submitTransaction(this.multiSig.address, txId, txData);
+            let executionResult = await this.multiSig.transactions(txId);
+            assert.equal(executionResult.executed, false);
+            txData = this.multiSig.contract.methods.addOwner(multiSigOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, txId, txData);
+            executionResult = await this.multiSig.transactions(txId);
+            assert.equal(executionResult.executed, false);
         });
     })
 
@@ -111,8 +120,10 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.removeOwner());
-            expectThrow(this.multiSig.removeOwner(anotherAccount));
+            await expectThrow(this.multiSig.removeOwner(multiSigOwner, {from: multiSigOwner}));
+            await expectThrow(this.multiSig.removeOwner(multiSigOwner, {from: this.multiSig.address}));
+            await expectThrow(this.multiSig.removeOwner(NULL_ADDRESS, {from: this.multiSig.address}));
+            await expectThrow(this.multiSig.removeOwner(anotherAccount, {from: this.multiSig.address}));
         });
     })
 
@@ -135,8 +146,9 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.replaceOwner());
-            expectThrow(this.multiSig.replaceOwner(additionalOwner, additionalOwner));
+            await expectThrow(this.multiSig.replaceOwner(NULL_ADDRESS, multiSigOwner, {from: this.multiSig.address}));
+            await expectThrow(this.multiSig.replaceOwner(multiSigOwner, NULL_ADDRESS, {from: this.multiSig.address}));
+            await expectThrow(this.multiSig.replaceOwner(additionalOwner, anotherAccount, {from: this.multiSig.address}));
         });
     })
 
@@ -153,8 +165,8 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.changeRequirement());
-            expectThrow(this.multiSig.changeRequirement(3));
+            await expectThrow(this.multiSig.changeRequirement(0, {from: this.multiSig.address}));
+            await expectThrow(this.multiSig.changeRequirement(3, {from: this.multiSig.address}));
         });
     })
 
@@ -173,8 +185,7 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.submitTransaction());
-            expectThrow(this.multiSig.submitTransaction(sampleTx.destination, sampleTx.value));
+            await expectThrow(this.multiSig.submitTransaction(NULL_ADDRESS, sampleTx.value, sampleTx.data, {from: multiSigOwner}));
         });
     })
 
@@ -197,8 +208,11 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.confirmTransaction());
-            expectThrow(this.multiSig.confirmTransaction(1));
+            await expectThrow(this.multiSig.confirmTransaction(0, {from: multiSigOwner}));
+            let txData = this.multiSig.contract.methods.addOwner(additionalOwner).encodeABI();
+            await this.multiSig.submitTransaction(this.multiSig.address, 0, txData);
+            await expectThrow(this.multiSig.confirmTransaction(0, {from: multiSigOwner}));
+
         });
     })
 
@@ -225,8 +239,8 @@ contract('MultiSigWallet', async (accounts) => {
         });
 
         it('throws error with invalid parameters', async () => {
-            expectThrow(this.multiSig.revokeConfirmation());
-            expectThrow(this.multiSig.revokeConfirmation(1));
+            await expectThrow(this.multiSig.revokeConfirmation(0, {from: multiSigOwner}));
+            await expectThrow(this.multiSig.revokeConfirmation(1, {from: multiSigOwner}));
         });
     })
 
@@ -291,6 +305,10 @@ contract('MultiSigWallet', async (accounts) => {
             await web3.eth.sendTransaction( { from: multiSigOwner, to: this.multiSig.address, value: payment } )
             let multiSigBalance = await web3.eth.getBalance(this.multiSig.address);
             assert.equal(payment, BigInt(multiSigBalance));
+        })
+
+        it('send 0 ether to default method', async () => {
+            await web3.eth.sendTransaction( { from: multiSigOwner, to: this.multiSig.address, value: 0 } )
         })
     })
 

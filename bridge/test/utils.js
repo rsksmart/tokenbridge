@@ -16,13 +16,11 @@ function expectThrow (promise) {
   }, (err) => {
       return err;
   });
-  
-  assert.fail('Expected throw not received');
 }
 
 
 function checkGas(gas) {
-    process.stdout.write(`\x1b[36m[Gas:${gas}]\x1b[0m`);
+    //process.stdout.write(`\x1b[36m[Gas:${gas}]\x1b[0m`);
     assert(gas < gasLimit, "Gas used bigger than the maximum in mainnet");
 }
 
@@ -110,6 +108,16 @@ function calculatePrefixesSuffixes(nodes) {
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
+function ascii_to_hexa(str)
+  {
+	var arr1 = [];
+	for (var n = 0, l = str.length; n < l; n ++) {
+        var hex = Number(str.charCodeAt(n)).toString(16);
+        arr1.push(hex);
+    }
+	return '0x' + arr1.join('');
+   }
+
 module.exports = {
     checkGas: checkGas,
     checkRcpt: checkRcpt,
@@ -118,5 +126,7 @@ module.exports = {
     expectThrow: expectThrow,
     calculatePrefixesSuffixes: calculatePrefixesSuffixes,
     increaseTimestamp: increaseTimestamp,
+    ascii_to_hexa: ascii_to_hexa,
+    NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
 };
 

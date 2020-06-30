@@ -1,8 +1,8 @@
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
-const Federation = artifacts.require("Federation");
+const Federation = artifacts.require("Federation_v0");
 const AllowTokens = artifacts.require('AllowTokens');
-const SideTokenFactory = artifacts.require('SideTokenFactory');
+const SideTokenFactory = artifacts.require('SideTokenFactory_v0');
 const Bridge_v0 = artifacts.require('Bridge_v0');
 
 //example https://github.com/OpenZeppelin/openzeppelin-sdk/tree/master/examples/truffle-migrate/migrations
@@ -33,13 +33,23 @@ module.exports = function(deployer, networkName, accounts) {
         const sideTokenFactory = await SideTokenFactory.deployed();
         const federation = await Federation.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-        let initArgs = [ multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
+        let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
 
         if (networkName === 'soliditycoverage') {
-            return deployer
-                .deploy(Bridge_v0, initArgs[0], initArgs[1], initArgs[2], initArgs[3], initArgs[4]);
+            //soldity coverage doesn't play along with oppen zeppelin sdk
+            //so we deploy the un initialized contract just to create the objects
+            return deployer.deploy(Bridge_v0);
         }
 
-        await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
-      });
+        try{
+            //running truffle test re runs migrations and OZ exploits if aleready upgraded the contract, check if we already have run a migration
+            await Bridge_v0.deployed();
+        } catch(err) {
+            //If we haven't deployed it then re deploy.
+            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
+
+            //Set the multisig as the Owner of the ProxyAdmin
+            await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });
+        }
+      })
 };

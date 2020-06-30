@@ -16,7 +16,7 @@ contract MinterRole is Context {
     }
 
     modifier onlyMinter() {
-        require(isMinter(_msgSender()), "MinterRole: caller does not have the Minter role");
+        require(isMinter(_msgSender()), "MinterRole: caller doesn't have the role");
         _;
     }
 

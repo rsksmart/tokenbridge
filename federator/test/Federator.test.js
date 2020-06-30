@@ -1,45 +1,89 @@
-const expect = require('chai').expect;
-const log4js = require('log4js');
 const fs = require('fs');
+const path = require('path');
 
-const Federator = require('../../src/lib/Federator');
-const web3Mock = require('../web3Mock');
-const config = require('../../config.js');
+const Federator = require('../src/lib/Federator');
+const eth = require('./web3Mock/eth.js');
+const web3Mock = require('./web3Mock');
 
-const logger = log4js.getLogger('test');
+const configFile = fs.readFileSync(path.join(__dirname,'config.js'), 'utf8');
+const config = JSON.parse(configFile);
+
+const logger = {
+    trace: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    error: jest.fn(),
+};
 const storagePath = `${__dirname}`;
+const testPath = `${storagePath}/lastBlock.txt`;
 let testConfig = { ...config, storagePath };
 
 describe('Federator module tests', () => {
+    beforeEach(async function () {
+        jest.clearAllMocks();
+        if(fs.existsSync(testPath)) {
+            fs.unlinkSync(testPath);
+        }
+    });
 
     it('Runs the main federator process sucessfully', async () => {
         let federator = new Federator(testConfig, logger, web3Mock);
         let result = await federator.run();
 
-        expect(result).to.be.true;
+        expect(result).toBeTruthy();
+    });
+
+    it('Runs the main federator process with pagination', async () => {
+        let currentBlock = testConfig.mainchain.fromBlock + 2002 + 120;
+        let federator = new Federator(testConfig, logger, web3Mock);
+        federator.mainWeb3.eth.getBlockNumber = () => Promise.resolve(currentBlock);
+        const _processLogsSpy = jest.spyOn(federator, '_processLogs');
+
+        let result = await federator.run();
+
+        expect(result).toBeTruthy();
+        let value = fs.readFileSync(testPath, 'utf8');
+        expect(parseInt(value)).toEqual(currentBlock-120);
+        expect(_processLogsSpy).toHaveBeenCalledTimes(3);
+    });
+
+    it('Runs the main federator process with pagination limit', async () => {
+        let currentBlock = testConfig.mainchain.fromBlock + 1001 + 120; // The +1 one is because it starts with fromBlock +1 
+        let federator = new Federator(testConfig, logger, web3Mock);
+        federator.mainWeb3.eth.getBlockNumber = () => Promise.resolve(currentBlock);
+        const _processLogsSpy = jest.spyOn(federator, '_processLogs');
+
+        let result = await federator.run();
+
+        expect(result).toBeTruthy();
+        let value = fs.readFileSync(testPath, 'utf8');
+        expect(parseInt(value)).toEqual(currentBlock-120);
+        expect(_processLogsSpy).toHaveBeenCalledTimes(1);
     });
 
     it('Saves the progress in a file path', async () => {
         let federator = new Federator(testConfig, logger, web3Mock);
-        let path = `${storagePath}/testPath.txt`;
 
-        federator._saveProgress(path, 'test');
+        federator._saveProgress(testPath, 'test');
 
-        expect(fs.existsSync(path)).to.be.true;
+        expect(fs.existsSync(testPath)).toBeTruthy();
 
-        let value = fs.readFileSync(path, 'utf8');
-        expect(value).to.eq('test');
+        let value = fs.readFileSync(testPath, 'utf8');
+        expect(value).toEqual('test');
     });
 
     it('Should no vote for empty log and receiver', async () => {
-        let federator = new Federator(testConfig, logger, web3Mock);
-        let result1 = await federator._voteTransaction(null, null);
-        let result2 = await federator._voteTransaction({}, null);
-        let result3 = await federator._voteTransaction(null, '0x0');
+        eth.sendSignedTransaction = jest.fn().mockImplementation(() => { throw new Error("Some Error") });
 
-        expect(result1).to.be.false;
-        expect(result2).to.be.false;
-        expect(result3).to.be.false;
+        let federator = new Federator(testConfig, logger, web3Mock);
+        try{
+            await federator._voteTransaction(null, null);
+            expect(false).toBeTruthy();
+        } catch (err) {
+            expect(err).not.toBeNull();
+        }
+        expect(fs.existsSync(testPath)).toBeFalsy();
     })
 
     it('Votes a transaction from a log entry', async () => {
@@ -79,7 +123,7 @@ describe('Federator module tests', () => {
         }
 
         let result = await federator._voteTransaction(log, '0x0');
-        expect(result).to.be.true;
+        expect(result).toBeTruthy();
     });
 
     it('Should process a list of logs', async () => {
@@ -119,6 +163,6 @@ describe('Federator module tests', () => {
         }]
 
         let result = await federator._processLogs(logs);
-        expect(result).to.be.true;
+        expect(result).toBeTruthy();
     });
 })

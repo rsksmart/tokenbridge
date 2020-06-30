@@ -14,7 +14,6 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require('fs');
 
-//resulting address 0x170346689cC312D8E19959Bc68c3AD03E72C9850
 let MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', { encoding: 'utf8' }) : "";// Your metamask's recovery words
 const INFURA_API_KEY = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key',{ encoding: 'utf8' }) : "";// Your Infura API Key after its registration
 
@@ -27,7 +26,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       network_id: "*",
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 20000000000
     },
     //RSK
@@ -35,7 +34,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 4444,
       network_id: "33",
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000 // 0.06 gwei
     },
     soliditycoverage: {
@@ -49,7 +48,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
       network_id: 31,
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000, // 0.06 gwei
       skipDryRun: true
     },
@@ -57,7 +56,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
       network_id: 30,
-      gas: 6700000,
+      gas: 6300000,
       gasPrice: 60000000, // 0.06 gwei
       skipDryRun: true
     },
@@ -72,29 +71,33 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
       network_id: 42,
-      gas: 7000000,
+      gas: 6300000,
       gasPrice: 10000000000,
       skipDryRun: true
     },
     rinkeby: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
       network_id: 4,
-      gas: 7000000,
+      gas: 6300000,
       gasPrice: 10000000000,
       skipDryRun: true
     },
     ethmainnet: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://mainnet.infura.io/v3/" + INFURA_API_KEY),
       network_id: 1,
-      gas: 7000000,
-      gasPrice: 4000000000,
+      gas: 6300000,
+      gasPrice: 3500000000,
       skipDryRun: true
     },
   },
   plugins: ["solidity-coverage"],
+  mocha: {
+    reporter: 'eth-gas-reporter',
+    //reporterOptions : { ... } // See options below
+  },
   compilers: {
       solc: {
-        version: "0.5.15",
+        version: "0.5.17",
         settings: {
           optimizer: {
             enabled: false,
@@ -102,8 +105,7 @@ module.exports = {
             // Lower values will optimize more for initial deployment cost, higher
             // values will optimize more for high-frequency usage.
             runs: 200
-          },
-          evmVersion: "petersburg"
+          }
         }
       }
   }

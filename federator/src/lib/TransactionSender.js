@@ -33,13 +33,13 @@ module.exports = class TransactionSender {
 
     async getEthGasPrice() {
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: gasPrice * 1.5;
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.5);
     }
 
     async getRskGasPrice() {
         let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
-        return gasPrice <= 1 ? 1: gasPrice * 1.05;
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.05);
     }
 
     async createRawTransaction(from, to, data, value) {
@@ -83,7 +83,7 @@ module.exports = class TransactionSender {
         return address;
     }
 
-    signAndSendTransaction(rawTx, privateKey) {
+    async signAndSendTransaction(rawTx, privateKey) {
         if (privateKey && privateKey.length) {
             let signedTx = this.signRawTransaction(rawTx, privateKey);
             return this.sendSignedTransaction(signedTx);

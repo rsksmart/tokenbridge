@@ -1,15 +1,21 @@
 # Token Bridge Contracts
 
-## Install Truffle
-
+## Install dependencies
+Don't use Node 14 as it has issues with truffle, use node 8, 10 or 12.
+Install node https://nodejs.org/es/
+Then install dependencies
 ```
-npm install -g truffle@5.0.33
 npm install
 ```
+
+## Install and run ganache
+https://www.trufflesuite.com/ganache
+
 
 ## Running test
 
 ```
+npm run migrate
 npm test
 npm run lint
 npm run coverage
