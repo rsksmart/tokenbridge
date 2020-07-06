@@ -692,8 +692,12 @@
                     minTokensAllowed = 1;
                     maxTokensAllowed = 10_000;
                     maxDailyLimit = 100_000;
-                    let feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call); 
-                    fee = feePercentage/feePercentageDivider;
+                    let feePercentage = 0;
+                    fee = 0;
+                    if(isTestnet) {
+                        feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call); 
+                        fee = feePercentage/feePercentageDivider;
+                    }
                     let feeFormated = (fee*100).toFixed(2) + '%';
                     let isValidatingAllowedTokens = true;
                     let federators = await retry3Times(federationContract.methods.getMembers().call);
