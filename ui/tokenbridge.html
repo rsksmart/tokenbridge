@@ -779,14 +779,14 @@
                         if(config.networkId >= 30 && config.networkId <= 33) {
                             let block = await web3.eth.getBlock('latest');
                             gasPriceParsed= parseInt(block.minimumGasPrice);
-                            gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.01;
+                            gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.05;
                         } else {
                             let gasPriceAvg = await web3.eth.getGasPrice();
                             gasPriceParsed= parseInt(gasPriceAvg);
                             gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.5;
                             
                         }
-                        gasPrice = `0x${Math.ceil(parseInt(gasPriceParsed)).toString(16)}`;
+                        gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
                         iconSuccess(currentStep);
                     }).then(async () => {
                         currentStep = 'approve-transfer';
