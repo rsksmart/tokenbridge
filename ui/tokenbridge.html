@@ -60,7 +60,10 @@
         <style>
             body {
               font-family: 'Quicksand', sans-serif !important;
-              margin-top: 150px;
+              font-size: 12px;
+            }
+            body .btn {
+                font-size: 14px;
             }
             h4 {
               font-family: 'Quicksand', sans-serif !important;
@@ -87,11 +90,14 @@
             }
             .title {
               text-align: center;
-              margin-bottom: 100px;
+              margin-bottom: 30px;
+            }
+            .subtitle {
+              text-align: center;
+              margin-bottom: 30px;
             }
             .logo {
-                width: 150px;
-                max-width: 150px;
+                width: 106px;
                 height: auto;
                 transition: all 0.5s ease;
             }
@@ -204,7 +210,7 @@
     <body>
         <section id="main">
             <!-- Navigation -->
-            <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+            <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
                 <div class="container">
                     <a class="navbar-brand" href="https://rsk.co">
                         <img id="logo" src="https://developers.rsk.co/assets/img/rsk_logo.svg" class="logo" alt="RSK Token Bridge">
@@ -216,23 +222,6 @@
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="navbar-collapse collapse" id="navbarResponsive">
-                        <ul class="navbar-nav ml-auto">
-                            <li class="nav-item">
-                                <a class="nav-link" href="https://github.com/rsksmart/tokenbridge" target="_blank">Repository</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="https://developers.rsk.co/tools/tokenbridge/faq" target="_blank">FAQ</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="https://developers.rsk.co/tools/tokenbridge/dappguide" target="_blank">How to use it?</a>
-                            </li>
-                            <li class="nav-item">
-                                <a id="get-rbtc-navlink" class="nav-link" href="https://coinswitch.rsk.co/" target="_blank">Get RBTC</a>
-                            </li>
-                            <li class="nav-item">
-                                <a id="network-navlink" class="nav-link" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a>
-                            </li>
-                        </ul>
                         <div style="margin-top:15px">
                             <button id="logIn" type="button" class="btn btn-primary badge-pill text-truncate" style="width: 90px;">
                                 log in
@@ -245,74 +234,62 @@
             <div class="navbar_bottom_shape"></div>
             <section id="home">
               <div class="container">
-                <h2 class="title">Token Bridge between RSK and Ethereum</h2>
-                
-                <ul class="nav nav-tabs">
-                    <li class="active">
-                        <a class="nav-link active" data-toggle="tab" href="#transferTab">Transfer</a>
-                    </li>
-                    <li>
-                        <a class="nav-link" data-toggle="tab" href="#tokenListTab">Token List</a>
-                    </li>
-                    <li>
-                        <a class="nav-link" data-toggle="tab" href="#infoTab">Info</a>
-                    </li>
-                </ul>
-
-                <div class="tab-content">
-                    <div id="transferTab" class="tab-pane active">
-                        <form id="crossForm" name="crossForm">
-                            <div class="row">
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label for="fromNetwork">From</label>
-                                        <div class="input-group">
-                                            <input type="text" readonly class="font-weight-bold form-control-plaintext fromNetwork" id="fromNetwork" name="fromNetwork" value="" data-toggle="tooltip" data-placement="bottom" title="">
+                <div class="title">
+                    <h2>Token Bridge between RSK and Ethereum</h2>
+                    <h5 class="subtitle">You can convert your tokens from RSK to Ethereum and viceversa.</h5>
+                </div>
+                <div id="transferTab">
+                    <form id="crossForm" name="crossForm">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label for="fromNetwork">From</label>
+                                    <div class="input-group">
+                                        <input type="text" readonly class="font-weight-bold form-control-plaintext fromNetwork" id="fromNetwork" name="fromNetwork" value="" data-toggle="tooltip" data-placement="bottom" title="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="">
+                                    <label for="tokenAddress">Token to Cross</label>
+                                    <div class="input-group">
+                                        <select class="selectpicker" id="tokenAddress" name="tokenAddress" data-width="100%" required>
+                                            <!-- Dinamic content made with JS -->
+                                            <option value="">Choose a token...</option>
+                                        </select>
+                                    </div>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group amount">
+                                    <label for="amount">Amount to cross</label>
+                                    <input name="amount" type="number" min="0" step="any" class="form-control" placeholder="Amount" required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group">
+                                    <label class="toNetwork-label" for="toNetwork" style="margin-left:1.8rem;">To</label>
+                                    <div class="input-group">
+                                        <span> <i class="form-control-plaintext fas fa-arrow-right" name="arrow"></i></span>
+                                        <input type="text" readonly class="ml-3 font-weight-bold form-control-plaintext toNetwork" id="toNetwork" name="toNetwork" value="">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="form-group willReceive">
+                                    <label class="willReceive-label" for="willReceive">Will Receive aprox</label>
+                                    <div class="input-group">
+                                        <div class="font-weight-bold form-control-plaintext" id="willReceive" name="willReceive">
+                                            <span id="willReceiveAmount" name="willReceiveAmount"></span>
+                                            <span id="willReceiveToken" name="willReceiveToken"></span>
                                         </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4">
-                                    <div class="">
-                                        <label for="tokenAddress">Token to Cross</label>
-                                        <div class="input-group">
-                                            <select class="selectpicker" id="tokenAddress" name="tokenAddress" data-width="100%" required>
-                                                <!-- Dinamic content made with JS -->
-                                                <option value="">Choose a token...</option>
-                                            </select>
-                                        </div>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group amount">
-                                        <label for="amount">Amount to cross</label>
-                                        <input name="amount" type="number" min="0" step="any" class="form-control" placeholder="Amount" required>
-                                        <div class="invalid-feedback"></div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group">
-                                        <label class="toNetwork-label" for="toNetwork" style="margin-left:1.8rem;">To</label>
-                                        <div class="input-group">
-                                            <span> <i class="form-control-plaintext fas fa-arrow-right" name="arrow"></i></span>
-                                            <input type="text" readonly class="ml-3 font-weight-bold form-control-plaintext toNetwork" id="toNetwork" name="toNetwork" value="">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="form-group willReceive">
-                                        <label class="willReceive-label" for="willReceive">Will Receive aprox</label>
-                                        <div class="input-group">
-                                            <div class="font-weight-bold form-control-plaintext" id="willReceive" name="willReceive">
-                                                <span id="willReceiveAmount" name="willReceiveAmount"></span>
-                                                <span id="willReceiveToken" name="willReceiveToken"></span>
-                                            </div>
-                                            <div class="input-group-append">
-                                                <!-- Trigger -->
-                                                <button id="willReceive-copy" style="display:none;" class="copy btn btn-outline-secondary" type="button" data-clipboard-text="" data-toggle="tooltip" data-placement="bottom" title="Copy the address">
-                                                    <i class="far fa-copy"></i>
-                                                </button>
-                                            </div>
+                                        <div class="input-group-append">
+                                            <!-- Trigger -->
+                                            <button id="willReceive-copy" style="display:none;" class="copy btn btn-outline-secondary" type="button" data-clipboard-text="" data-toggle="tooltip" data-placement="bottom" title="Copy the address">
+                                                <i class="far fa-copy"></i>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -342,76 +319,92 @@
                                 </li>
                             </ul>
                         </div>
-                    </div> <!--End of transferTab-->
+                        <div>
+                            <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
+                        </div>
+                    </form>
 
-                    <div id="tokenListTab" class="tab-pane">    
+                    <div id="console" style="display: none;">
+                        <h5>Steps:</h5>
+                        <ul>
+                            <li id="validate-balance">
+                                Validate your current balance <span class="icon-status ml-1"></span>
+                            </li>
+                            <li id="approve-transfer">
+                                Request the token contract to approve the transfer <span class="icon-status ml-1"></span>
+                            </li>
+                            <li id="transfer-tokens">
+                                Transfer the tokens to the bridge <span class="icon-status ml-1"></span>
+                            </li>
+                            <li id="wait-confirmations">
+                                The bridge will cross the tokens after <b><span id="confirmations"></span> blocks</b> <span class="icon-status ml-1"></span>
+                            </li>
+                        </ul>
+                    </div>
+                </div> <!--End of transferTab-->
+
+                <div>
+                    <h5 class="subtitle">Token bridge list</h5>
+                    <p style="text-align: center;">RSK native tokens will transform into e(tokenName). Ethereum native tokens will transform into r(tokenName)</p>
+                    <div id="tokenListTab">    
                         <!-- Dinamic content made with JS -->
                     </div>
+                </div>
 
-                    <div id="infoTab" class="tab-pane">
-                        <div class="row mb-5">
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <span class="config-value mb-2" id="config-max">-</span>
-                                <span class="config-title">Max transfer allowed</span>
-                                <p>
-                                    The max value of tokens that can be tranferred per day
-                                </p>
-                            </div>
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <span class="config-value mb-2" id="config-min">-</span>
-                                <span class="config-title">Min transfer allowed</span>
-                                <p>
-                                    The min value of tokens that can be transferred per day
-                                </p>
-                            </div>
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <span class="config-value mb-2" id="config-to-spend">-</span>
-                                <span class="config-title">Daily transfer limit</span>
-                                <p>
-                                    How many tokens can be tranferred today
-                                </p>
-                            </div>
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <span class="config-value mb-2" id="config-fee">-</span>
-                                <span class="config-title">Fee</span>
-                                <p>
-                                    This is the fee required for transfer tokens between networks
-                                </p>
-                            </div>
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <div>
-                                    <span class="config-value mb-2" id="config-federators-count">-</span>
-                                    <span class="config-address mb-2 ml-2" id="config-federators-required"></span>
-                                </div>
-                                <span class="config-title">Federators</span>
-                                <p>
-                                    The Authorities will vote the transactions to cross during the trial period. Once we implement the decentralized bridge there will be no authorities as its a fully trustless solution
-                                </p>
-                            </div>
-                            <div class="col-md-4 col-sm-4 mb-5 config-section">
-                                <span class="config-value mb-2" id="config-whitelisted-enabled">-</span>
-                                <span class="config-title">Whitelisted contracts</span>
-                                <p>
-                                    The whitelist will be used during the trial period once the decentralized bridge is released the whitelist will be removed
-                                </p>
-                            </div>
-                        </div>
-                        <div class="config-section fed-addresses mb-5 col-lg-4 col-sm-8">
-                            <span class="config-title">Federators Addresses</span>
-                            <p class="m-0 mb-3">
-                                These are the addresses of the authorities that will vote the transactions
+                <div id="infoTab">
+                    <h5 class="subtitle">Important details</h5>
+                    <div class="row mb-5">
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <span class="config-value mb-2" id="config-max">-</span>
+                            <span class="config-title">Max transfer allowed</span>
+                            <p>
+                                The max value of tokens that can be tranferred per day
                             </p>
-                            <span class="config-address mb-2" id="config-federators-addresses"></span>
+                        </div>
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <span class="config-value mb-2" id="config-min">-</span>
+                            <span class="config-title">Min transfer allowed</span>
+                            <p>
+                                The min value of tokens that can be transferred per day
+                            </p>
+                        </div>
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <span class="config-value mb-2" id="config-to-spend">-</span>
+                            <span class="config-title">Daily transfer limit</span>
+                            <p>
+                                How many tokens can be tranferred today
+                            </p>
+                        </div>
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <span class="config-value mb-2" id="config-fee">-</span>
+                            <span class="config-title">Fee</span>
+                            <p>
+                                This is the fee required for transfer tokens between networks
+                            </p>
+                        </div>
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <div>
+                                <span class="config-value mb-2" id="config-federators-count">-</span>
+                                <span class="config-address mb-2 ml-2" id="config-federators-required"></span>
+                            </div>
+                            <span class="config-title">Federators</span>
+                            <p>
+                                The Authorities will vote the transactions to cross during the trial period. Once we implement the decentralized bridge there will be no authorities as its a fully trustless solution
+                            </p>
+                        </div>
+                        <div class="col-md-4 col-sm-4 mb-5 config-section">
+                            <span class="config-value mb-2" id="config-whitelisted-enabled">-</span>
+                            <span class="config-title">Whitelisted contracts</span>
+                            <p>
+                                The whitelist will be used during the trial period once the decentralized bridge is released the whitelist will be removed
+                            </p>
                         </div>
                     </div>
-                </div> <!--- End Tab Content -->
-                <section class="mt-1">
-                    <div id="alert-login" class="alert alert-success" role="alert"><b>Log In</b> to start using the Dapp</div>
-                </section>
-                <section class="mt-1">
-                    <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
-                </section>
-            </div>
+                </div>
+            </div> <!--- End Tab Content -->
+            <section class="mt-1">
+                <div id="alert-danger" class="alert alert-danger" role="alert" style='display:none'></div>
+            </section>
           </div>
         </section>
         <!-- Modal -->
@@ -455,20 +448,24 @@
                         <div class="col-md-6">
                            <div class="footer-links">
                               <ul>
+                                 <li><a href="https://developers.rsk.co/tools/tokenbridge/dappguide" target="_blank">How to use it?</a></li>
                                  <li><a href="https://developers.rsk.co/tools/tokenbridge/faq/">FAQ</a></li>
-                                 <li><a href="https://www.iovlabs.org" rel="nofollow noopener noreferrer" target="_blank">About IOVlabs</a></li>
-                                 <li><a href="https://www.iovlabs.org/contact.html" rel="nofollow noopener noreferrer" target="_blank">Contact IOVlabs</a></li>
-                                 <li><a href="https://blog.rsk.co/" rel="nofollow noopener noreferrer" target="_blank">Blog</a></li>
+                                 <li><a href="https://github.com/rsksmart/tokenbridge" target="_blank">Repository</a></li>
+                                 <li><a id="get-rbtc-navlink" href="https://coinswitch.rsk.co/" target="_blank">Get RBTC</a></li>
+                                <li><a id="network-navlink" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a></li>
+                                 <a href="https://developers.rsk.co/tools/tokenbridge" rel="nofollow noopener noreferrer" target="_blank" class="footer-button" title="Documentation">Documentation</a>    
                               </ul>
                            </div>
                         </div>
                         <div class="col-md-6">
                            <div class="footer-links">
                               <ul>
-                                 <li><a class="bold" href="https://www.rsk.co/Brand_Guidelines/RSK_BrandManual_V6.pdf" rel="nofollow noopener noreferrer" target="_blank">Brand Guidelines</a></li>
-                                 <li><a class="bold" href="https://www.rsk.co/terms-conditions">Terms &amp; Conditions</a></li>
-                                 <li><a class="bold mb-30" href="https://www.rsk.co/privacy-policy">Privacy Policy</a></li>
-                                 <a href="https://developers.rsk.co/tools/tokenbridge" rel="nofollow noopener noreferrer" target="_blank" class="footer-button" title="Documentation">Documentation</a>
+                                <li><a href="https://www.iovlabs.org" rel="nofollow noopener noreferrer" target="_blank">About IOVlabs</a></li>
+                                <li><a href="https://www.iovlabs.org/contact.html" rel="nofollow noopener noreferrer" target="_blank">Contact IOVlabs</a></li>
+                                <li><a href="https://blog.rsk.co/" rel="nofollow noopener noreferrer" target="_blank">Blog</a></li>
+                                <li><a class="bold" href="https://www.rsk.co/Brand_Guidelines/RSK_BrandManual_V6.pdf" rel="nofollow noopener noreferrer" target="_blank">Brand Guidelines</a></li>
+                                <li><a class="bold" href="https://www.rsk.co/terms-conditions">Terms &amp; Conditions</a></li>
+                                <li><a class="bold mb-30" href="https://www.rsk.co/privacy-policy">Privacy Policy</a></li>
                               </ul>
                            </div>
                         </div>
@@ -679,7 +676,6 @@
                     if(!config) {
                         $('#logIn').html('<i class="fas fa-sync fa-spin">');
                         $('#logIn').attr('onclick', '');
-                        $('#alert-login').hide();
                         isInstalled()
                         .catch( (err) => {
                             onMetaMaskConnectionError(err);
@@ -721,7 +717,6 @@
                     $('#config-max').text(maxTokensAllowed.toLocaleString());
                     $('#config-to-spend').text(maxDailyLimit.toLocaleString());
                     $('#config-federators-count').text(federators.length);
-                    $('#config-federators-addresses').text(federators.join('\n'));
                     $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
                     $('#config-whitelisted-enabled').text(isValidatingAllowedTokens);
 
@@ -923,7 +918,6 @@
                     $('#myModal').modal('show');
                     $('#logIn').attr('onclick', 'onLogInClick()');
                     $('#logIn').text('log in');
-                    $('#alert-login').show();
                     disableInputs(true);
                     tokenContract = null;
                     allowTokensContract = null;
@@ -1002,7 +996,6 @@
                     $('.indicator').addClass('btn-outline-success');
                     $('.toNetwork').val(config.crossToNetwork.name);
                     $('#confirmations').html(config.confirmations);
-                    $('#alert-login').hide();
                     updateTokenAddressDropdown(config.networkId);
                 }
 
@@ -1027,11 +1020,11 @@
 
                     let tabHtml = `<div class="row">`;
                     tabHtml += `\n    <div class="col-sm-5 text-center">`;
-                    tabHtml += `\n        <h3>${rskConfig.name}</h3>`;
+                    tabHtml += `\n        ${rskConfig.name}`;
                     tabHtml += `\n    </div>`;
                     tabHtml += `\n    <div class="col-sm-2 text-center"></div>`;
                     tabHtml += `\n    <div class="col-sm-5 text-center">`;
-                    tabHtml += `\n        <h3>${rskConfig.crossToNetwork.name}</h3>`;
+                    tabHtml += `\n        ${rskConfig.crossToNetwork.name}`;
                     tabHtml += `\n    </div>`;
                     tabHtml += `\n</div>`;
                     for(let aToken of TOKENS) {
@@ -1039,43 +1032,29 @@
                             tabHtml += `\n<div class="row mb-3">`;
                             tabHtml += `\n    <div class="col-sm-6 row">`;
                             tabHtml += `\n      <div class="col-sm-3 font-weight-bold">`;
+                            tabHtml += `\n          <a href="${rskConfig.explorer}/address/${aToken[rskConfig.networkId].address}" class="address" target="_blank">`;
                             tabHtml += `\n            <span><img src="${aToken.icon}" class="token-logo"></span>${aToken[rskConfig.networkId].symbol}`;
-                            tabHtml += `\n      </div>`;
-                            tabHtml += `\n      <div class="col-sm-9">`;
-                            tabHtml += `\n          <div class="row">`;
-                            tabHtml += `\n              <div class="col-sm-10">`;
-                            tabHtml += `\n                  <a href="${rskConfig.explorer}/address/${aToken[rskConfig.networkId].address}" class="address" target="_blank">`;
-                            tabHtml += `\n                      ${aToken[rskConfig.networkId].address}`;
-                            tabHtml += `\n                   </a>`;
-                            tabHtml += `\n              </div>`;
-                            tabHtml += `\n              <div class="col-sm-2">`;
-                            tabHtml += `\n                  <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[rskConfig.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
-                            tabHtml += `\n                      <i class="far fa-copy"></i>`;
-                            tabHtml += `\n                  </button>`;
-                            tabHtml += `\n              </div>`;
-                            tabHtml += `\n          </div>`;
-                            tabHtml += `\n      </div>`;
+                            tabHtml += `\n          </a>`;
+                            tabHtml += `\n       </div>`;
+                            tabHtml += `\n       <div class="col-sm-2">`;
+                            tabHtml += `\n           <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[rskConfig.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
+                            tabHtml += `\n                <i class="far fa-copy"></i>`;
+                            tabHtml += `\n           </button>`;
+                            tabHtml += `\n       </div>`;
                             tabHtml += `\n    </div>`;
                             tabHtml += `\n    <div class="col-sm-6 row">`;
                             tabHtml += `\n      <div class="col-sm-1">`;
                             tabHtml += `\n        <i class="fas fa-arrows-alt-h"></i>`;
                             tabHtml += `\n      </div>`;
                             tabHtml += `\n      <div class="col-sm-3 font-weight-bold">`;
-                            tabHtml += `\n            <span><img src="${aToken.icon}" class="token-logo"></span>${aToken[rskConfig.crossToNetwork.networkId].symbol}`;
+                            tabHtml += `\n          <a href="${rskConfig.crossToNetwork.explorer}/address/${aToken[rskConfig.crossToNetwork.networkId].address}" class="address" target="_blank">`;
+                            tabHtml += `\n              <span><img src="${aToken.icon}" class="token-logo"></span>${aToken[rskConfig.crossToNetwork.networkId].symbol}`;
+                            tabHtml += `\n          </a>`;
                             tabHtml += `\n      </div>`;
-                            tabHtml += `\n      <div class="col-sm-8">`;
-                            tabHtml += `\n          <div class="row">`;
-                            tabHtml += `\n              <div class="col-sm-10">`;
-                            tabHtml += `\n                  <a href="${rskConfig.crossToNetwork.explorer}/address/${aToken[rskConfig.crossToNetwork.networkId].address}" class="address" target="_blank">`;
-                            tabHtml += `\n                      ${aToken[rskConfig.crossToNetwork.networkId].address}`;
-                            tabHtml += `\n                  </a>`;
-                            tabHtml += `\n              </div>`;
-                            tabHtml += `\n              <div class="col-sm-2">`;
-                            tabHtml += `\n                  <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[rskConfig.crossToNetwork.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
-                            tabHtml += `\n                      <i class="far fa-copy"></i>`;
-                            tabHtml += `\n                  </button>`;
-                            tabHtml += `\n              </div>`;
-                            tabHtml += `\n          </div>`;
+                            tabHtml += `\n      <div class="col-sm-2">`;
+                            tabHtml += `\n          <button class="copy btn btn-outline-secondary" type="button" data-clipboard-text="${aToken[rskConfig.crossToNetwork.networkId].address}" data-toggle="tooltip" data-placement="bottom" title="Copy the address">`;
+                            tabHtml += `\n              <i class="far fa-copy"></i>`;
+                            tabHtml += `\n          </button>`;
                             tabHtml += `\n      </div>`;
                             tabHtml += `\n    </div>`;
                             tabHtml += `\n</div>`;
