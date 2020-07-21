@@ -54,13 +54,11 @@
                 a.appendChild(r);
             })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
         </script>
-        
-        <title>RSK Token Bridge</title>
         <!-- Custom Styles -->
         <style>
             body {
               font-family: 'Quicksand', sans-serif !important;
-              font-size: 12px;
+              font-size: 12px!important;
             }
             body .btn {
                 font-size: 14px;
@@ -73,6 +71,31 @@
               color: #00B520;
               font-weight: 700;
               font-size: 32px;
+            }
+            .badge-outline{
+                color: #28a745;
+                background-color: transparent;
+                border: 1px solid #00B520;
+                line-height: 1.5;
+                padding-right: .6em;
+                padding-left: .6em;
+                border-radius: 10rem;
+                padding: .375rem .75rem;
+            }
+            .btn-primary {
+                color: #fff;
+                background-color: #00B520;
+                border-color: #00B520;
+            }
+            .btn-primary:hover {
+                color: #fff;
+                background-color: #03a335;
+                border-color: #03a335;
+            }
+            .btn-primary.disabled, .btn-primary:disabled {
+                color: #fff;
+                background-color:  #E5E5E5;
+                border-color:  #E5E5E5;
             }
             .navbar-dark.bg-dark {
                 background-color: white!important;
@@ -101,12 +124,23 @@
                 height: auto;
                 transition: all 0.5s ease;
             }
+            .navbar, a {
+                color: #00B520;
+                font-size: 14px;
+            }
+            a:hover {
+                color: #03a335;
+                text-decoration: none;
+            }
+            .navbar-item {
+                margin-top: 15px;
+            }
             .nav-tabs .nav-link {
                 font-weight: bold;
-                color: #00B520 !important;
+                color: #00B520;
             }
             .nav-tabs .nav-link:hover {
-                color: black !important;
+                color: black;
             }
             .tab-content {
                 padding: 40px 20px;
@@ -215,19 +249,26 @@
                     <a class="navbar-brand" href="https://rsk.co">
                         <img id="logo" src="https://developers.rsk.co/assets/img/rsk_logo.svg" class="logo" alt="RSK Token Bridge">
                     </a>
-                    <div class="indicator btn disabled btn-outline-danger badge-pill" style="margin-top:15px;">
-                        <span aria-describedby="tooltip-status">Unknown Network</span>
+                    <div class="wallet-status navbar-item indicator badge-outline badge-pill" style="display: none;">
+                        <span aria-describedby="tooltip-status" class="fromNetwork">Network</span>
                     </div>
+                    
                     <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
                     <div class="navbar-collapse collapse" id="navbarResponsive">
-                        <div style="margin-top:15px">
-                            <button id="logIn" type="button" class="btn btn-primary badge-pill text-truncate" style="width: 90px;">
-                                log in
-                            </button>
+                        <div class="wallet-status navbar-item badge-pill text-truncate" style="width: 85px; display: none;">
+                            <span id="address">0x123456789</span>
                         </div>
-                        </form>
+                        <div class="navbar-item ml-auto" >
+                            <button id="logIn" type="button" class="btn btn-primary badge-pill">
+                                Connect wallet
+                            </button>
+                            <a id="help" href="https://gitter.im/rsksmart/tokenbridge#" style="display: none;">
+                                Do you need help?
+                            </a>
+                        </div>
+                        
                     </div>
                 </div>
             </nav>
@@ -235,7 +276,7 @@
             <section id="home">
               <div class="container">
                 <div class="title">
-                    <h2>Token Bridge between RSK and Ethereum</h2>
+                    <h2 id="title">Token Bridge between RSK and Ethereum</h2>
                     <h5 class="subtitle">You can convert your tokens from RSK to Ethereum and viceversa.</h5>
                 </div>
                 <div id="transferTab">
@@ -318,9 +359,6 @@
                                     The bridge will cross the tokens after <b><span id="confirmations"></span> blocks</b> <span class="icon-status ml-1"></span>
                                 </li>
                             </ul>
-                        </div>
-                        <div>
-                            <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Cross the Tokens</button>
                         </div>
                     </form>
 
@@ -412,7 +450,7 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">log in</h5>
+                        <h5 class="modal-title">Connect wallet</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                         </button>
@@ -452,8 +490,8 @@
                                  <li><a href="https://developers.rsk.co/tools/tokenbridge/faq/">FAQ</a></li>
                                  <li><a href="https://github.com/rsksmart/tokenbridge" target="_blank">Repository</a></li>
                                  <li><a id="get-rbtc-navlink" href="https://coinswitch.rsk.co/" target="_blank">Get RBTC</a></li>
-                                <li><a id="network-navlink" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a></li>
-                                 <a href="https://developers.rsk.co/tools/tokenbridge" rel="nofollow noopener noreferrer" target="_blank" class="footer-button" title="Documentation">Documentation</a>    
+                                 <li><a id="network-navlink" href="https://testnet.tokenbridge.rsk.co">Use Testnet</a></li>
+                                 <li><a href="https://developers.rsk.co/tools/tokenbridge" rel="nofollow noopener noreferrer" target="_blank" class="footer-button" title="Documentation">Documentation</a></li>    
                               </ul>
                            </div>
                         </div>
@@ -489,7 +527,7 @@
                <div class="col-md-12">
                   <div class="row">
                      <div class="col-md-6 col-xs-12 pl-0-mobile">
-                        <p class="copyright">Copyright © 2015 - 2019 RSK Labs. All rights reserved.</p>
+                        <p class="copyright">Copyright © 2015 RSK Labs. All rights reserved.</p>
                      </div>
                      <div class="col-md-6 col-xs-12 pl-0-mobile">
                         <p class="credits"> RSK Public Key (69F6 F997 2497 8762 D541 8AE4 58D2 260D 5998 6758)</p>
@@ -611,7 +649,7 @@
                     
                     isTestnet = window.location.href.includes('testnet');
                     if(isTestnet) {
-                        $('#home h2.title').text('Token Bridge between RSK Testnet and Kovan');
+                        $('#title').text('Token Bridge between RSK Testnet and Kovan');
                         let navlink = $('#network-navlink');
                         navlink.prop('href', 'https://tokenbridge.rsk.co');
                         navlink.text('Use Mainnet');
@@ -917,7 +955,10 @@
                     $('#myModal .modal-body').html(`<p>${err.message}</p>`);
                     $('#myModal').modal('show');
                     $('#logIn').attr('onclick', 'onLogInClick()');
-                    $('#logIn').text('log in');
+                    $('#logIn').show();
+                    $('#help').hide();
+                    $('.wallet-status').hide();
+                    $('#address').text('0x00000..');
                     disableInputs(true);
                     tokenContract = null;
                     allowTokensContract = null;
@@ -949,7 +990,10 @@
 
                 function updateAddress(newAddress) {
                     address = newAddress;
-                    $('#logIn').text(newAddress);
+                    $('#address').text(newAddress);
+                    $('#logIn').hide();
+                    $('#help').show();
+                    $('.wallet-status').show();
 
                 }
 
