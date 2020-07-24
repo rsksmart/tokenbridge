@@ -6,4 +6,5 @@ latestBlock.txt
 db
 config/federator.key
 federator.log
+test/lib/*.txt
 coverage
