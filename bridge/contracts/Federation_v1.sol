@@ -20,6 +20,7 @@ contract Federation_v1 is Ownable {
     event MemberAddition(address indexed member);
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
+    event BridgeChanged(address bridge);
 
     modifier onlyMember() {
         require(isMember[_msgSender()], "Federation: Caller not a Federator");
@@ -33,6 +34,7 @@ contract Federation_v1 is Ownable {
     }
 
     constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
+        require(_members.length < MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
             require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
@@ -46,6 +48,7 @@ contract Federation_v1 is Ownable {
     function setBridge(address _bridge) external onlyOwner {
         require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
         bridge = IBridge_v1(_bridge);
+        emit BridgeChanged(_bridge);
     }
 
     function voteTransaction(
@@ -72,7 +75,7 @@ contract Federation_v1 is Ownable {
         // solium-disable-next-line max-len
         emit Voted(_msgSender(), transactionId, originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
 
-        uint8 transactionCount = getTransactionCount(transactionId);
+        uint transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
             bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity);
@@ -84,9 +87,9 @@ contract Federation_v1 is Ownable {
         return true;
     }
 
-    function getTransactionCount(bytes32 transactionId) public view returns(uint8) {
-        uint8 count = 0;
-        for (uint8 i = 0; i < members.length; i++) {
+    function getTransactionCount(bytes32 transactionId) public view returns(uint) {
+        uint count = 0;
+        for (uint i = 0; i < members.length; i++) {
             if (votes[transactionId][members[i]])
                 count += 1;
         }
@@ -135,6 +138,7 @@ contract Federation_v1 is Ownable {
         require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
         require(isMember[_oldMember], "Federation: Member doesn't exists");
         require(members.length > 1, "Federation: Can't remove all the members");
+        require(members.length - 1 >= required, "Federation: Can't have less than required members");
 
         isMember[_oldMember] = false;
         for (uint i = 0; i < members.length - 1; i++) {
