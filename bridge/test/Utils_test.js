@@ -1,4 +1,4 @@
-const UtilsContract = artifacts.require('./Utils');
+const UtilsLib = artifacts.require('./Utils');
 const MainToken = artifacts.require('./MainToken');
 const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
 const SideToken = artifacts.require('./SideToken_v1');
@@ -7,11 +7,11 @@ const BN = web3.utils.BN;
 const utils = require('./utils');
 const { expectThrow } = require('./utils');
 
-contract('Utils Contract', async function (accounts) {
+contract('Utils Lib', async function (accounts) {
     const owner = accounts[0];
 
     beforeEach(async function () {
-        this.utilsLib = await UtilsContract.new();
+        this.utilsLib = await UtilsLib.new();
     });
         
     describe('decimals conversion', async function () {

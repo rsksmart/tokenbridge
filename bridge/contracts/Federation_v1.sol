@@ -158,6 +158,7 @@ contract Federation_v1 is Ownable {
 
     function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required)
     {
+        require(_required >= 2, "Federation: Requires at least 2");
         required = _required;
         emit RequirementChange(_required);
     }

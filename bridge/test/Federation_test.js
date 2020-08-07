@@ -262,10 +262,11 @@ contract('Federation_v1', async function (accounts) {
             this.allowTokens = await AllowTokens.new(deployer);
             await this.allowTokens.addAllowedToken(originalTokenAddress);
             this.sideTokenFactory = await SideTokenFactory.new();
-            this.utilsContract = await UtilsContract.new();
+            this.utilsContract = await UtilsContract.deployed();
+            await Bridge.link(UtilsContract, this.utilsContract.address);
             this.bridge = await Bridge.new();
-            await this.bridge.methods['initialize(address,address,address,address,address,string)'](deployer, this.federation.address,
-                this.allowTokens.address, this.sideTokenFactory.address, this.utilsContract.address, 'e');
+            await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federation.address,
+                this.allowTokens.address, this.sideTokenFactory.address, 'e');
             await this.sideTokenFactory.transferPrimary(this.bridge.address);
             await this.federation.setBridge(this.bridge.address);
         });
