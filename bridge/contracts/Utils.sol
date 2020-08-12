@@ -4,7 +4,7 @@ import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/introspection/IERC1820Registry.sol";
 import "./zeppelin/token/ERC777/IERC777.sol";
 
-contract Utils {
+library Utils {
     using SafeMath for uint256;
 
     IERC1820Registry constant private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
