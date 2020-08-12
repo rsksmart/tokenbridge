@@ -26,10 +26,11 @@ contract('Bridge_v1', async function (accounts) {
         this.allowTokens = await AllowTokens.new(bridgeManager);
         await this.allowTokens.addAllowedToken(this.token.address, {from: bridgeManager});
         this.sideTokenFactory = await SideTokenFactory.new();
-        this.utilsContract = await UtilsContract.new();
+        this.utilsContract = await UtilsContract.deployed();
+        await Bridge.link(UtilsContract, this.utilsContract.address);
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
-            federation, this.allowTokens.address, this.sideTokenFactory.address, this.utilsContract.address, 'e');
+        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
+            federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
     });
 
@@ -595,11 +596,9 @@ contract('Bridge_v1', async function (accounts) {
         beforeEach(async function () {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
-            this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,address,string)'](bridgeManager, 
-                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, this.mirrorUtilsContract.address,
-                'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
+                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
@@ -998,17 +997,15 @@ contract('Bridge_v1', async function (accounts) {
             this.fedMultiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.allowTokens = await AllowTokens.new(this.multiSig.address);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
-            this.mirrorUtilsContract = await UtilsContract.new();
             this.mirrorBridge = await Bridge.new();
             this.decimals = "18";
             
 
-            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,address,string)'](
+            let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,string)'](
                 this.multiSig.address,
                 this.fedMultiSig.address,
                 this.allowTokens.address,
                 this.mirrorSideTokenFactory.address,
-                this.mirrorUtilsContract.address,
                 'r'
             ).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
@@ -1311,20 +1308,6 @@ contract('Bridge_v1', async function (accounts) {
             let newAddress = randomHex(20);
             await this.bridge.changeSideTokenFactory(newAddress, { from: bridgeManager });
             let result = await this.bridge.sideTokenFactory();
-            assert.equal(result.toLowerCase(), newAddress.toLowerCase());
-        });
-    });
-
-    describe('change Utils Contract', async function() {
-        
-        it('should reject empty address', async function () {
-            await utils.expectThrow(this.bridge.changeUtils(utils.NULL_ADDRESS, { from: bridgeManager }));
-        });
-
-        it('should be successful', async function () {
-            let newAddress = randomHex(20);
-            await this.bridge.changeUtils(newAddress, { from: bridgeManager });
-            let result = await this.bridge.utils();
             assert.equal(result.toLowerCase(), newAddress.toLowerCase());
         });
     });

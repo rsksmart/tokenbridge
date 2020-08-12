@@ -5,6 +5,7 @@ const Bridge = artifacts.require('./Bridge_v1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 const UtilsContract = artifacts.require('./Utils');
 
+const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
 
@@ -29,6 +30,14 @@ contract('Federation_v1', async function (accounts) {
 
      it('should fail if null memeber', async function () {
         await utils.expectThrow(Federation.new([fedMember1, utils.NULL_ADDRESS], 2));
+     });
+
+     it('should fail if max memeber length', async function () {
+        let members = [];
+        for(let i = 0; i <= 50; i++) {
+            members[i]=randomHex(20);
+        }
+        await utils.expectThrow(Federation.new(members, 2));
      });
 
     beforeEach(async function () {
@@ -59,10 +68,14 @@ contract('Federation_v1', async function (accounts) {
         });
 
         it('setBridge should work correctly', async function() {
-            await this.federation.setBridge(anAccount);
+            let result = await this.federation.setBridge(anAccount);
 
             let bridge = await this.federation.bridge();
             assert.equal(bridge, anAccount);
+
+            truffleAssert.eventEmitted(result, 'BridgeChanged', (ev) => {
+                return ev.bridge === bridge;
+            });
         });
 
         it('setBridge should fail if empty', async function() {
@@ -80,6 +93,9 @@ contract('Federation_v1', async function (accounts) {
                 let members = await this.federation.getMembers();
                 assert.equal(members.length, this.members.length + 1);
                 assert.equal(members[2], fedMember3);
+                truffleAssert.eventEmitted(receipt, 'MemberAddition', (ev) => {
+                    return ev.member === fedMember3;
+                });
             });
 
             it('should fail if not the owner', async function() {
@@ -120,7 +136,7 @@ contract('Federation_v1', async function (accounts) {
         });
 
         describe('removeMember', async function() {
-            it('should be succesful', async function() {
+            it('should be succesful with 1 required and 2 members', async function() {
                 let receipt = await this.federation.removeMember(fedMember1);
                 utils.checkRcpt(receipt);
 
@@ -129,13 +145,49 @@ contract('Federation_v1', async function (accounts) {
                 let members = await this.federation.getMembers();
                 assert.equal(members.length, 1);
                 assert.equal(members[0], fedMember2);
+
+                truffleAssert.eventEmitted(receipt, 'MemberRemoval', (ev) => {
+                    return ev.member === fedMember1;
+                });
+            });
+
+            it('should be succesful with 2 required and 3 memebers', async function() {
+                await this.federation.changeRequirement(2);
+
+                await this.federation.addMember(fedMember3);
+                let members = await this.federation.getMembers();
+                assert.equal(members.length, 3);
+
+                let receipt = await this.federation.removeMember(fedMember1);
+                utils.checkRcpt(receipt);
+
+                let isMember = await this.federation.isMember(fedMember1);
+                assert.equal(isMember, false);
+                members = await this.federation.getMembers();
+                assert.equal(members.length, 2);
+                assert.equal(members[0], fedMember3);
+
+                truffleAssert.eventEmitted(receipt, 'MemberRemoval', (ev) => {
+                    return ev.member === fedMember1;
+                });
+            });
+
+            it('should fail if lower than required', async function() {
+                await this.federation.changeRequirement(2);
+                let members = await this.federation.getMembers();
+                assert.equal(members.length, 2);
+
+                await utils.expectThrow(this.federation.removeMember(fedMember1));
+
+                members = await this.federation.getMembers();
+                assert.equal(members.length, 2);
             });
 
             it('should fail if not the owner', async function() {
-                await utils.expectThrow(this.federation.removeMember(fedMember3, { from: fedMember2 }));
+                await utils.expectThrow(this.federation.removeMember(fedMember1, { from: fedMember2 }));
 
-                let isMember = await this.federation.isMember(fedMember3);
-                assert.equal(isMember, false);
+                let isMember = await this.federation.isMember(fedMember1);
+                assert.equal(isMember, true);
                 let members = await this.federation.getMembers();
                 assert.equal(members.length, this.members.length);
             });
@@ -172,6 +224,10 @@ contract('Federation_v1', async function (accounts) {
 
                 let required = await this.federation.required();
                 assert.equal(required, 2);
+
+                truffleAssert.eventEmitted(receipt, 'RequirementChange', (ev) => {
+                    return parseInt(ev.required) === 2;
+                });
             });
 
             it('should fail if not the owner', async function() {
@@ -206,10 +262,11 @@ contract('Federation_v1', async function (accounts) {
             this.allowTokens = await AllowTokens.new(deployer);
             await this.allowTokens.addAllowedToken(originalTokenAddress);
             this.sideTokenFactory = await SideTokenFactory.new();
-            this.utilsContract = await UtilsContract.new();
+            this.utilsContract = await UtilsContract.deployed();
+            await Bridge.link(UtilsContract, this.utilsContract.address);
             this.bridge = await Bridge.new();
-            await this.bridge.methods['initialize(address,address,address,address,address,string)'](deployer, this.federation.address,
-                this.allowTokens.address, this.sideTokenFactory.address, this.utilsContract.address, 'e');
+            await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federation.address,
+                this.allowTokens.address, this.sideTokenFactory.address, 'e');
             await this.sideTokenFactory.transferPrimary(this.bridge.address);
             await this.federation.setBridge(this.bridge.address);
         });
@@ -236,6 +293,14 @@ contract('Federation_v1', async function (accounts) {
             let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
             transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, true);
+
+            truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
+                return ev.sender === fedMember1 && ev.transactionId === transactionId;
+            });
+
+            truffleAssert.eventEmitted(receipt, 'Executed', (ev) => {
+                return ev.transactionId === transactionId;
+            });
         });
 
         it('voteTransaction should fail with wrong acceptTransfer arguments', async function() {
@@ -307,6 +372,12 @@ contract('Federation_v1', async function (accounts) {
             let bridgeTransactionId = await this.bridge.getTransactionId(blockHash, transactionHash, anAccount, amount, logIndex);
             transactionWasProcessed = await this.bridge.processed(bridgeTransactionId);
             assert.equal(transactionWasProcessed, false);
+
+            truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
+                return ev.sender === fedMember1 && ev.transactionId === transactionId;
+            });
+
+            truffleAssert.eventNotEmitted(receipt, 'Executed');
         });
 
         it('voteTransaction should be successful with 2/2 feds require 1', async function() {
@@ -588,10 +659,17 @@ contract('Federation_v1', async function (accounts) {
         });
 
         it('should fail to remove a federation member due to missing signatures', async function() {
-            let data = this.federation.contract.methods.removeMember(fedMember1).encodeABI();
+            let data = this.federation.contract.methods.addMember(fedMember3).encodeABI();
+            await this.multiSig.submitTransaction(this.federation.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
+
+            let tx = await this.multiSig.transactions(0);
+            assert.equal(tx.executed, true);
+
+            data = this.federation.contract.methods.removeMember(fedMember1).encodeABI();
             await this.multiSig.submitTransaction(this.federation.address, 0, data, { from: multiSigOnwerA });
 
-            tx = await this.multiSig.transactions(0);
+            tx = await this.multiSig.transactions(1);
             assert.equal(tx.executed, false);
 
             let isMemeber = await this.federation.isMember(fedMember1);
@@ -599,11 +677,18 @@ contract('Federation_v1', async function (accounts) {
         });
 
         it('should remove a federation member', async function() {
-            data = this.federation.contract.methods.removeMember(fedMember1).encodeABI();
+            let data = this.federation.contract.methods.addMember(fedMember3).encodeABI();
             await this.multiSig.submitTransaction(this.federation.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(0, { from: multiSigOnwerB });
 
             let tx = await this.multiSig.transactions(0);
+            assert.equal(tx.executed, true);
+
+            data = this.federation.contract.methods.removeMember(fedMember1).encodeABI();
+            await this.multiSig.submitTransaction(this.federation.address, 0, data, { from: multiSigOnwerA });
+            await this.multiSig.confirmTransaction(1, { from: multiSigOnwerB });
+
+            tx = await this.multiSig.transactions(1);
             assert.equal(tx.executed, true);
 
             isMember = await this.federation.isMember(fedMember1);
