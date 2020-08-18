@@ -34,7 +34,7 @@ contract Federation_v1 is Ownable {
     }
 
     constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
-        require(_members.length < MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
+        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
             require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
