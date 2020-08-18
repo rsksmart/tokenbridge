@@ -32,12 +32,22 @@ contract('Federation_v1', async function (accounts) {
         await utils.expectThrow(Federation.new([fedMember1, utils.NULL_ADDRESS], 2));
      });
 
-     it('should fail if max memeber length', async function () {
+     it('should fail if bigger max memeber length', async function () {
         let members = [];
         for(let i = 0; i <= 50; i++) {
             members[i]=randomHex(20);
         }
         await utils.expectThrow(Federation.new(members, 2));
+     });
+
+     it('should be successful with max memeber length', async function () {
+        let members = [];
+        for(let i = 0; i < 50; i++) {
+            members[i]=randomHex(20);
+        }
+        let federation = await Federation.new(members, 2);
+        let resultMembers = await federation.getMembers();
+        assert.equal(resultMembers.length, 50);
      });
 
     beforeEach(async function () {
