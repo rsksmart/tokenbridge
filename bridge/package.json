@@ -4,6 +4,7 @@
   "version": "1.1.0",
   "description": "Decentralized Bridge Contracts",
   "scripts": {
+    "preinstall": "npx npm-force-resolutions",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solium -d contracts/",
     "migrate": "rm -rf ./build && rm -f ./.openzeppelin/dev-5777.json && npx truffle migrate --reset",
@@ -20,7 +21,11 @@
     "ethereum"
   ],
   "author": "IOVLabs",
-  "devDependencies": {
+  "engines": {
+    "node": ">=12"
+  },
+  "dependencies": {
+    "npm-force-resolutions": "0.0.3",
     "@openzeppelin/cli": "^2.8.2",
     "@openzeppelin/test-helpers": "^0.5.4",
     "@openzeppelin/upgrades": "^2.8.0",
@@ -31,10 +36,21 @@
     "resolve": "^1.13.0",
     "solidity-coverage": "^0.7.9",
     "table": "^5.4.6",
-    "truffle": "^5.1.27",
+    "truffle": "^5.1.42",
     "truffle-assertions": "^0.9.2"
   },
-  "engines": {
-    "node": ">=12"
+  "devDependencies": {
+    "yargs-parser": "^13.1.2",
+    "elliptic": "^6.5.3",
+    "minimist": "^1.2.5",
+    "mem": "^4.0.0",
+    "kind-of": "^6.0.3"
+  },
+  "resolutions": {
+    "yargs-parser": "^13.1.2",
+    "elliptic": "^6.5.3",
+    "minimist": "^1.2.5",
+    "mem": "^4.0.0",
+    "kind-of": "^6.0.3"
   }
 }
