@@ -906,16 +906,6 @@ contract('Bridge_v1', async function (accounts) {
                 this.granularity = 1;
             });
 
-            it('clearSideToken ONLY TESTNET should be successful', async function () {
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                assert.notEqual(sideTokenAddress, utils.NULL_ADDRESS);
-                await this.mirrorBridge.clearSideToken(this.token.address, { from: bridgeManager });
-                let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
-                let sideTokenAddressNow = await this.mirrorBridge.mappedTokens(this.token.address);
-                assert.equal(sideTokenAddressNow, utils.NULL_ADDRESS);
-                assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
-            });
-
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
                     let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
