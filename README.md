@@ -11,11 +11,9 @@ Cross chain events are very important in the future of crypto. Exchanging tokens
 The smart contract on each network are connected by bridges, a bridge on one chain would receive and lock the ERC20 tokens, this action emits an event that will be served to the bridge on the other chain. This interoperability is achieved using a Federation that sends the event from one contract to the other, once the bridge on the other chain receives the event from the Federation, it mints the tokens on the mirror ERC20 contract.
 See the [FAQ](https://developers.rsk.co/tools/tokenbridge/faq/) to know more about how it works!
 
-<p align="center">
-  <img src="./docs/images/token-bridge-diagram.png"/>
-</p>
+![Diagram]("./docs/images/token-bridge-diagram.png")
 
-The bridges on each contract are upgradeable, this would enable a smooth transition to a more decentralized bridge in the future. Here's is a link to the first 
+The bridges on each contract are upgradeable, this would enable a smooth transition to a more decentralized bridge in the future. Here's is a link to the first.
 [POC of the trustless decentralized bridge](https://github.com/rsksmart/tokenbridge/releases/tag/decentralized-poc-v0.1)
 
 ## Usage
@@ -41,7 +39,6 @@ The ABI to interact with the contracts are in the ['abis folder'](./abis)
 ### Dapp
 
 The dapp of the token bridge can be found in the ['UI Folder'](./ui)
-
 
 ### Federation
 
