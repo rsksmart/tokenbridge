@@ -44,13 +44,15 @@
     "elliptic": "^6.5.3",
     "minimist": "^1.2.5",
     "mem": "^4.0.0",
-    "kind-of": "^6.0.3"
+    "kind-of": "^6.0.3",
+    "bl": "^2.2.1"
   },
   "resolutions": {
     "yargs-parser": "^13.1.2",
     "elliptic": "^6.5.3",
     "minimist": "^1.2.5",
     "mem": "^4.0.0",
-    "kind-of": "^6.0.3"
+    "kind-of": "^6.0.3",
+    "bl": "^2.2.1"
   }
 }
