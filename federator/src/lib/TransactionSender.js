@@ -3,13 +3,15 @@ const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
 const CustomError = require('./CustomError');
+const fs = require('fs');
 
 module.exports = class TransactionSender {
-    constructor(client, logger) {
+    constructor(client, logger, config) {
         this.client = client;
         this.logger = logger;
         this.chainId = null;
         this.gasLimit = this.numberToHexString(3500000);
+        this.manuallyCheck = `${config.storagePath || __dirname}/manuallyCheck.txt`;
     }
 
     async getNonce(address) {
@@ -66,11 +68,6 @@ module.exports = class TransactionSender {
         return tx;
     }
 
-    async sendSignedTransaction(signedTx) {;
-        const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
-        return this.client.eth.sendSignedTransaction(serializedTx);
-    }
-
     async getAddress(privateKey) {
         let address = null;
         if (privateKey && privateKey.length) {
@@ -83,27 +80,26 @@ module.exports = class TransactionSender {
         return address;
     }
 
-    async signAndSendTransaction(rawTx, privateKey) {
-        if (privateKey && privateKey.length) {
-            let signedTx = this.signRawTransaction(rawTx, privateKey);
-            return this.sendSignedTransaction(signedTx);
-        } else {
-            //If no private key provided we use personal (personal is only for testing)
-            delete rawTx.r;
-            delete rawTx.s;
-            delete rawTx.v;
-            return this.client.eth.sendTransaction(rawTx);
-        }
-    }
-
     async sendTransaction(to, data, value, privateKey) {
         const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
         let rawTx = await this.createRawTransaction(from, to, data, value);
+        let txHash;
         let error = '';
         let errorInfo = '';
         try {
-            let receipt = await this.signAndSendTransaction(rawTx, privateKey);
+            let receipt;
+            if (privateKey && privateKey.length) {
+                let signedTx = this.signRawTransaction(rawTx, privateKey);
+                const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
+                receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', hash => txHash = hash);
+            } else {
+                //If no private key provided we use personal (personal is only for testing)
+                delete rawTx.r;
+                delete rawTx.s;
+                delete rawTx.v;
+                receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', hash => txHash = hash);
+            }
             if(receipt.status == 1) {
                 this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
                 return receipt;
@@ -111,7 +107,13 @@ module.exports = class TransactionSender {
             error = 'Transaction Receipt Status Failed';
             errorInfo = receipt;
         } catch(err) {
-            error = 'Send Signed Transaction Failed';
+            if (err.message.indexOf('it might still be mined') > 0) {
+                this.logger.warn(`Transaction was not mined within 750 seconds, please make sure your transaction was properly sent. Be aware that
+                it might still be mined. transactionHash:${txHash}`);
+                fs.appendFileSync(this.manuallyCheck, `transactionHash:${txHash} to:${to} data:${data}\n`);
+                return { transactionHash: txHash };
+            }
+            error = `Send Signed Transaction Failed TxHash:${txHash}`;
             errorInfo = err;
         }
         this.logger.error(error, errorInfo);

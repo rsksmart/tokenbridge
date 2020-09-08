@@ -28,7 +28,7 @@ if (scriptPath.indexOf('fundFederators') !== -1) {
 
 async function fundFederators(host, keys, privateKey, amount) {
     const web3 = new Web3(host);
-    const transactionSender = new TransactionSender(web3, logger);
+    const transactionSender = new TransactionSender(web3, logger, {});
 
     for (let i = 0; i < keys.length; i++) {
         try {
