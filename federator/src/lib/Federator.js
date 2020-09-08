@@ -18,7 +18,7 @@ module.exports = class Federator {
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
         this.federationContract = new this.sideWeb3.eth.Contract(abiFederation, this.config.sidechain.federation);
 
-        this.transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+        this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
 
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
     }
@@ -47,12 +47,15 @@ module.exports = class Federator {
                 if (!fs.existsSync(this.config.storagePath)) {
                     fs.mkdirSync(this.config.storagePath);
                 }
-
+                let originalFromBlock = this.config.mainchain.fromBlock || 0;
                 let fromBlock = null;
                 try {
                     fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
                 } catch(err) {
-                    fromBlock = this.config.mainchain.fromBlock || 0;
+                    fromBlock = originalFromBlock;
+                }
+                if(fromBlock < originalFromBlock) {
+                    fromBlock = originalFromBlock;
                 }
                 if(fromBlock >= toBlock){
                     this.logger.warn(`Current chain Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
@@ -82,8 +85,10 @@ module.exports = class Federator {
                     await this._processLogs(logs, toPagedBlock);
                     fromPageBlock = toPagedBlock + 1;
                 }
+                
                 return true;
             } catch (err) {
+                console.log(err)
                 this.logger.error(new Error('Exception Running Federator'), err);
                 retries--;
                 this.logger.debug(`Run ${3-retries} retrie`);
@@ -98,7 +103,7 @@ module.exports = class Federator {
 
     async _processLogs(logs, toBlock) {
         try {
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
             
             for(let log of logs) {
@@ -150,10 +155,11 @@ module.exports = class Federator {
         }
     }
 
+
     async _voteTransaction(tokenAddress, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity) {
         try {
 
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger);
+            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
             
             let txId = await this.federationContract.methods.getTransactionId(
