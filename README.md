@@ -16,7 +16,7 @@ See the [FAQ](https://developers.rsk.co/tools/tokenbridge/faq/) to know more abo
 </p>
 
 The bridges on each contract are upgradeable, this would enable a smooth transition to a more decentralized bridge in the future. Here's is a link to the first 
-[POC of the trustless decentralized bridge](https://github.com/rsksmart/tokenbridge/releases/tag/decentralized-poc-v0.1)
+[POC of the trustless decentralized bridge](https://github.com/rsksmart/decentralized-tokenbridge)
 
 ## Usage
 
