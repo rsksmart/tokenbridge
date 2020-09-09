@@ -1,8 +1,8 @@
 {
     "bridge": "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
-    "federation": "0xac42761c37d4467ff69082249b9e67d6b35d50cb",
+    "federation": "0xe37b6516f4fe2a27569a2751c1ad50f6340df369",
     "multiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
     "allowTokens": "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
     "host": "YOUR HOST URL AND PORT",
-    "fromBlock": 1988180
+    "fromBlock": 2683829
 }

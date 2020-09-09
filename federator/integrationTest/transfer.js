@@ -24,7 +24,7 @@ async function run() {
         let ethWeb3 = new Web3(config.sidechain.host);
 
         const mainTokenContract = new rskWeb3.eth.Contract(erc20TokenAbi, config.mainchain.testToken);
-        const transactionSender = new TransactionSender(rskWeb3, logger);
+        const transactionSender = new TransactionSender(rskWeb3, logger, config);
 
         const bridgeAddress = config.mainchain.bridge;
         let amount = rskWeb3.utils.toWei('1');

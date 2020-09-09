@@ -97,8 +97,8 @@ async function transfer(originFederators, destinationFederators, config, origin,
         let destinationWeb3 = new Web3(config.sidechain.host);
 
         const originTokenContract = new originWeb3.eth.Contract(abiMainToken, config.mainchain.testToken);
-        const transactionSender = new TransactionSender(originWeb3, logger);
-        const destinationTransactionSender = new TransactionSender(destinationWeb3, logger);
+        const transactionSender = new TransactionSender(originWeb3, logger, config);
+        const destinationTransactionSender = new TransactionSender(destinationWeb3, logger, config);
 
         const originBridgeAddress = config.mainchain.bridge;
         const amount = originWeb3.utils.toWei('1');

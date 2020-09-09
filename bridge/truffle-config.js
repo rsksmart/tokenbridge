@@ -85,8 +85,8 @@ module.exports = {
     ethmainnet: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://mainnet.infura.io/v3/" + INFURA_API_KEY),
       network_id: 1,
-      gas: 6300000,
-      gasPrice: 3500000000,
+      gas: 6700000,
+      gasPrice: 250000000000,
       skipDryRun: true
     },
   },
