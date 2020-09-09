@@ -38,6 +38,7 @@ describe('Federator module tests', () => {
         let currentBlock = testConfig.mainchain.fromBlock + 2002 + 120;
         let federator = new Federator(testConfig, logger, web3Mock);
         federator.mainWeb3.eth.getBlockNumber = () => Promise.resolve(currentBlock);
+        federator.mainWeb3.eth.net.getId = () => Promise.resolve(1);
         const _processLogsSpy = jest.spyOn(federator, '_processLogs');
 
         let result = await federator.run();
@@ -52,6 +53,7 @@ describe('Federator module tests', () => {
         let currentBlock = testConfig.mainchain.fromBlock + 1001 + 120; // The +1 one is because it starts with fromBlock +1 
         let federator = new Federator(testConfig, logger, web3Mock);
         federator.mainWeb3.eth.getBlockNumber = () => Promise.resolve(currentBlock);
+        federator.mainWeb3.eth.net.getId = () => Promise.resolve(1);
         const _processLogsSpy = jest.spyOn(federator, '_processLogs');
 
         let result = await federator.run();

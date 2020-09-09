@@ -24,6 +24,7 @@
     "web3": "^1.2.11"
   },
   "devDependencies": {
-    "jest": "^26.0.1"
+    "jest": "^26.4.2",
+    "web3-core-promievent": "^1.2.11"
   }
 }
