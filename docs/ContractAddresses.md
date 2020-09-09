@@ -7,14 +7,14 @@
 ## List of Addresses
 ### On RSk
   - "bridge": [0x9d11937e2179dc5270aa86a3f8143232d6da0e69](https://explorer.rsk.co/address/0x9d11937e2179dc5270aa86a3f8143232d6da0e69)
-  - "federation": [0xac42761c37d4467ff69082249b9e67d6b35d50cb](https://explorer.rsk.co/address/0xac42761c37d4467ff69082249b9e67d6b35d50cb)
+  - "federation": [0xE37b6516F4FE2A27569a2751C1aD50F6340DF369](https://explorer.rsk.co/address/0xE37b6516F4FE2A27569a2751C1aD50F6340DF369)
   - "allowTokens": [0xe4aa0f414725c9322a1a9d80d469c5e234786653](https://explorer.rsk.co/address/0xe4aa0f414725c9322a1a9d80d469c5e234786653)
   - "multiSigWallet": [0x040007b1804ad78a97f541bebed377dcb60e4138](https://explorer.rsk.co/address/0x040007b1804ad78a97f541bebed377dcb60e4138)
   - "RIF": [0x2acc95758f8b5f583470ba265eb685a8f45fc9d5](https://explorer.rsk.co/address/0x2acc95758f8b5f583470ba265eb685a8f45fc9d5)
 
 ### On Ethereum
   - "bridge": ["0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d"](https://etherscan.io/address/0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d)
-  - "federation": ["0x8c1901c031cdf42a846c0c422a3b5a2c943f4944"](https://etherscan.io/address/0x8c1901c031cdf42a846c0c422a3b5a2c943f4944)
+  - "federation": ["0x479F86eCbE766073D2712EF418acEb56d5362a2B"](https://etherscan.io/address/0x479F86eCbE766073D2712EF418acEb56d5362a2B)
   - "allowTokens": [0xe4aa0f414725c9322a1a9d80d469c5e234786653](https://etherscan.io/address/0xe4aa0f414725c9322a1a9d80d469c5e234786653)
   - "multiSigWallet": [0x040007b1804ad78a97f541bebed377dcb60e4138](https://etherscan.io/address/0x040007b1804ad78a97f541bebed377dcb60e4138)
 
