@@ -47,3 +47,16 @@ The dapp of the token bridge can be found in the ['UI Folder'](./ui)
 
 A federation sends notification of events happening in the bridge of one chain to another chain. The federation is composed of oracles listening to the events created in one chain and sending it to the other chain. When a majority of the federators votes on an event, the bridge accepts the event as valid and releases the tokens on the other chain.
 See the ['federator'](./federator/README.md) for more information about federations.
+
+### Integration Test
+
+An integration test is prepared for contracts and federators. To properly run integration test, you need check network config in the `truffle-config.js` and `package.json` in `bridge` folder with your test chains' configuration before run `npm run deployIntegrationTest`.
+
+1. Check `mnemonic.key` in `bridge` 
+1. Check `infura.key` in `bridge`
+1. Check `federator.key` in `federator/config`
+1. Check `config.js` in `federator/config`
+
+Then
+1. run `npm run deployIntegrationTest` in `bridge`
+1. run `npm run integrationTest` in `federator`
