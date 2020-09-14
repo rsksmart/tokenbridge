@@ -560,7 +560,7 @@
                             <span class="fromNetwork">From Network</span>
                         </div>
                         <div class="col-4 col-md-3 text-center">
-                            <span class="outline-rounded" style="padding-left: 1.5rem; padding-right: 1.5rem;">
+                            <span id="changeNetwork" class="outline-rounded" style="padding-left: 1.5rem; padding-right: 1.5rem;">
                                 <i class="fas fa-exchange-alt"></i>
                             </span>
                         </div>
@@ -582,7 +582,7 @@
                             <div class="col-4 col-md-3 text-center">
                                 <label class="amount-label" for="amount"><a id="max" class="max">Max</a></label>
                                 <div class="form-group amount">
-                                    <input name="amount" id="amount" type="number" min="0" step="any" class="outline form-control text-center align-center" placeholder="Amount" required>
+                                    <input name="amount" id="amount" class="outline form-control text-center align-center" placeholder="Amount" required>
                                     <div class="invalid-feedback"></div>
                                 </div>
                             </div>
@@ -932,6 +932,7 @@
                 let isSideToken = false;
                 let sideTokenAddress = null;
                 let fee = 0;
+                let feePercentage = 0;
                 let feePercentageDivider = 10_000;
 
                 $(document).ready(function() {
@@ -980,7 +981,7 @@
                     });
                     $('#amount').keyup(isAmountOk);
                     $('#amount').keypress(function(event) {
-                        if(event.key === ',') 
+                        if(event.key !== '.' && (event.key < '0' || event.key > '9')) 
                             return false;
                     });
                     $('#crossForm').on('submit', function(e) {
@@ -1037,12 +1038,8 @@
                     minTokensAllowed = 1;
                     maxTokensAllowed = 10_000;
                     maxDailyLimit = 100_000;
-                    let feePercentage = 0;
-                    fee = 0;
-                    if(isTestnet) {
-                        feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call); 
-                        fee = feePercentage/feePercentageDivider;
-                    }
+                    feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call);
+                    fee = feePercentage/feePercentageDivider;
                     let feeFormated = (fee*100).toFixed(2) + '%';
                     let isValidatingAllowedTokens = true;
                     let federators = await retry3Times(federationContract.methods.getMembers().call);
@@ -1099,7 +1096,8 @@
                             maxValue = balanceBNs;
                         }
                         let serviceFee = new BigNumber(maxValue).times(fee);
-                        $('#amount').val(maxValue.minus(serviceFee).toFixed(decimals, BigNumber.ROUND_DOWN));
+                        let value = maxValue.minus(serviceFee).toFixed(decimals, BigNumber.ROUND_DOWN);
+                        $('#amount').val(value.toString());
                         $('#amount').keyup();
                     });
                 }
@@ -1119,8 +1117,9 @@
                     }
                     const tokenAddress = token[config.networkId].address;
                     tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+                    const BN = web3.utils.BN;
 
-                    const amount = new BigNumber($('#amount').val());
+                    const amount = $('#amount').val();
                     if(!amount) {
                         crossTokenError('Complete the Amount field');
                         return;
@@ -1130,9 +1129,19 @@
                         return;
                     }
                     const decimals = token[config.networkId].decimals;
-                    const totalCost = fee == 0 ? amount.shiftedBy(decimals) : amount.shiftedBy(decimals).dividedBy(1-fee);
-                    const amountBN = totalCost.integerValue();
+                    const splittedAmount = amount.split('.');
+                    var amountWithDecimals = splittedAmount[0];
+                    for(i=0; i < decimals; i++) {
+                        if(splittedAmount[1] && i < splittedAmount[1].length) {
+                            amountWithDecimals += splittedAmount[1][i];
+                        } else {
+                            amountWithDecimals += '0';
+                        }
 
+                    }
+                    const amountWithDecimalsBN = new BN(amountWithDecimals);
+                    const amountFeesBN = fee == 0 ? amountWithDecimalsBN : amountWithDecimalsBN.mul(new BN(feePercentage)).div(new BN(feePercentageDivider));
+                    const amountBN = amountWithDecimalsBN.add(amountFeesBN);
                     disableInputs(true);
                     $('.fees').hide();
                     $('#secondsPerBlock').text(config.secondsPerBlock);
@@ -1142,14 +1151,15 @@
                     //iconProcessing(currentStep);
                     return retry3Times(tokenContract.methods.balanceOf(address).call)
                     .then(async (balance) => {
-                        const balanceBN = new BigNumber(balance);
-                        if(balanceBN.isLessThan(amountBN)) {
-                            throw new Error(`Insuficient Balance in your account, your current balance is ${balanceBN.shiftedBy(-decimals)} ${token[config.networkId].symbol}`);
+                        const balanceBN = new BN(balance);
+                        if(balanceBN.lt(amountBN)) {
+                            const showBalance = new BigNumber(balance);
+                            throw new Error(`Insuficient Balance in vyour account, your current balance is ${showBalance.shiftedBy(-decimals)} ${token[config.networkId].symbol}`);
                         }
                         let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call);
-                        let maxWithdraw = BigNumber(web3.utils.fromWei(maxWithdrawInWei, 'ether'));
-                        if(amount.isGreaterThan(maxWithdraw)) {
-                            throw new Error(`Amount bigger than the daily limit. Daily limit left ${maxWithdraw} tokens`);
+                        const maxWithdraw = new BN(maxWithdrawInWei);
+                        if(amountBN.gt(maxWithdraw)) {
+                            throw new Error(`Amount bigger than the daily limit. Daily limit left ${web3.utils.fromWei(maxWithdrawInWei, 'ether')} tokens`);
                         }
 
                         var gasPriceParsed = 0;
@@ -1600,22 +1610,28 @@
                 };
 
                 const LINK_TOKEN = { token: 'LINK', name: 'Chainlink Token', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
+                    30:{symbol:'rLINK', address:'0x14adae34bef7ca957ce2dde5add97ea050123827', decimals:18},
                     31:{symbol:'rKovLINK', address:'0x8bbbd80981fe76d44854d8df305e8985c19f0e78', decimals:18},
+                    1:{symbol:'LINK', address:'0x514910771af9ca656af840dff83e8264ecf986ca', decimals:18},
                     42:{symbol:'LINK', address:'0xa36085F69e2889c224210F603D836748e7dC0088', decimals:18},
                 };
 
                 const USDT_TOKEN = { token: 'USDT', name: 'Tether USD', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
-                    31:{symbol:'rUSDT', address:'0xcdc8ccbbfb6407c53118fe47259e8d00c81f42cd', decimals:18},
+                    30:{symbol:'rUSDT', address:'0xe506F698B31a66049bD4653Ed934e7A07Cbc5549', decimals:18},    
+                    31:{symbol:'rKovUSDT', address:'0xcdc8ccbbfb6407c53118fe47259e8d00c81f42cd', decimals:18},
+                    1:{symbol:'USDT', address:'0xdac17f958d2ee523a2206206994597c13d831ec7', decimals:6},
                     42:{symbol:'USDT', address:'0x13512979ade267ab5100878e2e0f485b568328a4', decimals:6},
                 };
 
                 const USDC_TOKEN = { token: 'USDC', name: 'USD Coin', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-                    31:{symbol:'rUSDC', address:'0x6117c9529f15c52e2d3188d5285c745b757b5825', decimals:18},
+                    30:{symbol:'rUSDC', address:'0x5a42221d7aae8e185bc0054bb036d9757ec18857', decimals:18},    
+                    31:{symbol:'rKovUSDC', address:'0x6117c9529f15c52e2d3188d5285c745b757b5825', decimals:18},
+                    1:{symbol:'USDC', address:'0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals:6},
                     42:{symbol:'USDC', address:'0xe22da380ee6b445bb8273c81944adeb6e8450422', decimals:6},
                 };
 
-                const FLIXX_TOKEN = { token: 'FLIXX', name: 'Flixx', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/flixx.png',
-                    30:{symbol:'eFLIXX', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a', decimals:18},    
+                const FLIXX_TOKEN = { token: 'FLIXX', name: 'Flixxo', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/flixx.png',
+                    30:{symbol:'rFLIXX', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a', decimals:18},    
                     1:{symbol:'FLIXX', address:'0xf04a8ac553fcedb5ba99a64799155826c136b0be', decimals:18},
                 };
 
