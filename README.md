@@ -56,6 +56,7 @@ An integration test is prepared for contracts and federators. To properly run in
 1. Check `infura.key` in `bridge`
 1. Check `federator.key` in `federator/config`
 1. Check `config.js` in `federator/config`
+1. Check your `networkName` in `bridge/migrations/4_deploy_erc1820.js` when your test network does not have **ERC1820:Pseudo-introspection Registry Contract** deployed.
 
 Then
 1. run `npm run deployIntegrationTest` in `bridge`
