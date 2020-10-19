@@ -453,40 +453,40 @@
             .sk-fading-circle .sk-circle11 {
             -webkit-transform: rotate(300deg);
                 -ms-transform: rotate(300deg);
-                    transform: rotate(300deg); 
+                    transform: rotate(300deg);
             }
             .sk-fading-circle .sk-circle12 {
             -webkit-transform: rotate(330deg);
                 -ms-transform: rotate(330deg);
-                    transform: rotate(330deg); 
+                    transform: rotate(330deg);
             }
             .sk-fading-circle .sk-circle2:before {
             -webkit-animation-delay: -1.1s;
-                    animation-delay: -1.1s; 
+                    animation-delay: -1.1s;
             }
             .sk-fading-circle .sk-circle3:before {
             -webkit-animation-delay: -1s;
-                    animation-delay: -1s; 
+                    animation-delay: -1s;
             }
             .sk-fading-circle .sk-circle4:before {
             -webkit-animation-delay: -0.9s;
-                    animation-delay: -0.9s; 
+                    animation-delay: -0.9s;
             }
             .sk-fading-circle .sk-circle5:before {
             -webkit-animation-delay: -0.8s;
-                    animation-delay: -0.8s; 
+                    animation-delay: -0.8s;
             }
             .sk-fading-circle .sk-circle6:before {
             -webkit-animation-delay: -0.7s;
-                    animation-delay: -0.7s; 
+                    animation-delay: -0.7s;
             }
             .sk-fading-circle .sk-circle7:before {
             -webkit-animation-delay: -0.6s;
-                    animation-delay: -0.6s; 
+                    animation-delay: -0.6s;
             }
             .sk-fading-circle .sk-circle8:before {
             -webkit-animation-delay: -0.5s;
-                    animation-delay: -0.5s; 
+                    animation-delay: -0.5s;
             }
             .sk-fading-circle .sk-circle9:before {
             -webkit-animation-delay: -0.4s;
@@ -512,7 +512,7 @@
 
             @keyframes sk-circleFadeDelay {
             0%, 39%, 100% { opacity: 0; }
-            40% { opacity: 1; } 
+            40% { opacity: 1; }
             }
         </style>
     </head>
@@ -527,7 +527,6 @@
                     <div class="wallet-status navbar-item indicator badge-outline badge-pill" style="display: none;">
                         <span aria-describedby="tooltip-status" class="fromNetwork">Network</span>
                     </div>
-                    
                     <button class="navbar-toggler collapsed" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
                         <span class="navbar-toggler-icon"></span>
                     </button>
@@ -543,7 +542,6 @@
                                 Do you need help?
                             </a>
                         </div>
-                        
                     </div>
                 </div>
             </nav>
@@ -679,7 +677,7 @@
                 <div id="tokensTab">
                     <h5 class="subtitle">Token bridge list</h5>
                     <p class="text-center">RSK native tokens will transform into e(tokenName). Ethereum native tokens will transform into r(tokenName)</p>
-                    <div id="tokenListTab" class="align-center">    
+                    <div id="tokenListTab" class="align-center">
                         <!-- Dinamic content made with JS -->
                     </div>
                 </div>
@@ -765,7 +763,7 @@
                      <div class="row">
                         <div class="col-sm-7">
                            <div class="footer-info">
-                              <p>Rsk is the most secure smart contract<span class="falsebreak"><br></span> network in the world and enables<span class="falsebreak"><br></span> decentralized applications secured by the<span class="falsebreak"><br></span> Bitcoin Network to empower people and<span class="falsebreak"><br></span> improve the quality of life of millions.</p>
+                              <p>Rsk is the most secure smart contract network in the world and enables decentralized applications secured by the Bitcoin Network to empower people and improve the quality of life of millions.</p>
                               <br/>
                               <a href="https://developers.rsk.co/" rel="nofollow noopener noreferrer" target="_blank" class="footer-button rounded" title="Start now">Start now</a>
                            </div>
@@ -939,7 +937,7 @@
                     new ClipboardJS('.copy');
                     $('[data-toggle="tooltip"]').tooltip();
                     $('.selectpicker').selectpicker();
-                    
+
                     isTestnet = window.location.href.includes('testnet');
                     if(isTestnet) {
                         $('#title').text('RSK Testnet bridges with Ethereum Kovan');
@@ -958,7 +956,7 @@
                     disableInputs(true);
 
                     $('#logIn').attr('onclick', 'onLogInClick()');
-                    
+
                     $('#tokenAddress').change(function(event) {
                         cleanAlertSuccess();
                         let token = TOKENS.find(element => element.token == event.currentTarget.value);
@@ -981,14 +979,36 @@
                     });
                     $('#amount').keyup(isAmountOk);
                     $('#amount').keypress(function(event) {
-                        if(event.key !== '.' && (event.key < '0' || event.key > '9')) 
+                        if(event.key !== '.' && (event.key < '0' || event.key > '9'))
                             return false;
                     });
                     $('#crossForm').on('submit', function(e) {
                         e.preventDefault();
                         crossToken();
                     });
+                    $('#changeNetwork').on('click', function() {
+                        if(config) {
+                            var connectToNetwork = '';
+                            if(isTestnet) {
+                                if(config.crossToNetwork.networkId == 42) {
+                                    connectToNetwork = 'Ethereum Kovan';
+                                } else {
+                                    connectToNetwork = 'RSK Testnet';
+                                }
+                            } else {
+                                if(config.crossToNetwork.networkId == 1) {
+                                    connectToNetwork = 'Ethereum Mainnet';
+                                } else {
+                                    connectToNetwork = 'RSK Mainnet';
+                                }
+                            }
+                            updateNetworkConfig(config.crossToNetwork);
+                            var err = new Error(`Switch the Network.<br /> Please connect your wallet to <b>${connectToNetwork}</b>`);
+                            onMetaMaskConnectionError(err);
+                        }
+                    });
                     updateTokenListTab();
+                    isInstalled();
                 });
 
                 async function waitForReceipt(txHash) {
@@ -1299,7 +1319,7 @@
                         return Promise.reject(new Error('You have an old version or not installed a wallet extension. Please install <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
                         + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a>. Once you have installed or updated it reload the page.'));
                     }
-                    
+
                     if(window.ethereum.enable) {
                         window.ethereum.enable();
                     }
@@ -1363,10 +1383,18 @@
                 async function updateCallback(chainId, accounts) {
                     return updateNetwork(chainId).then( () =>
                         updateAddress(accounts)
-                    );   
+                    );
                 }
 
-                
+                function updateNetworkConfig(config) {
+                    $('.fromNetwork').text(config.name);
+                    $('.indicator span').html(config.name);
+                    $('.indicator').removeClass('btn-outline-danger');
+                    $('.indicator').addClass('btn-outline-success');
+                    $('.toNetwork').text(config.crossToNetwork.name);
+                    $('#confirmations').html(config.confirmations);
+                    updateTokenAddressDropdown(config.networkId);
+                }
 
                 async function updateNetwork(newNetwork) {
                     cleanAlertSuccess();
@@ -1375,7 +1403,7 @@
                         if(config && config.networkId == newNetwork) return;
 
                         config = null;
-                        if(isTestnet) { 
+                        if(isTestnet) {
                             switch (newNetwork) {
                             case 42:
                                 config = KOVAN_CONFIG;
@@ -1400,21 +1428,15 @@
                             $('.indicator').removeClass('btn-outline-success');
                             $('.indicator').addClass('btn-outline-danger');
                             $('.toNetwork').text('To Network');
-                            var err = new Error(`Wrong Network.<br /> Please connect your wallet to <b>${isTestnet ? 'Rsk Testnet or Ethereum Kovan' : 'RSK Mainnet or Ethereum'}</b>`);
-                            onMetaMaskConnectionError(err);
-                            throw err;
+                            $('#willReceiveToken').html('');
+                            throw new Error(`Wrong Network.<br /> Please connect your wallet to <b>${isTestnet ? 'RSK Testnet or Ethereum Kovan' : 'RSK Mainnet or Ethereum Mainnet'}</b>`);
                         }
                         allowTokensContract = new web3.eth.Contract(ALLOW_TOKENS_ABI, config.allowTokens);
                         bridgeContract = new web3.eth.Contract(BRIDGE_ABI, config.bridge);
                         federationContract = new web3.eth.Contract(FEDERATION_ABI, config.federation);
-                        
+
                         $('#myModal').modal('hide');
-                        $('.fromNetwork').text(config.name);
-                        $('.indicator span').html(config.name);
-                        $('.indicator').removeClass('btn-outline-danger');
-                        $('.indicator').addClass('btn-outline-success');
-                        $('.toNetwork').text(config.crossToNetwork.name);
-                        $('#confirmations').html(config.confirmations);
+                        updateNetworkConfig(config);
                         updateTokenAddressDropdown(config.networkId);
 
                         setInfoTab();
@@ -1572,14 +1594,19 @@
 
                 const DAI_TOKEN = { token: 'DAI', name: 'Dai Stablecoin', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png',
                     30:{symbol:'rDAI', address:'0x6b1a73d547f4009a26b8485b63d7015d248ad406', decimals:18},
-                    31:{symbol:'rKovDAI', address:'0x0d86fca9be034a363cf12c9834af08d54a10451c', decimals:18},
+                    31:{symbol:'rKovDAI', address:'0x7b846216a194c69bb1ea52ea8faa92d314866451', decimals:18},
                     1:{symbol:'DAI', address:'0x6b175474e89094c44da98b954eedeac495271d0f', decimals:18},
-                    42:{symbol:'DAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40', decimals:18}
+                    42:{symbol:'DAI', address:'0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa', decimals:18}
+                };
+
+                const SAI_TOKEN = { token: 'SAI', name: 'Sai Stablecoin', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-testnet-contract-metadata/master/images/sai.png',   
+                    31:{symbol:'rKovSAI', address:'0x0d86fca9be034a363cf12c9834af08d54a10451c', decimals:18},
+                    42:{symbol:'SAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40', decimals:18}
                 };
 
                 const INV_TOKEN = { token: 'INV', name: 'Invest', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/inv.png',
                     30:{symbol:'INV', address:'0xe0cff8a40f540657c62eb4cac34b915e5ed8d8ff', decimals:18},
-                    1:{symbol:'eINV', address:'0x09a8f2041be23e8ec3c72790c9a92089bc70fbca', decimals:18},
+                    42:{symbol:'DAI', address:'0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40', decimals:18}
                 };
 
                 const BITPRO_TOKEN = { token: 'BITPRO', name: 'BitPro', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/bpro.png',
@@ -1636,7 +1663,7 @@
                 };
 
                 // Remove INV token because its paused on mainnet
-                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN ];
+                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN ];
                 // --------- TOKENS  END --------------
             </script>
         </div>
