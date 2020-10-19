@@ -1429,8 +1429,7 @@
                             $('.indicator').addClass('btn-outline-danger');
                             $('.toNetwork').text('To Network');
                             $('#willReceiveToken').html('');
-                            var err = new Error(`Wrong Network.<br /> Please connect your wallet to <b>${isTestnet ? 'RSK Testnet or Ethereum Kovan' : 'RSK Mainnet or Ethereum Mainnet'}</b>`);
-                            throw err;
+                            throw new Error(`Wrong Network.<br /> Please connect your wallet to <b>${isTestnet ? 'RSK Testnet or Ethereum Kovan' : 'RSK Mainnet or Ethereum Mainnet'}</b>`);
                         }
                         allowTokensContract = new web3.eth.Contract(ALLOW_TOKENS_ABI, config.allowTokens);
                         bridgeContract = new web3.eth.Contract(BRIDGE_ABI, config.bridge);
