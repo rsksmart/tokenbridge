@@ -29,7 +29,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
     bytes32 constant private NULL_HASH = bytes32(0);
     IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    address private federation;
+    address private validators;
     uint256 private feePercentage;
     string public symbolPrefix;
     uint256 public lastDay;
@@ -45,13 +45,13 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
 
-    event FederationChanged(address _newFederation);
+    event ValidatorsChanged(address _newValidators);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
     event Upgrading(bool isUpgrading);
 
     function initialize(
         address _manager,
-        address _federation,
+        address _validators,
         address _allowTokens,
         address _sideTokenFactory,
         string memory _symbolPrefix
@@ -61,7 +61,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
-        _changeFederation(_federation);
+        _changeValidators(_validators);
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
@@ -70,8 +70,8 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         return "v2";
     }
 
-    modifier onlyFederation() {
-        require(msg.sender == federation, "Bridge: Sender not Federation");
+    modifier onlyValidators() {
+        require(msg.sender == validators, "Bridge: Sender not Validators");
         _;
     }
 
@@ -91,7 +91,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         uint32 logIndex,
         uint8 decimals,
         uint256 granularity
-    ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
+    ) external onlyValidators whenNotPaused nonReentrant returns(bool) {
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
         require(amount > 0, "Bridge: Amount 0");
@@ -182,7 +182,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
 
     function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
-        //Send the payment to the MultiSig of the Federation
+        //Send the payment to the MultiSig of the Validators
         uint256 fee = 0;
         if(feePercentage > 0) {
             fee = amount.mul(feePercentage).div(feePercentageDivider);
@@ -274,19 +274,19 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         return allowTokens.calcMaxWithdraw(spent);
     }
 
-    function changeFederation(address newFederation) external onlyOwner returns(bool) {
-        _changeFederation(newFederation);
+    function changeValidators(address newValidator) external onlyOwner returns(bool) {
+        _changeValidators(newValidator);
         return true;
     }
 
-    function _changeFederation(address newFederation) internal {
-        require(newFederation != NULL_ADDRESS, "Bridge: Federation is empty");
-        federation = newFederation;
-        emit FederationChanged(federation);
+    function _changeValidators(address newValidators) internal {
+        require(newValidators != NULL_ADDRESS, "Bridge: Validator is empty");
+        validators = newValidators;
+        emit ValidatorsChanged(validators);
     }
 
-    function getFederation() external view returns(address) {
-        return federation;
+    function getValidators() external view returns(address) {
+        return validators;
     }
 
     function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner returns(bool) {
