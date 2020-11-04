@@ -1,4 +1,4 @@
-const Federation = artifacts.require("Federation_v0");
+const Federation = artifacts.require("Federation_v1");
 
 module.exports = function(deployer, networkName, accounts) {
     deployer
