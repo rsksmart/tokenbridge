@@ -19,7 +19,7 @@ contract('Bridge', async function (accounts) {
     const bridgeManager = accounts[2];
     const anAccount = accounts[3];
     const newBridgeManager = accounts[4];
-    const federation = accounts[5];
+    const validators = accounts[5];
 
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
@@ -30,7 +30,7 @@ contract('Bridge', async function (accounts) {
         await Bridge.link(UtilsContract, this.utilsContract.address);
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
-            federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
+            validators, this.allowTokens.address, this.sideTokenFactory.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
     });
 
@@ -82,28 +82,28 @@ contract('Bridge', async function (accounts) {
             });
 
 
-            it('check federation', async function () {
-                const fedAddress = await this.bridge.getFederation();
-                assert.equal(fedAddress, federation);
+            it('check validators', async function () {
+                const validatorsAddress = await this.bridge.getValidators();
+                assert.equal(validatorsAddress, validators);
             });
 
-            it('change federation', async function () {
-                const receipt = await this.bridge.changeFederation(newBridgeManager, { from: bridgeManager });
+            it('change validators', async function () {
+                const receipt = await this.bridge.changeValidators(newBridgeManager, { from: bridgeManager });
                 utils.checkRcpt(receipt);
-                const fedAddress = await this.bridge.getFederation();
-                assert.equal(fedAddress, newBridgeManager);
+                const validatorsAddress = await this.bridge.getValidators();
+                assert.equal(validatorsAddress, newBridgeManager);
             });
 
-            it('only manager can change the federation', async function () {
-                await utils.expectThrow(this.bridge.changeFederation(newBridgeManager));
-                const fedAddress = await this.bridge.getFederation();
-                assert.equal(fedAddress, federation);
+            it('only manager can change the validators', async function () {
+                await utils.expectThrow(this.bridge.changeValidators(newBridgeManager));
+                const validatorsAddress = await this.bridge.getValidators();
+                assert.equal(validatorsAddress, validators);
             });
 
-            it('change federation new fed cant be null', async function () {
-                await utils.expectThrow(this.bridge.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }));
-                const fedAddress = await this.bridge.getFederation();
-                assert.equal(fedAddress, federation);
+            it('change validators new fed cant be null', async function () {
+                await utils.expectThrow(this.bridge.changeValidators(utils.NULL_ADDRESS, { from: bridgeManager }));
+                const validatorsAddress = await this.bridge.getValidators();
+                assert.equal(validatorsAddress, validators);
             });
 
         });
@@ -276,7 +276,7 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = tokenOwner;
+                let userData = tokenOwner.toLowerCase();
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
@@ -326,7 +326,7 @@ contract('Bridge', async function (accounts) {
                   ], result.receipt.rawLogs[2].data, result.receipt.rawLogs[2].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
-                assert.equal(decodedLog._from, tokenOwner.toLowerCase());
+                assert.equal(decodedLog._from, tokenOwner);
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._symbol, await erc777.symbol());
@@ -354,7 +354,7 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = tokenOwner;
+                let userData = tokenOwner.toLowerCase();
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
@@ -405,7 +405,7 @@ contract('Bridge', async function (accounts) {
                   ], result.receipt.rawLogs[4].data, result.receipt.rawLogs[4].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
-                assert.equal(decodedLog._from, tokenOwner.toLowerCase());
+                assert.equal(decodedLog._from, tokenOwner);
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount.sub(fees).toString());
                 assert.equal(decodedLog._symbol, await erc777.symbol());
@@ -515,7 +515,7 @@ contract('Bridge', async function (accounts) {
                 let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
                 const amount = web3.utils.toWei('1000');
                 await this.token.approve(otherContract.address, amount, { from: tokenOwner });
-                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, tokenOwner, amount));
+                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, tokenOwner, tokenOwner, amount));
             });
 
             it('rejects to receive tokens greater than  max tokens allowed 18 decimals', async function() {
@@ -639,8 +639,8 @@ contract('Bridge', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
-                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
+                validators, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
@@ -654,7 +654,7 @@ contract('Bridge', async function (accounts) {
             it('accept transfer first time for the token', async function () {
                 let receipt = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -674,10 +674,10 @@ contract('Bridge', async function (accounts) {
             it('accept transfer second time for the token', async function () {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators });
 
                 let receipt = await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
-                randomHex(32), randomHex(32), 1, this.decimals, this.granularity, { from: federation });
+                randomHex(32), randomHex(32), 1, this.decimals, this.granularity, { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
@@ -701,7 +701,7 @@ contract('Bridge', async function (accounts) {
 
                 let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithDecimals.address);
@@ -727,7 +727,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation })
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: validators })
                 );
             });
 
@@ -738,7 +738,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, utils.NULL_ADDRESS, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation })
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: validators }) 
                 );
             });
 
@@ -750,7 +750,7 @@ contract('Bridge', async function (accounts) {
 
                 let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
@@ -778,10 +778,10 @@ contract('Bridge', async function (accounts) {
 
                 await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: validators });
 
                 let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
-                    randomHex(32), randomHex(32), 1, this.decimals, granularity, { from: federation });
+                    randomHex(32), randomHex(32), 1, this.decimals, granularity, { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
@@ -809,7 +809,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: validators })
                 );
             });
 
@@ -821,7 +821,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: validators })
                     );
             });
 
@@ -833,11 +833,11 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: federation })
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, granularity, { from: validators })
                     );
             });
 
-            it('accept transfer only federation', async function () {
+            it('accept transfer only validators', async function () {
                 await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: bridgeOwner }));
@@ -858,7 +858,7 @@ contract('Bridge', async function (accounts) {
             it('dont accept transfer the same transaction', async function () {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators });
 
                 const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
@@ -868,72 +868,72 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
 
             });
 
             it('should fail null token address', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer("0x", anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
 
             });
 
             it('should fail null receiver address', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, 0, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
 
             });
 
             it('should fail null amount address', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, 0, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
 
             });
 
             it('should fail null symbol', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
 
             });
 
             it('should fail null blockhash', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 "0x", this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
             });
 
             it('should fail null transaction hash', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, "0x",
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators }));
             });
 
             it('should fail invalid decimals', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, '19', this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, '19', this.granularity, { from: validators }));
             });
 
             it('should fail granularity 0', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('0'), { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('0'), { from: validators }));
             });
 
             it('should fail more than max granularity', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('10000000000000000000'), { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('10000000000000000000'), { from: validators }));
             });
 
             it('should overflow granularity multiplication', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, web3.utils.toWei('100000000000000000000000000000000000000000000000000'), "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: federation }));
+                this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: validators }));
             });
 
             it('crossback with amount lower than granularity', async function () {
@@ -1004,7 +1004,7 @@ contract('Bridge', async function (accounts) {
             beforeEach(async function () {
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators });
                 this.amountToCrossBack = web3.utils.toWei('100');
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
@@ -1086,7 +1086,7 @@ contract('Bridge', async function (accounts) {
                 it('main Bridge should release the tokens', async function () {
                     let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amountToCrossBack, "MAIN",
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: validators });
                     utils.checkRcpt(tx);
 
                     let bridgeBalance = await this.token.balanceOf(this.bridge.address);
@@ -1211,16 +1211,16 @@ contract('Bridge', async function (accounts) {
             assert.equal(feePercentageAfter.toString(), newPayment);
         });
 
-        it('should allow to set a new federation', async function() {
-            let data = this.mirrorBridge.contract.methods.changeFederation(federation).encodeABI();
+        it('should allow to set a new validators', async function() {
+            let data = this.mirrorBridge.contract.methods.changeValidators(validators).encodeABI();
             await this.multiSig.submitTransaction(this.mirrorBridge.address, 0, data, { from: multiSigOnwerA });
             await this.multiSig.confirmTransaction(2, { from: multiSigOnwerB });
 
             let tx = await this.multiSig.transactions(2);
             assert.equal(tx.executed, true);
 
-            let federationAfter = await this.mirrorBridge.getFederation();
-            assert.equal(federationAfter, federation);
+            let validatorsAfter = await this.mirrorBridge.getValidators();
+            assert.equal(validatorsAfter, validators);
         });
 
         it('should pause the bridge contract', async function() {
@@ -1394,7 +1394,7 @@ contract('Bridge', async function (accounts) {
             it('should accept transfer for the token', async function () {
                 const amount = web3.utils.toWei('1000');
                 let receipt = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, amount, "MAIN",
-                randomHex(32), randomHex(32), 1, '18', '1', { from: federation });
+                randomHex(32), randomHex(32), 1, '18', '1', { from: validators });
                 utils.checkRcpt(receipt);
 
                 let sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
