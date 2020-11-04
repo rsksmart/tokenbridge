@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./zeppelin/token/ERC777/ERC777.sol";
+import "../zeppelin/token/ERC777/ERC777.sol";
 
 contract SideToken_v0 is ERC777 {
     address public minter;
