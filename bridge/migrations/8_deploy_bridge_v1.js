@@ -1,9 +1,9 @@
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
-const Federation = artifacts.require("Federation_v0");
+const Federation = artifacts.require("Federation_v1");
 const AllowTokens = artifacts.require('AllowTokens');
-const SideTokenFactory = artifacts.require('SideTokenFactory_v0');
-const Bridge_v0 = artifacts.require('Bridge_v0');
+const SideTokenFactory = artifacts.require('SideTokenFactory_v1');
+const Bridge_v1 = artifacts.require('Bridge_v1');
 
 //example https://github.com/OpenZeppelin/openzeppelin-sdk/tree/master/examples/truffle-migrate/migrations
 async function ozDeploy(options, name, alias, initArgs) {
@@ -22,6 +22,7 @@ async function ozDeploy(options, name, alias, initArgs) {
 }
 
 module.exports = function(deployer, networkName, accounts) {
+    console.log('Deploy Bridge');
     let symbol = 'e';
 
     if(networkName == 'rskregtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')
@@ -33,20 +34,20 @@ module.exports = function(deployer, networkName, accounts) {
         const sideTokenFactory = await SideTokenFactory.deployed();
         const federation = await Federation.deployed();
         const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-        let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol ];
+        let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol];
 
         if (networkName === 'soliditycoverage') {
             //soldity coverage doesn't play along with oppen zeppelin sdk
             //so we deploy the un initialized contract just to create the objects
-            return deployer.deploy(Bridge_v0);
+            return deployer.deploy(Bridge_v1);
         }
 
-        try{
-            //running truffle test re runs migrations and OZ exploits if aleready upgraded the contract, check if we already have run a migration
-            await Bridge_v0.deployed();
+        try {
+            //running truffle test re runs migrations and OZ explodes if already upgraded the contract, as we changed the owner address to the multisig
+            await Bridge_v1.deployed();
         } catch(err) {
             //If we haven't deployed it then re deploy.
-            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge_v0', initArgs);
+            await ozDeploy({ network, txParams }, 'Bridge_v1', 'Bridge', initArgs);
 
             //Set the multisig as the Owner of the ProxyAdmin
             await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });

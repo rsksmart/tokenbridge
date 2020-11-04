@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "./zeppelin/token/ERC20/ERC20Detailed.sol";
+import "../zeppelin/token/ERC20/ERC20Detailed.sol";
 
 interface IBridge_v0 {
     function version() external pure returns (string memory);
