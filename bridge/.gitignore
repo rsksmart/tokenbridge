@@ -7,3 +7,5 @@ build
 .openzeppelin/mainnet.json
 coverage/
 coverage.json
+.coverage_contracts
+.coverage_artifacts

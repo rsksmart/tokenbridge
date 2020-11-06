@@ -23,26 +23,18 @@ jobs:
           paths:
             - bridge/node_modules
           key: v1-dependencies-{{ checksum "bridge/package.json" }}
-      - run: 
+      - run:
           name: contracts lint
           command: |
             cd bridge
             npm run lint
-      - run: 
+      - run:
           name: contracts migrate
           command: |
             cd bridge
             npm run migrate
-      - run: 
+      - run:
           name: contracts test
           command: |
             cd bridge
             npm test
-      - run:
-          name: contracts coverage
-          command: |
-            cd bridge
-            npm run coverage
-      - store_artifacts:
-          path: bridge/coverage
-          destination: coverage

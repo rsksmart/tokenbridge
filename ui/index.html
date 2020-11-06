@@ -1174,7 +1174,7 @@
                         const balanceBN = new BN(balance);
                         if(balanceBN.lt(amountBN)) {
                             const showBalance = new BigNumber(balance);
-                            throw new Error(`Insuficient Balance in vyour account, your current balance is ${showBalance.shiftedBy(-decimals)} ${token[config.networkId].symbol}`);
+                            throw new Error(`Insuficient Balance in your account, your current balance is ${showBalance.shiftedBy(-decimals)} ${token[config.networkId].symbol}`);
                         }
                         let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call);
                         const maxWithdraw = new BN(maxWithdrawInWei);
@@ -1191,7 +1191,6 @@
                             let gasPriceAvg = await web3.eth.getGasPrice();
                             gasPriceParsed= parseInt(gasPriceAvg);
                             gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.3;
-                            
                         }
                         gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
                         //iconSuccess(currentStep);
@@ -1644,26 +1643,33 @@
                 };
 
                 const USDT_TOKEN = { token: 'USDT', name: 'Tether USD', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
-                    30:{symbol:'rUSDT', address:'0xe506F698B31a66049bD4653Ed934e7A07Cbc5549', decimals:18},    
+                    30:{symbol:'rUSDT', address:'0xe506F698B31a66049bD4653Ed934e7A07Cbc5549', decimals:18},
                     31:{symbol:'rKovUSDT', address:'0xcdc8ccbbfb6407c53118fe47259e8d00c81f42cd', decimals:18},
                     1:{symbol:'USDT', address:'0xdac17f958d2ee523a2206206994597c13d831ec7', decimals:6},
                     42:{symbol:'USDT', address:'0x13512979ade267ab5100878e2e0f485b568328a4', decimals:6},
                 };
 
                 const USDC_TOKEN = { token: 'USDC', name: 'USD Coin', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-                    30:{symbol:'rUSDC', address:'0x5a42221d7aae8e185bc0054bb036d9757ec18857', decimals:18},    
+                    30:{symbol:'rUSDC', address:'0x5a42221d7aae8e185bc0054bb036d9757ec18857', decimals:18},
                     31:{symbol:'rKovUSDC', address:'0x6117c9529f15c52e2d3188d5285c745b757b5825', decimals:18},
                     1:{symbol:'USDC', address:'0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals:6},
                     42:{symbol:'USDC', address:'0xe22da380ee6b445bb8273c81944adeb6e8450422', decimals:6},
                 };
 
                 const FLIXX_TOKEN = { token: 'FLIXX', name: 'Flixxo', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/flixx.png',
-                    30:{symbol:'rFLIXX', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a', decimals:18},    
+                    30:{symbol:'rFLIXX', address:'0x73c08467e23f7dcb7ddbbc8d05041b74467a498a', decimals:18},
                     1:{symbol:'FLIXX', address:'0xf04a8ac553fcedb5ba99a64799155826c136b0be', decimals:18},
+                    //FLIXX does not have a testnet token
+                };
+
+                const RFOX_TOKEN = { token: 'RFOX', name: 'RedFOX Labs', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/rfox.png',
+                    30:{symbol:'rRFOX', address:'0x9c3a5f8d686fade293c0ce989a62a34408c4e307', decimals:18},
+                    1:{symbol:'RFOX', address:'0xa1d6df714f91debf4e0802a542e13067f31b8262', decimals:18},
+                    //RFOX does not have a testnet token
                 };
 
                 // Remove INV token because its paused on mainnet
-                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN ];
+                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN ];
                 // --------- TOKENS  END --------------
             </script>
         </div>
