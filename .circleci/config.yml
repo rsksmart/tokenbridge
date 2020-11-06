@@ -38,11 +38,3 @@ jobs:
           command: |
             cd bridge
             npm test
-      - run:
-          name: contracts coverage
-          command: |
-            cd bridge
-            npm run coverage
-      - store_artifacts:
-          path: bridge/coverage
-          destination: coverage
