@@ -1,0 +1,31 @@
+{
+  "name": "federator",
+  "private": "true",
+  "version": "1.1.0",
+  "description": "Mutitoken Bridge Federator",
+  "keywords": [
+    "rsk",
+    "federated",
+    "bridge",
+    "ethereum",
+    "federator"
+  ],
+  "author": "IOVLabs",
+  "scripts": {
+    "start": "node ./src/main.js",
+    "test": "npx jest --detectOpenHandles",
+    "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
+    "clean": "rm -rf ./db/*"
+  },
+  "dependencies": {
+    "ethereumjs-tx": "^1.3.7",
+    "ethereumjs-util": "^6.1.0",
+    "log4js": "^5.0.0",
+    "web3": "^1.2.11"
+  },
+  "devDependencies": {
+    "jest": "^26.4.2",
+    "web3-core-promievent": "^1.2.11",
+    "node-notifier": "^8.0.1"
+  }
+}
