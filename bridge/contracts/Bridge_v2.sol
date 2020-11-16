@@ -17,7 +17,7 @@ import "./zeppelin/math/SafeMath.sol";
 import "./IBridge_v2.sol";
 import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
-import "./AllowTokens.sol";
+import "./AllowTokens_v1.sol";
 import "./Utils.sol";
 
 contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
@@ -39,7 +39,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) public processed; // ProcessedHash => true
-    AllowTokens public allowTokens;
+    AllowTokens_v1 public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
@@ -59,7 +59,7 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
+        allowTokens = AllowTokens_v1(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
         _changeValidators(_validators);
         //keccak256("ERC777TokensRecipient")
@@ -146,11 +146,17 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
      */
     function receiveTokens(address tokenToUse, address to, uint256 amount) external whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
         address sender = _msgSender();
-        require(!sender.isContract(), "Bridge: Sender can't be a contract");
+        verifyIfContract(sender);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
         crossTokens(tokenToUse, sender, to, amount, "");
         return true;
+    }
+
+    function verifyIfContract(address from) public view {
+        if(from.isContract()) {
+            require(allowTokens.allowedContracts(from), "Bridge: from not whitelisted contract");
+        }
     }
 
     /**
@@ -169,8 +175,9 @@ contract Bridge_v2 is Initializable, IBridge_v2, IERC777Recipient, UpgradablePau
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to address");
         address tokenToUse = _msgSender();
-        address receiver = userData.length == 0 ? from : bytesToAddress(userData);
         //This can only be used with trusted contracts
+        verifyIfContract(from);
+        address receiver = userData.length == 0 ? from : bytesToAddress(userData);
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
