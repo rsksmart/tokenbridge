@@ -1,0 +1,13 @@
+config/config.js
+rskregtest.json
+development.json
+test.json
+latestBlock.txt
+db
+config/federator.key
+config/validators.key
+federator.log
+validator.log
+test/lib/*.txt
+coverage
+manuallyCheck.txt

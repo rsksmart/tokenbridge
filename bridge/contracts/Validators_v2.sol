@@ -36,21 +36,21 @@ contract Validators_v2 is Ownable {
     }
 
     modifier onlyMember() {
-        require(isMember[_msgSender()], "Federation: Caller not a Federator");
+        require(isMember[_msgSender()], "Validators: Caller not a Validator");
         _;
     }
 
     modifier validRequirement(uint membersCount, uint _required) {
         // solium-disable-next-line max-len
-        require(_required <= membersCount && _required != 0 && membersCount != 0, "Federation: Invalid requirements");
+        require(_required <= membersCount && _required != 0 && membersCount != 0, "Validators: Invalid requirements");
         _;
     }
 
     constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
-        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
+        require(_members.length <= MAX_MEMBER_COUNT, "Validators: Members larger than max allowed");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
-            require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
+            require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Validators: Invalid members");
             isMember[_members[i]] = true;
             emit MemberAddition(_members[i]);
         }
@@ -59,7 +59,7 @@ contract Validators_v2 is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
-        require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
+        require(_bridge != NULL_ADDRESS, "Validators: Empty bridge");
         bridge = IBridge_v2(_bridge);
         emit BridgeChanged(_bridge);
     }
@@ -85,7 +85,7 @@ contract Validators_v2 is Ownable {
             bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
                 transactionInfo.amount, transactionInfo.symbol, transactionInfo.blockHash, transactionInfo.transactionHash,
                 transactionInfo.logIndex, transactionInfo.decimals, transactionInfo.granularity);
-            require(acceptTransfer, "Federation: Bridge acceptTransfer error");
+            require(acceptTransfer, "Validators: Bridge acceptTransfer error");
             emit Executed(transactionId);
             return true;
         }
@@ -124,9 +124,9 @@ contract Validators_v2 is Ownable {
 
     function addMember(address _newMember) external onlyOwner
     {
-        require(_newMember != NULL_ADDRESS, "Federation: Empty member");
-        require(!isMember[_newMember], "Federation: Member already exists");
-        require(members.length < MAX_MEMBER_COUNT, "Federation: Max members reached");
+        require(_newMember != NULL_ADDRESS, "Validators: Empty member");
+        require(!isMember[_newMember], "Validators: Member already exists");
+        require(members.length < MAX_MEMBER_COUNT, "Validators: Max members reached");
 
         isMember[_newMember] = true;
         members.push(_newMember);
@@ -135,10 +135,10 @@ contract Validators_v2 is Ownable {
 
     function removeMember(address _oldMember) external onlyOwner
     {
-        require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
-        require(isMember[_oldMember], "Federation: Member doesn't exists");
-        require(members.length > 1, "Federation: Can't remove all the members");
-        require(members.length - 1 >= required, "Federation: Can't have less than required members");
+        require(_oldMember != NULL_ADDRESS, "Validators: Empty member");
+        require(isMember[_oldMember], "Validators: Member doesn't exists");
+        require(members.length > 1, "Validators: Can't remove all the members");
+        require(members.length - 1 >= required, "Validators: Can't have less than required members");
 
         isMember[_oldMember] = false;
         for (uint i = 0; i < members.length - 1; i++) {
@@ -158,7 +158,7 @@ contract Validators_v2 is Ownable {
 
     function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required)
     {
-        require(_required >= 2, "Federation: Requires at least 2");
+        require(_required >= 2, "Validators: Requires at least 2");
         required = _required;
         emit RequirementChange(_required);
     }

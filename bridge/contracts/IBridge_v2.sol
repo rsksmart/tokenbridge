@@ -29,7 +29,7 @@ interface IBridge_v2 {
     ) external;
 
     /**
-     * Accepts the transaction from the other chain that was voted and sent by the federation contract
+     * Accepts the transaction from the other chain that was voted and sent by the Validators contract
      */
     function acceptTransfer(
         address originalTokenAddress,

@@ -23,12 +23,14 @@ contract('Bridge upgrade test', async (accounts) => {
     const deployerAddress = accounts[0];
     const managerAddress = accounts[1];
     const anAccount = accounts[2];
-    const federationAddress = accounts[5];
+    const otherAccount = accounts[3];
+    const validatorsAddress = accounts[5];
 
     beforeEach(async () => {
         this.project = await TestHelper();
         this.allowTokens = await AllowTokens.new(managerAddress);
         this.utilsContract = await UtilsContract.deployed();
+        Bridge_v1.link({ "Utils": this.utilsContract.address });
         Bridge_v2.link({ "Utils": this.utilsContract.address });
         await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory_v0 = await SideTokenFactory_v0.new();
@@ -40,7 +42,7 @@ contract('Bridge upgrade test', async (accounts) => {
         it('should create a proxy', async () => {
             const proxy = await this.project.createProxy(Bridge_v1);
             let result = await proxy.methods.version().call();
-            assert.equal(result, 'v0');
+            assert.equal(result, 'v1');
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  "0x0000000000000000000000000000000000000000");
@@ -54,7 +56,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
         it('should initialize it', async () => {
             const proxy = await this.project.createProxy(Bridge_v1,
-                { initMethod: 'initialize', initArgs: [managerAddress, federationAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
+                { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
@@ -65,22 +67,22 @@ contract('Bridge upgrade test', async (accounts) => {
             result = await proxy.methods.symbolPrefix().call();
             assert.equal(result,  'r');
             result = await proxy.methods.getFederation().call();
-            assert.equal(result,  federationAddress);
+            assert.equal(result,  validatorsAddress);
         });
 
         describe('initialized', async () => {
             beforeEach(async() => {
-                this.proxy = await this.project.createProxy(Bridge_v1, 
-                    { initMethod: 'initialize', initArgs: [managerAddress, federationAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
+                this.proxy = await this.project.createProxy(Bridge_v1,
+                    { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
             });
 
             it('should accept send Transaction', async () => {
-                const crossingPayment = web3.utils.toWei('5000');
-                const tx = await this.proxy.methods.setCrossingPayment(crossingPayment).send({ from: managerAddress });
+                let feePercentage = '20'; //0.2%
+                const tx = await this.proxy.methods.setFeePercentage(feePercentage).send({from: managerAddress});
                 assert.equal(tx.status, true);
                 utils.checkGas(tx.cumulativeGasUsed);
-                const result = await this.proxy.methods.getCrossingPayment().call();
-                assert.equal(result.toString(), crossingPayment);
+                const result = await this.proxy.methods.getFeePercentage().call();
+                assert.equal(result.toString(), feePercentage);
             });
 
             it('should receive tokens', async () => {
@@ -114,24 +116,23 @@ contract('Bridge upgrade test', async (accounts) => {
                 assert.equal(result, this.allowTokens.address);
                 result = await newProxy.methods.sideTokenFactory().call();
                 assert.equal(result,  this.sideTokenFactory_v0.address);
-                result = await newProxy.methods.getFederation().call();
-                assert.equal(result,  federationAddress);
+                result = await newProxy.methods.getValidators().call();
+                assert.equal(result,  validatorsAddress);
             });
 
             it('should have new method setFeePercentage after update', async () => {
-                const crossingPayment = web3.utils.toWei('5000');
-                let tx = await this.proxy.methods.setCrossingPayment(crossingPayment).send({from: managerAddress});
-                assert.equal(tx.status, true);
-                let result = await this.proxy.methods.getCrossingPayment().call();
-                assert.equal(result.toString(), crossingPayment);
+                let feePercentage = '20'; //0.2%
+                await this.proxy.methods.setFeePercentage(feePercentage).send({from: managerAddress});
+                result = await this.proxy.methods.getFeePercentage().call();
+                assert.equal(result.toString(), feePercentage);
 
-                newProxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v2);
+                const newProxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v2);
 
                 result = await newProxy.methods.getFeePercentage().call();
                 // This is the previous value from getCRossingPayment
-                assert.equal(result.toString(), crossingPayment);
+                assert.equal(result.toString(), feePercentage);
 
-                let feePercentage = '20'; //0.2%
+                feePercentage = '300'; //3%
                 await newProxy.methods.setFeePercentage(feePercentage).send({from: managerAddress});
                 result = await newProxy.methods.getFeePercentage().call();
                 assert.equal(result.toString(), feePercentage);
@@ -203,7 +204,7 @@ contract('Bridge upgrade test', async (accounts) => {
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxy.address, amount, { from: anAccount });
 
-                        let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
+                        let tx = await this.proxy.methods.receiveTokens(this.token.address, anAccount, amount).send({ from: anAccount});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         assert.equal(tx.events.Cross.event, 'Cross');
@@ -214,8 +215,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
 
                     it('should accept Transfer', async () => {
-                        let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
-                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: federationAddress });
+                        let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, otherAccount, this.amount, "MAIN",
+                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: validatorsAddress });
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
@@ -228,7 +229,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
                         const mirrorBridgeBalance = await sideToken.balanceOf(this.proxy.address);
                         assert.equal(mirrorBridgeBalance, 0);
-                        const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
+                        const mirrorAnAccountBalance = await sideToken.balanceOf(otherAccount);
                         assert.equal(mirrorAnAccountBalance, this.amount);
                     });
                 }); // end after changeSideTokenFactory
@@ -237,15 +238,15 @@ contract('Bridge upgrade test', async (accounts) => {
             describe('Change the owner and upgrade calling AdminUpgradeabilityProxy', () => {
                 it('should update it', async () => {
                     let result = await this.proxy.methods.version().call();
-                    assert.equal(result, 'v0');
+                    assert.equal(result, 'v1');
 
                     result = await this.project.proxyAdmin.contract.methods.owner().call();
                     assert.equal(result, deployerAddress);
 
                     //See the open zeppelin SDK admin contracts https://docs.openzeppelin.com/upgrades/2.8/api#ProxyAdmin-changeProxyAdmin-contract-AdminUpgradeabilityProxy-address-
                     /* Upgrade the contract at the address of our instance to the new logic */
-                    let Bridge_v2 = await Bridge_v2.new();
-                    await this.project.proxyAdmin.contract.methods.upgrade(this.proxy.address, Bridge_v2.address).send({from: deployerAddress});
+                    let bridge_v2 = await Bridge_v2.new();
+                    await this.project.proxyAdmin.contract.methods.upgrade(this.proxy.address, bridge_v2.address).send({from: deployerAddress});
 
                     //Check the Proxy Adminis still the AdminUpgradeabilityProxy  admin
                     //We need this because if the deployerAddress was the admin it couldn't call the bridge methods from the proxy
@@ -255,7 +256,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(result, this.project.proxyAdmin.address);
 
                     result = await this.project.proxyAdmin.contract.methods.getProxyImplementation(this.proxy.address).call();
-                    assert.equal(result, Bridge_v2.address);
+                    assert.equal(result, bridge_v2.address);
 
                     this.proxy= await Bridge_v2.at(this.proxy.address);
 
@@ -267,8 +268,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(result, this.allowTokens.address);
                     result = await this.proxy.methods.sideTokenFactory().call();
                     assert.equal(result,  this.sideTokenFactory_v0.address);
-                    result = await this.proxy.methods.getFederation().call();
-                    assert.equal(result,  federationAddress);
+                    result = await this.proxy.methods.getValidators().call();
+                    assert.equal(result,  validatorsAddress);
                 });
             });
 
@@ -278,11 +279,11 @@ contract('Bridge upgrade test', async (accounts) => {
                     //await this.project.transferAdminOwnership(deployerAddress);
                     await this.project.proxyAdmin.contract.methods.transferOwnership(managerAddress).send({from: deployerAddress});
                     /* Upgrade the contract at the address of our instance to the new logic */
-                    let Bridge_v2 = await Bridge_v2.new();
-                    await this.project.proxyAdmin.contract.methods.upgrade(this.proxy.address, Bridge_v2.address).send({from: managerAddress});
+                    let bridge_v2 = await Bridge_v2.new();
+                    await this.project.proxyAdmin.contract.methods.upgrade(this.proxy.address, bridge_v2.address).send({from: managerAddress});
                     this.proxy = await Bridge_v2.at(this.proxy.address);
 
-                    //this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v2);
+                    //this.proxy = await this.project.upgradeProxy(this.proxy.address, bridge_v2);
                     this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
                     this.utilsContract = await UtilsContract.new();
@@ -307,7 +308,7 @@ contract('Bridge upgrade test', async (accounts) => {
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxy.address, amount, { from: anAccount });
 
-                        let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
+                        let tx = await this.proxy.methods.receiveTokens(this.token.address, anAccount, amount).send({ from: anAccount});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         assert.equal(tx.events.Cross.event, 'Cross');
@@ -318,8 +319,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
 
                     it('should accept Transfer', async () => {
-                        let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
-                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: federationAddress });
+                        let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, otherAccount, this.amount, "MAIN",
+                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: validatorsAddress });
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
@@ -332,8 +333,8 @@ contract('Bridge upgrade test', async (accounts) => {
 
                         const mirrorBridgeBalance = await sideToken.balanceOf(this.proxy.address);
                         assert.equal(mirrorBridgeBalance, 0);
-                        const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
-                        assert.equal(mirrorAnAccountBalance, this.amount);
+                        const mirrorOtherAccountBalance = await sideToken.balanceOf(otherAccount);
+                        assert.equal(mirrorOtherAccountBalance, this.amount);
                     });
                 }); // end after changeSideTokenFactory
             }); //end after upgrade
