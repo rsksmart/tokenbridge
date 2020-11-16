@@ -9,7 +9,7 @@ const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
 
-contract.only('Validators_v2', async function (accounts) {
+contract('Validators_v2', async function (accounts) {
     const deployer = accounts[0];
     const anAccount = accounts[1];
     const validator1 = accounts[2];
@@ -281,7 +281,7 @@ contract.only('Validators_v2', async function (accounts) {
             await this.validators.setBridge(this.bridge.address);
         });
 
-        it('voteTransaction should be successful with 1/1 feds require 1', async function() {
+        it('voteTransaction should be successful with 1/1 validators require 1', async function() {
             this.validators.removeMember(validator2)
             let transactionId = await this.validators.getTransactionId(originalTokenAddress, {sender:anAccount, receiver:anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity});
             let transactionCount = await this.validators.getTransactionCount(transactionId);
@@ -305,7 +305,7 @@ contract.only('Validators_v2', async function (accounts) {
             assert.equal(transactionWasProcessed, true);
 
             truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
-                return ev.transactionInfo.sender === validator1 && ev.transactionId === transactionId;
+                return ev.validator === validator1 && ev.transactionId === transactionId;
             });
 
             truffleAssert.eventEmitted(receipt, 'Executed', (ev) => {
@@ -337,7 +337,7 @@ contract.only('Validators_v2', async function (accounts) {
             assert.equal(transactionWasProcessed, false);
         });
 
-        it('voteTransaction should be pending with 1/2 feds require 1', async function() {
+        it('voteTransaction should be pending with 1/2 validators require 1', async function() {
             let transactionId = await this.validators.getTransactionId(originalTokenAddress, {sender:anAccount, receiver:anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity});
             let transactionCount = await this.validators.getTransactionCount(transactionId);
             assert.equal(transactionCount, 0);
@@ -360,7 +360,7 @@ contract.only('Validators_v2', async function (accounts) {
             assert.equal(transactionWasProcessed, false);
         });
 
-        it.only('voteTransaction should be pending with 1/2 feds require 2', async function() {
+        it('voteTransaction should be pending with 1/2 feds require 2', async function() {
             await this.validators.changeRequirement(2);
             let transactionId = await this.validators.getTransactionId(originalTokenAddress, {sender:anAccount, receiver:anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity});
             let transactionCount = await this.validators.getTransactionCount(transactionId);
@@ -384,8 +384,7 @@ contract.only('Validators_v2', async function (accounts) {
             assert.equal(transactionWasProcessed, false);
 
             truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
-                console.log(ev);
-                return ev.sender.toLowerCase() === validator1.toLowerCase() && ev.transactionId === transactionId;
+                return ev.validator === validator1 && ev.transactionId === transactionId;
             });
 
             truffleAssert.eventNotEmitted(receipt, 'Executed');
