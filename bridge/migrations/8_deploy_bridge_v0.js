@@ -1,7 +1,7 @@
 const { scripts, ConfigManager } = require('@openzeppelin/cli');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const Federation = artifacts.require("Federation_v1");
-const AllowTokens = artifacts.require('AllowTokens');
+const AllowTokens = artifacts.require('AllowTokens_v0');
 const SideTokenFactory = artifacts.require('SideTokenFactory_v1');
 const Bridge_v0 = artifacts.require('Bridge_v0');
 
