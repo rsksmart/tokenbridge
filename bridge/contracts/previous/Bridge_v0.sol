@@ -16,7 +16,7 @@ import "../zeppelin/math/SafeMath.sol";
 import "./IBridge_v0.sol";
 import "./SideToken_v0.sol";
 import "./SideTokenFactory_v0.sol";
-import "../AllowTokens.sol";
+import "./AllowTokens_v0.sol";
 
 contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -37,7 +37,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) processed; // ProcessedHash => true
-    AllowTokens public allowTokens;
+    AllowTokens_v0 public allowTokens;
     SideTokenFactory_v0 public sideTokenFactory;
 
     event FederationChanged(address _newFederation);
@@ -51,7 +51,7 @@ contract Bridge_v0 is Initializable, IBridge_v0, IERC777Recipient, UpgradablePau
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
+        allowTokens = AllowTokens_v0(_allowTokens);
         sideTokenFactory = SideTokenFactory_v0(_sideTokenFactory);
         // solium-disable-next-line security/no-block-members
         lastDay = now;
