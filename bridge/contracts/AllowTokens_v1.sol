@@ -3,7 +3,7 @@ pragma solidity >=0.4.21 <0.6.0;
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
 
-contract AllowTokens is Ownable {
+contract AllowTokens_v1 is Ownable {
     using SafeMath for uint256;
 
     address constant private NULL_ADDRESS = address(0);
@@ -13,6 +13,7 @@ contract AllowTokens is Ownable {
     uint256 private maxTokensAllowed;
     uint256 private minTokensAllowed;
     uint256 public dailyLimit;
+    mapping (address => bool) public allowedContracts;
 
     event AllowedTokenAdded(address indexed _tokenAddress);
     event AllowedTokenRemoved(address indexed _tokenAddress);
@@ -20,6 +21,8 @@ contract AllowTokens is Ownable {
     event MaxTokensAllowedChanged(uint256 _maxTokens);
     event MinTokensAllowedChanged(uint256 _minTokens);
     event DailyLimitChanged(uint256 dailyLimit);
+    event AllowedContractAdded(address indexed _contractAddress);
+    event AllowedContractRemoved(address indexed _contractAddress);
 
     modifier notNull(address _address) {
         require(_address != NULL_ADDRESS, "AllowTokens: Address cannot be empty");
@@ -32,6 +35,16 @@ contract AllowTokens is Ownable {
         maxTokensAllowed = 10000 ether;
         minTokensAllowed = 1 ether;
         dailyLimit = 100000 ether;
+    }
+
+    function addAllowedContract(address _contract) external notNull(_contract) onlyOwner {
+        allowedContracts[_contract] = true;
+        emit AllowedContractAdded(_contract);
+    }
+
+    function removeAllowedContract(address _contract) external notNull(_contract) onlyOwner {
+        allowedContracts[_contract] = false;
+        emit AllowedContractRemoved(_contract);
     }
 
     function isValidatingAllowedTokens() external view returns(bool) {
