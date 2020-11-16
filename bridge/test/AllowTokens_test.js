@@ -1,6 +1,6 @@
 
 const MainToken = artifacts.require('./MainToken');
-const AllowTokens = artifacts.require('./AllowTokens');
+const AllowTokens = artifacts.require('./AllowTokens_v1');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
