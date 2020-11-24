@@ -11,9 +11,10 @@ const UtilsContract = artifacts.require('Utils');
 
 //Normal Contracts
 const SideTokenFactory_v0 = artifacts.require('./SideTokenFactory_v0');
-const SideTokenFactory = artifacts.require('./SideTokenFactory');
-const SideToken = artifacts.require('./SideToken');
-const AllowTokens = artifacts.require('./AllowTokens');
+const SideTokenFactory_v1 = artifacts.require('./SideTokenFactory_v1');
+const SideToken_v1 = artifacts.require('./SideToken_v1');
+const AllowTokens_v0 = artifacts.require('./AllowTokens_v0');
+const AllowTokens_v1 = artifacts.require('./AllowTokens_v1');
 const MainToken = artifacts.require('./MainToken');
 
 const utils = require('./utils');
@@ -28,11 +29,11 @@ contract('Bridge upgrade test', async (accounts) => {
 
     beforeEach(async () => {
         this.project = await TestHelper();
-        this.allowTokens = await AllowTokens.new(managerAddress);
+        this.allowTokens_v0 = await AllowTokens_v0.new(managerAddress);
         this.utilsContract = await UtilsContract.deployed();
         Bridge_v1.link({ "Utils": this.utilsContract.address });
         Bridge_v2.link({ "Utils": this.utilsContract.address });
-        await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
+        await this.allowTokens_v0.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory_v0 = await SideTokenFactory_v0.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('10000'), { from: deployerAddress });
         this.amount = web3.utils.toWei('1000');
@@ -56,12 +57,12 @@ contract('Bridge upgrade test', async (accounts) => {
 
         it('should initialize it', async () => {
             const proxy = await this.project.createProxy(Bridge_v1,
-                { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
+                { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens_v0.address, this.sideTokenFactory_v0.address, 'r'] });
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
             result = await proxy.methods.allowTokens().call();
-            assert.equal(result, this.allowTokens.address);
+            assert.equal(result, this.allowTokens_v0.address);
             result = await proxy.methods.sideTokenFactory().call();
             assert.equal(result,  this.sideTokenFactory_v0.address);
             result = await proxy.methods.symbolPrefix().call();
@@ -73,7 +74,7 @@ contract('Bridge upgrade test', async (accounts) => {
         describe('initialized', async () => {
             beforeEach(async() => {
                 this.proxy = await this.project.createProxy(Bridge_v1,
-                    { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens.address, this.sideTokenFactory_v0.address, 'r'] });
+                    { initMethod: 'initialize', initArgs: [managerAddress, validatorsAddress, this.allowTokens_v0.address, this.sideTokenFactory_v0.address, 'r'] });
             });
 
             it('should accept send Transaction', async () => {
@@ -113,7 +114,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 result = await newProxy.methods.owner().call();
                 assert.equal(result,  managerAddress);
                 result = await newProxy.methods.allowTokens().call();
-                assert.equal(result, this.allowTokens.address);
+                assert.equal(result, this.allowTokens_v0.address);
                 result = await newProxy.methods.sideTokenFactory().call();
                 assert.equal(result,  this.sideTokenFactory_v0.address);
                 result = await newProxy.methods.getValidators().call();
@@ -182,6 +183,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v2);
                     this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
+                    this.allowTokens_v1 = await AllowTokens_v1.new(managerAddress);
+                    await this.allowTokens_v1.disableAllowedTokensValidation({from: managerAddress});
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
@@ -189,10 +192,15 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(result, true);
                 });
 
+                it('should have new method changeAllowTokens', async () => {
+                    let result = await this.proxy.methods.changeAllowTokens(this.allowTokens_v1.address).call({from: managerAddress});
+                    assert.equal(result, true);
+                });
 
-                describe('after changeSideTokenFactory', () => {
+                describe('after changeSideTokenFactory and changeAllowTokens', () => {
                     beforeEach(async () => {
-                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory.address).send({from: managerAddress});
+                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).send({from: managerAddress});
+                        await this.proxy.methods.changeAllowTokens(this.allowTokens_v1.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
@@ -265,7 +273,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     result = await this.proxy.methods.owner().call();
                     assert.equal(result,  managerAddress);
                     result = await this.proxy.methods.allowTokens().call();
-                    assert.equal(result, this.allowTokens.address);
+                    assert.equal(result, this.allowTokens_v0.address);
                     result = await this.proxy.methods.sideTokenFactory().call();
                     assert.equal(result,  this.sideTokenFactory_v0.address);
                     result = await this.proxy.methods.getValidators().call();
@@ -287,6 +295,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
                     await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
                     this.utilsContract = await UtilsContract.new();
+                    this.allowTokens_v1 = await AllowTokens_v1.new(managerAddress);
+                    await this.allowTokens_v1.disableAllowedTokensValidation({from: managerAddress});
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
@@ -294,9 +304,15 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(result, true);
                 });
 
+                it('should have new method changeAllowTokens', async () => {
+                    let result = await this.proxy.methods.changeAllowTokens(this.allowTokens_v1.address).call({from: managerAddress});
+                    assert.equal(result, true);
+                });
+
                 describe('after changeSideTokenFactory', () => {
                     beforeEach(async () => {
-                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory.address).send({from: managerAddress});
+                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).send({from: managerAddress});
+                        await this.proxy.methods.changeAllowTokens(this.allowTokens_v1.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
