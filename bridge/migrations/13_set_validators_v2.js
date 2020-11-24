@@ -4,18 +4,16 @@ const Bridge_v2 = artifacts.require("Bridge_v2");
 const Validators = artifacts.require('Validators_v2');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 
-module.exports = function(deployer, networkName, accounts) {
-    deployer
-        .then(async ()=> {
-            if (networkName === 'soliditycoverage') {
-                return;
-            }
-            const multiSig = await MultiSigWallet.deployed();
-            const validators = await Validators.deployed();
-            const bridge = await Bridge.deployed();
+module.exports = async (deployer, networkName, accounts) => {
+    if (networkName === 'soliditycoverage') {
+        return;
+    }
+    const multiSig = await MultiSigWallet.deployed();
+    const validators = await Validators.deployed();
+    const bridge = await Bridge.deployed();
 
-            const bridge_v2 = new web3.eth.Contract(Bridge_v2.abi, bridge.address);
-            let data = bridge_v2.methods.changeValidators(validators.address).encodeABI();
-            await multiSig.submitTransaction(bridge.address, 0, data, { from: accounts[0] });
-        });
+    const bridge_v2 = new web3.eth.Contract(Bridge_v2.abi, bridge.address);
+    let data = bridge_v2.methods.changeValidators(validators.address).encodeABI();
+    await multiSig.submitTransaction(bridge.address, 0, data, { from: accounts[0] });
+
 }
