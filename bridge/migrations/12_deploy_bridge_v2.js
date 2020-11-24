@@ -6,10 +6,10 @@ const Utils = artifacts.require("Utils");
 const proxyAdminAbi = require('../../abis/ProxyAdmin.json');
 
 
-module.exports = async function(deployer, networkName, accounts) {
+module.exports = async (deployer, networkName, accounts) => {
     await Bridge_v2.link(Utils, Utils.address);
-
-    let bridge_v2 = await deployer.deploy(Bridge_v2);
+    await deployer.deploy(Bridge_v2);
+    const bridge_v2 = await Bridge_v2.deployed();
     const multiSig = await MultiSigWallet.deployed();
     const bridgeProxy = await Bridge.deployed();
     // If coverage deploy directly the new contract
