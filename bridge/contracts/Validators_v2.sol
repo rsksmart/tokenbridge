@@ -75,9 +75,20 @@ contract Validators_v2 is Ownable {
             return true;
 
         votes[transactionId][_msgSender()] = true;
-        emit Voted(_msgSender(), transactionId, originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
-            transactionInfo.amount, transactionInfo.symbol, transactionInfo.blockHash, transactionInfo.transactionHash,
-            transactionInfo.logIndex, transactionInfo.decimals, transactionInfo.granularity);
+        emit Voted(
+            _msgSender(),
+            transactionId,
+            originalTokenAddress,
+            transactionInfo.sender,
+            transactionInfo.receiver,
+            transactionInfo.amount,
+            transactionInfo.symbol,
+            transactionInfo.blockHash,
+            transactionInfo.transactionHash,
+            transactionInfo.logIndex,
+            transactionInfo.decimals,
+            transactionInfo.granularity
+        );
 
         uint transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
@@ -117,9 +128,20 @@ contract Validators_v2 is Ownable {
         TransactionInfo memory transactionInfo)
     public pure returns(bytes32)
     {
-        return keccak256(abi.encodePacked(originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
-            transactionInfo.amount, transactionInfo.symbol, transactionInfo.blockHash, transactionInfo.transactionHash,
-            transactionInfo.logIndex, transactionInfo.decimals, transactionInfo.granularity));
+        return keccak256(
+            abi.encodePacked(
+            originalTokenAddress,
+            transactionInfo.sender,
+            transactionInfo.receiver,
+            transactionInfo.amount,
+            transactionInfo.symbol,
+            transactionInfo.blockHash,
+            transactionInfo.transactionHash,
+            transactionInfo.logIndex,
+            transactionInfo.decimals,
+            transactionInfo.granularity
+            )
+        );
     }
 
     function addMember(address _newMember) external onlyOwner
