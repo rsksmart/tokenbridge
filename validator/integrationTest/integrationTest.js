@@ -252,8 +252,8 @@ async function transfer(originValidators, destinationValidators, config, origin,
         const allowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
         const multiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.mainchain.multiSig);
         const allowTokensAddress = allowTokensContract.options.address;
-
-        data = allowTokensContract.methods.addAllowedToken(anotherTokenAddress).encodeABI();
+        let typeId = 0;
+        data = allowTokensContract.methods.setToken(anotherTokenAddress, typeId).encodeABI();
 
         if (validatorKeys.length === 1) {
             const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
