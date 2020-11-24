@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const allowTokensBuild = require('./build/contracts/AllowTokens');
+const allowTokensBuild = require('./build/contracts/AllowTokens_v1');
 fs.writeFileSync('../abis/AllowTokens.json', JSON.stringify(allowTokensBuild.abi));
 
 const bridgeBuild = require('./build/contracts/Bridge');
