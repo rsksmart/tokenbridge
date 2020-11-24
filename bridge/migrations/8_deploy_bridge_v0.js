@@ -21,36 +21,34 @@ async function ozDeploy(options, name, alias, initArgs) {
     }
 }
 
-module.exports = function(deployer, networkName, accounts) {
+module.exports = async (deployer, networkName, accounts) => {
     console.log('Deploy Bridge');
     let symbol = 'e';
 
     if(networkName == 'rskregtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')
         symbol = 'r';
 
-    deployer.then(async () => {
-        const multiSig = await MultiSigWallet.deployed();
-        const allowTokens = await AllowTokens.deployed();
-        const sideTokenFactory = await SideTokenFactory.deployed();
-        const federation = await Federation.deployed();
-        const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
-        let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol];
+    const multiSig = await MultiSigWallet.deployed();
+    const allowTokens = await AllowTokens.deployed();
+    const sideTokenFactory = await SideTokenFactory.deployed();
+    const federation = await Federation.deployed();
+    const { network, txParams } = await ConfigManager.initNetworkConfiguration({ network: networkName, from: accounts[0] });
+    let initArgs = [multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol];
 
-        if (networkName === 'soliditycoverage') {
-            //soldity coverage doesn't play along with oppen zeppelin sdk
-            //so we deploy the un initialized contract just to create the objects
-            return deployer.deploy(Bridge_v0);
-        }
+    if (networkName === 'soliditycoverage') {
+        //soldity coverage doesn't play along with oppen zeppelin sdk
+        //so we deploy the un initialized contract just to create the objects
+        return deployer.deploy(Bridge_v0);
+    }
 
-        try {
-            //running truffle test re runs migrations and OZ explodes if already upgraded the contract, as we changed the owner address to the multisig
-            await Bridge_v0.deployed();
-        } catch(err) {
-            //If we haven't deployed it then re deploy.
-            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
+    try {
+        //running truffle test re runs migrations and OZ explodes if already upgraded the contract, as we changed the owner address to the multisig
+        await Bridge_v0.deployed();
+    } catch(err) {
+        //If we haven't deployed it then re deploy.
+        await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
 
-            //Set the multisig as the Owner of the ProxyAdmin
-            await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });
-        }
-      })
-};
+        //Set the multisig as the Owner of the ProxyAdmin
+        await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });
+    }
+}
