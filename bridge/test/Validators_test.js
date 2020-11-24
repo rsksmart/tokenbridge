@@ -1,6 +1,6 @@
 const Validators = artifacts.require('./Validators_v2');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
-const AllowTokens = artifacts.require('./AllowTokens');
+const AllowTokens = artifacts.require('./AllowTokens_v1');
 const Bridge = artifacts.require('./Bridge_v2');
 const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
 const UtilsContract = artifacts.require('./Utils');
@@ -8,6 +8,7 @@ const UtilsContract = artifacts.require('./Utils');
 const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
+const toWei = web3.utils.toWei;
 
 contract('Validators_v2', async function (accounts) {
     const deployer = accounts[0];
@@ -270,7 +271,9 @@ contract('Validators_v2', async function (accounts) {
 
         beforeEach(async function () {
             this.allowTokens = await AllowTokens.new(deployer);
-            await this.allowTokens.addAllowedToken(originalTokenAddress);
+            await this.allowTokens.addTokenType('RIF', toWei('10000'), toWei('1'), toWei('100000'));
+            let typeId = 0;
+            await this.allowTokens.setToken(originalTokenAddress, typeId);
             this.sideTokenFactory = await SideTokenFactory.new();
             this.utilsContract = await UtilsContract.deployed();
             await Bridge.link(UtilsContract, this.utilsContract.address);

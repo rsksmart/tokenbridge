@@ -32,7 +32,7 @@ module.exports = function(deployer, networkName, accounts) {
         const proxyAdminAddress = networkConfig.proxyAdmin.address;
         const proxyAdmin = new web3.eth.Contract(proxyAdminAbi, proxyAdminAddress);
 
-        const data = proxyAdmin.methods.upgrade(bridgeProxy.address, bridge.address).encodeABI();
+        const data = proxyAdmin.methods.upgrade(bridgeProxy.address, bridge_v1.address).encodeABI();
         await multiSig.submitTransaction(proxyAdmin.options.address, 0, data, { from: accounts[0] });
-      });
+    })
 };
