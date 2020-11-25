@@ -14,7 +14,7 @@ module.exports = class Scheduler {
         if (this.running)
             throw new Error('scheduler service already started');
         this.running = true;
-        await this.poll();                  
+        await this.poll();
     }
 
     async poll() {
