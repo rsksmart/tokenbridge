@@ -3,7 +3,6 @@ rskregtest.json
 development.json
 test.json
 latestBlock.txt
-db
 config/federator.key
 federator.log
 test/lib/*.txt

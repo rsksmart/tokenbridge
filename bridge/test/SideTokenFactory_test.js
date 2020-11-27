@@ -1,9 +1,9 @@
 const SideToken = artifacts.require('./SideToken_v1');
-const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
+const SideTokenFactory = artifacts.require('./SideTokenFactory_v2');
 
 const utils = require('./utils');
 
-contract('SideTokenFactory_v1', async function (accounts) {
+contract('SideTokenFactory_v2', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
 
