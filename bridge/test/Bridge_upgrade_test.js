@@ -11,8 +11,8 @@ const UtilsContract = artifacts.require('Utils');
 
 //Normal Contracts
 const SideTokenFactory_v0 = artifacts.require('./SideTokenFactory_v0');
-const SideTokenFactory_v1 = artifacts.require('./SideTokenFactory_v1');
-const SideToken_v1 = artifacts.require('./SideToken_v1');
+const SideTokenFactory_v2 = artifacts.require('./SideTokenFactory_v2');
+const SideToken = artifacts.require('./SideToken_v2');
 const AllowTokens = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
@@ -97,7 +97,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 assert.equal(balance, amount);
                 const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
                 assert.equal(isKnownToken, true);
-                
+
             });
 
             it('should update it using OZ CLI', async () => {
@@ -108,7 +108,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 let newProxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
                 result = await newProxy.methods.version().call();
                 assert.equal(result, 'v1');
-                
+
                 result = await newProxy.methods.owner().call();
                 assert.equal(result,  managerAddress);
                 result = await newProxy.methods.allowTokens().call();
@@ -180,19 +180,19 @@ contract('Bridge upgrade test', async (accounts) => {
             describe('after upgrade using OZ', () => {
                 beforeEach(async () => {
                     this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
-                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
-                    await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
+                    this.sideTokenFactory_v2 = await SideTokenFactory_v2.new();
+                    await this.sideTokenFactory_v2.transferPrimary(this.proxy.address);
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
-                    let result = await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).call({from: managerAddress});
+                    let result = await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v2.address).call({from: managerAddress});
                     assert.equal(result, true);
                 });
 
 
                 describe('after changeSideTokenFactory', () => {
                     beforeEach(async () => {
-                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).send({from: managerAddress});
+                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v2.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
@@ -203,16 +203,16 @@ contract('Bridge upgrade test', async (accounts) => {
                         const amount = web3.utils.toWei('1000');
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxy.address, amount, { from: anAccount });
-        
+
                         let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
-        
+
                         assert.equal(tx.events.Cross.event, 'Cross');
                         const balance = await this.token.balanceOf(this.proxy.address);
                         assert.equal(balance, amount);
                         const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
                         assert.equal(isKnownToken, true);
-                        
+
                     });
 
                     it('should accept Transfer', async () => {
@@ -221,7 +221,7 @@ contract('Bridge upgrade test', async (accounts) => {
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
-                        let sideToken = await SideToken_v1.at(sideTokenAddress);
+                        let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
 
@@ -285,19 +285,19 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.proxy = await Bridge_v1.at(this.proxy.address);
 
                     //this.proxy = await this.project.upgradeProxy(this.proxy.address, Bridge_v1);
-                    this.sideTokenFactory_v1 = await SideTokenFactory_v1.new();
-                    await this.sideTokenFactory_v1.transferPrimary(this.proxy.address);
+                    this.sideTokenFactory_v2 = await SideTokenFactory_v2.new();
+                    await this.sideTokenFactory_v2.transferPrimary(this.proxy.address);
                     this.utilsContract = await UtilsContract.new();
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
-                    let result = await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).call({from: managerAddress});
+                    let result = await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v2.address).call({from: managerAddress});
                     assert.equal(result, true);
                 });
 
                 describe('after changeSideTokenFactory', () => {
                     beforeEach(async () => {
-                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v1.address).send({from: managerAddress});
+                        await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory_v2.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
@@ -308,16 +308,16 @@ contract('Bridge upgrade test', async (accounts) => {
                         const amount = web3.utils.toWei('1000');
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxy.address, amount, { from: anAccount });
-        
+
                         let tx = await this.proxy.methods.receiveTokens(this.token.address, amount).send({ from: anAccount});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
-        
+
                         assert.equal(tx.events.Cross.event, 'Cross');
                         const balance = await this.token.balanceOf(this.proxy.address);
                         assert.equal(balance, amount);
                         const isKnownToken = await this.proxy.methods.knownTokens(this.token.address).call();
                         assert.equal(isKnownToken, true);
-                        
+
                     });
 
                     it('should accept Transfer', async () => {
@@ -326,7 +326,7 @@ contract('Bridge upgrade test', async (accounts) => {
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
-                        let sideToken = await SideToken_v1.at(sideTokenAddress);
+                        let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
 
@@ -340,7 +340,6 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
                 }); // end after changeSideTokenFactory
             }); //end after upgrade
-            
 
         }); // end initialized
     }); // end freshly created

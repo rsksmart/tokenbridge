@@ -24,7 +24,7 @@ module.exports = {
     mainchain: require('./rsktestnet-kovan.json'),
     sidechain: require('./kovan.json'),
     runEvery: 1, // In minutes,
-    confirmations: 10,// Number of blocks before processing it,
+    confirmations: 10,// Optional: Number of blocks before processing it (only for networks that are not testnet or mainnet),
     privateKey: require('federator.key'),
     storagePath: './db'
 }
@@ -64,5 +64,5 @@ Then run :
 -v $PWD/federator/config:/app/federator/config  \
 -v $PWD/federator/db:/app/federator/db \
 --name=fed-tokenbridge \
-fed-tokenbridge:latest``` 
+fed-tokenbridge:latest```
 to start the image.

@@ -4,7 +4,7 @@ import "./zeppelin/token/ERC777/ERC777.sol";
 import "./IERC677Receiver.sol";
 import "./ISideToken.sol";
 
-contract SideToken_v1 is ISideToken, ERC777 {
+contract SideToken_v2 is ISideToken, ERC777 {
     using Address for address;
     using SafeMath for uint256;
 
@@ -52,55 +52,6 @@ contract SideToken_v1 is ISideToken, ERC777 {
         emit Transfer(from, recipient, amount, data);
         IERC677Receiver(recipient).onTokenTransfer(from, amount, data);
         return true;
-    }
-
-    /* -- Helper Functions -- */
-    //
-    /// @notice Internal function that ensures `amount` is multiple of the granularity
-    /// @param amount The quantity that want's to be checked
-    function requireGranularityMultiple(uint256 amount) internal view {
-        require(amount.mod(_granularity) == 0, "SideToken: Balance is not a multiple of Granularity");
-    }
-
-    function _move(
-        address operator,
-        address from,
-        address to,
-        uint256 amount,
-        bytes memory userData,
-        bytes memory operatorData
-    )
-    internal
-    {
-        requireGranularityMultiple(balanceOf(from).sub(amount));
-        requireGranularityMultiple(balanceOf(to).add(amount));
-        super._move(operator, from, to, amount, userData, operatorData);
-    }
-
-    function _burn(
-        address operator,
-        address from,
-        uint256 amount,
-        bytes memory data,
-        bytes memory operatorData
-    )
-    internal
-    {
-        requireGranularityMultiple(balanceOf(from).sub(amount));
-        super._burn(operator, from, amount, data, operatorData);
-    }
-
-    function _mint(
-        address operator,
-        address account,
-        uint256 amount,
-        bytes memory userData,
-        bytes memory operatorData
-    )
-    internal
-    {
-        requireGranularityMultiple(balanceOf(account).add(amount));
-        super._mint(operator, account, amount, userData, operatorData);
     }
 
     function granularity() public view returns (uint256) {

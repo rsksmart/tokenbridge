@@ -15,7 +15,7 @@ See the [FAQ](https://developers.rsk.co/tools/tokenbridge/faq/) to know more abo
   <img src="./docs/images/token-bridge-diagram.png"/>
 </p>
 
-The bridges on each contract are upgradeable, this would enable a smooth transition to a more decentralized bridge in the future. Here's is a link to the first 
+The bridges on each contract are upgradeable, this would enable a smooth transition to a more decentralized bridge in the future. Here's is a link to the first
 [POC of the trustless decentralized bridge](https://github.com/rsksmart/decentralized-tokenbridge)
 
 ## Usage
@@ -52,7 +52,7 @@ See the ['federator'](./federator/README.md) for more information about federati
 
 An integration test is prepared for contracts and federators. To properly run integration test, you need check network config in the `truffle-config.js` and `package.json` in `bridge` folder with your test chains' configuration before run `npm run deployIntegrationTest`.
 
-1. Check `mnemonic.key` in `bridge` 
+1. Check `mnemonic.key` in `bridge`
 1. Check `infura.key` in `bridge`
 1. Check `federator.key` in `federator/config`
 1. Check `config.js` in `federator/config`
