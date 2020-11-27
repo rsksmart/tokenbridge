@@ -20,7 +20,7 @@ import "./ISideTokenFactory.sol";
 import "./AllowTokens.sol";
 import "./Utils.sol";
 
-contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract Bridge_v2 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
@@ -67,7 +67,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     }
 
     function version() external pure returns (string memory) {
-        return "v1";
+        return "v2";
     }
 
     modifier onlyFederation() {
@@ -174,12 +174,17 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
-        uint256 fee = 0;
-        if(feePercentage > 0) {
-            fee = amount.mul(feePercentage).div(feePercentageDivider);
-            IERC20(tokenToUse).safeTransfer(owner(), fee);
+        uint256 amountMinusFees;
+        {
+        uint256 fee =  amount.mul(feePercentage).div(feePercentageDivider);
+        amountMinusFees = amount.sub(fee);
+        if(isASideToken) {
+            uint256 modulo = amountMinusFees % ISideToken(tokenToUse).granularity();
+            fee = fee.add(modulo);
+            amountMinusFees = amountMinusFees.sub(modulo);
         }
-        uint256 amountMinusFees = amount - fee;
+        IERC20(tokenToUse).safeTransfer(owner(), fee);
+        }
         if (isASideToken) {
             verifyWithAllowTokens(tokenToUse, amount, isASideToken);
             //Side Token Crossing
