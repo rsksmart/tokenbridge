@@ -1,15 +1,15 @@
-const Federation = artifacts.require('./Federation_v1');
+const Federation = artifacts.require('./Federation');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const AllowTokens = artifacts.require('./AllowTokens');
-const Bridge = artifacts.require('./Bridge_v1');
-const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
+const Bridge = artifacts.require('./Bridge');
+const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const UtilsContract = artifacts.require('./Utils');
 
 const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
 
-contract('Federation_v1', async function (accounts) {
+contract('Federation', async function (accounts) {
     const deployer = accounts[0];
     const anAccount = accounts[1];
     const fedMember1 = accounts[2];

@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "../IBridge_v1.sol";
+import "../IBridge.sol";
 
 contract mockReceiveTokensCall {
     address public bridge;
@@ -10,6 +10,6 @@ contract mockReceiveTokensCall {
     }
 
     function callReceiveTokens(address tokenToUse, uint256 amount) public returns(bool) {
-        return IBridge_v1(bridge).receiveTokens(tokenToUse, amount);
+        return IBridge(bridge).receiveTokens(tokenToUse, amount);
     }
 }
