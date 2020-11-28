@@ -1,7 +1,7 @@
 const UtilsLib = artifacts.require('./Utils');
 const MainToken = artifacts.require('./MainToken');
 const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
-const SideToken = artifacts.require('./SideToken_v1');
+const SideToken = artifacts.require('./SideToken');
 
 const BN = web3.utils.BN;
 const utils = require('./utils');
@@ -13,7 +13,7 @@ contract('Utils Lib', async function (accounts) {
     beforeEach(async function () {
         this.utilsLib = await UtilsLib.new();
     });
-        
+
     describe('decimals conversion', async function () {
         it('decimals to granularity', async function () {
             let resultGranularity = await this.utilsLib.decimalsToGranularity(18);
@@ -29,7 +29,7 @@ contract('Utils Lib', async function (accounts) {
         it('decimals to granularity should fail over 18 decimals', async function () {
             await expectThrow(this.utilsLib.decimalsToGranularity(19));
         });
-        
+
         it('granularity to decimals', async function () {
             for(var i = 0; i < 19; i++) {
                 let resultDecimals = await this.utilsLib.granularityToDecimals((10**i).toString());
@@ -140,7 +140,7 @@ contract('Utils Lib', async function (accounts) {
         let granularity = '1';
 
         let result = await this.utilsLib.calculateGranularityAndAmount(decimals, granularity, amount);
-  
+
         assert.equal(result.calculatedGranularity.toString(), (10**decimals).toString());
         assert.equal(result.formattedAmount.toString(), (amount*(10**(18-decimals))).toString());
     });
@@ -151,7 +151,7 @@ contract('Utils Lib', async function (accounts) {
         let granularity = 100;
 
         let result = await this.utilsLib.calculateGranularityAndAmount(decimals, granularity, amount);
-  
+
         assert.equal(result.calculatedGranularity.toString(), granularity);
         assert.equal(result.formattedAmount.toString(), amount.toString());
     });

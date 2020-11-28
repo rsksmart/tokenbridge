@@ -46,7 +46,7 @@ module.exports = function(deployer, networkName, accounts) {
             await Bridge_v0.deployed();
         } catch(err) {
             //If we haven't deployed it then re deploy.
-            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge', initArgs);
+            await ozDeploy({ network, txParams }, 'Bridge_v0', 'Bridge_v0', initArgs);
 
             //Set the multisig as the Owner of the ProxyAdmin
             await scripts.setAdmin({ newAdmin:multiSig.address, network:network, txParams:txParams });
