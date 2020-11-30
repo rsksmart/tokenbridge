@@ -52,7 +52,7 @@ Inside the .json files there is also the host to that network, for example this 
 ```
 
 You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node for that network and the json rpc port. `Remember to do it for both networks`.
-Also you need to create a `federetars.key` file with the federator private in it.
+Also you need to create a `federetors.key` file with the federator private in it.
 
 ### Latest block
 
