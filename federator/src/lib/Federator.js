@@ -34,8 +34,11 @@ module.exports = class Federator {
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
                     confirmations = 10
                 }
-                if(chainId == 30 || chainId == 1) { // rsk mainnet and ethereum mainnet
-                    confirmations = 120
+                if( chainId == 1) { //ethereum mainnet 24hs
+                    confirmations = 5760
+                }
+                if(chainId == 30) { // rsk mainnet 24hs
+                    confirmations = 2880
                 }
                 const toBlock = currentBlock - confirmations;
                 this.logger.info('Running to Block', toBlock);
