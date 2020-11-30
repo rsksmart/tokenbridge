@@ -77,7 +77,7 @@ block() {
 
 build() {
     cd $DEST_DIR
-    # docker build -t fed-tokenbridge . &&
+    docker build -t fed-tokenbridge . &&
         echo "Docker image created suscessfully" &&
         return 0
     quit 1 "There was a problem creating the docker image"
