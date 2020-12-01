@@ -24,6 +24,8 @@ fi
 FED_KEY=""
 MAIN_BLOCK_NUMBER=""
 SIDE_BLOCK_NUMBER=""
+ETH_HOST=""
+RSK_HOST=""
 
 cd $DEST_DIR/federator
 
@@ -58,6 +60,22 @@ block_exists() {
         grep -q '^[0-9]*$' "$DEST_DIR/federator/db/side-fed/lastBlock.txt" 2>/dev/null &&
         return 0
     return 1
+}
+
+eth_host(){
+    read -p "Please enter your ETH host address along with the RPC port, (https://127.0.0.1:8545) " ETH_HOST
+    [ ! -z "${ETH_HOST}" ] &&
+        sed -i "s|<YOUR HOST URL AND PORT>|$ETH_HOST|g" $DEST_DIR/federator/config/ethmainnet.json &&
+        return 0
+    quit 1 "There was an error setting the ETH host and port"
+}
+
+rsk_host(){
+    read -p "Please enter your RSK host address along with the RPC port, (https://127.0.0.1:4444) " RSK_HOST
+    [ ! -z "${RSK_HOST}" ] &&
+        sed -i "s|<YOUR HOST URL AND PORT>|$RSK_HOST|g" $DEST_DIR/federator/config/rskmainnet.json &&
+        return 0
+    quit 1 "There was an error setting the RSK host and port"
 }
 
 block() {
@@ -102,7 +120,9 @@ setup() {
 
 if [ $UPDATE -eq 1 ]; then
     echo "Installing the token bridge federate node"
-    config &&
+    rsk_host &&
+        eth_host &&
+        config &&
         key &&
         block &&
         setup &&
