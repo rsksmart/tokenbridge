@@ -305,4 +305,18 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         emit Upgrading(isUpgrading);
     }
 
+    //This method is only to recreate the USDT and USDC tokens on rsk without granularity restrictions.
+    function clearSideToken(address sideToken) external onlyOwner returns(bool) {
+        require(
+            sideToken == 0xe506F698b31a66049BD4653ed934E7a07Cbc5549 ||
+            sideToken == 0x5a42221D7AaE8e185BC0054Bb036D9757eC18857 ||
+            sideToken == 0xcdc8ccBbFB6407c53118fE47259e8d00C81F42CD ||
+            sideToken == 0x6117C9529F15c52e2d3188d5285C745B757b5825
+            , 'invalid side token');
+        address originalToken = address(originalTokens[sideToken]);
+        originalTokens[sideToken] = NULL_ADDRESS;
+        mappedTokens[originalToken] = ISideToken(NULL_ADDRESS);
+        return true;
+    }
+
 }
