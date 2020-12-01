@@ -1017,19 +1017,22 @@ contract('Bridge', async function (accounts) {
 
                 it('clearSideToken should be successful', async function () {
                     let sideTokenAddress = '0xe506f698b31a66049bd4653ed934e7a07cbc5549';
-                    await this.mirrorBridge.clearSideToken(sideTokenAddress, { from: bridgeManager });
+                    await this.mirrorBridge.clearSideToken({ from: bridgeManager });
                     let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
                     assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
                 });
 
-                it('clearSideToken should fail if not permited token', async function () {
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                    assert.notEqual(sideTokenAddress, utils.NULL_ADDRESS);
-                    await utils.expectThrow(this.mirrorBridge.clearSideToken(this.token.address, { from: bridgeManager }));
+                it('clearSideToken should fail if already run', async function () {
+                    let sideTokenAddress = '0xe506f698b31a66049bd4653ed934e7a07cbc5549';
+                    await this.mirrorBridge.clearSideToken({ from: bridgeManager });
+                    let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
+                    assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
+
+                    await utils.expectThrow(this.mirrorBridge.clearSideToken( { from: bridgeManager }));
                 });
 
                 it('clearSideToken should fail if not the owner', async function () {
-                    await utils.expectThrow(this.mirrorBridge.clearSideToken('0xe506f698b31a66049bd4653ed934e7a07cbc5549', { from: anAccount }));
+                    await utils.expectThrow(this.mirrorBridge.clearSideToken({ from: anAccount }));
                 });
 
                 it('using ERC777 tokensReceived', async function () {
