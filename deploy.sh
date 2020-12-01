@@ -97,7 +97,7 @@ setup() {
         build &&
         run_message &&
         echo "To run the federate node container execute: " &&
-        echo 0 "$RUN_MESSAGE"
+        quit 0 "$RUN_MESSAGE"
 }
 
 if [ $UPDATE -eq 1 ]; then
