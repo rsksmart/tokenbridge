@@ -46,13 +46,13 @@ Inside the .json files there is also the host to that network, for example this 
     "testToken": "0x5d248f520b023acb815edecd5000b98ef84cbf1b",
     "multisig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
     "allowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
-    "host": "<YOUR NODE HOST AND RPC PORT>",
+    "host": "<YOUR HOST URL AND PORT>",
     "fromBlock": 434075
 }
 ```
 
 You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node for that network and the json rpc port. `Remember to do it for both networks`.
-Also you need to create a `federetors.key` file with the federator private in it.
+Also you need to create a `federators.key` file with the federator private in it.
 
 ### Latest block
 
