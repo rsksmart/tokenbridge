@@ -935,10 +935,7 @@ contract('Bridge', async function (accounts) {
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
                 const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
                 console.log('amountToCrossBack', amountToCrossBack.toString());
-                console.log('fees', fees.toString());
-                console.log('modulo', modulo.toString());
-                console.log('newFees', modulo.add(fees).toString());
-                console.log('amountShouldReceive', amountToCrossBack.sub(modulo.add(fees)).toString());
+
                 const originalTokenBalance = await sideToken.balanceOf(anAccount);
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
@@ -949,6 +946,36 @@ contract('Bridge', async function (accounts) {
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
                 assert.equal(ownerBalance.toString(), fees.add(modulo).toString());
                 assert.equal(fees.toString(), (amountToCrossBack*0.33/100).toString());
+                const tokenBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amountToCrossBack));
+                const bridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(bridgeBalance.toString(), '0');
+            });
+
+            it('crossback with amount lower than granularity and no fees', async function () {
+                const granularity = '10000000000000000';
+                const decimals = 18;
+                await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, granularity, { from: federation });
+                const amountToCrossBack = new BN(web3.utils.toWei('1'));
+                const payment = new BN(0);
+
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
+                const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
+                const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
+                const originalTokenBalance = await sideToken.balanceOf(anAccount);
+
+                await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
+                await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
+
+                let receipt = await this.mirrorBridge.receiveTokens(sideToken.address, amountToCrossBack, { from: anAccount });
+                utils.checkRcpt(receipt);
+
+                const ownerBalance = await sideToken.balanceOf(bridgeManager);
+                assert.equal(ownerBalance.toString(), fees.add(modulo).toString());
                 const tokenBalance = await sideToken.balanceOf(anAccount);
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amountToCrossBack));
                 const bridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);

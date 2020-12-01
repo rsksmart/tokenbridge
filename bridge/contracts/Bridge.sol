@@ -174,18 +174,15 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
-        uint256 amountMinusFees = amount;
-        {
-        if (feePercentage > 0) {
-            uint256 fee =  amount.mul(feePercentage).div(feePercentageDivider);
-            amountMinusFees = amount.sub(fee);
-            if (isASideToken) {
-                uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
-                fee = fee.add(modulo);
-                amountMinusFees = amountMinusFees.sub(modulo);
-            }
-            IERC20(tokenToUse).safeTransfer(owner(), fee);
+        uint256 fee =  amount.mul(feePercentage).div(feePercentageDivider);
+        uint256 amountMinusFees = amount.sub(fee);
+        if (isASideToken) {
+            uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
+            fee = fee.add(modulo);
+            amountMinusFees = amountMinusFees.sub(modulo);
         }
+        if(fee > 0) {
+            IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
         if (isASideToken) {
             verifyWithAllowTokens(tokenToUse, amount, isASideToken);
