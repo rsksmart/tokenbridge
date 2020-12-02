@@ -1,5 +1,14 @@
 #!/bin/bash
 
+UPDATE=0
+DEST_DIR=""
+FED_KEY=""
+MAIN_BLOCK_NUMBER=""
+SIDE_BLOCK_NUMBER=""
+ETH_HOST=""
+RSK_HOST=""
+PROGRAMS="docker npm nodejs"
+
 quit() {
     if [ $1 -eq 1 ]; then
         echo "ERROR: "$2
@@ -9,32 +18,27 @@ quit() {
     exit $1
 }
 
-if [ ! -z $1 ]; then
-    UPDATE=$1
-else
-    quit 1 "Undefinied parameter. 1 for install, 0 to update."
-fi
-
-if [ ! -z $2 ]; then
-    DEST_DIR=$2
-else
-    quit 1 "Undefined DEST_DIR"
-fi
-
-FED_KEY=""
-MAIN_BLOCK_NUMBER=""
-SIDE_BLOCK_NUMBER=""
-ETH_HOST=""
-RSK_HOST=""
-
-cd $DEST_DIR/federator
-
 config() {
     cp $DEST_DIR/federator/config/config.sample.js $DEST_DIR/federator/config/config.js &&
         sed -i "s|rsktestnet-kovan|rskmainnet|g" $DEST_DIR/federator/config/config.js &&
         sed -i "s|kovan|ethmainnet|g" $DEST_DIR/federator/config/config.js &&
         return 0
     quit 1 "There was a problem setting the configuration, please verify."
+}
+
+check_required_programs() {
+    echo "Checking for required programs..."
+    rc=0
+    PROGRAMS=$1
+    for program in $PROGRAMS; do
+        if ! command -v "$program" >/dev/null 2>&1; then
+            rc=1
+            echo "$program: command not found"
+        fi
+    done
+    if [ $rc -ne 0 ]; then
+        quit 1 "Requirements not acomplished"
+    fi
 }
 
 dependencies() {
@@ -117,6 +121,22 @@ setup() {
         echo "To run the federate node container execute: " &&
         quit 0 "$RUN_MESSAGE"
 }
+
+if [ ! -z $1 ]; then
+    UPDATE=$1
+else
+    quit 1 "Undefinied parameter. 1 for install, 0 to update."
+fi
+
+if [ ! -z $2 ]; then
+    DEST_DIR=$2
+else
+    quit 1 "Undefined DEST_DIR"
+fi
+
+check_required_programs
+
+cd $DEST_DIR/federator
 
 if [ $UPDATE -eq 1 ]; then
     echo "Installing the token bridge federate node"
