@@ -1014,6 +1014,7 @@
                 }
 
                 function onLogInClick() {
+                    debugger
                     if(!config) {
                         $('#logIn').html('<i class="fas fa-sync fa-spin">');
                         $('#logIn').attr('onclick', '');
@@ -1026,14 +1027,21 @@
 
                 async function setInfoTab() {
                   try {
-                    minTokensAllowed = 1;
-                    maxTokensAllowed = 100_000;
-                    maxDailyLimit = 1_000_000;
+                    // Dinamically get the values, this is comented as the public node some times throws errors
+                    [maxWithdraw, maxAllowed, minAllowed, federators] = await Promise.all([
+                      retry3Times(allowTokensContract.methods.dailyLimit().call),
+                      retry3Times(allowTokensContract.methods.getMaxTokensAllowed().call),
+                      retry3Times(allowTokensContract.methods.getMinTokensAllowed().call),
+                      retry3Times(federationContract.methods.getMembers().call),
+                    ]);
+                    minTokensAllowed = parseInt(web3.utils.fromWei(minAllowed, 'ether'));
+                    maxTokensAllowed = parseInt(web3.utils.fromWei(maxAllowed, 'ether'));
+                    maxDailyLimit = parseInt(web3.utils.fromWei(maxWithdraw, 'ether'));
+
                     feePercentage = await retry3Times(bridgeContract.methods.getFeePercentage().call);
                     fee = feePercentage/feePercentageDivider;
                     let feeFormated = (fee*100).toFixed(2) + '%';
                     let isValidatingAllowedTokens = true;
-                    let federators = await retry3Times(federationContract.methods.getMembers().call);
 
                     $('#fee').html(feeFormated);
                     $('#config-fee').text(feeFormated);
@@ -1052,7 +1060,6 @@
                 async function getMaxBalance(event) {
                     if(event)
                         event.preventDefault();
-
                     let tokenToCross = $('#tokenAddress').val();
                     let token = TOKENS.find(element => element.token == tokenToCross);
                     if(!token) {
@@ -1113,9 +1120,9 @@
                         }
 
                     }
-                    const amountWithDecimalsBN = new BN(amountWithDecimals);
-                    const amountFeesBN = fee == 0 ? amountWithDecimalsBN : amountWithDecimalsBN.mul(new BN(feePercentage)).div(new BN(feePercentageDivider));
-                    const amountBN = amountWithDecimalsBN.add(amountFeesBN);
+                    const amountBN = new BN(amountWithDecimals).mul(new BN(feePercentageDivider)).div(new BN(feePercentageDivider - feePercentage));
+                    const amountFeesBN = fee == 0 ? amountBN : amountBN.mul(new BN(feePercentage)).div(new BN(feePercentageDivider));
+
                     disableInputs(true);
                     $('.fees').hide();
                     $('#secondsPerBlock').text(config.secondsPerBlock);
@@ -1216,14 +1223,15 @@
                         markInvalidAmount('Invalid amount');
                         return;
                     }
-                    let parsedAmount = Number(amount);
+                    let parsedAmount = new BigNumber(amount);
                     if(parsedAmount <= 0) {
                         markInvalidAmount("Must be bigger than 0");
                         return;
                     }
                     $('#amount').removeClass('ok');
-                    let totalCost = fee == 0 ? new BigNumber(parsedAmount) : new BigNumber(parsedAmount).dividedBy(1-fee);
+                    let totalCost = fee == 0 ? parsedAmount : parsedAmount.dividedBy(1-fee);
                     let serviceFee = totalCost.times(fee);
+
                     $('#serviceFee').html(serviceFee.toFormat(6, BigNumber.ROUND_DOWN));
                     $('#totalCost').html(totalCost.toFormat(6, BigNumber.ROUND_DOWN));
                     try {
@@ -1259,7 +1267,7 @@
                         + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a>. Once you have installed or updated it reload the page.'));
                     }
 
-                    if(window.ethereum.enable) {
+                    if (window.ethereum.enable) {
                         window.ethereum.enable();
                     }
                     window.ethereum.autoRefreshOnNetworkChange = false;
@@ -1584,14 +1592,14 @@
 
                 const USDT_TOKEN = { token: 'USDT', name: 'Tether USD', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png',
                     30:{symbol:'rUSDT', address:'0xe506F698B31a66049bD4653Ed934e7A07Cbc5549', decimals:18},
-                    31:{symbol:'rKovUSDT', address:'0xcdc8ccbbfb6407c53118fe47259e8d00c81f42cd', decimals:18},
+                    31:{symbol:'rKovUSDT', address:'0x4cfE225cE54c6609a525768b13F7d87432358C57', decimals:18},
                     1:{symbol:'USDT', address:'0xdac17f958d2ee523a2206206994597c13d831ec7', decimals:6},
                     42:{symbol:'USDT', address:'0x13512979ade267ab5100878e2e0f485b568328a4', decimals:6},
                 };
 
                 const USDC_TOKEN = { token: 'USDC', name: 'USD Coin', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
                     30:{symbol:'rUSDC', address:'0x5a42221d7aae8e185bc0054bb036d9757ec18857', decimals:18},
-                    31:{symbol:'rKovUSDC', address:'0x6117c9529f15c52e2d3188d5285c745b757b5825', decimals:18},
+                    31:{symbol:'rKovUSDC', address:'0xed3334adb07a3a5947d268e5a8c67b84f5464963', decimals:18},
                     1:{symbol:'USDC', address:'0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', decimals:6},
                     42:{symbol:'USDC', address:'0xe22da380ee6b445bb8273c81944adeb6e8450422', decimals:6},
                 };
@@ -1608,8 +1616,13 @@
                     //RFOX does not have a testnet token
                 };
 
+                const OLD_TOKEN = { token: 'Ω', name: 'Ω Old Mintable', icon: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xE41d2489571d322189246DaFA5ebDe1F4699F498/logo.png',
+                    31:{symbol:'rΩ', address:'0xdFFF789Db00907D2a59007a58e5b551aa3AD66Ea', decimals:18},
+                    42:{symbol:'Ω', address:'0x865f275121113b3fe8f91632aeaa4637e8a9f861', decimals:18},
+                };
+
                 // Remove INV token because its paused on mainnet
-                const TOKENS = [ DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN ];
+                const TOKENS = [ OLD_TOKEN, DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN ];
                 // --------- TOKENS  END --------------
             </script>
         </div>

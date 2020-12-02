@@ -49,7 +49,7 @@ module.exports = {
         new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
       network_id: 31,
       gas: 6300000,
-      gasPrice: 60000000, // 0.06 gwei
+      gasPrice: 70000000, // 0.07 gwei
       skipDryRun: true
     },
     rskmainnet: {
@@ -57,7 +57,7 @@ module.exports = {
         new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
       network_id: 30,
       gas: 6300000,
-      gasPrice: 60000000, // 0.06 gwei
+      gasPrice: 65000000, // 0.065 gwei
       skipDryRun: true
     },
      //Ethereum
