@@ -7,7 +7,7 @@ MAIN_BLOCK_NUMBER=""
 SIDE_BLOCK_NUMBER=""
 ETH_HOST=""
 RSK_HOST=""
-PROGRAMS="docker npm nodejs"
+PROGRAMS="docker npm nodejs jq"
 
 quit() {
     if [ $1 -eq 1 ]; then
@@ -82,10 +82,23 @@ rsk_host(){
     quit 1 "There was an error setting the RSK host and port"
 }
 
+last_block_rsk() {
+    LAST_BLOCK_RSK=$(curl -s 'https://backend.explorer.rsk.co/api?module=blocks&action=getBlocks&limit=1')
+    MAIN_BLOCK_NUMBER=$(echo $LAST_BLOCK_RSK | jq '. | .data[0].number')
+}
+
+last_block_eth() {
+    LAST_BLOCK_ETH=$(curl -s https://api.blockcypher.com/v1/eth/main)
+    SIDE_BLOCK_NUMBER=$(echo $LAST_BLOCK_ETH | jq '. | .height')
+}
+
 block() {
-    read -p "Enter the block number of RSK mainchain to start syncing [2683829] " MAIN_BLOCK_NUMBER
+    last_block_eth &&
+        last_block_rsk &&
+        echo $MAIN_BLOCK_NUMBER
+        read -p "Enter the block number of RSK mainchain to start syncing [$MAIN_BLOCK_NUMBER] " MAIN_BLOCK_NUMBER &&
+        read -p "Enter the block number from Eth chain to start syncing [$SIDE_BLOCK_NUMBER] " SIDE_BLOCK_NUMBER
     MAIN_BLOCK_NUMBER=${MAIN_BLOCK_NUMBER:-"2683829"}
-    read -p "Enter the block number from Eth chain to start syncing [10823910] " SIDE_BLOCK_NUMBER
     SIDE_BLOCK_NUMBER=${SIDE_BLOCK_NUMBER:-"10823910"}
     [ ! -z "${MAIN_BLOCK_NUMBER}" ] &&
         echo $MAIN_BLOCK_NUMBER > $DEST_DIR/federator/db/lastBlock.txt
