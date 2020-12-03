@@ -5,6 +5,8 @@ DEST_DIR=""
 FED_KEY=""
 MAIN_BLOCK_NUMBER=""
 SIDE_BLOCK_NUMBER=""
+MAIN_BLOCK=""
+SIDE_BLOCK=""
 ETH_HOST=""
 RSK_HOST=""
 PROGRAMS="docker npm nodejs jq"
@@ -29,7 +31,6 @@ config() {
 check_required_programs() {
     echo "Checking for required programs..."
     rc=0
-    PROGRAMS=$1
     for program in $PROGRAMS; do
         if ! command -v "$program" >/dev/null 2>&1; then
             rc=1
@@ -89,18 +90,17 @@ last_block_rsk() {
 }
 
 last_block_eth() {
-    LAST_BLOCK_ETH=$(curl -s https://api.blockcypher.com/v1/eth/main)
-    SIDE_BLOCK_NUMBER=$(echo $LAST_BLOCK_ETH | jq '. | .height')
+    SIDE_BLOCK_NUMBER=$(curl -fSs  https://api.blockcypher.com/v1/eth/main | jq -r '.height')
+    [ "$SIDE_BLOCK_NUMBER" != "null" ]
 }
 
 block() {
     last_block_eth &&
         last_block_rsk &&
-        echo $MAIN_BLOCK_NUMBER
-        read -p "Enter the block number of RSK mainchain to start syncing [$MAIN_BLOCK_NUMBER] " MAIN_BLOCK_NUMBER &&
-        read -p "Enter the block number from Eth chain to start syncing [$SIDE_BLOCK_NUMBER] " SIDE_BLOCK_NUMBER
-    MAIN_BLOCK_NUMBER=${MAIN_BLOCK_NUMBER:-"2683829"}
-    SIDE_BLOCK_NUMBER=${SIDE_BLOCK_NUMBER:-"10823910"}
+        read -p "Enter the block number of RSK mainchain to start syncing [$MAIN_BLOCK_NUMBER] " MAIN_BLOCK &&
+        read -p "Enter the block number from Eth chain to start syncing [$SIDE_BLOCK_NUMBER] " SIDE_BLOCK
+    MAIN_BLOCK_NUMBER=${MAIN_BLOCK:-$MAIN_BLOCK_NUMBER}
+    SIDE_BLOCK_NUMBER=${SIDE_BLOCK:-$SIDE_BLOCK_NUMBER}
     [ ! -z "${MAIN_BLOCK_NUMBER}" ] &&
         echo $MAIN_BLOCK_NUMBER > $DEST_DIR/federator/db/lastBlock.txt
     [ ! -z "${SIDE_BLOCK_NUMBER}" ] &&
@@ -139,7 +139,7 @@ setup() {
 if [ ! -z $1 ]; then
     UPDATE=$1
 else
-    quit 1 "Undefinied parameter. 1 for install, 0 to update."
+    quit 1 "Undefinied parameter. 0 for install, 1 to update."
 fi
 
 if [ ! -z $2 ]; then
