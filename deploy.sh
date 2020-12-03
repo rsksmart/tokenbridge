@@ -83,8 +83,9 @@ rsk_host(){
 }
 
 last_block_rsk() {
-    LAST_BLOCK_RSK=$(curl -s 'https://backend.explorer.rsk.co/api?module=blocks&action=getBlocks&limit=1')
-    MAIN_BLOCK_NUMBER=$(echo $LAST_BLOCK_RSK | jq '. | .data[0].number')
+    MAIN_BLOCK_NUMBER=$(curl -fSs 'https://backend.explorer.rsk.co/api?module=blocks&action=getBlocks&limit=1' |
+        jq -r '.data[0].number')
+    [ "$MAIN_BLOCK_NUMBER" != "null" ]
 }
 
 last_block_eth() {
