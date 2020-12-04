@@ -3,7 +3,8 @@
   "name": "bridge",
   "version": "1.0.0",
   "contracts": {
-    "Bridge": "Bridge_v0"
+    "Bridge": "Bridge",
+    "Bridge_v0": "Bridge_v0"
   },
   "dependencies": {},
   "compiler": {

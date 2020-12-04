@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "./zeppelin/token/ERC20/ERC20Detailed.sol";
 
-interface IBridge_v1 {
+interface IBridge {
     function version() external pure returns (string memory);
 
     function getFeePercentage() external view returns(uint);

@@ -14,13 +14,13 @@ import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/utils/Address.sol";
 import "./zeppelin/math/SafeMath.sol";
 
-import "./IBridge_v1.sol";
+import "./IBridge.sol";
 import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
 import "./AllowTokens.sol";
 import "./Utils.sol";
 
-contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
@@ -44,6 +44,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     //Bridge_v1 variables
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
+    bool private alreadyRun;
 
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
@@ -67,7 +68,7 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     }
 
     function version() external pure returns (string memory) {
-        return "v1";
+        return "v2";
     }
 
     modifier onlyFederation() {
@@ -174,12 +175,16 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
-        uint256 fee = 0;
-        if(feePercentage > 0) {
-            fee = amount.mul(feePercentage).div(feePercentageDivider);
+        uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
+        uint256 amountMinusFees = amount.sub(fee);
+        if (isASideToken) {
+            uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
+            fee = fee.add(modulo);
+            amountMinusFees = amountMinusFees.sub(modulo);
+        }
+        if(fee > 0) {
             IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
-        uint256 amountMinusFees = amount - fee;
         if (isASideToken) {
             verifyWithAllowTokens(tokenToUse, amount, isASideToken);
             //Side Token Crossing
@@ -301,5 +306,22 @@ contract Bridge_v1 is Initializable, IBridge_v1, IERC777Recipient, UpgradablePau
         emit Upgrading(isUpgrading);
     }
 
-}
+    //This method is only to recreate the USDT and USDC tokens on rsk without granularity restrictions.
+    function clearSideToken() external onlyOwner returns(bool) {
+        require(!alreadyRun, "already done");
+        alreadyRun = true;
+        address payable[4] memory sideTokens = [
+            0xe506F698b31a66049BD4653ed934E7a07Cbc5549,
+            0x5a42221D7AaE8e185BC0054Bb036D9757eC18857,
+            0xcdc8ccBbFB6407c53118fE47259e8d00C81F42CD,
+            0x6117C9529F15c52e2d3188d5285C745B757b5825
+        ];
+        for (uint i = 0; i < sideTokens.length; i++) {
+            address originalToken = address(originalTokens[sideTokens[i]]);
+            originalTokens[sideTokens[i]] = NULL_ADDRESS;
+            mappedTokens[originalToken] = ISideToken(NULL_ADDRESS);
+        }
+        return true;
+    }
 
+}
