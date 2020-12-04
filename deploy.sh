@@ -120,7 +120,7 @@ build() {
 }
 
 run_message() {
-    RUN_MESSAGE="docker run --rm \
+    RUN_MESSAGE="docker run -d --rm \
     --network host \
     -v $DEST_DIR/federator/config:/app/federator/config \
     -v $DEST_DIR/federator/db:/app/federator/db \
