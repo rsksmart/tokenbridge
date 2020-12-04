@@ -1,4 +1,4 @@
-const SideTokenFactory = artifacts.require('SideTokenFactory_v1');
+const SideTokenFactory = artifacts.require('SideTokenFactory');
 const Bridge = artifacts.require("Bridge_v0");
 
 module.exports = function(deployer, networkName, accounts) {

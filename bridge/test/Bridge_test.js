@@ -1,9 +1,9 @@
 const MainToken = artifacts.require('./MainToken');
 const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
-const SideToken = artifacts.require('./SideToken_v1');
-const Bridge = artifacts.require('./Bridge_v1');
+const SideToken = artifacts.require('./SideToken');
+const Bridge = artifacts.require('./Bridge');
 const AllowTokens = artifacts.require('./AllowTokens');
-const SideTokenFactory = artifacts.require('./SideTokenFactory_v1');
+const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const UtilsContract = artifacts.require('./Utils');
 const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
@@ -13,7 +13,7 @@ const BN = web3.utils.BN;
 const randomHex = web3.utils.randomHex;
 const ONE_DAY = 24*3600;
 
-contract('Bridge_v1', async function (accounts) {
+contract('Bridge', async function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
@@ -38,7 +38,7 @@ contract('Bridge_v1', async function (accounts) {
 
         it('should retrieve the version', async function () {
             const result = await this.bridge.version();
-            assert.equal(result, "v1");
+            assert.equal(result, "v2");
         });
 
         describe('owner', async function () {
@@ -238,10 +238,10 @@ contract('Bridge_v1', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '1000';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                
+
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
@@ -269,7 +269,7 @@ contract('Bridge_v1', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -341,7 +341,7 @@ contract('Bridge_v1', async function (accounts) {
                 const fees = amount.mul(payment).div(feePercentageDivider);
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -351,7 +351,7 @@ contract('Bridge_v1', async function (accounts) {
 
                 let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,uint256,string,bytes,uint8,uint256)');
                 assert.equal(result.receipt.rawLogs[4].topics[0], eventSignature);
-                
+
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
                       "indexed": true,
@@ -413,7 +413,7 @@ contract('Bridge_v1', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -425,15 +425,13 @@ contract('Bridge_v1', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = '0x1100';
                 await utils.expectThrow(this.bridge.tokensReceived(erc777.address, erc777.address, tokenOwner, amount, userData, '0x', { from: tokenOwner }));
             });
 
-            
             it('send money to contract should fail', async function () {
                 const payment = new BN('1000');
                 await utils.expectThrow(web3.eth.sendTransaction({ from:tokenOwner, to: this.bridge.address, value: payment }));
@@ -459,6 +457,34 @@ contract('Bridge_v1', async function (accounts) {
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
                 const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                assert.equal(isKnownToken, true);
+            });
+
+            it('receiveTokens with payment and granularity successful', async function () {
+                const payment = new BN('33');
+                const amount = new BN(web3.utils.toWei('1000'));
+                const granularity = '100';
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+
+                await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                const feePercentageDivider = await this.bridge.feePercentageDivider();
+                const fees = amount.mul(payment).div(feePercentageDivider);
+                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
+                await this.bridge.setFeePercentage(payment, { from: bridgeManager});
+                await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
+
+                let receipt = await this.bridge.receiveTokens(erc777.address, amount, { from: tokenOwner });
+                utils.checkRcpt(receipt);
+
+                const ownerBalance = await erc777.balanceOf(bridgeManager);
+                assert.equal(ownerBalance.toString(), fees.toString());
+                assert.equal(fees.toString(), (amount*0.33/100).toString());
+                const tokenBalance = await erc777.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
+                const bridgeBalance = await erc777.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
+                const isKnownToken = await this.bridge.knownTokens(erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -597,7 +623,7 @@ contract('Bridge_v1', async function (accounts) {
             this.mirrorAllowTokens = await AllowTokens.new(bridgeManager);
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
+            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
                 federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
 
@@ -685,7 +711,7 @@ contract('Bridge_v1', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation }) 
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation })
                 );
             });
 
@@ -696,7 +722,7 @@ contract('Bridge_v1', async function (accounts) {
 
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, utils.NULL_ADDRESS, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation }) 
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, 1, { from: federation })
                 );
             });
 
@@ -887,11 +913,73 @@ contract('Bridge_v1', async function (accounts) {
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex, this.decimals, new BN('10000000000000000000'), { from: federation }));
             });
-            
+
             it('should overflow granularity multiplication', async function () {
                 await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, web3.utils.toWei('100000000000000000000000000000000000000000000000000'), "MAIN",
                 this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                 this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: federation }));
+            });
+
+            it('crossback with amount lower than granularity', async function () {
+                const granularity = '10000000000000000';
+                const decimals = 18;
+                await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, granularity, { from: federation });
+                const amountToCrossBack = new BN(web3.utils.toWei('1'));
+                const payment = new BN('33');
+
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
+                const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
+                const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
+                console.log('amountToCrossBack', amountToCrossBack.toString());
+
+                const originalTokenBalance = await sideToken.balanceOf(anAccount);
+                await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
+                await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
+
+                let receipt = await this.mirrorBridge.receiveTokens(sideToken.address, amountToCrossBack, { from: anAccount });
+                utils.checkRcpt(receipt);
+
+                const ownerBalance = await sideToken.balanceOf(bridgeManager);
+                assert.equal(ownerBalance.toString(), fees.add(modulo).toString());
+                assert.equal(fees.toString(), (amountToCrossBack*0.33/100).toString());
+                const tokenBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amountToCrossBack));
+                const bridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(bridgeBalance.toString(), '0');
+            });
+
+            it('crossback with amount lower than granularity and no fees', async function () {
+                const granularity = '10000000000000000';
+                const decimals = 18;
+                await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, this.amount, "MAIN",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, granularity, { from: federation });
+                const amountToCrossBack = new BN(web3.utils.toWei('1'));
+                const payment = new BN(0);
+
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
+                const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
+                const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
+                const originalTokenBalance = await sideToken.balanceOf(anAccount);
+
+                await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
+                await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
+
+                let receipt = await this.mirrorBridge.receiveTokens(sideToken.address, amountToCrossBack, { from: anAccount });
+                utils.checkRcpt(receipt);
+
+                const ownerBalance = await sideToken.balanceOf(bridgeManager);
+                assert.equal(ownerBalance.toString(), fees.add(modulo).toString());
+                const tokenBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amountToCrossBack));
+                const bridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(bridgeBalance.toString(), '0');
             });
 
         });
@@ -925,6 +1013,26 @@ contract('Bridge_v1', async function (accounts) {
 
                     let mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance.toString(), '0');
+                });
+
+                it('clearSideToken should be successful', async function () {
+                    let sideTokenAddress = '0xe506f698b31a66049bd4653ed934e7a07cbc5549';
+                    await this.mirrorBridge.clearSideToken({ from: bridgeManager });
+                    let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
+                    assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
+                });
+
+                it('clearSideToken should fail if already run', async function () {
+                    let sideTokenAddress = '0xe506f698b31a66049bd4653ed934e7a07cbc5549';
+                    await this.mirrorBridge.clearSideToken({ from: bridgeManager });
+                    let originalTokenAddressNow = await this.mirrorBridge.mappedTokens(sideTokenAddress);
+                    assert.equal(originalTokenAddressNow, utils.NULL_ADDRESS);
+
+                    await utils.expectThrow(this.mirrorBridge.clearSideToken( { from: bridgeManager }));
+                });
+
+                it('clearSideToken should fail if not the owner', async function () {
+                    await utils.expectThrow(this.mirrorBridge.clearSideToken({ from: anAccount }));
                 });
 
                 it('using ERC777 tokensReceived', async function () {
@@ -989,7 +1097,6 @@ contract('Bridge_v1', async function (accounts) {
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
             this.decimals = "18";
-            
 
             let data = this.mirrorBridge.contract.methods['initialize(address,address,address,address,string)'](
                 this.multiSig.address,
@@ -1260,7 +1367,7 @@ contract('Bridge_v1', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                
+
                 await this.allowTokens.addAllowedToken(erc777.address, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 await utils.expectThrow(erc777.send(this.bridge.address, amount, '0x1100', { from: tokenOwner }));

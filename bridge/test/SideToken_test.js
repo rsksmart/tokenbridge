@@ -1,11 +1,11 @@
-const SideToken = artifacts.require('./SideToken_v1');
+const SideToken = artifacts.require('./SideToken');
 const mockERC677Receiver = artifacts.require('./mockERC677Receiver');
 const mockERC777Recipient = artifacts.require('./mockERC777Recipient');
 
 const utils = require('./utils');
 const expectThrow = utils.expectThrow;
 
-contract('SideToken_v1', async function (accounts) {
+contract('SideToken', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];
@@ -232,7 +232,7 @@ contract('SideToken_v1', async function (accounts) {
     describe('granularity 1000', async function () {
         beforeEach(async function () {
             this.granularity = '1000';
-            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, this.granularity);
+            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, this.granularity,);
         });
 
         it('initial state', async function () {
@@ -250,12 +250,20 @@ contract('SideToken_v1', async function (accounts) {
             assert.equal(totalSupply, this.granularity);
         });
 
-        it('mint throws if less than granularity', async function () {
-            await expectThrow(this.token.mint(anAccount, 100, '0x', '0x', { from: tokenCreator }));
+        it('mint works if less than granularity', async function () {
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            const amount = 100;
+            await this.token.mint(anAccount, amount, '0x', '0x', { from: tokenCreator });
+            const anAccountNewBalance = await this.token.balanceOf(anAccount);
+            assert.equal(Number(anAccountBalance) + amount, Number(anAccountNewBalance));
         });
 
         it('mint throws if not multiple of granularity', async function () {
-            await expectThrow(this.token.mint(anAccount, 1001, '0x', '0x', { from: tokenCreator }));
+            const anAccountBalance = await this.token.balanceOf(anAccount);
+            const amount = 1001;
+            await this.token.mint(anAccount, 1001, '0x', '0x', { from: tokenCreator });
+            const anAccountNewBalance = await this.token.balanceOf(anAccount);
+            assert.equal(Number(anAccountBalance) + amount, Number(anAccountNewBalance));
         });
 
         it('transfer account to account', async function () {
@@ -272,22 +280,32 @@ contract('SideToken_v1', async function (accounts) {
             assert.equal(totalSupply.toString(), '10000');
         });
 
-        it('transfer throws if  less tan hgranularity', async function () {
+        it('transfer works if  less than granularity', async function () {
+            const amount = 100;
             await this.token.mint(anAccount, 10000, '0x', '0x', { from: tokenCreator });
-            await expectThrow(this.token.transfer(anotherAccount, 100, { from: anAccount }));
+            balance = await this.token.balanceOf(anotherAccount);
+            await this.token.transfer(anotherAccount, amount, { from: anAccount });
+            newBalance = await this.token.balanceOf(anotherAccount);
+            assert.equal(Number(newBalance), Number(balance) + amount);
         });
 
-        it('transfer throws if not multiple of granularity', async function () {
+        it('transfer works if not multiple of granularity', async function () {
+            const amount = 1100;
             await this.token.mint(anAccount, 10000, '0x', '0x', { from: tokenCreator });
-            await expectThrow(this.token.transfer(anotherAccount, 1100, { from: anAccount }));
+            balance = await this.token.balanceOf(anotherAccount);
+            await this.token.transfer(anotherAccount, amount, { from: anAccount });
+            newBalance = await this.token.balanceOf(anotherAccount);
+            assert.equal(Number(newBalance), Number(balance) + amount);
         });
 
-        it('burn throws if not multiple of granularity', async function () {
+        it('burn works if not multiple of granularity', async function () {
+            const amount = 1;
             await this.token.mint(anAccount, 1000000, '0x', '0x', { from: tokenCreator });
-
-            await expectThrow(this.token.burn(anAccount, 1, '0x', '0x', { from: tokenCreator }));
+            balance = await this.token.balanceOf(anAccount);
+            await this.token.burn(amount, '0x', { from: anAccount });
+            newBalance = await this.token.balanceOf(anAccount);
+            assert.equal(Number(balance) - amount, Number(newBalance));
         });
-        
     });
 
 });
