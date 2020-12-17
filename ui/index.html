@@ -1055,7 +1055,7 @@
                         $('#logIn').attr('onclick', '');
                         isInstalled()
                         .catch( (err) => {
-                            onMetaMaskConnectionError(err);
+                            onMetaMaskConnectionError(err.message ? err : { message: err });
                         });
                     }
                 }
