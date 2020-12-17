@@ -925,6 +925,7 @@
                 let fee = 0;
                 let feePercentage = 0;
                 let feePercentageDivider = 10_000;
+                let rLogin;
 
                 $(document).ready(function() {
                     new ClipboardJS('.copy');
@@ -949,6 +950,31 @@
                     disableInputs(true);
 
                     $('#logIn').attr('onclick', 'onLogInClick()');
+
+                    let rpc = {
+                        1: 'https://mainnet.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
+                        30: 'https://public-node.rsk.co',
+                    };
+                    supportedChains = [1,30];
+                    if(isTestnet) {
+                        rpc = {
+                            42: 'https://kovan.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
+                            31: 'https://public-node.testnet.rsk.co',
+                        };
+                        supportedChains = [42,31];
+                    }
+                    rLogin = new window.RLogin.default({
+                        cacheProvider: false,
+                        providerOptions: {
+                            walletconnect: {
+                                package: window.WalletConnectProvider.default,
+                                options: {
+                                    rpc: rpc
+                                }
+                            }
+                        },
+                        supportedChains: supportedChains
+                    });
 
                     $('#tokenAddress').change(function(event) {
                         cleanAlertSuccess();
@@ -1268,23 +1294,6 @@
                     $('#amount').removeClass('ok');
                     $('.fees').hide();
                 }
-
-
-                const rLogin = new window.RLogin.default({
-                    cacheProvider: false,
-                    providerOptions: {
-                        walletconnect: {
-                            package: window.WalletConnectProvider.default,
-                            options: {
-                            rpc: {
-                                1: 'https://mainnet.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
-                                30: 'https://public-node.rsk.co',
-                            }
-                            }
-                        }
-                    },
-                    supportedChains: [1, 30]
-                })
 
                 async function isInstalled() {
                     if (window.ethereum) {
