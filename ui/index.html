@@ -505,6 +505,11 @@
                     animation-delay: -0.1s;
             }
 
+            /* this is added because rLogin is wrongly displayed */
+            .navbar {
+                position: inherit;
+            }
+
             @-webkit-keyframes sk-circleFadeDelay {
             0%, 39%, 100% { opacity: 0; }
             40% { opacity: 1; }
@@ -824,6 +829,10 @@
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bignumber.js/9.0.0/bignumber.min.js" integrity="sha384-W92bSiy/NxoN+p5YNhm8ybWnIFnqtH0/Bxc4l9jojSsPK2KQdOvQonrRBon0O/om" crossorigin="anonymous"></script>
             <!-- Copy to Clipboard https://clipboardjs.com/ -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha384-8CYhPwYlLELodlcQV713V9ZikA3DlCVaXFDpjHfP8Z36gpddf/Vrt47XmKDsCttu" crossorigin="anonymous"></script>
+            <!-- rLogin -->
+            <script src="https://unpkg.com/@rsksmart/rlogin@0.1.0/dist/main.js" integrity="sha384-cYICMPdI8IRLucayN5X65f1l+aGnNpFUK5fyXFj8419Obj6SeIpFw57JF2SqMJFc" crossorigin="anonymous"></script>
+            <!-- Wallet Connect -->
+            <script src="https://unpkg.com/@walletconnect/web3-provider@1.3.1/dist/umd/index.min.js" integrity="sha384-DOJahViDNA9y40Y+NIb/qcO4Cxfe58MRJvtlIzdHdHRrnnhppgFGnipStRNW2DXG" crossorigin="anonymous"></script>
            <!-- async-await-retry  https://github.com/VoodooTeam/async-await-retry -->
             <script>
                 const getPromise = (fn, args) => {
@@ -992,7 +1001,7 @@
                         }
                     });
                     updateTokenListTab();
-                    isInstalled();
+                    // isInstalled(); - uncomment to show popup on page load
                 });
 
                 async function waitForReceipt(txHash) {
@@ -1260,25 +1269,36 @@
                     $('.fees').hide();
                 }
 
+
+                const rLogin = new window.RLogin.default({
+                    cacheProvider: false,
+                    providerOptions: {
+                        walletconnect: {
+                            package: window.WalletConnectProvider.default,
+                            options: {
+                            rpc: {
+                                1: 'https://mainnet.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
+                                30: 'https://public-node.rsk.co',
+                            }
+                            }
+                        }
+                    },
+                    supportedChains: [1, 30]
+                })
+
                 async function isInstalled() {
-                    if (typeof window.ethereum === 'undefined') {
-                        console.error('undefined window.ethereum');
-                        return Promise.reject(new Error('You have an old version or not installed a wallet extension. Please install <a href="https://chrome.google.com/webstore/detail/nifty-wallet/jbdaocneiiinmjbjlgalhcelgbejmnid" target="_blank">Nifty wallet</a>'
-                        + ' or <a href="https://metamask.io/" target="_blank">MetaMask</a>. Once you have installed or updated it reload the page.'));
+                    if (window.ethereum) {
+                        window.ethereum.autoRefreshOnNetworkChange = false;
                     }
 
-                    if (window.ethereum.enable) {
-                        window.ethereum.enable();
-                    }
-                    window.ethereum.autoRefreshOnNetworkChange = false;
-
-                    window.web3 = new Web3(window.ethereum);
+                    const provider = await rLogin.connect()
+                    window.web3 = new Web3(provider);
                     let accounts = await getAccounts();
                     let chainId = await web3.eth.net.getId();
                     await updateCallback(chainId, accounts);
                     //web3.currentProvider.publicConfigStore.on('update', updateCallback);
-                    window.ethereum.on('chainChanged', updateNetwork);
-                    window.ethereum.on('accountsChanged', updateAddress);
+                    provider.on('chainChanged', updateNetwork);
+                    provider.on('accountsChanged', updateAddress);
                     return chainId;
                 }
 
