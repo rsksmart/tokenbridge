@@ -1301,6 +1301,7 @@
                     }
 
                     const provider = await rLogin.connect()
+                        .catch(() => { throw new Error('Login failed. Please try again.') })
                     window.web3 = new Web3(provider);
                     let accounts = await getAccounts();
                     let chainId = await web3.eth.net.getId();
