@@ -25,12 +25,18 @@ module.exports = class TransactionSender {
         return `0x${Math.ceil(parseInt(number)).toString(16)}`;
     }
 
-    getGasPrice(chainId) {
+    async getGasPrice(chainId) {
         chainId = parseInt(chainId)
+        console.log(chainId)
         if(chainId>= 30 && chainId <=33) {
             return this.getRskGasPrice();
         }
         return this.getEthGasPrice();
+    }
+
+    async getGasLimit(rawTx) {
+        let estimatedGas = await this.client.eth.estimateGas(rawTx);
+        return Math.round(estimatedGas * 1.5);
     }
 
     async getEthGasPrice() {
@@ -50,7 +56,6 @@ module.exports = class TransactionSender {
         const gasPrice = await this.getGasPrice(chainId);
         let rawTx = {
             gasPrice: this.numberToHexString(gasPrice),
-            gas: this.gasLimit,
             value: this.numberToHexString(value),
             to: to,
             data: data,
@@ -59,6 +64,8 @@ module.exports = class TransactionSender {
             r: 0,
             s: 0
         }
+        rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
+
         return rawTx;
     }
 
@@ -118,7 +125,7 @@ module.exports = class TransactionSender {
         }
         this.logger.error(error, errorInfo);
         this.logger.error('RawTx that failed', rawTx);
-        throw new CustomError(`Transaction Failed: ${error} ${stack}`, errorInfo);      
+        throw new CustomError(`Transaction Failed: ${error} ${stack}`, errorInfo);
     }
 
 }
