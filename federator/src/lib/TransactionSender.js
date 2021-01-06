@@ -10,7 +10,6 @@ module.exports = class TransactionSender {
         this.client = client;
         this.logger = logger;
         this.chainId = null;
-        this.gasLimit = this.numberToHexString(3500000);
         this.manuallyCheck = `${config.storagePath || __dirname}/manuallyCheck.txt`;
     }
 
@@ -35,8 +34,9 @@ module.exports = class TransactionSender {
     }
 
     async getGasLimit(rawTx) {
-        let estimatedGas = await this.client.eth.estimateGas(rawTx);
-        return Math.round(estimatedGas * 1.5);
+        let estimatedGas = await this.client.eth.estimateGas({ gasPrice: rawTx.gasPrice, value: rawTx.value, to: rawTx.to, data: rawTx.data, from: rawTx.from});
+        estimatedGas = (estimatedGas < 250000) ? 250000 : 3500000;
+        return estimatedGas;
     }
 
     async getEthGasPrice() {
@@ -65,7 +65,6 @@ module.exports = class TransactionSender {
             s: 0
         }
         rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
-
         return rawTx;
     }
 

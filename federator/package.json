@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "jest": "^26.4.2",
-    "web3-core-promievent": "^1.2.11"
+    "web3-core-promievent": "^1.2.11",
+    "node-notifier": "^8.0.1"
   }
 }
