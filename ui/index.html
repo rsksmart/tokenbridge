@@ -82,8 +82,8 @@
                 margin-bottom: 30px;
                 padding: 40px 20px;
             }
-            #tokensTab{
-                margin-top: 6em;
+            #previousTxnsTab {
+                display: none;
             }
             .form-control:disabled {
                 background-color: transparent;
@@ -670,8 +670,8 @@
                     <h5 class="subtitle">Active Account Transactions</h5>
                     <nav>
                         <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                            <a class="nav-item nav-link active" id="nav-eth-rsk-tab" data-toggle="tab" href="#nav-rsk-eth" role="tab" aria-controls="nav-rsk-eth" aria-selected="true">RSK -> ETH</a>
-                            <a class="nav-item nav-link" id="nav-eth-eth-tab" data-toggle="tab" href="#nav-eth-rsk" role="tab" aria-controls="nav-eth-rsk" aria-selected="false">ETH -> RSK</a>
+                            <a class="nav-item nav-link active" id="nav-rsk-eth-tab" data-toggle="tab" href="#nav-rsk-eth" role="tab" aria-controls="nav-rsk-eth" aria-selected="true">RSK -> ETH</a>
+                            <a class="nav-item nav-link" id="nav-eth-rsk-tab" data-toggle="tab" href="#nav-eth-rsk" role="tab" aria-controls="nav-eth-rsk" aria-selected="false">ETH -> RSK</a>
                         </div>
                     </nav>
                         <div class="tab-content" id="nav-tabContent">
@@ -709,6 +709,12 @@
                                         <!-- Dinamic content made with JS -->
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                        <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">
+                            <div class="btn-group mr-2" role="group" aria-label="First group">
+                              <button type="button" id="txn-previous" class="btn btn-secondary">< previous</button>
+                              <button type="button" id="txn-next" class="btn btn-secondary">next ></button>
                             </div>
                         </div>
                 </div>
@@ -918,6 +924,25 @@
                 }
 
                 /**
+                 * Credit to: https://arjunphp.com/can-paginate-array-objects-javascript/
+                 */
+                function Paginator(items, page = 1, per_page = 5) {
+                    let offset = (page - 1) * per_page;
+                    let data = items.slice(offset).slice(0, per_page);
+                    let total_pages = Math.ceil(items.length / per_page);
+
+                    return {
+                        page,
+                        per_page,
+                        pre_page: page - 1 ? page - 1 : null,
+                        next_page: (total_pages > page) ? page + 1 : null,
+                        total: items.length,
+                        total_pages,
+                        data
+                    };
+                }
+
+                /**
                  * Poll given network for latest block number
                  *
                  * @param {Function} cb: callback function to call upon new value
@@ -934,6 +959,7 @@
 
                     return intervalId;
                 };
+
 
 
                 async function waitForReceipt(txHash) {
@@ -999,7 +1025,11 @@
                 //User
                 let address = '';
                 let activeAddressEth2RskTxns = [];
+                let eth2RskTablePage = 1;
+                let eth2RskPaginationObj = {};
                 let activeAddressRsk2EthTxns = [];
+                let rsk2EthTablePage = 1;
+                let rsk2EthPaginationObj = {};
                 //Network configuration
                 let config = null;
                 let isTestnet = true;
@@ -1150,6 +1180,42 @@
                             onMetaMaskConnectionError(typeof err === 'string' ? { message: err } : err);
                         });
                     }
+                }
+
+                function onPreviousTxnClick() {
+                    if($('#nav-eth-rsk-tab').attr('class').includes('active')) {
+                        if (eth2RskPaginationObj != {} && eth2RskPaginationObj.pre_page == null) {
+                            // no decrement applied
+                        } else {
+                            eth2RskTablePage -= 1;
+                        }
+                    } else {
+                        if (rsk2EthPaginationObj != {} && rsk2EthPaginationObj.pre_page == null) {
+                            // no decrement applied
+                        } else {
+                            rsk2EthTablePage -= 1;
+                        }
+                    }
+                    showActiveAddressTXNs();
+                }
+
+                function onNextTxnClick() {
+
+                    if($('#nav-eth-rsk-tab').attr('class').includes('active')) {
+                        if (eth2RskPaginationObj != {} && eth2RskPaginationObj.next_page == null) {
+                            // no increment applied
+                        } else {
+                            eth2RskTablePage += 1;
+                        }
+                    } else {
+                        if (rsk2EthPaginationObj != {} && rsk2EthPaginationObj.next_page == null) {
+                            // no increment applied
+                        } else {
+                            rsk2EthTablePage += 1;
+                        }
+                    }
+
+                    showActiveAddressTXNs();
                 }
 
                 async function setInfoTab() {
@@ -1485,11 +1551,28 @@
 
                 function showActiveAddressTXNs() {
 
+                    $('#previousTxnsTab')
+                        .show()
+                        .css('margin-bottom', '6em');
+                    $('#txn-previous')
+                        .off()
+                        .on('click', onPreviousTxnClick);
+                    $('#txn-next')
+                        .off()
+                        .on('click', onNextTxnClick);
+
                     let eth2RskTable = $('#eth-rsk-tbody');
                     let rsk2EthTable = $('#rsk-eth-tbody');
 
-                    let eth2RskTxns = activeAddressEth2RskTxns;
-                    let rsk2EthTxns = activeAddressRsk2EthTxns;
+                    eth2RskPaginationObj = Paginator(activeAddressEth2RskTxns, eth2RskTablePage, 3);
+                    let {
+                        data: eth2RskTxns
+                    } = eth2RskPaginationObj;
+
+                    rsk2EthPaginationObj = Paginator(activeAddressRsk2EthTxns, rsk2EthTablePage, 3);
+                    let {
+                        data: rsk2EthTxns
+                    } = rsk2EthPaginationObj;
 
                     let currentNetwork = $('.indicator span').text();
 
@@ -1499,7 +1582,6 @@
                             secondsPerBlock,
                             explorer
                         } = config;
-
 
                         let isConfig4CurrentNetwork = config.name === currentNetwork;
 
