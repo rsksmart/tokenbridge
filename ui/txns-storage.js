@@ -30,7 +30,9 @@ class TXN_Storage {
     static getAllTxns4Address(accountAddress = "", networkName = "") {
         let key = `${accountAddress}-${networkName.toLowerCase().replace(" ", '-')}`;
         let { _, txns } = this.unserializeTxns(key);
-        return txns;
+        return txns.sort((txn1, txn2) => {
+            return txn1.blockNumber <= txn2.blockNumber ? 1 : -1;
+        });
     }
  
     static addTxn(accountAddress, networkName = "", data = {}) {
