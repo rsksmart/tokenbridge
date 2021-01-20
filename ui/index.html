@@ -82,6 +82,9 @@
                 margin-bottom: 30px;
                 padding: 40px 20px;
             }
+            #previousTxnsEmptyTab {
+                display: none;
+            }
             #previousTxnsTab {
                 display: none;
             }
@@ -192,6 +195,9 @@
                 color: #BFBDBD;
             }
 
+            .btn-toolbar {
+                justify-content: center;
+            }
             .btn-primary {
                 font-family: 'Quicksand';
                 color: #fff;
@@ -380,6 +386,12 @@
                 padding: 0px;
                 max-width: 222px;
             }
+            .confirmed {
+                color: #00B520;
+            }
+            .pending {
+                color: #FEAD0D;
+            }
 
             /*Spinner*/
             .sk-fading-circle {
@@ -521,6 +533,10 @@
             @keyframes sk-circleFadeDelay {
             0%, 39%, 100% { opacity: 0; }
             40% { opacity: 1; }
+            }
+
+            table.table tr th:last-child, table.table tr td:last-child {
+                text-align: center;
             }
         </style>
     </head>
@@ -666,8 +682,15 @@
                     </form>
                 </div> <!--End of transferTab-->
 
+                <div id="previousTxnsEmptyTab">
+                    <h5 class="subtitle">Active account transactions</h5>
+                    <p class="text-center">Please note that all transactions listed here will not
+                            appear if you use another device</p>
+                    <h6 class="subtitle">No transactions for active account found</h5>
+                </div>
+
                 <div id="previousTxnsTab">
-                    <h5 class="subtitle">Active Account Transactions</h5>
+                    <h5 class="subtitle">Active account transactions</h5>
                     <nav>
                         <div class="nav nav-tabs" id="nav-tab" role="tablist">
                             <a class="nav-item nav-link active" id="nav-rsk-eth-tab" data-toggle="tab" href="#nav-rsk-eth" role="tab" aria-controls="nav-rsk-eth" aria-selected="true">RSK -> ETH</a>
@@ -679,12 +702,10 @@
                                 <table class="table">
                                     <thead>
                                       <tr>
-                                        <th scope="col">Txn Hash</th>
-                                        <th scope="col">Block Number</th>
-                                        <th scope="col">Token</th>
+                                        <th scope="col">Txn hash</th>
+                                        <th scope="col">Block number</th>
                                         <th scope="col">Amount</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">ETC</th>
+                                        <th scope="col">Status | Estimated time</th>
                                       </tr>
                                     </thead>
                                     <tbody id="rsk-eth-tbody">
@@ -697,12 +718,10 @@
                                 <table class="table">
                                     <thead>
                                       <tr>
-                                        <th scope="col">Txn Hash</th>
-                                        <th scope="col">Block Number</th>
-                                        <th scope="col">Token</th>
+                                        <th scope="col">Txn hash</th>
+                                        <th scope="col">Block number</th>
                                         <th scope="col">Amount</th>
-                                        <th scope="col">Status</th>
-                                        <th scope="col">ETC</th>
+                                        <th scope="col">Status | Estimated time</th>
                                       </tr>
                                     </thead>
                                     <tbody id="eth-rsk-tbody">
@@ -1398,6 +1417,7 @@
                         });
 
                         updateActiveAddressTXNs(address);
+                        showActiveTxnsTab();
                         showActiveAddressTXNs();
 
                     }).catch((err) => {
@@ -1480,7 +1500,10 @@
                     let chainId = await web3.eth.net.getId();
                     await updateCallback(chainId, accounts);
                     //web3.currentProvider.publicConfigStore.on('update', updateCallback);
-                    provider.on('chainChanged', updateNetwork);
+                    provider.on('chainChanged', function(newChain) {
+                        updateNetwork(newChain);
+                        showActiveTxnsTab();
+                    });
                     provider.on('accountsChanged', function(newAddresses) {
                         updateAddress(newAddresses).then(
                             (addr) => updateActiveAddressTXNs(addr)
@@ -1538,7 +1561,6 @@
                 }
 
                 function updateActiveAddressTXNs(addr) {
-
                     if(config.name.toLowerCase().includes('eth')) {
                         activeAddressEth2RskTxns = TXN_Storage.getAllTxns4Address(address, config.name);
                         activeAddressRsk2EthTxns = TXN_Storage.getAllTxns4Address(address, config.crossToNetwork.name);
@@ -1546,11 +1568,52 @@
                         activeAddressRsk2EthTxns = TXN_Storage.getAllTxns4Address(address, config.name);
                         activeAddressEth2RskTxns = TXN_Storage.getAllTxns4Address(address, config.crossToNetwork.name);
                     }
+                }
 
+                function showActiveTxnsTab() {
+                    if(config.name.toLowerCase().includes('eth')) {
+                        $('#nav-eth-rsk-tab')
+                            .addClass('active')
+                            .attr('aria-selected', true);
+
+                        $('#nav-eth-rsk')
+                            .addClass('active show');
+
+                        $('#nav-rsk-eth-tab')
+                            .removeClass('active')
+                            .attr('aria-selected', false);
+
+                        $('#nav-rsk-eth')
+                            .removeClass('active show');
+                    } else {
+                        $('#nav-rsk-eth-tab')
+                            .addClass('active')
+                            .attr('aria-selected', true);
+
+                        $('#nav-rsk-eth')
+                            .addClass('active show');
+
+                        $('#nav-eth-rsk-tab')
+                            .attr('aria-selected', false)
+                            .removeClass('active');
+
+                        $('#nav-eth-rsk')
+                            .removeClass('active show');
+                    }
                 }
 
                 function showActiveAddressTXNs() {
+                    if(address != '' && !activeAddressEth2RskTxns.length && !activeAddressRsk2EthTxns.length) {
+                        $('#previousTxnsEmptyTab')
+                            .css('margin-bottom', '6em')
+                            .show();
+                        $('#previousTxnsTab').hide()
+                        return;
+                    }
 
+                    $('#previousTxnsEmptyTab')
+                            .css('margin-bottom', '0em')
+                            .hide();
                     $('#previousTxnsTab')
                         .show()
                         .css('margin-bottom', '6em');
@@ -1588,7 +1651,9 @@
                         let elapsedBlocks = currentBlockNumber - txn.blockNumber;
                         let remainingBlocks2Confirmation = confirmations - elapsedBlocks;
                         let status = isConfig4CurrentNetwork ?
-                            ((elapsedBlocks >= confirmations) ? "Confirmed" : "Pending") :
+                            ((elapsedBlocks >= confirmations) ?
+                                `<span class="confirmed"> Confirmed</span>` :
+                                `<span class="pending"> Pending</span>`) :
                             `Info Not Available`;
 
                         let confirmationTime = confirmations * secondsPerBlock;
@@ -1596,21 +1661,20 @@
                             remainingBlocks2Confirmation * secondsPerBlock : 0;
 
                         let hoursToConfirmation = Math.floor(seconds2Confirmation / 60 / 60);
+                        let hoursToConfirmationStr = (  hoursToConfirmation > 0) ? `${hoursToConfirmation}hs ` : ``;
                         let minutesToConfirmation = Math.floor(seconds2Confirmation / 60) - (hoursToConfirmation * 60);
                         let humanTimeToConfirmation = isConfig4CurrentNetwork ?
-                            `~ ${hoursToConfirmation}hs ${minutesToConfirmation}mins` :
-                            `Info Not Available`;
+                            ((elapsedBlocks >= confirmations) ?
+                            `` : `| ~ ${hoursToConfirmationStr} ${minutesToConfirmation}mins`) : ``;
 
                         let txnExplorerLink = `${explorer}/tx/${txn.transactionHash}`;
                         let shortTxnHash = `${txn.transactionHash.substring(0, 8)}...${txn.transactionHash.slice(-8)}`;
 
                         let htmlRow = `<tr class="black">
-                            <th scope="row"><a href="${txnExplorerLink}">${shortTxnHash}</a></th>
+                            <th scope="row"><a class="confirmed" href="${txnExplorerLink}">${shortTxnHash}</a></th>
                             <td>${txn.blockNumber}</td>
-                            <td>${txn.tokenFrom}</td>
-                            <td>${txn.amount}</td>
-                            <td>${status}</td>
-                            <td>${humanTimeToConfirmation}</td>
+                            <td>${txn.amount} ${txn.tokenFrom}</td>
+                            <td>${status} ${humanTimeToConfirmation}</td>
                         </tr>`;
 
                         return htmlRow;
