@@ -88,6 +88,26 @@
             #previousTxnsTab {
                 display: none;
             }
+            #cross {
+                display: none;
+            }
+            .approve-deposit {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+            .form-check label {
+                position: relative;
+                bottom: 1px;
+                color: black;
+            }
+            #approve {
+                min-width: 10em;
+            }
+            #deposit {
+                align-self: flex-start;
+                min-width: 10em;
+            }
             .form-control:disabled {
                 background-color: transparent;
                 color: #BFBDBD;
@@ -576,7 +596,7 @@
                     <h1 id="title">RSK bridges with Ethereum</h1>
                     <h5 class="subtitle">You can convert your tokens from RSK to Ethereum and viceversa.</h5>
                 </div>
-                <div id="transferTab" class=" align-center disabled">
+                <div id="transferTab" class="align-center disabled">
                     <div class="row justify-content-center network">
                         <div class="col-4 text-center">
                             <span class="fromNetwork">From Network</span>
@@ -615,11 +635,6 @@
                                         <div class="form-control-plaintext" id="willReceive" name="willReceive">
                                             <span id="willReceiveToken" class="willReceiveToken" name="willReceiveToken"></span>
                                         </div>
-                                        <!-- <div class="input-group-append">
-                                            <button id="willReceive-copy" style="display:none;" class="copy btn btn-outline-secondary" type="button" data-clipboard-text="" data-toggle="tooltip" data-placement="bottom" title="Copy the address">
-                                                <i class="far fa-copy"></i>
-                                            </button>
-                                        </div> -->
                                     </div>
                                 </div>
                             </div>
@@ -628,9 +643,20 @@
                             <p>Service fee: <span id="serviceFee"></span> <span class="selectedToken"></span></p>
                             <p>Total cost: <span class="black"><span id="totalCost"></span> <span class="selectedToken"></span></span></p>
                         </div> 
-                        <div class="row justify-content-center">
+                        <!--<div class="row justify-content-center">
                             <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Convert tokens</button>
+                        </div>-->
+                        <div class="row justify-content-center">
+                            <div class="approve-deposit">
+                                <button disabled id="approve" class="btn btn-primary mr-3 mt-3 mb-3">Approve</button>
+                                <div class="form-check">
+                                    <input disabled type="checkbox" class="form-check-input" id="doNotAskAgain">
+                                    <label class="text-center" for="doNotAskAgain">Do not ask me again</label>
+                                </div>
+                            </div>
+                            <button disbaled id="deposit" type="submit" class="btn btn-primary ml-3 mt-3 mb-3">Convert tokens</button>
                         </div>
+
                         <div class="fees mt-3 align-center text-center" style="max-width:350px; line-height: 16px; display:none;">
                             <div>Your wallet will open and you will be asked to confirm the first of two transactions required for the bridge.</div>
                         </div>
@@ -1063,7 +1089,6 @@
                 let tokenContract = null;
                 let isSideToken = false;
                 let sideTokenAddress = null;
-                let fee = 0;
                 let feePercentage = 0;
                 let feePercentageDivider = 10_000;
                 let rLogin;
@@ -1090,6 +1115,11 @@
                     }
 
                     disableInputs(true);
+                    disableApproveCross({
+                        approvalDisable: true,
+                        doNotAskDisabled: true,
+                        crossDisabled: true
+                    });
 
                     $('#logIn').attr('onclick', 'onLogInClick()');
 
@@ -1139,14 +1169,22 @@
                         }
                     });
                     $('#amount').keyup(isAmountOk);
+                    $('#amount').focusout(checkAllowance)
                     $('#amount').keypress(function(event) {
-                        if(event.key !== '.' && (event.key < '0' || event.key > '9'))
+                        if(event.key !== '.' && (event.key < '0' || event.key > '9')) {
                             return false;
+                        }
                     });
                     $('#crossForm').on('submit', function(e) {
                         e.preventDefault();
                         crossToken();
                     });
+
+                    $('#approve').on('click', function(e) {
+                        e.preventDefault();
+                        approveSpend();
+                    });
+
                     $('#changeNetwork').on('click', function() {
                         if(config) {
                             var connectToNetwork = '';
@@ -1299,6 +1337,98 @@
                     });
                 }
 
+                async function approveSpend() {
+
+                    var tokenToCross = $('#tokenAddress').val();
+                    var token = TOKENS.find(element => element.token == tokenToCross);
+                    if(!token) {
+                        crossTokenError('Choose a token to cross');
+                        return;
+                    }
+                    const isUnlimitedApproval = $('#doNotAskAgain').prop('checked');
+                    const BN = web3.utils.BN;
+                    const amount = $('#amount').val();
+
+                    if(!amount) {
+                        crossTokenError('Complete the Amount field');
+                        return;
+                    }
+                    if($('#amount').hasClass('is-invalid')) {
+                        crossTokenError('Invalid Amount');
+                        return;
+                    }
+
+                    const decimals = token[config.networkId].decimals;
+                    const splittedAmount = amount.split('.');
+                    var amountWithDecimals = splittedAmount[0];
+                    for(i=0; i < decimals; i++) {
+                        if(splittedAmount[1] && i < splittedAmount[1].length) {
+                            amountWithDecimals += splittedAmount[1][i];
+                        } else {
+                            amountWithDecimals += '0';
+                        }
+                    }
+
+                    const amountBN = isUnlimitedApproval ?
+                        new BN(web3.utils.toWei(Number.MAX_SAFE_INTEGER.toString(), 'ether')) :
+                        new BN(amountWithDecimals)
+                            .mul(new BN(feePercentageDivider))
+                            .div(new BN(feePercentageDivider - feePercentage));
+
+                    var gasPriceParsed = 0;
+                    if(config.networkId >= 30 && config.networkId <= 33) {
+                        let block = await web3.eth.getBlock('latest');
+                        gasPriceParsed = parseInt(block.minimumGasPrice);
+                        gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.03;
+                    } else {
+                        let gasPriceAvg = await web3.eth.getGasPrice();
+                        gasPriceParsed= parseInt(gasPriceAvg);
+                        gasPriceParsed = gasPriceParsed <= 1 ? 1: gasPriceParsed * 1.3;
+                    }
+                    gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
+
+                    $('#wait').show();
+
+                    return new Promise((resolve, reject) => {
+                        tokenContract.methods.approve(bridgeContract.options.address, amountBN.toString())
+                            .send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
+                            if (err) return reject(err);
+                                try {
+                                let receipt = await waitForReceipt(txHash);
+                                if(receipt.status) {
+                                    resolve(receipt);
+                                }
+                            } catch(err) {
+                                reject(err);
+                            }
+                            reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
+                        });
+                    }).then(() => {
+
+                        $('#wait').hide();
+
+                        // approve disabled, cross tokens enabled
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: false
+                        });
+                    })
+                    .catch((err) => {
+
+                        $('#wait').hide();
+                        console.error(err);
+                        crossTokenError(`Couldn't approve amount. ${err.message}`);
+
+                        // all options disabled:
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: true
+                        });
+                    })
+                }
+
                 async function crossToken() {
                     cleanAlertError();
                     cleanAlertSuccess();
@@ -1367,29 +1497,19 @@
                         gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
                     }).then(async () => {
                         return new Promise((resolve, reject) => {
-                            tokenContract.methods.approve(bridgeContract.options.address, amountBN.toString()).send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
-                                if (err) return reject(err);
-                                try {
-                                    let receipt = await waitForReceipt(txHash);
-                                    if(receipt.status) {
-                                        //iconSuccess(currentStep,`<a target="_blank" href="${config.explorer}/tx/${txHash}">Approve successful see Tx</a>`);
-                                        resolve(receipt);
-                                    }
-                                } catch(err) {
-                                    reject(err);
-                                }
-                                reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
-                            });
-                        });
-                    }).then(async () => {
-                        return new Promise((resolve, reject) => {
                             bridgeContract.methods
                                 .receiveTokens(tokenContract.options.address, amountBN.toString())
                                 .send({from: address, gasPrice:gasPrice, gas:200_000}, async (err, txHash) => {
                                 if (err) return reject(err);
                                 try {
                                     let receipt = await waitForReceipt(txHash);
-                                    $('#cross').prop('disabled', false);
+
+                                    disableApproveCross({
+                                        approvalDisable: true,
+                                        doNotAskDisabled: true,
+                                        crossDisabled: true
+                                    })
+
                                     if(receipt.status) {
                                         resolve(receipt);
                                     }
@@ -1403,7 +1523,6 @@
                         $('#wait').hide();
                         $('#confirmationTime').text(config.confirmationTime);
                         $('#receive').text(`${amount} ${token[config.crossToNetwork.networkId].symbol}`);
-                        //$('#txBridge').attr('href', `${config.explorer}/tx/${receipt.transactionHash}`);
                         $('#success').show();
                         disableInputs(false);
 
@@ -1440,11 +1559,14 @@
                     $('#alert-danger-text').html(err);
                     $('#alert-danger').show();
                     $('#alert-danger').focus();
-                    $('#cross').prop('disabled', false);
+                    // $('#cross').prop('disabled', false);
+                    $('#deposit').prop('disabled', false);
+
                     disableInputs(false);
                 }
 
-                async function isAmountOk() {
+
+                async function checkAllowance() {
                     cleanAlertSuccess();
                     let amount = $('#amount').val();
                     if(amount == '') {
@@ -1460,6 +1582,61 @@
                     let totalCost = fee == 0 ? parsedAmount : parsedAmount.dividedBy(1-fee);
                     let serviceFee = totalCost.times(fee);
 
+                    let tokenToCross = $('#tokenAddress').val();
+                    let token = TOKENS.find(element => element.token == tokenToCross);
+                    const tokenAddress = token[config.networkId].address;
+                    tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
+
+                    let allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
+                    let allowanceBN = new BigNumber(allowance);
+                    if(totalCost.lte(allowanceBN)) {
+                        // straight to convert
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: false
+                        });
+                    } else {
+                        // user must first approve amount
+                        disableApproveCross({
+                            approvalDisable: false,
+                            doNotAskDisabled: false,
+                            crossDisabled: true
+                        });
+                    }
+
+                }
+
+                async function isAmountOk() {
+                    cleanAlertSuccess();
+                    let amount = $('#amount').val();
+                    if(amount == '') {
+                        markInvalidAmount('Invalid amount');
+
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: true
+                        });
+
+                        return;
+                    }
+                    let parsedAmount = new BigNumber(amount);
+                    if(parsedAmount <= 0) {
+                        markInvalidAmount("Must be bigger than 0");
+
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: true
+                        });
+
+                        return;
+                    }
+                    $('#amount').removeClass('ok');
+                    let totalCost = fee == 0 ? parsedAmount : parsedAmount.dividedBy(1-fee);
+                    let serviceFee = totalCost.times(fee);
+
                     $('#serviceFee').html(serviceFee.toFormat(6, BigNumber.ROUND_DOWN));
                     $('#totalCost').html(totalCost.toFormat(6, BigNumber.ROUND_DOWN));
                     try {
@@ -1467,13 +1644,21 @@
                             throw new Error(`Minimum amount ${minTokensAllowed - minTokensAllowed*fee} token`);
                         }
                         if(totalCost > maxTokensAllowed) {
-                            throw new Error(`Max amount ${maxTokensAllowed  - maxTokensAllowed*fee} tokens`);
+                            throw new Error(`Max amount ${maxTokensAllowed - maxTokensAllowed*fee} tokens`);
                         }
+
                         $('.amount .invalid-feedback').hide();
                         $('#amount').removeClass('is-invalid');
                         $('#amount').addClass('ok');
                         $('.fees').show();
                     } catch(err) {
+
+                        disableApproveCross({
+                            approvalDisable: true,
+                            doNotAskDisabled: true,
+                            crossDisabled: true
+                        });
+
                         markInvalidAmount(err.message);
                     }
                 }
@@ -1499,12 +1684,14 @@
                     let accounts = await getAccounts();
                     let chainId = await web3.eth.net.getId();
                     await updateCallback(chainId, accounts);
-                    //web3.currentProvider.publicConfigStore.on('update', updateCallback);
+
                     provider.on('chainChanged', function(newChain) {
                         updateNetwork(newChain);
                         showActiveTxnsTab();
                     });
                     provider.on('accountsChanged', function(newAddresses) {
+                        console.log(`event accountsChanged triggered with: ${newAddresses}`);
+                        checkAllowance();
                         updateAddress(newAddresses).then(
                             (addr) => updateActiveAddressTXNs(addr)
                         ).then(() => showActiveAddressTXNs());
@@ -1530,8 +1717,18 @@
                     address = '';
                 }
 
+
+                function disableApproveCross({
+                    approvalDisable = true,
+                    doNotAskDisabled = true,
+                    crossDisabled = true
+                }) {
+                    $('#approve').prop('disabled', approvalDisable);
+                    $('#doNotAskAgain').prop('disabled', doNotAskDisabled);
+                    $('#deposit').prop('disabled', crossDisabled);
+                }
+
                 function disableInputs(disable) {
-                    $('#cross').prop('disabled', disable);
                     $("#tokenAddress").prop('disabled', disable);
                     $("button[data-id='tokenAddress']").prop('disabled', disable);
                     $('#amount').prop('disabled', disable);
@@ -1546,6 +1743,11 @@
 
                 function onMetaMaskConnectionSuccess() {
                     disableInputs(false);
+                    disableApproveCross({
+                        approvalDisable: true,
+                        doNotAskDisabled: true,
+                        crossDisabled: true
+                    });
                 }
 
                 function updateAddress(newAddresses) {
