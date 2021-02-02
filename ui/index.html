@@ -1607,12 +1607,16 @@
                     let allowanceBN = new BigNumber(allowance);
 
                     if(totalCost.lte(allowanceBN)) {
+
+                        $('.approve-deposit').hide();
+
                         // straight to convert
                         disableApproveCross({
                             approvalDisable: true,
                             doNotAskDisabled: true,
                             crossDisabled: false
                         });
+
                     } else {
                         // user must first approve amount
                         disableApproveCross({
