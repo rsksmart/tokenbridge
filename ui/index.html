@@ -96,6 +96,9 @@
                 flex-direction: column;
                 justify-content: center;
             }
+            .form-check {
+                margin-top: -1em;
+            }
             .form-check label {
                 position: relative;
                 bottom: 1px;
@@ -145,6 +148,9 @@
                 font-size: 14px;
                 line-height: 30px;
                 color: #919191;
+            }
+            .fees p {
+                margin-bottom: -10px;
             }
             .black {
                 color: #000;
@@ -647,6 +653,9 @@
                             <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Convert tokens</button>
                         </div>-->
                         <div class="row justify-content-center">
+                            <div class="mt-3 mb-3">Estimated time to cross tokens <b id="timeToCross"></b></div>
+                        </div>
+                        <div class="row justify-content-center">
                             <div class="approve-deposit">
                                 <button disabled id="approve" class="btn btn-primary mr-3 mt-3 mb-3">Approve</button>
                                 <div class="form-check">
@@ -815,9 +824,9 @@
                         </div>
                         <div class="col-md-4 col-sm-4 mb-5 config-section">
                             <span class="config-value mb-2" id="config-whitelisted-enabled">-</span>
-                            <span class="config-title">Whitelisted contracts</span>
+                            <span class="config-title">Crossing period</span>
                             <p>
-                                The whitelist will be used during the trial period once the decentralized bridge is released the whitelist will be removed
+                                Time needed to have enough confirmations to securely cross assets to the other network
                             </p>
                         </div>
                     </div>
@@ -1168,7 +1177,12 @@
                             $('#willReceive-copy').hide();
                         }
                     });
-                    $('#amount').keyup(isAmountOk);
+                    $('#amount').keyup(function(event) {
+                        isAmountOk();
+                        if (event.key === 'Enter') {
+                            checkAllowance();
+                        }
+                    });
                     $('#amount').focusout(checkAllowance)
                     $('#amount').keypress(function(event) {
                         if(event.key !== '.' && (event.key < '0' || event.key > '9')) {
@@ -1300,8 +1314,7 @@
                     $('#config-to-spend').text(maxDailyLimit.toLocaleString());
                     $('#config-federators-count').text(federators.length);
                     $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
-                    $('#config-whitelisted-enabled').text(isValidatingAllowedTokens);
-
+                    $('#config-whitelisted-enabled').html(`[${config.crossToNetwork.confirmationTime}]`);
                   } catch (err) {
                     console.error('Error setting info tab ', err);
                   }
@@ -1923,6 +1936,7 @@
                     $('.indicator').addClass('btn-outline-success');
                     $('.toNetwork').text(config.crossToNetwork.name);
                     $('#confirmations').html(config.confirmations);
+                    $('#timeToCross').html(config.crossToNetwork.confirmationTime);
                     updateTokenAddressDropdown(config.networkId);
                 }
 
