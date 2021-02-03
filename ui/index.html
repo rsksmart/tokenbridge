@@ -71,7 +71,8 @@
               font-weight: 700;
               font-size: 36px;
               line-height: 45px;
-              margin-top: 25px;
+              margin-top: 15px;
+              padding-bottom: 0;
             }
             .align-center {
                 margin-left: auto;
@@ -249,15 +250,15 @@
               font-weight: normal;
             }
             #home {
-              padding-top: 30px;
-              padding-bottom: 30px;
+              padding-top: 20px;
+              padding-bottom: 20px;
             }
             #footer {
               margin-top: 0;
             }
             .title {
               text-align: center;
-              margin-bottom: 30px;
+              margin-bottom: 20px;
             }
             .subtitle {
               text-align: center;
@@ -645,30 +646,27 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="fees text-center mt-2" style="display:none">
-                            <p>Service fee: <span id="serviceFee"></span> <span class="selectedToken"></span></p>
-                            <p>Total cost: <span class="black"><span id="totalCost"></span> <span class="selectedToken"></span></span></p>
-                        </div> 
-                        <!--<div class="row justify-content-center">
-                            <button id="cross" type="submit" class="btn btn-primary mt-3 mb-3">Convert tokens</button>
-                        </div>-->
+                        <div class="" style="min-height: 60px;">
+                            <div class="fees text-center mt-2" style="display:none">
+                                <p>Service fee: <span id="serviceFee"></span> <span class="selectedToken"></span></p>
+                                <p>Total cost: <span class="black"><span id="totalCost"></span> <span class="selectedToken"></span></span></p>
+                            </div>
+                        </div>
+
                         <div class="row justify-content-center">
-                            <div class="mt-3 mb-3">Estimated time to cross tokens <b id="timeToCross"></b></div>
+                            <div class="mt-2">Estimated time to cross tokens <b id="timeToCross"></b></div>
                         </div>
                         <div class="row justify-content-center">
                             <div class="approve-deposit">
                                 <button disabled id="approve" class="btn btn-primary mr-3 mt-3 mb-3">Approve</button>
                                 <div class="form-check">
-                                    <input disabled type="checkbox" class="form-check-input" id="doNotAskAgain">
-                                    <label class="text-center" for="doNotAskAgain">Do not ask me again</label>
+                                    <input disabled checked type="checkbox" class="form-check-input" id="doNotAskAgain">
+                                    <label class="form-check-label" for="doNotAskAgain">Do not ask me again</label>
                                 </div>
                             </div>
                             <button disbaled id="deposit" type="submit" class="btn btn-primary ml-3 mt-3 mb-3">Convert tokens</button>
                         </div>
 
-                        <div class="fees mt-3 align-center text-center" style="max-width:350px; line-height: 16px; display:none;">
-                            <div>Your wallet will open and you will be asked to confirm the first of two transactions required for the bridge.</div>
-                        </div>
                         <div id="wait" class="mt-3 align-center text-center" style="max-width:350px; line-height: 16px; display:none;">
                             <!-- Spinner <div class="spinner-border mb-4" style="height:70px; width:70px"></div> -->
                             <!-- https://tobiasahlin.com/spinkit/ -->
@@ -701,9 +699,6 @@
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <!-- <div class="mt-2" style="line-height: 16px;">
-                                <a id="txBridge" target="_blank" href="#">Check it on the explorer</a>
-                            </div> -->
                         </div>
                         <div class="mt-3">
                             <div id="alert-danger" class="alert alert-danger alert-dismissible fade show" role="alert" style="display:none">
@@ -814,8 +809,7 @@
                         </div>
                         <div class="col-md-4 col-sm-4 mb-5 config-section">
                             <div>
-                                <span class="config-value mb-2" id="config-federators-count">-</span>
-                                <span class="config-address mb-2 ml-2" id="config-federators-required"></span>
+                                <span class="config-value mb-2 ml-2" id="config-federators-count">-</span>
                             </div>
                             <span class="config-title">Federators</span>
                             <p>
@@ -1314,8 +1308,8 @@
                     $('#config-min').text(minTokensAllowed.toLocaleString());
                     $('#config-max').text(maxTokensAllowed.toLocaleString());
                     $('#config-to-spend').text(maxDailyLimit.toLocaleString());
-                    $('#config-federators-count').text(federators.length);
-                    $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
+                    $('#config-federators-count').text(`${federators.length}`);
+                    //$('#config-federators-required').text(`${Math.floor((federators.length / 2) + 1)}`);
                     $('#config-whitelisted-enabled').html(`${config.crossToNetwork.confirmationTime}`);
                   } catch (err) {
                     console.error('Error setting info tab ', err);
@@ -1607,16 +1601,13 @@
                     let allowanceBN = new BigNumber(allowance);
 
                     if(totalCost.lte(allowanceBN)) {
-
                         $('.approve-deposit').hide();
-
                         // straight to convert
                         disableApproveCross({
                             approvalDisable: true,
                             doNotAskDisabled: true,
                             crossDisabled: false
                         });
-
                     } else {
                         // user must first approve amount
                         disableApproveCross({
@@ -1624,6 +1615,7 @@
                             doNotAskDisabled: false,
                             crossDisabled: true
                         });
+                        $('.approve-deposit').show();
                     }
 
                 }
@@ -1825,7 +1817,7 @@
                 }
 
                 function showActiveAddressTXNs() {
-                    if(address != '' && !activeAddressEth2RskTxns.length && !activeAddressRsk2EthTxns.length) {
+                    if(!address  || (!activeAddressEth2RskTxns.length && !activeAddressRsk2EthTxns.length)) {
                         $('#previousTxnsEmptyTab')
                             .css('margin-bottom', '6em')
                             .show();
@@ -2024,6 +2016,7 @@
                     $('#tokenAddress').html(selectHtml);
                     $('#tokenAddress').prop('disabled', false);
                     $('#tokenAddress').selectpicker('refresh');
+                    $('#willReceiveToken').html('')
                 }
 
                 function updateTokenListTab() {
