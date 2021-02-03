@@ -1170,6 +1170,7 @@
                             $('#willReceive-copy').attr('data-clipboard-text', token[config.crossToNetwork.networkId].address);
                             if($('#amount').val()) {
                                 isAmountOk();
+                                checkAllowance();
                             }
                         } else {
                             $('.selectedToken').html('');
@@ -1177,6 +1178,7 @@
                             $('#willReceive-copy').hide();
                         }
                     });
+
                     $('#amount').keyup(function(event) {
                         isAmountOk();
                         if (event.key === 'Enter') {
@@ -1314,7 +1316,7 @@
                     $('#config-to-spend').text(maxDailyLimit.toLocaleString());
                     $('#config-federators-count').text(federators.length);
                     $('#config-federators-required').text(`(${Math.floor((federators.length / 2) + 1)} required)`);
-                    $('#config-whitelisted-enabled').html(`[${config.crossToNetwork.confirmationTime}]`);
+                    $('#config-whitelisted-enabled').html(`${config.crossToNetwork.confirmationTime}`);
                   } catch (err) {
                     console.error('Error setting info tab ', err);
                   }
@@ -1591,6 +1593,7 @@
                         markInvalidAmount("Must be bigger than 0");
                         return;
                     }
+                    $('#secondsPerBlock').text(config.secondsPerBlock);
                     $('#amount').removeClass('ok');
                     let totalCost = fee == 0 ? parsedAmount : parsedAmount.dividedBy(1-fee);
                     let serviceFee = totalCost.times(fee);
@@ -1602,6 +1605,7 @@
 
                     let allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
                     let allowanceBN = new BigNumber(allowance);
+
                     if(totalCost.lte(allowanceBN)) {
                         // straight to convert
                         disableApproveCross({
@@ -1703,7 +1707,6 @@
                         showActiveTxnsTab();
                     });
                     provider.on('accountsChanged', function(newAddresses) {
-                        console.log(`event accountsChanged triggered with: ${newAddresses}`);
                         checkAllowance();
                         updateAddress(newAddresses).then(
                             (addr) => updateActiveAddressTXNs(addr)
