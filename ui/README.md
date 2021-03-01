@@ -1,7 +1,7 @@
 # Token Bride UI
 
 ## Rationale
-Interacting with smart contracts can be cucumbersome as you need to past the abis and contract addresses and have no validation of the inputs you are using. 
+Interacting with smart contracts can be cucumbersome as you need to past the abis and contract addresses and have no validation of the inputs you are using.
 Thats why we created a Dapp to improve the user experience when using the token bridge.
 
 ## Developers
