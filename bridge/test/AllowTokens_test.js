@@ -1,6 +1,6 @@
 
 const MainToken = artifacts.require('./MainToken');
-const AllowTokens = artifacts.require('./AllowTokens_v1');
+const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
@@ -514,7 +514,6 @@ contract('AllowTokens', async function (accounts) {
         it('should change daily limit', async function() {
             let limit = await this.allowTokens.typeLimits(this.typeId);
             let newDailyLimit = web3.utils.toWei('50000');
-            console.log('newDailyLimit',newDailyLimit);
             let data = this.allowTokens.contract.methods.setTypeLimits(this.typeId, limit.max.toString(), limit.min.toString(), newDailyLimit).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
             this.txIndex++;
@@ -524,7 +523,6 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(tx.executed, true);
 
             limit = await this.allowTokens.typeLimits(this.typeId);
-            console.log('limit.daily',limit.daily.toString());
             assert.equal(limit.daily.toString(), newDailyLimit);
         });
     });
