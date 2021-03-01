@@ -14,7 +14,8 @@ body {
     font-weight: 700;
     font-size: 36px;
     line-height: 45px;
-    margin-top: 25px;
+    margin-top: 15px;
+    padding-bottom: 0;
   }
   .align-center {
       margin-left: auto;
@@ -24,6 +25,35 @@ body {
       max-width: 660px;
       margin-bottom: 30px;
       padding: 40px 20px;
+  }
+  #previousTxnsEmptyTab {
+      display: none;
+  }
+  #previousTxnsTab {
+      display: none;
+  }
+  #cross {
+      display: none;
+  }
+  .approve-deposit {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+  }
+  .form-check {
+      margin-top: -1em;
+  }
+  .form-check label {
+      position: relative;
+      bottom: 1px;
+      color: black;
+  }
+  #approve {
+      min-width: 10em;
+  }
+  #deposit {
+      align-self: flex-start;
+      min-width: 10em;
   }
   .form-control:disabled {
       background-color: transparent;
@@ -62,6 +92,9 @@ body {
       font-size: 14px;
       line-height: 30px;
       color: #919191;
+  }
+  .fees p {
+      margin-bottom: -10px;
   }
   .black {
       color: #000;
@@ -132,6 +165,9 @@ body {
       color: #BFBDBD;
   }
 
+  .btn-toolbar {
+      justify-content: center;
+  }
   .btn-primary {
       font-family: 'Quicksand';
       color: #fff;
@@ -157,15 +193,15 @@ body {
     font-weight: normal;
   }
   #home {
-    padding-top: 30px;
-    padding-bottom: 30px;
+    padding-top: 20px;
+    padding-bottom: 20px;
   }
   #footer {
     margin-top: 0;
   }
   .title {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
   }
   .subtitle {
     text-align: center;
@@ -320,6 +356,12 @@ body {
       padding: 0px;
       max-width: 222px;
   }
+  .confirmed {
+      color: #00B520;
+  }
+  .pending {
+      color: #FEAD0D;
+  }
 
   /*Spinner*/
   .sk-fading-circle {
@@ -448,6 +490,11 @@ body {
           animation-delay: -0.1s;
   }
 
+  /* this is added because rLogin is wrongly displayed */
+  .navbar {
+      position: inherit;
+  }
+
   @-webkit-keyframes sk-circleFadeDelay {
   0%, 39%, 100% { opacity: 0; }
   40% { opacity: 1; }
@@ -456,4 +503,8 @@ body {
   @keyframes sk-circleFadeDelay {
   0%, 39%, 100% { opacity: 0; }
   40% { opacity: 1; }
+  }
+
+  table.table tr th:last-child, table.table tr td:last-child {
+      text-align: center;
   }
