@@ -8,6 +8,7 @@ log4js.configure(logConfig);
 // Services
 const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
+const Heartbeat = require('./lib/Heartbeat.js')
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
@@ -17,6 +18,8 @@ if(!config.mainchain || !config.sidechain) {
     logger.error('Mainchain and Sidechain configuration are required');
     process.exit();
 }
+
+const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederator = new Federator({
@@ -39,6 +42,22 @@ async function run() {
         await sideFederator.run();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
+        process.exit();
+    }
+}
+
+let heartBeatPollingInterval = config.runHeartbeatEvery * 1000 * 60; // Minutes
+let heartBeatScheduler = new Scheduler(heartBeatPollingInterval, logger, { run: () => runHeartbeat() });
+
+heartBeatScheduler.start().catch((err) => {
+    logger.error('Unhandled Error on start()', err);
+});
+
+async function runHeartbeat() {
+    try {
+        await heartbeat.run(); 
+    } catch(err) {
+        logger.error('Unhandled Error on runHeartbeat()', err);
         process.exit();
     }
 }
