@@ -34,6 +34,12 @@ contract Federation is Ownable {
         uint256 granularity;
         string symbol;
     }
+    event HeartBeat(
+        address indexed sender,
+        uint256 fedRskBlock,
+        uint256 fedEthBlock,
+        string federatorVersion
+    );
 
     modifier onlyMember() {
         require(isMember[_msgSender()], "Federation: Caller not a Federator");
@@ -189,4 +195,20 @@ contract Federation is Ownable {
         emit RequirementChange(_required);
     }
 
+    function version() public view returns (string memory) {
+        return "v2";
+    }
+
+    function emitHeartbeat(
+        uint256 fedRskBlock,
+        uint256 fedEthBlock,
+        string calldata federatorVersion
+    ) external onlyMember {
+        emit HeartBeat(
+            _msgSender(),
+            fedRskBlock,
+            fedEthBlock,
+            federatorVersion
+        );
+    }
 }
