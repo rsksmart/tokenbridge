@@ -1399,7 +1399,8 @@
                     $('#wait').show();
 
                     return new Promise((resolve, reject) => {
-                        tokenContract.methods.approve(bridgeContract.options.address, amountBN.toString())
+
+                        tokenContract.methods.approve(bridgeContract.options.address, amountBN.mul(new BN(101)).div(new BN(100)).toString())
                             .send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
                             if (err) return reject(err);
                                 try {
@@ -1598,6 +1599,7 @@
                     tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
 
                     let allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
+                    allowance = web3.utils.fromWei(allowance);
                     let allowanceBN = new BigNumber(allowance);
 
                     if(totalCost.lte(allowanceBN)) {
