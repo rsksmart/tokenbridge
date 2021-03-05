@@ -4,6 +4,7 @@ const abiBridge = require('../../../abis/Bridge.json');
 const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
+const GenericFederation = require('./GenericFederation');
 const utils = require('./utils');
 
 module.exports = class Federator {
@@ -16,7 +17,11 @@ module.exports = class Federator {
 
         this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-        this.federationContract = new this.sideWeb3.eth.Contract(abiFederation, this.config.sidechain.federation);
+
+        this.federationContract = GenericFederation.getInstance(
+            this.sideWeb3.eth.Contract,
+            this.config.sidechain.federation
+        );
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
@@ -46,7 +51,7 @@ module.exports = class Federator {
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
                     confirmations = 10
                 }
-                if( chainId == 1) { //ethereum mainnet 24hs
+                if(chainId == 1) { //ethereum mainnet 24hs
                     confirmations = 5760
                 }
                 if(chainId == 30) { // rsk mainnet 24hs
@@ -124,30 +129,42 @@ module.exports = class Federator {
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
-                const { _from: sender, _to: receiver, _amount: amount, _symbol: symbol, _tokenAddress: tokenAddress,
-                    _decimals: decimals, _granularity:granularity } = log.returnValues;
+                const {
+                    blockHash,
+                    transactionHash,
+                    logIndex
+                } = log;
 
-                let transactionId = await this.federationContract.methods.getTransactionId(
-                    tokenAddress,
-                    { sender,
+                const {
+                    _to: receiver,
+                    _amount: amount,
+                    _symbol: symbol,
+                    _tokenAddress: tokenAddress,
+                    _decimals: decimals,
+                    _granularity: granularity
+                } = log.returnValues;
+
+                let transactionId = await this.federationContract.getTransactionId({
+                    originalTokenAddress: tokenAddress,
+                    sender: '',
                     receiver,
                     amount,
                     symbol,
-                    blockHash: log.blockHash,
-                    transactionHash: log.transactionHash,
-                    logIndex: log.logIndex,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
                     decimals,
-                    granularity }
-                ).call();
+                    granularity
+                }).call();
                 this.logger.info('get transaction id:', transactionId);
 
-                let wasProcessed = await this.federationContract.methods.transactionWasProcessed(transactionId).call();
+                let wasProcessed = await this.federationContract.transactionWasProcessed(transactionId).call();
                 if (!wasProcessed) {
-                    let hasVoted = await this.federationContract.methods.hasVoted(transactionId).call({from: from});
+                    let hasVoted = await this.federationContract.hasVoted(transactionId).call({from: from});
                     if(!hasVoted) {
                         this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} token: ${symbol}`);
-                        await this._voteTransaction(tokenAddress,
-                            sender,
+                        await this._voteTransaction(
+                            tokenAddress,
                             receiver,
                             amount,
                             symbol,
@@ -155,7 +172,8 @@ module.exports = class Federator {
                             log.transactionHash,
                             log.logIndex,
                             decimals,
-                            granularity);
+                            granularity
+                        );
                     } else {
                         this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol}  has already been voted by us`);
                     }
@@ -176,12 +194,11 @@ module.exports = class Federator {
         try {
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-            const from = await transactionSender.getAddress(this.config.privateKey);
-            this.logger.info(`Calling getTransactionId(${tokenAddress}, ${sender}, ${receiver}, ${amount}, ${symbol}, ${blockHash}, ${transactionHash}, ${logIndex}, ${decimals}, ${granularity}) trough sidechain bridge ${this.sideBridgeContract.options.address}`);
+            this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
 
-            let txId = await this.federationContract.methods.getTransactionId(
-                tokenAddress,
-                {sender,
+            let txId = await this.federationContract.getTransactionId({
+                originalTokenAddress: tokenAddress,
+                sender: '',
                 receiver,
                 amount,
                 symbol,
@@ -189,18 +206,12 @@ module.exports = class Federator {
                 transactionHash,
                 logIndex,
                 decimals,
-                granularity}
-            ).call();
-            this.logger.info(`Voting Transaction Id ${txId}`);
-            this.logger.info(`From ${from}`);
-            let member = await this.federationContract.methods.isMember(from).call();
-            this.logger.info(`isMember ${member}`);
-            this.logger.info(`this.federationContract.address ${this.federationContract._address}`);
-            let federationAddress = await this.sideBridgeContract.methods.getFederation().call()
-            this.logger.info(`getfederation ${federationAddress}`);
-            let result = await this.federationContract.methods.voteTransaction(
-                tokenAddress,
-                {sender,
+                granularity
+            }).call();
+            
+            let txData = await this.federationContract.voteTransaction({
+                originalTokenAddress: tokenAddress,
+                sender: '',
                 receiver,
                 amount,
                 symbol,
@@ -208,22 +219,8 @@ module.exports = class Federator {
                 transactionHash,
                 logIndex,
                 decimals,
-                granularity}
-            ).call({from}) //Dry run
-
-            this.logger.info(`Successful dry run result: ${result}`);
-            let txData = await this.federationContract.methods.voteTransaction(
-                tokenAddress,
-                {sender,
-                receiver,
-                amount,
-                symbol,
-                blockHash,
-                transactionHash,
-                logIndex,
-                decimals,
-                granularity}
-            ).encodeABI();
+                granularity
+            }).encodeABI();
 
             await transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
             this.logger.info(`Voted transaction:${transactionHash} of block: ${blockHash} token ${symbol} to federation Contract with TransactionId:${txId}`);
