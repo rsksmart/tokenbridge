@@ -4,6 +4,7 @@ const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
 const utils = require('./utils');
+const scriptVersion = require('../../package.json').version;
 
 module.exports = class Heartbeat {
     constructor(config, logger, Web3 = web3) {
@@ -23,11 +24,13 @@ module.exports = class Heartbeat {
         const sleepAfterRetrie = 3000;
         while(retries > 0) {
             try {
-                const currentBlockRSK = await this.mainWeb3.eth.getBlockNumber();
-                const currentBlockETH = await this.sideWeb3.eth.getBlockNumber();
+                const [ currentBlockRSK, currentBlockETH ] =
+                await Promise.all([
+                    this.mainWeb3.eth.getBlockNumber(),
+                    this.sideWeb3.eth.getBlockNumber()
+                ]);
 
-                await this._emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN);
-                return true;
+                return await this._emitHeartbeat(currentBlockRSK, currentBlockETH, scriptVersion);
             } catch (err) {
                 console.log(err)
                 this.logger.error(new Error('Exception Running Heartbeat'), err);
