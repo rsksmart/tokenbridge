@@ -41,7 +41,7 @@
   },
   "devDependencies": {
     "yargs-parser": ">=13.1.2",
-    "elliptic": ">=6.5.3",
+    "elliptic": ">=6.5.4",
     "minimist": "^1.2.5",
     "mem": ">=4.0.0",
     "kind-of": ">=6.0.3",
