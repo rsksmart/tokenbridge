@@ -1,9 +1,9 @@
 {
-    "bridge": "0x132f5c3e5c6d49cb85f08c9597a40302e1e52740",
-    "federation": "0xc866ce2ec8ec645adbc53d102d8b1c32e1e689e6",
-    "multiSig": "0x7c271a5d8f4d2049f4e9dfbc6ce69928b576e9be",
-    "allowTokens": "0x44d344a96cc3c5c714bda72085eb4e9c45b39ebe",
-    "testToken": "0x44fdc32514266839d67fadcb4229b33a2e89e0ca",
+    "bridge": "0x8bcdd95438b5852f38b564cc90e1a73553263e99",
+    "federation": "0x9f218af13d20503fa0c01dcabbc95a3928ed19bd",
+    "multiSig": "0x8e8c88fbec93db61662d2ac7f265279a70b7f1c1",
+    "allowTokens": "0xeeed1257c45fe0544d8ee31a15a8bbbd36f28a34",
+    "testToken": "0xb4afdcee8cb3cb40e408984c02b77b5cf698bf9a",
     "host": "http://127.0.0.1:8545",
     "fromBlock": 43
 }
