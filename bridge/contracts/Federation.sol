@@ -38,7 +38,8 @@ contract Federation is Ownable {
         address indexed sender,
         uint256 fedRskBlock,
         uint256 fedEthBlock,
-        string federatorVersion
+        string federatorVersion,
+        string nodeInfo
     );
 
     modifier onlyMember() {
@@ -202,13 +203,15 @@ contract Federation is Ownable {
     function emitHeartbeat(
         uint256 fedRskBlock,
         uint256 fedEthBlock,
-        string calldata federatorVersion
+        string calldata federatorVersion,
+        string calldata nodeInfo
     ) external onlyMember {
         emit HeartBeat(
             _msgSender(),
             fedRskBlock,
             fedEthBlock,
-            federatorVersion
+            federatorVersion,
+            nodeInfo
         );
     }
 }
