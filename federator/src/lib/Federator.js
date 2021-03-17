@@ -138,7 +138,6 @@ module.exports = class Federator {
                             heartbeatLogs,
                             toPagedBlock,
                             {
-                                rskLastBlock: currentBlock,
                                 ethLastBlock: sideCurrentBlock
                             }
                         );
@@ -231,7 +230,7 @@ module.exports = class Federator {
         }
     }
 
-    async _processHeartbeatLogs(logs, toBlock, { rskLastBlock, ethLastBlock }) {
+    async _processHeartbeatLogs(logs, toBlock, { ethLastBlock }) {
         /*
             if node it's not synchronizing, do ->
         */
@@ -261,7 +260,7 @@ module.exports = class Federator {
                 logInfo    += `[federationVersion: ${federationVersion}],`;
                 logInfo    += `[nodeInfo: ${nodeInfo}],`;
                 logInfo    += `[blockNumber: ${blockNumber}],`;
-                logInfo    += `[RskBlockGap: ${rskLastBlock - blockNumber}],`;
+                logInfo    += `[RskBlockGap: ${blockNumber - fedRskBlock}],`;
                 logInfo    += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
 
                 this.logger.info(logInfo);
