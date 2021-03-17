@@ -9,8 +9,16 @@ const utils = require('./utils');
 
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
+
         this.config = config;
         this.logger = logger;
+
+        if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+            throw new CustomError(
+                `Invalid host configuration, https or localhost required`,
+                new Error(``)
+            );
+        }
 
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
@@ -18,13 +26,28 @@ module.exports = class Federator {
         this.mainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
 
-        this.federationContract = GenericFederation.getInstance(
-            this.sideWeb3.eth.Contract,
-            this.config.sidechain.federation
-        );
+        this.federationContract = null;
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+    }
+
+    async getFederationContract() {
+        if (this.federationContract === null) {
+            try {
+                const federationAddress =
+                    await this.sideBridgeContract.methods.getFederation().call();
+
+                this.federationContract = await GenericFederation.getInstance(
+                    this.sideWeb3.eth.Contract,
+                    federationAddress
+                );
+            } catch(err) {
+                throw new Error(`${err.message}`);
+            }
+        }
+
+        return this.federationContract;
     }
 
     async run() {
@@ -33,6 +56,7 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
+                const sideCurrentBlock = await this.sideWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
                 let confirmations = 0; //for rsk regtest and ganache
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
@@ -91,6 +115,24 @@ module.exports = class Federator {
                     this.logger.info(`Found ${logs.length} logs`);
                     await this._processLogs(logs, toPagedBlock);
                     fromPageBlock = toPagedBlock + 1;
+
+                    // when this.mainBridgeContract lives in RSK ...
+                    if(chainId == 30 || chainId == 31 || chainId == 0) {
+                        const heartbeatLogs = await this.mainBridgeContract.getPastEvents('HeartBeat', {
+                            fromBlock: fromPageBlock,
+                            toBlock: toPagedBlock
+                        });
+
+                        if (!heartbeatLogs) throw new Error('Failed to obtain HeartBeat logs');
+                        await this._processHeartbeatLogs(
+                            heartbeatLogs,
+                            toPagedBlock,
+                            {
+                                rskLastBlock: currentBlock,
+                                ethLastBlock: sideCurrentBlock
+                            }
+                        );
+                    }
                 }
 
                 return true;
@@ -112,6 +154,7 @@ module.exports = class Federator {
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
+            let fedContract = await this.getFederationContract();
 
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
@@ -131,7 +174,7 @@ module.exports = class Federator {
                     _granularity: granularity
                 } = log.returnValues;
 
-                let transactionId = await this.federationContract.getTransactionId({
+                let transactionId = await fedContract.getTransactionId({
                     originalTokenAddress: tokenAddress,
                     sender: '',
                     receiver,
@@ -145,9 +188,10 @@ module.exports = class Federator {
                 }).call();
                 this.logger.info('get transaction id:', transactionId);
 
-                let wasProcessed = await this.federationContract.transactionWasProcessed(transactionId).call();
+
+                let wasProcessed = await fedContract.transactionWasProcessed(transactionId).call();
                 if (!wasProcessed) {
-                    let hasVoted = await this.federationContract.hasVoted(transactionId).call({from: from});
+                    let hasVoted = await fedContract.hasVoted(transactionId).call({from: from});
                     if(!hasVoted) {
                         this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} token: ${symbol}`);
                         await this._voteTransaction(
@@ -176,14 +220,58 @@ module.exports = class Federator {
         }
     }
 
+    async _processHeartbeatLogs(logs, toBlock, { rskLastBlock, ethLastBlock }) {
+        /*
+            if node it's not synchronizing, do ->
+        */
+
+        try {
+            for(let log of logs) {
+                this.logger.info('Processing Heartbeat event log:', log);
+
+                const {
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    blockNumber
+                } = log;
+
+                const {
+                    sender,
+                    fedRskBlock,
+                    fedEthBlock,
+                    federationVersion,
+                    nodeInfo
+                } = log.returnValues;
+
+                let logInfo = `[sender: ${sender}],`;
+                logInfo    += `[fedRskBlock: ${fedRskBlock}],`;
+                logInfo    += `[fedEthBlock: ${fedEthBlock}],`;
+                logInfo    += `[federationVersion: ${federationVersion}],`;
+                logInfo    += `[nodeInfo: ${nodeInfo}],`;
+                logInfo    += `[blockNumber: ${blockNumber}],`;
+                logInfo    += `[RskBlockGap: ${rskLastBlock - blockNumber}],`;
+                logInfo    += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
+
+                this.logger.info(logInfo);
+            }
+
+            this._saveProgress(this.lastBlockPath, toBlock);
+
+            return true;
+        } catch (err) {
+            throw new CustomError(`Exception processing HeartBeat logs`, err);
+        }
+    }
 
     async _voteTransaction(tokenAddress, sender, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity) {
         try {
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.sideBridgeContract.options.address} to receiver ${receiver}`);
+            let fedContract = await this.getFederationContract();
 
-            let txId = await this.federationContract.getTransactionId({
+            let txId = await fedContract.getTransactionId({
                 originalTokenAddress: tokenAddress,
                 sender: '',
                 receiver,
@@ -196,7 +284,7 @@ module.exports = class Federator {
                 granularity
             }).call();
             
-            let txData = await this.federationContract.voteTransaction({
+            let txData = await fedContract.voteTransaction({
                 originalTokenAddress: tokenAddress,
                 sender: '',
                 receiver,
