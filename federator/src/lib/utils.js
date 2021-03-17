@@ -100,6 +100,13 @@ function checkHttpsOrLocalhost(url = '') {
     return isHttps || isLocalhost;
 }
 
+function checkIfItsInRSK(chainId = -1) {
+    return chainId === 0 ||
+        chainId === 30 ||
+        chainId === 31 ||
+        chainId === 33;
+}
+
 module.exports = {
     waitBlocks,
     sleep,
@@ -110,5 +117,6 @@ module.exports = {
     calculatePrefixesSuffixes,
     waitForReceipt,
     checkHttpsOrLocalhost,
+    checkIfItsInRSK,
     zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000'
 }
