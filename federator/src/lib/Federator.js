@@ -14,10 +14,7 @@ module.exports = class Federator {
         this.logger = logger;
 
         if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
-            throw new CustomError(
-                `Invalid host configuration, https or localhost required`,
-                new Error(``)
-            );
+            throw new Error(`Invalid host configuration, https or localhost required`);
         }
 
         this.mainWeb3 = new Web3(config.mainchain.host);
@@ -43,7 +40,7 @@ module.exports = class Federator {
                     federationAddress
                 );
             } catch(err) {
-                throw new Error(`${err.message}`);
+                throw new CustomError(`Exception getting Federation address`, err);
             }
         }
 
@@ -117,7 +114,7 @@ module.exports = class Federator {
                     fromPageBlock = toPagedBlock + 1;
 
                     // when this.mainBridgeContract lives in RSK ...
-                    if(chainId == 30 || chainId == 31 || chainId == 0) {
+                    if (utils.checkIfItsInRSK(chainId)) {
                         const heartbeatLogs = await this.mainBridgeContract.getPastEvents('HeartBeat', {
                             fromBlock: fromPageBlock,
                             toBlock: toPagedBlock
