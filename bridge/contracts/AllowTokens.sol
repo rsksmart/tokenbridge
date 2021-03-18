@@ -12,8 +12,9 @@ contract AllowTokens is Ownable {
     bool public isValidatingAllowedTokens;
     mapping (address => bool) public allowedContracts;
     mapping (address => TokenInfo) public allowedTokens;
-    string[] typeDescriptions;
     mapping (uint256 => Limits) public typeLimits;
+    address public bridge;
+    string[] typeDescriptions;
 
     struct Limits {
         uint256 max;
@@ -75,7 +76,7 @@ contract AllowTokens is Ownable {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external {
+    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external { // TODO add only bridge as modifier
         if(isValidatingAllowedTokens) {
             (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
             require(isSideToken || isTokenAllowed(token), "AllowTokens: Token not whitelisted");
@@ -106,6 +107,10 @@ contract AllowTokens is Ownable {
 
     function getTypeDescriptionsLength() external view returns(uint256) {
         return typeDescriptions.length;
+    }
+
+    function getTypeDescriptions(uint index) external view returns(string memory) {
+        return typeDescriptions[index];
     }
 
     function addAllowedContract(address _contract) external notNull(_contract) onlyOwner {
