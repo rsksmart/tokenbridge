@@ -12,9 +12,9 @@ contract AllowTokens is Ownable {
     bool public isValidatingAllowedTokens;
     mapping (address => bool) public allowedContracts;
     mapping (address => TokenInfo) public allowedTokens;
-    string[] typeDescriptions;
     mapping (uint256 => Limits) public typeLimits;
     address public bridge;
+    string[] typeDescriptions;
 
     struct Limits {
         uint256 max;
