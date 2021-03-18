@@ -2234,8 +2234,13 @@
                     42:{symbol:'Ω', address:'0x865f275121113b3fe8f91632aeaa4637e8a9f861', decimals:18},
                 };
 
+                const BUND_TOKEN = { token: 'BUND', name: 'Bundles Finance', icon: 'https://etherscan.io/token/images/bundles_32.png',
+                    31:{symbol:'rBUND', address:'0xe95afdfec031f7b9cd942eb7e60f053fb605dfcd', decimals:18},
+                    42:{symbol:'BUND', address:'0x8d3e855f3f55109d473735ab76f753218400fe96', decimals:18},
+                };
+
                 // Remove INV token because its paused on mainnet
-                const TOKENS = [ OLD_TOKEN, DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN ];
+                const TOKENS = [ BUND_TOKEN, DOC_TOKEN, DAI_TOKEN, SAI_TOKEN, BITPRO_TOKEN, RIF_TOKEN, LINK_TOKEN, TUSD_TOKEN, USDT_TOKEN, USDC_TOKEN, WETH_TOKEN, ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN, OLD_TOKEN, ];
                 // --------- TOKENS  END --------------
             </script>
         </div>
