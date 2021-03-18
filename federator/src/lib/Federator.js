@@ -197,7 +197,7 @@ module.exports = class Federator {
             let member = await this.federationContract.methods.isMember(from).call();
             this.logger.info(`isMember ${member}`);
             this.logger.info(`this.federationContract.address ${this.federationContract._address}`);
-            let federationAddress = await this.sideBridgeContract.methods.getfederation().call()
+            let federationAddress = await this.sideBridgeContract.methods.getFederation().call()
             this.logger.info(`getfederation ${federationAddress}`);
             let result = await this.federationContract.methods.voteTransaction(
                 tokenAddress,
