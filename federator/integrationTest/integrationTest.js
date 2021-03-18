@@ -131,17 +131,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         logger.debug('Bridge receiveTokens (transferFrom)');
         let bridgeContract = new originWeb3.eth.Contract(abiBridge, originBridgeAddress);
-        console.log('originBridgeAddress', originBridgeAddress)
-        console.log('originAddress', originAddress)
-        console.log('userAddress', userAddress)
-        console.log('amount', amount)
-        console.log('user balance', (await originWeb3.eth.getBalance(userAddress)).toString())
-        console.log('user tokens balance', (await originTokenContract.methods.balanceOf(userAddress).call()).toString())
-        console.log('user tokens bridge alowance', (await originTokenContract.methods.allowance(userAddress, originBridgeAddress).call()).toString())
-        console.log('bridge fee', (await bridgeContract.methods.getFeePercentage().call()).toString())
-        console.log('allowTokensContract isValidatingAllowedTokens', (await allowTokensContract.methods.isValidatingAllowedTokens().call()).toString())
-        console.log('allowTokensContract allowedTokens', (await allowTokensContract.methods.allowedTokens(originAddress).call()))
-        console.log('allowTokensContract typeLimits', (await allowTokensContract.methods.typeLimits(0).call()))
         await bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).call({from: userAddress});
         data = bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
@@ -199,8 +188,8 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Allowed to transfer ', allowed);
 
         logger.debug('Bridge side receiveTokens');
-        await destinationBridgeContract.methods.receiveTokens(destinationTokenAddress, userAddress, amount).call({from: userAddress});
-        data = destinationBridgeContract.methods.receiveTokens(destinationTokenAddress, userAddress, amount).encodeABI();
+        await destinationBridgeContract.methods.receiveTokensTo(destinationTokenAddress, userAddress, amount).call({from: userAddress});
+        data = destinationBridgeContract.methods.receiveTokensTo(destinationTokenAddress, userAddress, amount).encodeABI();
         await destinationTransactionSender.sendTransaction(destinationBridgeAddress, data, 0, userPrivateKey);
         logger.debug('Bridge side receiveTokens completed');
 
@@ -266,21 +255,40 @@ async function transfer(originFederators, destinationFederators, config, origin,
         let typeId = 0;
         data = allowTokensContract.methods.setToken(anotherTokenAddress, typeId).encodeABI();
 
-        if (federatorKeys.length === 1) {
+        //if (federatorKeys.length === 1) {
             const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
             await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
-        } else {
-            let multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
-            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0]);
+        // } else {
+        //     let multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+        //     await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0]);
 
-            let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
-            for (let i = 1; i < federatorKeys.length; i++) {
-                multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
-                await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i]);
-            }
-        }
+        //     let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
+        //     for (let i = 1; i < federatorKeys.length; i++) {
+        //         multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+        //         await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i]);
+        //     }
+        // }
 
         logger.debug('Call to transferAndCall');
+
+        console.log('originBridgeAddress', originBridgeAddress)
+        console.log('userAddress', userAddress)
+        console.log('amount', amount)
+        console.log('user balance', (await originWeb3.eth.getBalance(userAddress)).toString())
+        console.log('user tokens balance', (await anotherTokenContract.methods.balanceOf(userAddress).call()).toString())
+        console.log('user tokens bridge alowance', (await anotherTokenContract.methods.allowance(userAddress, originBridgeAddress).call()).toString())
+        console.log('bridge fee', (await bridgeContract.methods.getFeePercentage().call()).toString())
+        console.log('allowTokensContract isValidatingAllowedTokens', (await allowTokensContract.methods.isValidatingAllowedTokens().call()).toString())
+        console.log('allowTokensContract allowedTokens', (await allowTokensContract.methods.allowedTokens(anotherTokenAddress).call()))
+        console.log('allowTokensContract getInfoAndLimits', (await allowTokensContract.methods.getInfoAndLimits(anotherTokenAddress).call()))
+        console.log('allowTokensContract isTokenAllowed', (await allowTokensContract.methods.isTokenAllowed(anotherTokenAddress).call()))
+        console.log('bridge allowTokens', (await bridgeContract.methods.allowTokens().call()).toString())
+        console.log('allowTokens address', config.mainchain.allowTokens)
+        console.log('multisig address', config.mainchain.multiSig)
+        console.log('allowTokensContract owner', (await allowTokensContract.methods.owner().call()))
+        console.log('allowTokensContract maxWithdraw', (await allowTokensContract.methods.calcMaxWithdraw(anotherTokenAddress).call()))
+        console.log('type 0 typeDescriptions', (await allowTokensContract.methods.getTypeDescriptions(0).call()))
+        await anotherTokenContract.methods.send(originBridgeAddress, amount, '0x').call({from:userAddress});
         data = anotherTokenContract.methods.send(originBridgeAddress, amount, '0x').encodeABI();
         await transactionSender.sendTransaction(anotherTokenContract.options.address, data, 0, userPrivateKey);
         logger.debug('Call to transferAndCall completed');
