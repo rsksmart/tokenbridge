@@ -5,7 +5,7 @@
   "description": "Decentralized Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
-    "ganache": "npx ganache-cli -i 5777 -k istanbul",
+    "ganache": "npx ganache-cli -i 5777 -k istanbul -v",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solium -d contracts/",
     "compile": "rm -rf ./build && npx truffle compile",
