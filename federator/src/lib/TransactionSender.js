@@ -26,7 +26,6 @@ module.exports = class TransactionSender {
 
     async getGasPrice(chainId) {
         chainId = parseInt(chainId)
-        console.log(chainId)
         if(chainId>= 30 && chainId <=33) {
             return this.getRskGasPrice();
         }

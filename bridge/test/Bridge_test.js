@@ -117,13 +117,13 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(this.token.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 assert.equal(receipt.logs[0].event, 'Cross');
                 assert.equal(receipt.logs[0].args[0], this.token.address);
                 assert.equal(receipt.logs[0].args[1], tokenOwner);
-                assert.equal(receipt.logs[0].args[2], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], anAccount);
                 assert.equal(receipt.logs[0].args[3], amount);
                 assert.equal(receipt.logs[0].args[4], await this.token.symbol());
                 assert.equal(receipt.logs[0].args[5], null);
@@ -286,7 +286,81 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = tokenOwner.toLowerCase();
+                let userData = anAccount.toLowerCase();
+                let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
+                utils.checkRcpt(result);
+
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,string,bytes,uint8,uint256)');
+                assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
+                let decodedLog = web3.eth.abi.decodeLog([
+                    {
+                      "indexed": true,
+                      "name": "_tokenAddress",
+                      "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "name": "_from",
+                        "type": "address"
+                      },
+                    {
+                      "indexed": true,
+                      "name": "_to",
+                      "type": "address"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_amount",
+                      "type": "uint256"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_symbol",
+                      "type": "string"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_userData",
+                      "type": "bytes"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_decimals",
+                      "type": "uint8"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_granularity",
+                      "type": "uint256"
+                    }
+                  ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
+
+                assert.equal(decodedLog._tokenAddress, erc777.address);
+                assert.equal(decodedLog._from, tokenOwner);
+                assert.equal(decodedLog._to, anAccount);
+                assert.equal(decodedLog._amount, amount);
+                assert.equal(decodedLog._symbol, await erc777.symbol());
+                assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._decimals.toString(), (await erc777.decimals()).toString());
+                assert.equal(decodedLog._granularity.toString(), (await erc777.granularity()).toString());
+
+                const tokenBalance = await erc777.balanceOf(tokenOwner);
+                assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
+                const bridgeBalance = await erc777.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                assert.equal(isKnownToken, true);
+            });
+
+            it('tokensReceived for ERC777 without address in data', async function () {
+                const amount = web3.utils.toWei('1000');
+                const granularity = '100';
+                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
+                let userData = '0x';
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
@@ -340,7 +414,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._symbol, await erc777.symbol());
-                assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._userData, null);
                 assert.equal(decodedLog._decimals.toString(), (await erc777.decimals()).toString());
                 assert.equal(decodedLog._granularity.toString(), (await erc777.granularity()).toString());
 
