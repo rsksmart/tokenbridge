@@ -237,14 +237,16 @@ module.exports = class Federator {
                     fedRskBlock,
                     fedEthBlock,
                     federationVersion,
-                    nodeInfo
+                    nodeRskInfo,
+                    nodeEthInfo
                 } = log.returnValues;
 
                 let logInfo = `[sender: ${sender}],`;
                 logInfo    += `[fedRskBlock: ${fedRskBlock}],`;
                 logInfo    += `[fedEthBlock: ${fedEthBlock}],`;
                 logInfo    += `[federationVersion: ${federationVersion}],`;
-                logInfo    += `[nodeInfo: ${nodeInfo}],`;
+                logInfo    += `[nodeRskInfo: ${nodeRskInfo}],`;
+                logInfo    += `[nodeEthInfo: ${nodeEthInfo}],`;
                 logInfo    += `[blockNumber: ${blockNumber}],`;
                 logInfo    += `[RskBlockGap: ${blockNumber - fedRskBlock}],`;
                 logInfo    += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
