@@ -2,21 +2,20 @@ const abiFederation = require('../../../abis/Federation.json');
 
 module.exports = class GenericFederation {
 
-    static async isVersion2(federationContract) {
+    static async getVersion(federationContract) {
         try {
-            await federationContract.methods.version().call();
-            return true;
+            return await federationContract.methods.version().call();
         } catch(err) {
-            return false;
+            return "v1";
         }
     }
 
     static async getInstance(Constructor, ...args) {
         const federationContract = new Constructor(abiFederation, ...args);
-        const isV2 = await this.isVersion2(federationContract);
+        const version = await this.getVersion(federationContract);
         let instanceClass;
 
-        if (isV2) {
+        if (version === 'v2') {
             instanceClass = class {
                 getTransactionId(paramsObj = {}) {
                     const {
