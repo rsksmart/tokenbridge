@@ -27,11 +27,13 @@ module.exports = class Heartbeat {
                 const [
                     currentBlockRSK,
                     currentBlockETH,
-                    nodeInfo
+                    nodeRskInfo,
+                    nodeEthInfo
                 ] =
                 await Promise.all([
                     this.mainWeb3.eth.getBlockNumber(),
                     this.sideWeb3.eth.getBlockNumber(),
+                    this.mainWeb3.eth.getNodeInfo(),
                     this.sideWeb3.eth.getNodeInfo()
                 ]);
 
@@ -39,7 +41,8 @@ module.exports = class Heartbeat {
                     currentBlockRSK,
                     currentBlockETH,
                     scriptVersion,
-                    nodeInfo
+                    nodeRskInfo,
+                    nodeEthInfo
                 );
             } catch (err) {
                 console.log(err)
@@ -55,17 +58,18 @@ module.exports = class Heartbeat {
         }
     }
 
-    async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeInfo) {
+    async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
         try {
             
             let txData = await this.federationContract.methods.emitHeartbeat(
                 fedRskBlock,
                 fedEthBlock,
                 fedVSN,
-                nodeInfo
+                nodeRskInfo,
+                nodeEthInfo
             ).encodeABI();
 
-            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVSN}, ${nodeInfo})`);
+            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVSN}, ${nodeRskInfo}, ${nodeEthInfo})`);
             await this.transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
             this.logger.info(`Success emiting heartbeat`);
             return true;

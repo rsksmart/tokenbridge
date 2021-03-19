@@ -39,7 +39,8 @@ contract Federation is Ownable {
         uint256 fedRskBlock,
         uint256 fedEthBlock,
         string federatorVersion,
-        string nodeInfo
+        string nodeRskInfo,
+        string nodeEthInfo
     );
 
     modifier onlyMember() {
@@ -204,14 +205,16 @@ contract Federation is Ownable {
         uint256 fedRskBlock,
         uint256 fedEthBlock,
         string calldata federatorVersion,
-        string calldata nodeInfo
+        string calldata nodeRskInfo,
+        string calldata nodeEthInfo
     ) external onlyMember {
         emit HeartBeat(
             _msgSender(),
             fedRskBlock,
             fedEthBlock,
             federatorVersion,
-            nodeInfo
+            nodeRskInfo,
+            nodeEthInfo
         );
     }
 }
