@@ -2,10 +2,12 @@ pragma solidity >=0.4.21 <0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "./zeppelin/math/SafeMath.sol";
-import "./zeppelin/ownership/Ownable.sol";
-import "./zeppelin/ownership/Secondary.sol";
+// Upgradables
+import "./zeppelin/upgradable/Initializable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableSecondary.sol";
 
-contract AllowTokens is Ownable, Secondary {
+contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     using SafeMath for uint256;
 
     address constant private NULL_ADDRESS = address(0);
@@ -15,12 +17,17 @@ contract AllowTokens is Ownable, Secondary {
     mapping (address => TokenInfo) public allowedTokens;
     mapping (uint256 => Limits) public typeLimits;
     address public bridge;
+    uint256 public smallAmountConfirmations;
+    uint256 public mediumAmountConfirmations;
+    uint256 public largeAmountConfirmations;
     string[] typeDescriptions;
 
     struct Limits {
         uint256 max;
         uint256 min;
         uint256 daily;
+        uint256 mediumAmount;
+        uint256 largeAmount;
     }
 
     struct TokenInfo {
@@ -36,7 +43,7 @@ contract AllowTokens is Ownable, Secondary {
     event AllowedContractAdded(address indexed _contractAddress);
     event AllowedContractRemoved(address indexed _contractAddress);
     event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
-    event TypeLimitsChanged(uint256 indexed _typeId, uint256 _maxTokens, uint256 _minTokens, uint256 _dailyLimit);
+    event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
     event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
 
     modifier notNull(address _address) {
@@ -44,8 +51,9 @@ contract AllowTokens is Ownable, Secondary {
         _;
     }
 
-    constructor(address _manager) public  {
-        transferOwnership(_manager);
+    function initialize(address _manager, address _primary) public initializer {
+        UpgradableOwnable.initialize(_manager);
+        UpgradableSecondary.initialize(_primary);
         isValidatingAllowedTokens = true;
     }
 
@@ -96,12 +104,12 @@ contract AllowTokens is Ownable, Secondary {
         }
     }
 
-    function addTokenType(string calldata description, uint256 max, uint256 min, uint256 daily) external onlyOwner returns(uint256) {
+    function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         uint256 len = typeDescriptions.length;
         require(len + 1 < MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
         typeDescriptions.push(description);
-        setTypeLimits(len, max, min, daily);
+        setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
         return len;
     }
@@ -158,17 +166,14 @@ contract AllowTokens is Ownable, Secondary {
         emit AllowedTokenValidation(isValidatingAllowedTokens);
     }
 
-    function setTypeLimits(uint256 typeId, uint256 maxTokens, uint256 minTokens, uint256 dailyLimit) public onlyOwner {
-        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions size");
-        require(maxTokens >= minTokens, "AllowTokens: maxTokens smaller than minTokens");
-        require(maxTokens >= minTokens, "AllowTokens: minTokens bigger than maxTokens");
-        require(dailyLimit >= maxTokens, "AllowTokens: dailyLimit smaller than maxTokens");
-        Limits memory limit = typeLimits[typeId];
-        limit.max = maxTokens;
-        limit.min = minTokens;
-        limit.daily = dailyLimit;
-        typeLimits[typeId] = limit;
-        emit TypeLimitsChanged(typeId, maxTokens, minTokens, dailyLimit);
+    function setTypeLimits(uint256 typeId, Limits memory limits) public onlyOwner {
+        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions length");
+        require(limits.max >= limits.min, "AllowTokens: maxTokens smaller than minTokens");
+        require(limits.daily >= limits.max, "AllowTokens: dailyLimit smaller than maxTokens");
+        require(limits.mediumAmount > limits.min, "AllowTokens: limits.mediumAmount smaller than min");
+        require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
+        typeLimits[typeId] = limits;
+        emit TypeLimitsChanged(typeId, limits);
     }
 
 }
