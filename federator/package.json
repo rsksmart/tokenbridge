@@ -2,7 +2,7 @@
   "name": "federator",
   "private": "true",
   "version": "1.1.0",
-  "description": "Mutitoken Bridge Federator",
+  "description": "RSK Bridge Federator",
   "keywords": [
     "rsk",
     "federated",

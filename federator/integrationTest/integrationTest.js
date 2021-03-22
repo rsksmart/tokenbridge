@@ -131,6 +131,11 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         logger.debug('Bridge receiveTokens (transferFrom)');
         let bridgeContract = new originWeb3.eth.Contract(abiBridge, originBridgeAddress);
+        console.log('Bridge addr', originBridgeAddress)
+        console.log('allowTokens addr', allowTokensContract.options.address)
+        console.log('Bridge AllowTokensAddr', await bridgeContract.methods.allowTokens().call())
+        console.log('allowTokens primary', await allowTokensContract.methods.primary().call())
+        console.log('allowTokens owner', await allowTokensContract.methods.owner().call())
         await bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).call({from: userAddress});
         data = bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
