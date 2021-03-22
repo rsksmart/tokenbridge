@@ -10,6 +10,8 @@ const toWei = web3.utils.toWei;
 contract('AllowTokens', async function (accounts) {
     const tokenDeployer= accounts[0];
     const manager = accounts[1];
+    const anotherAccount = accounts[2];
+    const anotherOwner = accounts[3];
 
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenDeployer });
@@ -296,7 +298,6 @@ contract('AllowTokens', async function (accounts) {
     });
 
     describe('Ownable methods', async function() {
-        const anotherOwner = accounts[3];
 
         it('Should renounce ownership', async function() {
             await this.allowTokens.renounceOwnership({ from: manager });
@@ -324,6 +325,30 @@ contract('AllowTokens', async function (accounts) {
             let ownerAfter = await this.allowTokens.owner();
 
             assert.equal(owner, ownerAfter);
+        });
+    })
+
+    describe('Secondary methods', async function() {
+
+        it('Should not allowed when not called by primary', async function() {
+            let maxTokensAllowed = toWei('10000');
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, true, {from: anotherAccount}));
+        });
+
+        it('Should not transfer primary when not called by the owner', async function() {
+            let owner = await this.allowTokens.primary();
+            await utils.expectThrow(this.allowTokens.transferPrimary(anotherOwner, {from: anotherAccount}));
+            let ownerAfter = await this.allowTokens.primary();
+
+            assert.equal(owner, ownerAfter);
+        });
+
+        it('Should transfer primary', async function() {
+            await this.allowTokens.transferPrimary(anotherOwner);
+            let primary = await this.allowTokens.primary();
+            assert.equal(primary, anotherOwner);
+            let owner = await this.allowTokens.owner();
+            assert.notEqual(owner, primary);
         });
     })
 

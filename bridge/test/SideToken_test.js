@@ -50,7 +50,7 @@ contract('SideToken', async function (accounts) {
         it('mint', async function () {
             let receipt = await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
             utils.checkRcpt(receipt);
-            
+
             const creatorBalance = await this.token.balanceOf(tokenCreator);
             assert.equal(creatorBalance, 0);
 

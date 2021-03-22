@@ -32,9 +32,10 @@ contract('Bridge', async function (accounts) {
         this.utilsContract = await UtilsContract.deployed();
         await Bridge.link(UtilsContract, this.utilsContract.address);
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
+        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
             federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
+        await this.allowTokens.transferPrimary(this.bridge.address);
     });
 
     describe('Main network', async function () {
@@ -735,6 +736,7 @@ contract('Bridge', async function (accounts) {
             await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager, 
                 federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
+            await this.mirrorAllowTokens.transferPrimary(this.mirrorBridge.address);
 
             this.amount = web3.utils.toWei('1000');
             this.decimals = (await this.token.decimals()).toString();
@@ -1203,6 +1205,7 @@ contract('Bridge', async function (accounts) {
             assert.equal(tx.executed, true);
 
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
+            await this.allowTokens.transferPrimary(this.mirrorBridge.address);
 
             data = this.allowTokens.contract.methods.addTokenType('MAIN', toWei('10000'), toWei('1'), toWei('100000')).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
