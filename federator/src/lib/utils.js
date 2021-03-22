@@ -91,15 +91,32 @@ function calculatePrefixesSuffixes(nodes) {
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
+function checkHttpsOrLocalhost(url = '') {
+    const isHttps = url.slice(0,8).toLowerCase() === 'https://';
+    const isLocalhost = url.slice(0,16).toLowerCase() === 'http://127.0.0.1' ||
+        url.slice(0,16).toLowerCase() === 'http://localhost' ||
+        url.slice(0,14).toLowerCase() === 'http://0.0.0.0';
+
+    return isHttps || isLocalhost;
+}
+
+function checkIfItsInRSK(chainId = -1) {
+    return chainId === 0 ||
+        chainId === 30 ||
+        chainId === 31 ||
+        chainId === 33;
+}
 
 module.exports = {
-    waitBlocks: waitBlocks,
-    sleep: sleep,
-    hexStringToBuffer: hexStringToBuffer,
-    privateToAddress: privateToAddress,
-    stripHexPrefix: stripHexPrefix,
-    memoryUsage: memoryUsage,
-    calculatePrefixesSuffixes: calculatePrefixesSuffixes,
-    zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    waitForReceipt: waitForReceipt
+    waitBlocks,
+    sleep,
+    hexStringToBuffer,
+    privateToAddress,
+    stripHexPrefix,
+    memoryUsage,
+    calculatePrefixesSuffixes,
+    waitForReceipt,
+    checkHttpsOrLocalhost,
+    checkIfItsInRSK,
+    zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000'
 }
