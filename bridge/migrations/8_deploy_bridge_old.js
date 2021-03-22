@@ -23,7 +23,5 @@ module.exports = async (deployer, networkName, accounts) => {
     const bridgeLogic = await Bridge_old.deployed()
 
     const initData = bridgeLogic.contract.methods.initialize(multiSig.address, federation.address, allowTokens.address, sideTokenFactory.address, symbol).encodeABI();
-
     await deployer.deploy(BridgeProxy, bridgeLogic.address, proxyAdmin.address, initData);
-    await proxyAdmin.transferOwnership(multiSig.address);
 }
