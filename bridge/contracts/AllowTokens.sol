@@ -3,8 +3,9 @@ pragma experimental ABIEncoderV2;
 
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/ownership/Ownable.sol";
+import "./zeppelin/ownership/Secondary.sol";
 
-contract AllowTokens is Ownable {
+contract AllowTokens is Ownable, Secondary {
     using SafeMath for uint256;
 
     address constant private NULL_ADDRESS = address(0);
@@ -76,7 +77,7 @@ contract AllowTokens is Ownable {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external { // TODO add only bridge as modifier
+    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external onlyPrimary {
         if(isValidatingAllowedTokens) {
             (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
             require(isSideToken || isTokenAllowed(token), "AllowTokens: Token not whitelisted");
