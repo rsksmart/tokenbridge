@@ -34,19 +34,19 @@ module.exports = class TransactionSender {
 
     async getGasLimit(rawTx) {
         let estimatedGas = await this.client.eth.estimateGas({ gasPrice: rawTx.gasPrice, value: rawTx.value, to: rawTx.to, data: rawTx.data, from: rawTx.from});
-        estimatedGas = (estimatedGas < 250000) ? 250000 : 3500000;
+        estimatedGas = (estimatedGas < 300_000) ? 300_000 : 3_500_000;
         return estimatedGas;
     }
 
     async getEthGasPrice() {
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.5);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.3);
     }
 
     async getRskGasPrice() {
         let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.05);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.03);
     }
 
     async createRawTransaction(from, to, data, value) {
