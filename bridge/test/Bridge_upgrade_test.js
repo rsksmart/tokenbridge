@@ -197,7 +197,8 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.proxy = new web3.eth.Contract(Bridge.abi, this.proxy.options.address);
                     this.sideTokenFactory = await SideTokenFactory.new();
                     await this.sideTokenFactory.transferPrimary(this.proxy.options.address);
-                    this.allowTokens = await AllowTokens.new(managerAddress);
+                    this.allowTokens = await AllowTokens.new();
+                    await this.allowTokens.methods['initialize(address,address)'](managerAddress, deployerAddress);
                     await this.allowTokens.transferPrimary(this.proxy.options.address);
                     await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
                     const result = await this.proxy.methods.version().call();
