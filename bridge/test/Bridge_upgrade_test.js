@@ -198,6 +198,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.sideTokenFactory = await SideTokenFactory.new();
                     await this.sideTokenFactory.transferPrimary(this.proxy.options.address);
                     this.allowTokens = await AllowTokens.new(managerAddress);
+                    await this.allowTokens.transferPrimary(this.proxy.options.address);
                     await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
                     const result = await this.proxy.methods.version().call();
                     assert.equal(result, 'v3');

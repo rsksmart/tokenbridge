@@ -74,5 +74,5 @@ contract('SideTokenFactory', async function (accounts) {
         const minter = await sideToken.minter();
         assert.equal(minter, anAccount);
     });
-    
+
 });
