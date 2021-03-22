@@ -89,7 +89,7 @@ module.exports = class TransactionSender {
     async getRskGasPrice() {
         let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.05);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.03);
     }
 
     async getChainId() {
