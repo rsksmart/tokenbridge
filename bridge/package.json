@@ -2,7 +2,7 @@
   "name": "bridge",
   "private": true,
   "version": "1.2.0",
-  "description": "Decentralized Bridge Contracts",
+  "description": "Token Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
     "ganache": "npx ganache-cli -i 5777 -k istanbul -v",
