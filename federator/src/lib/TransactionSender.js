@@ -40,13 +40,13 @@ module.exports = class TransactionSender {
 
     async getEthGasPrice() {
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.5);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.3);
     }
 
     async getRskGasPrice() {
         let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.05);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.03);
     }
 
     async createRawTransaction(from, to, data, value) {
