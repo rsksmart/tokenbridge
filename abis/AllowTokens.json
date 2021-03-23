@@ -131,22 +131,37 @@
                 "type": "uint256"
             },
             {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "max",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "min",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "daily",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "mediumAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "largeAmount",
+                        "type": "uint256"
+                    }
+                ],
                 "indexed": false,
-                "internalType": "uint256",
-                "name": "_maxTokens",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "_minTokens",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "_dailyLimit",
-                "type": "uint256"
+                "internalType": "struct AllowTokens.Limits",
+                "name": "limits",
+                "type": "tuple"
             }
         ],
         "name": "TypeLimitsChanged",
@@ -297,6 +312,36 @@
     {
         "constant": true,
         "inputs": [],
+        "name": "largeAmountConfirmations",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "mediumAmountConfirmations",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
         "name": "owner",
         "outputs": [
             {
@@ -331,6 +376,21 @@
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "smallAmountConfirmations",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -387,6 +447,16 @@
             {
                 "internalType": "uint256",
                 "name": "daily",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "mediumAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "largeAmount",
                 "type": "uint256"
             }
         ],
@@ -498,6 +568,16 @@
                         "internalType": "uint256",
                         "name": "daily",
                         "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "mediumAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "largeAmount",
+                        "type": "uint256"
                     }
                 ],
                 "internalType": "struct AllowTokens.Limits",
@@ -564,19 +644,36 @@
                 "type": "string"
             },
             {
-                "internalType": "uint256",
-                "name": "max",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "min",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "daily",
-                "type": "uint256"
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "max",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "min",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "daily",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "mediumAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "largeAmount",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct AllowTokens.Limits",
+                "name": "limits",
+                "type": "tuple"
             }
         ],
         "name": "addTokenType",
@@ -740,19 +837,36 @@
                 "type": "uint256"
             },
             {
-                "internalType": "uint256",
-                "name": "maxTokens",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "minTokens",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "dailyLimit",
-                "type": "uint256"
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "max",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "min",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "daily",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "mediumAmount",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "largeAmount",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct AllowTokens.Limits",
+                "name": "limits",
+                "type": "tuple"
             }
         ],
         "name": "setTypeLimits",
