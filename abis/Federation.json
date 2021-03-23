@@ -48,6 +48,49 @@
             {
                 "indexed": true,
                 "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "fedRskBlock",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "fedEthBlock",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "federatorVersion",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "nodeRskInfo",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "nodeEthInfo",
+                "type": "string"
+            }
+        ],
+        "name": "HeartBeat",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
                 "name": "member",
                 "type": "address"
             }
@@ -661,6 +704,41 @@
             }
         ],
         "name": "changeRequirement",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "fedRskBlock",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "fedEthBlock",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "federatorVersion",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "nodeRskInfo",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "nodeEthInfo",
+                "type": "string"
+            }
+        ],
+        "name": "emitHeartbeat",
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
