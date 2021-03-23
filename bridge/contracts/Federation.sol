@@ -197,10 +197,6 @@ contract Federation is Ownable {
         emit RequirementChange(_required);
     }
 
-    function version() public view returns (string memory) {
-        return "v2";
-    }
-
     function emitHeartbeat(
         uint256 fedRskBlock,
         uint256 fedEthBlock,
