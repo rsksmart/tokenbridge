@@ -169,7 +169,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function verifyIfContract(address from) public view {
         if(originalTokens[from] != NULL_ADDRESS || from.isContract()) {
-            require(allowTokens.allowedContracts(from), "Bridge: from not whitelisted contract");
+            require(allowTokens.allowedContracts(from), "Bridge: from contract not whitelisted ");
         }
     }
 
