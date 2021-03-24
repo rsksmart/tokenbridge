@@ -45,15 +45,23 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
     event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
     event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
+    event ConfirmationsChanged(uint256 _smallAmountConfirmations, uint256 _mediumAmountConfirmations, uint256 _largeAmountConfirmations);
+
 
     modifier notNull(address _address) {
         require(_address != NULL_ADDRESS, "AllowTokens: Address cannot be empty");
         _;
     }
 
-    function initialize(address _manager, address _primary) public initializer {
+    function initialize(
+        address _manager,
+        address _primary,
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) public initializer {
         UpgradableOwnable.initialize(_manager);
         UpgradableSecondary.initialize(_primary);
+        _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
         isValidatingAllowedTokens = true;
     }
 
@@ -123,11 +131,13 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     function addAllowedContract(address _contract) external notNull(_contract) onlyOwner {
+        require(_contract != NULL_ADDRESS, "AllowTokens: Zero address");
         allowedContracts[_contract] = true;
         emit AllowedContractAdded(_contract);
     }
 
     function removeAllowedContract(address _contract) external notNull(_contract) onlyOwner {
+        require(_contract != NULL_ADDRESS, "AllowTokens: Zero address");
         allowedContracts[_contract] = false;
         emit AllowedContractRemoved(_contract);
     }
@@ -174,6 +184,29 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
         typeLimits[typeId] = limits;
         emit TypeLimitsChanged(typeId, limits);
+    }
+
+    function setConfirmations(
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) external onlyOwner {
+        _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
+    }
+
+    function _setConfirmations(
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) private {
+        require(_smallAmountConfirmations <= _mediumAmountConfirmations, "AllowTokens: small bigger than medium confirmations");
+        require(_mediumAmountConfirmations <= _largeAmountConfirmations, "AllowTokens: medium bigger than large confirmations");
+        smallAmountConfirmations = _smallAmountConfirmations;
+        mediumAmountConfirmations = _mediumAmountConfirmations;
+        largeAmountConfirmations = _largeAmountConfirmations;
+        emit ConfirmationsChanged(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
+    }
+
+    function getConfirmations() external returns (uint256, uint256, uint256) {
+        return (smallAmountConfirmations, mediumAmountConfirmations, largeAmountConfirmations);
     }
 
 }
