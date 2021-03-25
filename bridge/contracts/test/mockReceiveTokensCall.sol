@@ -1,6 +1,7 @@
 pragma solidity ^0.5.0;
 
 import "../IBridge.sol";
+import "../zeppelin/token/ERC20/IERC20.sol";
 
 contract mockReceiveTokensCall {
     address public bridge;
@@ -9,7 +10,8 @@ contract mockReceiveTokensCall {
         bridge = _bridge;
     }
 
-    function callReceiveTokens(address tokenToUse, address receiver, uint256 amount) public {
+    function callReceiveTokens(address tokenToUse, address receiver, uint256 amount) external {
+        IERC20(tokenToUse).approve(bridge, amount);
         IBridge(bridge).receiveTokensTo(tokenToUse, receiver, amount);
     }
 }
