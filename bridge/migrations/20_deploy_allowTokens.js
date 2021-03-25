@@ -22,19 +22,19 @@ module.exports = async (deployer, networkName, accounts) => {
         largeAmountConfirmations = '10';
     }
     if(networkName == 'kovan') {
-        smallAmountConfirmations = '5';
-        mediumAmountConfirmations = '10';
-        largeAmountConfirmations = '20';
+        smallAmountConfirmations = '10';
+        mediumAmountConfirmations = '20';
+        largeAmountConfirmations = '40';
     }
     if(networkName == 'rskmainnet') {
         smallAmountConfirmations = '30';
         mediumAmountConfirmations = '60';
-        largeAmountConfirmations = '120';
+        largeAmountConfirmations = '2880';
     }
     if(networkName == 'ethmainnet') {
         smallAmountConfirmations = '30';
         mediumAmountConfirmations = '60';
-        largeAmountConfirmations = '120';
+        largeAmountConfirmations = '5760';
     }
     const initData = allowTokensLogic.contract.methods.initialize(multiSig.address, bridgeProxy.address, smallAmountConfirmations, mediumAmountConfirmations , largeAmountConfirmations).encodeABI();
     await deployer.deploy(AllowTokensProxy, allowTokensLogic.address, proxyAdmin.address, initData);

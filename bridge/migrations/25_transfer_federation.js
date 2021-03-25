@@ -4,9 +4,6 @@ const Federation = artifacts.require('Federation');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 
 module.exports = async (deployer, networkName, accounts) => {
-    if (networkName === 'soliditycoverage') {
-        return;
-    }
     const multiSig = await MultiSigWallet.deployed();
     const federation = await Federation.deployed();
     const bridgeProxy = await BridgeProxy.deployed();

@@ -23,13 +23,25 @@ contract('AllowTokens', async function (accounts) {
     describe('Tokens whitelist', async function () {
 
         it('should initialize correctly', async function () {
+            const smallConfirmations = '100';
+            const mediumConfirmations = '200';
+            const largeConfirmations = '300';
             const allowTokens = await AllowTokens.new();
-            await allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](manager, anotherOwner, '100', '200' , '300');
+            await allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](manager, anotherOwner, smallConfirmations, mediumConfirmations , largeConfirmations);
             assert.equal(manager, await allowTokens.owner());
             assert.equal(anotherOwner, await allowTokens.primary());
-            assert.equal('100', await allowTokens.smallAmountConfirmations());
-            assert.equal('200', await allowTokens.mediumAmountConfirmations());
-            assert.equal('300', await allowTokens.largeAmountConfirmations());
+            assert.equal(smallConfirmations, await allowTokens.smallAmountConfirmations());
+            assert.equal(mediumConfirmations, await allowTokens.mediumAmountConfirmations());
+            assert.equal(largeConfirmations, await allowTokens.largeAmountConfirmations());
+            const confirmations = await  allowTokens.getConfirmations();
+            assert.equal(smallConfirmations, confirmations.smallAmount.toString());
+            assert.equal(mediumConfirmations, confirmations.mediumAmount.toString());
+            assert.equal(largeConfirmations, confirmations.largeAmount.toString());
+        });
+
+        it('should have correct version', async function () {
+            let version = await this.allowTokens.version();
+            assert.equal(version, 'v1');
         });
 
         it('should validate allowed tokens with initial values', async function () {
@@ -91,6 +103,14 @@ contract('AllowTokens', async function (accounts) {
             assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
         });
 
+        it('fail if over 250 token type', async function() {
+            for(var i = 0; i < 250; i++) {
+                await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
+            }
+            assert.equal('250', (await this.allowTokens.getTypeDescriptionsLength()).toString());
+            utils.expectThrow(this.allowTokens.addTokenType('250TH', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager }));
+        });
+
         it('validates whitelisted token', async function() {
             let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
             assert.equal(isValidatingAllowedTokens, true);
@@ -98,6 +118,10 @@ contract('AllowTokens', async function (accounts) {
             let typeId = 0;
             await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
             let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isAllowed, true);
+            let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
+            await this.allowTokens.setToken(otherToken.address, typeId, { from: manager });
+            isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
             assert.equal(isAllowed, true);
         });
 
@@ -188,9 +212,9 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it ('sets new limits for tokens', async function() {
-            let newMaxTokens = web3.utils.toWei('50000');
-            let newMinTokens = web3.utils.toWei('10');
-            let newDailyLimit = web3.utils.toWei('50000');
+            const newMaxTokens = web3.utils.toWei('50000');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('50000');
 
             await this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('100'), largeAmount:toWei('1000')}, { from: manager });
             let limits = await this.allowTokens.typeLimits(this.typeId);
@@ -201,9 +225,9 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it('fail if not the owner', async function() {
-            let newMaxTokens = web3.utils.toWei('50000');
-            let newMinTokens = web3.utils.toWei('10');
-            let newDailyLimit = web3.utils.toWei('50000');
+            const newMaxTokens = web3.utils.toWei('50000');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('50000');
 
             let previousLimits = await this.allowTokens.typeLimits(this.typeId);
             await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('100'), largeAmount:toWei('1000')}, { from: tokenDeployer }));
@@ -215,27 +239,59 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it('fail if max is smaller than min', async function() {
-            let newMaxTokens = web3.utils.toWei('9');
-            let newMinTokens = web3.utils.toWei('10');
-            let newDailyLimit = web3.utils.toWei('50000');
-
-            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit}, { from: manager }));
+            const newMaxTokens = web3.utils.toWei('9');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('50000');
+            const mediumAmount = web3.utils.toWei('11');
+            const largeAmount = web3.utils.toWei('12');
+            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
         });
 
-        it ('fail daily limit smaller than max', async function() {
-            let newMaxTokens = web3.utils.toWei('100');
-            let newMinTokens = web3.utils.toWei('10');
-            let newDailyLimit = web3.utils.toWei('99');
+        it('fail daily limit smaller than max', async function() {
+            const newMaxTokens = web3.utils.toWei('100');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('99');
+            const mediumAmount = web3.utils.toWei('11');
+            const largeAmount = web3.utils.toWei('12');
+            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+        });
 
-            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager }));
+        it('fail if typeId bigger than max', async function() {
+            const typeId = Number(await this.allowTokens.getTypeDescriptionsLength())+1;
+            const newMaxTokens = web3.utils.toWei('50');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('300');
+            const mediumAmount = web3.utils.toWei('11');
+            const largeAmount = web3.utils.toWei('12');
+            await utils.expectThrow(this.allowTokens.setTypeLimits(typeId.toString(), {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+        });
+
+        it('fail medium amount smaller than min limit', async function() {
+            const newMaxTokens = web3.utils.toWei('100');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('1000');
+            const mediumAmount = web3.utils.toWei('10');
+            const largeAmount = web3.utils.toWei('12');
+            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+        });
+
+        it('fail large amount smaller than medium amount', async function() {
+            const newMaxTokens = web3.utils.toWei('100');
+            const newMinTokens = web3.utils.toWei('10');
+            const newDailyLimit = web3.utils.toWei('1000');
+            const mediumAmount = web3.utils.toWei('11');
+            const largeAmount = web3.utils.toWei('11');
+            await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
         });
 
         it('calcMaxWithdraw', async function() {
-            let newMaxTokens = web3.utils.toWei('10000');
-            let newMinTokens = web3.utils.toWei('1');
-            let newDailyLimit = web3.utils.toWei('12000');
+            const newMaxTokens = web3.utils.toWei('10000');
+            const newMinTokens = web3.utils.toWei('1');
+            const newDailyLimit = web3.utils.toWei('12000');
+            const mediumAmount = web3.utils.toWei('2');
+            const largeAmount = web3.utils.toWei('3');
 
-            await this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
+            await this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
             let maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
