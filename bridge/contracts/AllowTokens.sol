@@ -23,8 +23,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     string[] typeDescriptions;
 
     struct Limits {
-        uint256 max;
         uint256 min;
+        uint256 max;
         uint256 daily;
         uint256 mediumAmount;
         uint256 largeAmount;
@@ -115,7 +115,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         uint256 len = typeDescriptions.length;
-        require(len + 1 < MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
+        require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
         typeDescriptions.push(description);
         setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
@@ -131,13 +131,11 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     function addAllowedContract(address _contract) external notNull(_contract) onlyOwner {
-        require(_contract != NULL_ADDRESS, "AllowTokens: Zero address");
         allowedContracts[_contract] = true;
         emit AllowedContractAdded(_contract);
     }
 
     function removeAllowedContract(address _contract) external notNull(_contract) onlyOwner {
-        require(_contract != NULL_ADDRESS, "AllowTokens: Zero address");
         allowedContracts[_contract] = false;
         emit AllowedContractRemoved(_contract);
     }
@@ -160,7 +158,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
 
     function removeAllowedToken(address token) external notNull(token) onlyOwner {
         TokenInfo memory info = allowedTokens[token];
-        require(info.allowed, "AllowTokens: Token does not exis  in allowedTokens");
+        require(info.allowed, "AllowTokens: Token does not exis in allowedTokens");
         info.allowed = false;
         allowedTokens[token] = info;
         emit AllowedTokenRemoved(token);
@@ -205,7 +203,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         emit ConfirmationsChanged(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
     }
 
-    function getConfirmations() external returns (uint256, uint256, uint256) {
+    function getConfirmations() external view returns (uint256 smallAmount, uint256 mediumAmount, uint256 largeAmount) {
         return (smallAmountConfirmations, mediumAmountConfirmations, largeAmountConfirmations);
     }
 
