@@ -44,6 +44,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     //Bridge_v1 variables
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
+    bytes32 constant _erc777Interface = keccak256("ERC777Token");
 
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
@@ -92,7 +93,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint32 logIndex,
         uint8 decimals,
         uint256 granularity
-    ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
+    ) external onlyFederation whenNotPaused nonReentrant {
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
         require(amount > 0, "Bridge: Amount 0");
@@ -109,7 +110,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         } else {
             _acceptCrossToSideToken(sender, receiver, tokenAddress, decimals, granularity, amount, symbol);
         }
-        return true;
     }
 
     function _acceptCrossToSideToken(
@@ -154,23 +154,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      */
     function receiveTokensTo(address tokenToUse, address to, uint256 amount) public whenNotUpgrading whenNotPaused nonReentrant {
         address sender = _msgSender();
-        verifyIfContract(sender);
+        if(sender.isContract()) {
+            require(allowTokens.allowedContracts(sender), "Bridge: from contract not whitelisted ");
+        }
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
         crossTokens(tokenToUse, sender, to, amount, "");
-    }
-
-    /**
-     * Legacy receiveTokens DEPRECATED, it will be removed in the next version
-     */
-    function receiveTokens(address tokenToUse, uint256 amount) external returns(bool) {
-        receiveTokensTo(tokenToUse, _msgSender(), amount);
-    }
-
-    function verifyIfContract(address from) public view {
-        if(originalTokens[from] != NULL_ADDRESS || from.isContract()) {
-            require(allowTokens.allowedContracts(from), "Bridge: from not whitelisted contract");
-        }
     }
 
     /**
@@ -187,11 +176,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     ) external whenNotPaused whenNotUpgrading {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
-        require(to == address(this), "Bridge: Not to address");
+        require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
-        //This can only be used with trusted contracts
-        verifyIfContract(from);
+        require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         address receiver = userData.length == 0 ? from : bytesToAddress(userData);
+        //This can only be used with trusted contracts
+        require(isSideToken(tokenToUse) || allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
@@ -202,8 +192,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         }
     }
 
+    function isSideToken(address tokenAddress) public view returns (bool) {
+        return originalTokens[tokenAddress] != NULL_ADDRESS;
+    }
+
     function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData) private {
-        bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
+        bool isASideToken = isSideToken(tokenToUse);
         //Send the payment to the MultiSig of the Federation
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);

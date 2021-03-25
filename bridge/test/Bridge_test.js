@@ -25,7 +25,7 @@ contract('Bridge', async function (accounts) {
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
         this.allowTokens = await AllowTokens.new();
-        await this.allowTokens.methods['initialize(address,address)'](bridgeManager, bridgeOwner);
+        await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](bridgeManager, bridgeOwner, '0', '0' , '0');
         await this.allowTokens.addTokenType('MAIN', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: bridgeManager });
         this.typeId = 0;
         await this.allowTokens.setToken(this.token.address, this.typeId, { from: bridgeManager });
@@ -36,7 +36,7 @@ contract('Bridge', async function (accounts) {
         await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
             federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
-        await this.allowTokens.transferPrimary(this.bridge.address);
+        await this.allowTokens.transferPrimary(this.bridge.address, { from: bridgeOwner });
     });
 
     describe('Main network', async function () {
@@ -63,6 +63,31 @@ contract('Bridge', async function (accounts) {
                 await utils.expectThrow(this.bridge.transferOwnership(newBridgeManager));
                 const manager = await this.bridge.owner();
                 assert.equal(manager, bridgeManager);
+            });
+
+            it('change allowTokens', async function () {
+                let allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, this.allowTokens.address);
+                const receipt = await this.bridge.changeAllowTokens(anAccount, { from: bridgeManager });
+                utils.checkRcpt(receipt);
+                allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, anAccount);
+            });
+
+            it('only manager can change allowTokens', async function () {
+                let allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, this.allowTokens.address);
+                await utils.expectThrow(this.bridge.changeAllowTokens(anAccount, { from: tokenOwner }));
+                allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, this.allowTokens.address);
+            });
+
+            it('change allowTokens fail if zero address', async function () {
+                let allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, this.allowTokens.address);
+                await utils.expectThrow(this.bridge.changeAllowTokens(utils.NULL_ADDRESS, { from: bridgeManager }));
+                allowTokens = await this.bridge.allowTokens();
+                assert.equal(allowTokens, this.allowTokens.address);
             });
 
             it('setFeePercentage successful', async function () {
@@ -110,7 +135,6 @@ contract('Bridge', async function (accounts) {
                 const federationAddress = await this.bridge.getFederation();
                 assert.equal(federationAddress, federation);
             });
-
         });
 
         describe('receiveTokens', async function () {
@@ -284,8 +308,12 @@ contract('Bridge', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-
-                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
+                console.log('erc777.address', erc777.address)
+                console.log('his.typeId', this.typeId)
+                await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
+                console.log('isAllowed', await this.allowTokens.allowedContracts(erc777.address))
+                console.log('getTypeDescriptions', await this.allowTokens.getTypeDescriptions(this.typeId))
+                console.log('allowedTokens', await this.allowTokens.allowedTokens(erc777.address))
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = anAccount.toLowerCase();
@@ -360,7 +388,7 @@ contract('Bridge', async function (accounts) {
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
-                await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
+                await erc777.mint(tokenOwner, amount, "0x", "0x", { from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = '0x';
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
@@ -597,11 +625,19 @@ contract('Bridge', async function (accounts) {
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount, { from: tokenOwner }));
             });
 
+            it('receiveTokens should work calling from an allowed contract', async function () {
+                let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
+                this.allowTokens.addAllowedContract(otherContract.address, { from: bridgeManager });
+                const amount = web3.utils.toWei('1000');
+                await this.token.transfer(otherContract.address, amount, { from: tokenOwner });
+                await otherContract.callReceiveTokens(this.token.address, tokenOwner, amount);
+            });
+
             it('receiveTokens should reject calling from a contract', async function () {
                 let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
                 const amount = web3.utils.toWei('1000');
-                await this.token.approve(otherContract.address, amount, { from: tokenOwner });
-                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, tokenOwner, tokenOwner, amount));
+                await this.token.transfer(otherContract.address, amount, { from: tokenOwner });
+                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, tokenOwner, amount));
             });
 
             it('rejects to receive tokens greater than  max tokens allowed 18 decimals', async function() {
@@ -731,7 +767,7 @@ contract('Bridge', async function (accounts) {
     describe('Mirror Side', async function () {
         beforeEach(async function () {
             this.mirrorAllowTokens = await AllowTokens.new();
-            await this.mirrorAllowTokens.methods['initialize(address,address)'](bridgeManager, bridgeOwner);
+            await this.mirrorAllowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](bridgeManager, bridgeOwner, '0', '0' , '0');
             await this.mirrorAllowTokens.addTokenType('eRIF', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: bridgeManager });
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
@@ -1188,7 +1224,7 @@ contract('Bridge', async function (accounts) {
             this.multiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.fedMultiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.allowTokens = await AllowTokens.new();
-            await this.allowTokens.methods['initialize(address,address)'](this.multiSig.address, bridgeOwner);
+            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](this.multiSig.address, bridgeOwner, '0', '0' , '0');
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
             this.decimals = "18";

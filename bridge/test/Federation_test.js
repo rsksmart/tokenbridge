@@ -67,6 +67,11 @@ contract('Federation', async function (accounts) {
             assert.equal(owner, deployer);
         });
 
+        it('should have correct version', async function () {
+            let version = await this.federators.version();
+            assert.equal(version, 'v2');
+        });
+
         it('isMember should work correctly', async function() {
             let isMember = await this.federators.isMember(federator1);
             assert.equal(isMember, true);
@@ -248,12 +253,50 @@ contract('Federation', async function (accounts) {
                 assert.equal(required, 1);
             });
 
+            it('should fail if less than 2', async function() {
+                await this.federators.changeRequirement(2);
+                await utils.expectThrow(this.federators.changeRequirement(1));
+
+                let required = await this.federators.required();
+                assert.equal(required, 2);
+            });
+
             it('should fail if required bigger than memebers', async function() {
                 await utils.expectThrow(this.federators.changeRequirement(3));
 
                 let required = await this.federators.required();
                 assert.equal(required, 1);
             });
+        });
+
+        describe('emitHeartbeat', async function() {
+            it('should be succesful', async function() {
+                const fedRskBlock = '123456';
+                const fedEthBlock = '999000000';
+                const federatorVersion = '2.0.0';
+                const nodeRskInfo = 'rskjar/2.2.0';
+                const nodeEthInfo = 'geth/1.10.2';
+                let receipt = await this.federators.emitHeartbeat(fedRskBlock,fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo, {from: federator1});
+                utils.checkRcpt(receipt);
+
+                assert.equal(receipt.logs[0].event, 'HeartBeat');
+                assert.equal(receipt.logs[0].args[0], federator1);
+                assert.equal(receipt.logs[0].args[1], fedRskBlock);
+                assert.equal(receipt.logs[0].args[2], fedEthBlock);
+                assert.equal(receipt.logs[0].args[3], federatorVersion);
+                assert.equal(receipt.logs[0].args[4], nodeRskInfo);
+                assert.equal(receipt.logs[0].args[5], nodeEthInfo);
+            });
+
+            it('should fail if not a memeber', async function() {
+                const fedRskBlock = '123456';
+                const fedEthBlock = '999000000';
+                const federatorVersion = '2.0.0';
+                const nodeRskInfo = 'rskjar/2.2.0';
+                const nodeEthInfo = 'geth/1.10.2';
+                await utils.expectThrow(this.federators.emitHeartbeat(fedRskBlock,fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo, {from: deployer}));
+            });
+
         });
 
     });
@@ -271,7 +314,7 @@ contract('Federation', async function (accounts) {
 
         beforeEach(async function () {
             this.allowTokens = await AllowTokens.new();
-            await this.allowTokens.methods['initialize(address,address)'](deployer, deployer);
+            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](deployer, deployer, '0', '0' , '0');
             await this.allowTokens.addTokenType('RIF', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')});
             let typeId = 0;
             await this.allowTokens.setToken(originalTokenAddress, typeId);
@@ -616,7 +659,7 @@ contract('Federation', async function (accounts) {
 
         it('should fail if not federators member', async function() {
             await utils.expectThrow(this.federators.voteTransaction(originalTokenAddress,
-                anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity));
+                {sender:anAccount, receiver:anAccount, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity}));
         });
 
         it('voteTransaction should be successfull if already voted', async function() {

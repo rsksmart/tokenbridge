@@ -23,8 +23,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     string[] typeDescriptions;
 
     struct Limits {
-        uint256 max;
         uint256 min;
+        uint256 max;
         uint256 daily;
         uint256 mediumAmount;
         uint256 largeAmount;
@@ -45,15 +45,23 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
     event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
     event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
+    event ConfirmationsChanged(uint256 _smallAmountConfirmations, uint256 _mediumAmountConfirmations, uint256 _largeAmountConfirmations);
+
 
     modifier notNull(address _address) {
         require(_address != NULL_ADDRESS, "AllowTokens: Address cannot be empty");
         _;
     }
 
-    function initialize(address _manager, address _primary) public initializer {
+    function initialize(
+        address _manager,
+        address _primary,
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) public initializer {
         UpgradableOwnable.initialize(_manager);
         UpgradableSecondary.initialize(_primary);
+        _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
         isValidatingAllowedTokens = true;
     }
 
@@ -107,7 +115,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         uint256 len = typeDescriptions.length;
-        require(len + 1 < MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
+        require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
         typeDescriptions.push(description);
         setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
@@ -150,7 +158,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
 
     function removeAllowedToken(address token) external notNull(token) onlyOwner {
         TokenInfo memory info = allowedTokens[token];
-        require(info.allowed, "AllowTokens: Token does not exis  in allowedTokens");
+        require(info.allowed, "AllowTokens: Token does not exis in allowedTokens");
         info.allowed = false;
         allowedTokens[token] = info;
         emit AllowedTokenRemoved(token);
@@ -174,6 +182,29 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
         typeLimits[typeId] = limits;
         emit TypeLimitsChanged(typeId, limits);
+    }
+
+    function setConfirmations(
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) external onlyOwner {
+        _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
+    }
+
+    function _setConfirmations(
+        uint256 _smallAmountConfirmations,
+        uint256 _mediumAmountConfirmations,
+        uint256 _largeAmountConfirmations) private {
+        require(_smallAmountConfirmations <= _mediumAmountConfirmations, "AllowTokens: small bigger than medium confirmations");
+        require(_mediumAmountConfirmations <= _largeAmountConfirmations, "AllowTokens: medium bigger than large confirmations");
+        smallAmountConfirmations = _smallAmountConfirmations;
+        mediumAmountConfirmations = _mediumAmountConfirmations;
+        largeAmountConfirmations = _largeAmountConfirmations;
+        emit ConfirmationsChanged(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
+    }
+
+    function getConfirmations() external view returns (uint256 smallAmount, uint256 mediumAmount, uint256 largeAmount) {
+        return (smallAmountConfirmations, mediumAmountConfirmations, largeAmountConfirmations);
     }
 
 }
