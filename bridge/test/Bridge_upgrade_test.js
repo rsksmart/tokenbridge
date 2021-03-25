@@ -242,7 +242,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
                     it('should accept Transfer', async () => {
                         let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, otherAccount, this.amount, "MAIN",
-                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: federationAddress, gas: 3_200_000 });
+                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: federationAddress, gas: 4_000_000 });
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();

@@ -12,10 +12,6 @@ interface IBridge {
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
     function receiveTokensTo(address tokenToUse, address to, uint256 amount) external;
-    /**
-     * Legacy receiveTokens DEPRECATED, it will be removed in the next version, use receiveTokensTo instead
-     */
-    function receiveTokens(address tokenToUse, uint256 amount) external returns(bool);
 
     /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
@@ -44,7 +40,7 @@ interface IBridge {
         uint32 logIndex,
         uint8 decimals,
         uint256 granularity
-    ) external returns(bool);
+    ) external;
 
     event Cross(address indexed _tokenAddress, address indexed _from, address indexed _to, uint256 _amount, string _symbol, bytes _userData,
         uint8 _decimals, uint256 _granularity);

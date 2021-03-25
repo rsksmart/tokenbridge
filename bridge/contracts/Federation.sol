@@ -105,10 +105,9 @@ contract Federation is Ownable {
         uint transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
-            bool acceptTransfer = bridge.acceptTransfer(originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
+            bridge.acceptTransfer(originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
                 transactionInfo.amount, transactionInfo.symbol, transactionInfo.blockHash, transactionInfo.transactionHash,
                 transactionInfo.logIndex, transactionInfo.decimals, transactionInfo.granularity);
-            require(acceptTransfer, "Federation: Bridge acceptTransfer error");
             emit Executed(transactionId);
             return true;
         }
