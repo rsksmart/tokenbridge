@@ -1016,7 +1016,7 @@
                     }).then(async () => {
                         return new Promise((resolve, reject) => {
                             bridgeContract.methods
-                                .receiveTokens(tokenContract.options.address, amountBN.toString())
+                                .receiveTokensTo(tokenContract.options.address, address, amountBN.toString())
                                 .send({from: address, gasPrice:gasPrice, gas:200_000}, async (err, txHash) => {
                                 if (err) return reject(err);
                                 try {
