@@ -6,7 +6,7 @@ const ProxyAdmin = artifacts.require("ProxyAdmin");
 
 
 module.exports = async (deployer, networkName, accounts) => {
-    const utils = Utils.deployed();
+    const utils = await Utils.deployed();
     await Bridge.link(Utils, utils.address);
     await deployer.deploy(Bridge);
     const bridgeLogic = await Bridge.deployed();

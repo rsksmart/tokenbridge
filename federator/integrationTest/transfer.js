@@ -38,7 +38,7 @@ async function run() {
 
         logger.debug('bridge receiveTokens (transferFrom)');
         let bridgeContract = new rskWeb3.eth.Contract(abiBridge, bridgeAddress);
-        data = bridgeContract.methods.receiveTokens(mainTokenAddress, amount).encodeABI();
+        data = bridgeContract.methods.receiveTokensTo(mainTokenAddress, senderAddress, amount).encodeABI();
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.privateKey);
 
         //Wait for confirmations
