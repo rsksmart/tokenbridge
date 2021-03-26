@@ -3,7 +3,7 @@ const fs = require('fs');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
 const GenericFederation = require('./GenericFederation');
-const GenericBridge = require('./GenericBridge');
+const BridgeFactory = require('./BridgeFactory');
 const utils = require('./utils');
 
 module.exports = class Federator {
@@ -19,21 +19,17 @@ module.exports = class Federator {
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
-        this.mainBridgeContract = null;
-        this.sideBridgeContract = null;
         this.federationContract = null;
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+        this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
     }
 
     async getFederationContract() {
         if (this.federationContract === null) {
             try {
-
-                const {
-                  sideBridge
-                } = await this.getBridgeContract()
+                const sideBridge = await this.bridgeFactory.getSideBridgeContract();
 
                 const federationAddress =
                     await sideBridge.getFederation().call();
@@ -48,36 +44,6 @@ module.exports = class Federator {
         }
 
         return this.federationContract;
-    }
-
-    async getBridgeContract() {
-        if (this.mainBridgeContract === null || this.sideBridgeContract === null) {
-            let mainBridgeContract;
-            let sideBridgeContract;
-
-            try {
-                mainBridgeContract = await GenericBridge.getInstance(
-                    this.mainWeb3.eth.Contract,
-                    this.config.mainchain.bridge
-                );
-
-                sideBridgeContract = await GenericBridge.getInstance(
-                    this.sideWeb3.eth.Contract,
-                    this.config.sidechain.bridge
-                );
-
-                this.mainBridgeContract = mainBridgeContract;
-                this.sideBridgeContract = sideBridgeContract;
-            } catch(err) {
-                throw new CustomError(`Exception creating Bridge Contracts`, err);
-            }
-        }
-
-        return {
-            mainBridge: this.mainBridgeContract,
-            sideBridge: this.sideBridgeContract
-        }
-
     }
 
     async run() {
@@ -101,10 +67,7 @@ module.exports = class Federator {
                     return;
                 }
 
-                const {
-                    mainBridge,
-                    sideBridge
-                } = await this.getBridgeContract();
+                const mainBridge = await this.bridgeFactory.getMainBridgeContract();
                 let confirmations = 0; //for rsk regtest and ganache
 
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
@@ -148,7 +111,7 @@ module.exports = class Federator {
                 this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
 
                 var fromPageBlock = fromBlock;
-                for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) { 
+                for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) {
                     var toPagedBlock = fromPageBlock + recordsPerPage-1;
                     if(currentPage == numberOfPages) {
                         toPagedBlock = toBlock
@@ -161,10 +124,9 @@ module.exports = class Federator {
                     if (!logs) throw new Error('Failed to obtain the logs');
 
                     this.logger.info(`Found ${logs.length} logs`);
-                    await this._processLogs(logs, toPagedBlock);
-                    fromPageBlock = toPagedBlock + 1;
+                    await this._processLogs(logs);
 
-                    // when this.mainBridgeContract lives in RSK ...
+                    // when mainBridge lives in RSK ...
                     if (utils.checkIfItsInRSK(chainId)) {
                         const heartbeatLogs = await mainBridge.getPastEvents('HeartBeat', {
                             fromBlock: fromPageBlock,
@@ -174,12 +136,13 @@ module.exports = class Federator {
                         if (!heartbeatLogs) throw new Error('Failed to obtain HeartBeat logs');
                         await this._processHeartbeatLogs(
                             heartbeatLogs,
-                            toPagedBlock,
                             {
                                 ethLastBlock: sideCurrentBlock
                             }
                         );
                     }
+                    this._saveProgress(this.lastBlockPath, toPagedBlock);
+                    fromPageBlock = toPagedBlock + 1;
                 }
 
                 return true;
@@ -197,7 +160,7 @@ module.exports = class Federator {
         }
     }
 
-    async _processLogs(logs, toBlock) {
+    async _processLogs(logs) {
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
@@ -260,7 +223,6 @@ module.exports = class Federator {
                     this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol} was already processed`);
                 }
             }
-            this._saveProgress(this.lastBlockPath, toBlock);
 
             return true;
         } catch (err) {
@@ -268,7 +230,7 @@ module.exports = class Federator {
         }
     }
 
-    async _processHeartbeatLogs(logs, toBlock, { ethLastBlock }) {
+    async _processHeartbeatLogs(logs, { ethLastBlock }) {
         /*
             if node it's not synchronizing, do ->
         */
@@ -306,8 +268,6 @@ module.exports = class Federator {
                 this.logger.info(logInfo);
             }
 
-            this._saveProgress(this.lastBlockPath, toBlock);
-
             return true;
         } catch (err) {
             throw new CustomError(`Exception processing HeartBeat logs`, err);
@@ -316,12 +276,10 @@ module.exports = class Federator {
 
     async _voteTransaction(tokenAddress, sender, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity) {
         try {
-
-            const { sideBridge } = await this.getBridgeContract();
             const fedContract = await this.getFederationContract();
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-            this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${sideBridge.getAddress()} to receiver ${receiver}`);
+            this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
 
             let txId = await fedContract.getTransactionId({
                 originalTokenAddress: tokenAddress,
@@ -335,7 +293,7 @@ module.exports = class Federator {
                 decimals,
                 granularity
             }).call();
-            
+
             let txData = await fedContract.voteTransaction({
                 originalTokenAddress: tokenAddress,
                 sender,
