@@ -61,20 +61,15 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        _changeAllowTokens(_allowTokens);
-        _changeSideTokenFactory(_sideTokenFactory);
-        _changeFederation(_federation);
+        allowTokens = AllowTokens(_allowTokens);
+        sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
+        federation = _federation;
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
     function version() external pure returns (string memory) {
         return "v3";
-    }
-
-    modifier onlyFederation() {
-        require(msg.sender == federation, "Bridge: Sender not Federation");
-        _;
     }
 
     modifier whenNotUpgrading() {
@@ -93,7 +88,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint32 logIndex,
         uint8 decimals,
         uint256 granularity
-    ) external onlyFederation whenNotPaused nonReentrant {
+    ) external whenNotPaused nonReentrant {
+        require(msg.sender == federation, "Bridge: Sender not Federation");
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
         require(amount > 0, "Bridge: Amount 0");
@@ -127,7 +123,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         if (address(sideToken) == NULL_ADDRESS) {
             sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
         } else {
-            require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ from side token");
+            require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ");
         }
         sideToken.mint(receiver, formattedAmount, "", "");
         emit AcceptedCrossTransfer(tokenAddress, sender, receiver, amount, decimals, granularity, formattedAmount, 18, calculatedGranularity);
@@ -141,7 +137,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint256 granularity,
         uint256 amount)
     private {
-        require(decimals == 18, "Bridge: Invalid decimals cross back");
+        require(decimals == 18, "Bridge: Invalid decimals");
         //As side tokens are ERC777 we need to convert granularity to decimals
         (uint8 calculatedDecimals, uint256 formattedAmount) = Utils.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
         IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
@@ -275,23 +271,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         return feePercentage;
     }
 
-    function changeFederation(address newValidator) external onlyOwner returns(bool) {
-        _changeFederation(newValidator);
-        return true;
-    }
-
-    function _changeFederation(address newFederation) internal {
+    function changeFederation(address newFederation) external onlyOwner {
         require(newFederation != NULL_ADDRESS, "Bridge: Federation is empty");
         federation = newFederation;
         emit FederationChanged(federation);
     }
 
-    function changeAllowTokens(address newAllowTokens) external onlyOwner returns(bool) {
-        _changeAllowTokens(newAllowTokens);
-        return true;
-    }
 
-    function _changeAllowTokens(address newAllowTokens) internal {
+    function changeAllowTokens(address newAllowTokens) external onlyOwner {
         require(newAllowTokens != NULL_ADDRESS, "Bridge: AllowTokens is empty");
         allowTokens = AllowTokens(newAllowTokens);
         emit AllowTokensChanged(newAllowTokens);
@@ -301,24 +288,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         return federation;
     }
 
-    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner returns(bool) {
-        _changeSideTokenFactory(newSideTokenFactory);
-        return true;
-    }
-
-    function _changeSideTokenFactory(address newSideTokenFactory) internal {
+    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
         require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory is empty");
         sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
     }
 
-    function startUpgrade() external onlyOwner {
-        isUpgrading = true;
-        emit Upgrading(isUpgrading);
-    }
-
-    function endUpgrade() external onlyOwner {
-        isUpgrading = false;
+    function setUpgrading(bool _isUpgrading) external onlyOwner {
+        isUpgrading = _isUpgrading;
         emit Upgrading(isUpgrading);
     }
 

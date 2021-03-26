@@ -206,13 +206,11 @@ contract('Bridge upgrade test', async (accounts) => {
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
-                    let result = await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory.address).call({from: managerAddress});
-                    assert.equal(result, true);
+                    await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory.address).call({from: managerAddress});
                 });
 
                 it('should have new method changeAllowTokens', async () => {
-                    let result = await this.proxy.methods.changeAllowTokens(this.allowTokens.address).call({from: managerAddress});
-                    assert.equal(result, true);
+                    await this.proxy.methods.changeAllowTokens(this.allowTokens.address).call({from: managerAddress});
                 });
 
                 describe('after changeSideTokenFactory and changeAllowTokens', () => {
