@@ -1,4 +1,7 @@
-const abiFederation = require('../../../abis/Federation.json');
+const abiFederationOld = require('../../../abis/Federation_old.json');
+const abiFederationNew = require('../../../abis/Federation.json');
+const FederationInterfaceV1 = require('./IFederationV1.js');
+const FederationInterfaceV2 = require('./IFederationV2.js');
 
 module.exports = class GenericFederation {
 
@@ -6,77 +9,21 @@ module.exports = class GenericFederation {
         try {
             return await federationContract.methods.version().call();
         } catch(err) {
+            console.log(err);
             return "v1";
         }
     }
 
     static async getInstance(Constructor, ...args) {
-        const federationContract = new Constructor(abiFederation, ...args);
+        let federationContract = new Constructor(abiFederationNew, ...args);
         const version = await this.getVersion(federationContract);
-        let instanceClass;
 
         if (version === 'v2') {
-            instanceClass = class {
-                getTransactionId(paramsObj = {}) {
-                    const {
-                        originalTokenAddress
-                    } = paramsObj;
-
-                    delete paramsObj.originalTokenAddress;
-
-                    return federationContract.methods.getTransactionId(
-                        originalTokenAddress,
-                        paramsObj
-                    );
-                }
-
-                transactionWasProcessed(txId) {
-                    return federationContract.methods.transactionWasProcessed(txId);
-                }
-
-                hasVoted(txId) {
-                    return federationContract.methods.hasVoted(txId);
-                }
-                
-                voteTransaction(paramsObj = {}) {
-                    const {
-                        originalTokenAddress
-                    } = paramsObj;
-
-                    delete paramsObj.originalTokenAddress;
-                    
-                    return federationContract.methods.voteTransaction(
-                        originalTokenAddress,
-                        paramsObj
-                    );
-                }
-            }
+            federationContract = new Constructor(abiFederationNew, ...args);
+            return new FederationInterfaceV2(federationContract);
         } else {
-            instanceClass = class {
-                getTransactionId(paramsObj = {}) {
-                    delete paramsObj.sender;
-
-                    return federationContract.methods.getTransactionId(
-                        ...Object.values(paramsObj)
-                    );
-                }
-                
-                transactionWasProcessed(txId) {
-                    return federationContract.methods.transactionWasProcessed(txId);
-                }
-
-                hasVoted(txId) {
-                    return federationContract.methods.hasVoted(txId);
-                }
-                
-                voteTransaction(paramsObj = {}) {
-                    return federationContract.methods.voteTransaction(
-                        ...Object.values(paramsObj)
-                    );
-                } 
-            }
+            federationContract = new Constructor(abiFederationOld, ...args);
+            return new FederationInterfaceV1(federationContract);
         }
-
-        return new instanceClass();
     } 
 }
