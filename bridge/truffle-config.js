@@ -34,7 +34,7 @@ module.exports = {
       host: "127.0.0.1",
       port: 4444,
       network_id: "33",
-      gas: 6300000,
+      gas: 6800000,
       gasPrice: 60000000 // 0.06 gwei
     },
     soliditycoverage: {
