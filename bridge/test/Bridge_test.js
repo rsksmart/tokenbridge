@@ -1468,7 +1468,7 @@ contract('Bridge', async function (accounts) {
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, false);
 
-            await this.bridge.startUpgrade({ from: bridgeManager });
+            await this.bridge.setUpgrading(true, { from: bridgeManager });
             isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, true);
         });
@@ -1477,32 +1477,32 @@ contract('Bridge', async function (accounts) {
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, false);
 
-            await utils.expectThrow(this.bridge.startUpgrade());
+            await utils.expectThrow(this.bridge.setUpgrading(true));
             assert.equal(isUpgrading, false);
         });
 
         it('Should end upgrade of the bridge contract', async function() {
-            await this.bridge.startUpgrade({ from: bridgeManager });
+            await this.bridge.setUpgrading(true, { from: bridgeManager });
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, true);
 
-            await this.bridge.endUpgrade({ from: bridgeManager });
+            await this.bridge.setUpgrading(false, { from: bridgeManager });
             isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, false);
         });
 
         it('Should not end upgrade of the bridge contract if not the owner', async function() {
-            await this.bridge.startUpgrade({ from: bridgeManager });
+            await this.bridge.setUpgrading(true, { from: bridgeManager });
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, true);
 
-            await utils.expectThrow(this.bridge.endUpgrade());
+            await utils.expectThrow(this.bridge.setUpgrading(false,));
             assert.equal(isUpgrading, true);
         });
 
         describe('when Upgrading', async function() {
             beforeEach(async function() {
-                await this.bridge.startUpgrade({ from: bridgeManager });
+                await this.bridge.setUpgrading(true, { from: bridgeManager });
             });
 
             it('should reject receiveTokens ERC20', async function () {

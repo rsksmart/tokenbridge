@@ -102,6 +102,7 @@ function checkHttpsOrLocalhost(url = '') {
 
 function checkIfItsInRSK(chainId = -1) {
     return chainId === 0 ||
+        chainId === 5777 ||
         chainId === 30 ||
         chainId === 31 ||
         chainId === 33;
