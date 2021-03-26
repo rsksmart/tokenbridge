@@ -28,4 +28,19 @@ module.exports = class IFederationV1 {
     getAddress() {
         return this.federationContract.options.address;
     }
+
+    getPastEvents(eventName, options) {
+        return this.federationContract.getPastEvents(
+            eventName,
+            options
+        );
+    } 
+
+    emitHeartbeat(...args) {
+        return {
+            encodeABI: function() {
+                return '';
+            }
+        };
+    }
 }
