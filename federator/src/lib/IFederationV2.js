@@ -40,4 +40,21 @@ module.exports = class IFederationV2 {
     getAddress() {
         return this.federationContract.options.address;
     }
+
+    getPastEvents(eventName, options) {
+        return this.federationContract.getPastEvents(
+            eventName,
+            options
+        );
+    }
+
+    emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
+        return this.federationContract.methods.emitHeartbeat(
+          fedRskBlock,
+          fedEthBlock,
+          fedVSN,
+          nodeRskInfo,
+          nodeEthInfo
+        );
+    }
 }

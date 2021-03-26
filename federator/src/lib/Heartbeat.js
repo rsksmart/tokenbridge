@@ -3,6 +3,8 @@ const fs = require('fs');
 const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
+const BridgeFactory = require('./BridgeFactory');
+const FederationFactory = require('./FederationFactory');
 const utils = require('./utils');
 const scriptVersion = require('../../package.json').version;
 
@@ -14,9 +16,10 @@ module.exports = class Heartbeat {
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
-        this.federationContract = new this.mainWeb3.eth.Contract(abiFederation, this.config.mainchain.federation);
         this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+        this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
+        this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
     }
 
     async run() {
@@ -60,17 +63,18 @@ module.exports = class Heartbeat {
 
     async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
         try {
+            const fedContract = await this.federationFactory.getSideFederationContract();
             
-            let txData = await this.federationContract.methods.emitHeartbeat(
+            let txData = await fedContract.emitHeartbeat(
                 fedRskBlock,
                 fedEthBlock,
                 fedVSN,
                 nodeRskInfo,
                 nodeEthInfo
             ).encodeABI();
-
+            
             this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVSN}, ${nodeRskInfo}, ${nodeEthInfo})`);
-            await this.transactionSender.sendTransaction(this.federationContract.options.address, txData, 0, this.config.privateKey);
+            await this.transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
             this.logger.info(`Success emiting heartbeat`);
             return true;
         } catch (err) {
