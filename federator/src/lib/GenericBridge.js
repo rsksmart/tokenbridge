@@ -5,18 +5,13 @@ const BridgeInterface = require('./IBridge.js');
 module.exports = class GenericBridge {
 
     static async getVersion(bridgeContract) {
-        try {
-            return await bridgeContract.methods.version().call();
-        } catch(err) {
-            console.log(err);
-            return "v2";
-        }
+        return await bridgeContract.methods.version().call();
     }
 
     static async getInstance(Constructor, ...args) {
-        let bridgeContract = new Constructor(abiBridgeNew, ...args);    
+        let bridgeContract = new Constructor(abiBridgeNew, ...args);
         const version = await this.getVersion(bridgeContract);
-        
+        console.log('version', version);
         if (version === 'v3') {
             bridgeContract = new Constructor(abiBridgeNew, ...args);
             return new BridgeInterface(bridgeContract);
@@ -24,5 +19,5 @@ module.exports = class GenericBridge {
             bridgeContract = new Constructor(abiBridgeOld, ...args);
             return new BridgeInterface(bridgeContract);
         }
-    } 
+    }
 }
