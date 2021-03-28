@@ -2,8 +2,8 @@ const web3 = require('web3');
 const fs = require('fs');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
-const GenericFederation = require('./GenericFederation');
 const BridgeFactory = require('./BridgeFactory');
+const FederationFactory = require('./FederationFactory');
 const utils = require('./utils');
 
 module.exports = class Federator {
@@ -24,26 +24,7 @@ module.exports = class Federator {
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
-    }
-
-    async getFederationContract() {
-        if (this.federationContract === null) {
-            try {
-                const sideBridge = await this.bridgeFactory.getSideBridgeContract();
-
-                const federationAddress =
-                    await sideBridge.getFederation().call();
-
-                this.federationContract = await GenericFederation.getInstance(
-                    this.sideWeb3.eth.Contract,
-                    federationAddress
-                );
-            } catch(err) {
-                throw new CustomError(`Exception getting Federation address`, err);
-            }
-        }
-
-        return this.federationContract;
+        this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
     }
 
     async run() {
@@ -55,6 +36,8 @@ module.exports = class Federator {
                 const sideCurrentBlock = await this.sideWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
                 const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+                const fedContract = await this.federationFactory.getSideFederationContract();
+                
                 let confirmations = 0; //for rsk regtest and ganache
 
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
@@ -115,7 +98,7 @@ module.exports = class Federator {
 
                     // when mainBridge lives in RSK ...
                     if (utils.checkIfItsInRSK(chainId)) {
-                        const heartbeatLogs = await mainBridge.getPastEvents('HeartBeat', {
+                        const heartbeatLogs = await fedContract.getPastEvents('HeartBeat', {
                             fromBlock: fromPageBlock,
                             toBlock: toPagedBlock
                         });
@@ -151,7 +134,7 @@ module.exports = class Federator {
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
-            let fedContract = await this.getFederationContract();
+            const fedContract = await this.federationFactory.getSideFederationContract();
 
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
@@ -263,7 +246,7 @@ module.exports = class Federator {
 
     async _voteTransaction(tokenAddress, sender, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity) {
         try {
-            const fedContract = await this.getFederationContract();
+            const fedContract = await this.federationFactory.getSideFederationContract();
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
