@@ -15,7 +15,7 @@ module.exports = class BridgeFactory {
 
     async createInstance(web3, address) {
         let bridgeContract = new web3.eth.Contract(abiBridgeOld, address);
-        const version = await bridgeContract.methods.version().call()
+        const version = await bridgeContract.methods.version().call();
         if (version === 'v3') {
             bridgeContract = new web3.eth.Contract(abiBridgeNew, address);
         }

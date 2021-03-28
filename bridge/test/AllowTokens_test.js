@@ -148,21 +148,21 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it('setToken type even if address was already added', async function() {
-            let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            let result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             assert.equal(result.info.typeId.toString(), '0');
             assert.equal(result.info.allowed, false);
 
             await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
             let typeId = 0;
             await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-            result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             assert.equal(result.info.typeId.toString(), typeId.toString());
             assert.equal(result.info.allowed, true);
 
             await this.allowTokens.addTokenType('DOC', { max:toWei('20000'), min:toWei('2'), daily:toWei('200000'), mediumAmount:toWei('3'), largeAmount:toWei('10')}, { from: manager });
             typeId = 1;
             await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-            result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             assert.equal(result.info.typeId.toString(), typeId.toString());
             assert.equal(result.info.allowed, true);
         });
@@ -659,7 +659,7 @@ contract('AllowTokens', async function (accounts) {
         });
 
         it('should fail to set max tokens due to missing signatures', async function() {
-            let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            let result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             let limit = result.limit;
             let maxTokens = limit.max.toString();
             let newMax = web3.utils.toWei('1000');
@@ -671,14 +671,14 @@ contract('AllowTokens', async function (accounts) {
             let tx = await this.multiSig.transactions(this.txIndex);
             assert.equal(tx.executed, false);
 
-            result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             let maxTokensAfter = result.limit.max;
             assert.equal(maxTokensAfter.toString(), maxTokens);
         });
 
         it('should set max tokens', async function() {
             let newMax = web3.utils.toWei('1000');
-            let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            let result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             let limit = result.limit;
             let data = this.allowTokens.contract.methods.setTypeLimits(result.info.typeId.toString(), {max:newMax, min:limit.min.toString(), daily:limit.daily.toString(), mediumAmount:toWei('2'), largeAmount:toWei('3')}).encodeABI();
             await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
@@ -688,7 +688,7 @@ contract('AllowTokens', async function (accounts) {
             let tx = await this.multiSig.transactions(this.txIndex);
             assert.equal(tx.executed, true);
 
-            result = await this.allowTokens.getInfoAndLimits(this.token.address);
+            result = await this.allowTokens.getTokenInfoAndLimits(this.token.address);
             assert.equal(result.limit.max.toString(), newMax);
         });
 

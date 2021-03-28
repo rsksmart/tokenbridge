@@ -523,7 +523,7 @@
                 "type": "address"
             }
         ],
-        "name": "getInfoAndLimits",
+        "name": "getTokenInfoAndLimits",
         "outputs": [
             {
                 "components": [
