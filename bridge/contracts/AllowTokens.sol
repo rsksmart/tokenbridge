@@ -69,13 +69,13 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return "v1";
     }
 
-    function getInfoAndLimits(address token) public view returns (TokenInfo memory info, Limits memory limit) {
+    function getTokenInfoAndLimits(address token) public view returns (TokenInfo memory info, Limits memory limit) {
         info = allowedTokens[token];
         limit = typeLimits[info.typeId];
         return (info, limit);
     }
     function calcMaxWithdraw(address token) public view returns (uint256 maxWithdraw) {
-        (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
+        (TokenInfo memory info, Limits memory limit) = getTokenInfoAndLimits(token);
         return _calcMaxWithdraw(info, limit);
     }
 
@@ -95,7 +95,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     // solium-disable-next-line max-len
     function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external onlyPrimary {
         if(isValidatingAllowedTokens) {
-            (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
+            (TokenInfo memory info, Limits memory limit) = getTokenInfoAndLimits(token);
             require(isSideToken || isTokenAllowed(token), "AllowTokens: Token not whitelisted");
             require(amount >= limit.min, "AllowTokens: Amount lower than limit");
              // solium-disable-next-line security/no-block-members
