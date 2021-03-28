@@ -3,22 +3,22 @@ module.exports = class IBridge {
         this.bridgeContract = bridgeContract;
     }
 
-    getFederation() {
-        return this.bridgeContract.methods.getFederation();
+    async getFederation() {
+        return this.bridgeContract.methods.getFederation().call();
     }
-    
-    getPastEvents(eventName, options) {
+
+    async getPastEvents(eventName, options) {
         return this.bridgeContract.getPastEvents(
             eventName,
             options
         );
-    } 
+    }
 
     getAddress() {
         return this.bridgeContract.options.address;
     }
 
-    getProcessed(transactionHash) {
-        return this.bridgeContract.methods.processed(transactionHash).call();
+    async getProcessed(txId) {
+        return this.bridgeContract.methods.processed(txId).call();
     }
 }
