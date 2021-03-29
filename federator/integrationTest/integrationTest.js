@@ -192,6 +192,26 @@ async function transfer(originFederators, destinationFederators, config, origin,
         let allowed = await destinationTokenContract.methods.allowance(userAddress, destinationBridgeAddress).call();
         logger.debug('Allowed to transfer ', allowed);
 
+        logger.debug('Set side token limit');
+        const sideMultiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
+        const sideAllowTokensAddress = config.sidechain.allowTokens;
+        const sideAllowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, sideAllowTokensAddress);
+        data = sideAllowTokensContract.methods.setToken(destinationTokenAddress, 0).encodeABI();
+        if (federatorKeys.length === 1) {
+            const multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
+            await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '');
+        } else {
+            let multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
+            await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, federatorKeys[0]);
+
+            let nextTransactionCount = await sideMultiSigContract.methods.getTransactionCount(true, false).call();
+            for (let i = 1; i < federatorKeys.length; i++) {
+                multiSigData = sideMultiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, federatorKeys[i]);
+            }
+        }
+
+
         logger.debug('Bridge side receiveTokens');
         await destinationBridgeContract.methods.receiveTokensTo(destinationTokenAddress, userAddress, amount).call({from: userAddress});
         data = destinationBridgeContract.methods.receiveTokensTo(destinationTokenAddress, userAddress, amount).encodeABI();
