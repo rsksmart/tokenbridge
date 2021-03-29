@@ -36,11 +36,8 @@ module.exports = class IFederationV1 {
         );
     } 
 
-    emitHeartbeat(...args) {
-        return {
-            encodeABI: function() {
-                return '';
-            }
-        };
+    async emitHeartbeat(...args) {
+        // no-op [Federation V1 does not feature an `emitHearbeat`
+        // function nor an Hearbeat event ]
     }
 }
