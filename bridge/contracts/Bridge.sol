@@ -177,7 +177,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         address receiver = userData.length == 0 ? from : bytesToAddress(userData);
         //This can only be used with trusted contracts
-        require(isSideToken(tokenToUse) || allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
+        require(allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
@@ -206,7 +206,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
         if (isASideToken) {
-            allowTokens.updateTokenTransfer(tokenToUse, amount, isASideToken);
+            allowTokens.updateTokenTransfer(tokenToUse, amount);
             //Side Token Crossing
             ISideToken(tokenToUse).burn(amountMinusFees, userData);
             // solium-disable-next-line max-len
@@ -220,7 +220,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
                 formattedAmount = amount.mul(uint256(10)**(18-decimals));
             }
             //We consider the amount before fees converted to 18 decimals to check the limits
-            allowTokens.updateTokenTransfer(tokenToUse, formattedAmount, isASideToken);
+            allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
             emit Cross(tokenToUse, from, to, amountMinusFees, symbol, userData, decimals, granularity);
         }
     }
