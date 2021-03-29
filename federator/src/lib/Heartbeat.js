@@ -64,17 +64,17 @@ module.exports = class Heartbeat {
     async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
         try {
             const fedContract = await this.federationFactory.getSideFederationContract();
-            
-            let txData = await fedContract.emitHeartbeat(
+
+            await fedContract.emitHeartbeat(
+                this.transactionSender,
                 fedRskBlock,
                 fedEthBlock,
                 fedVSN,
                 nodeRskInfo,
                 nodeEthInfo
-            ).encodeABI();
+            )
             
             this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVSN}, ${nodeRskInfo}, ${nodeEthInfo})`);
-            await this.transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
             this.logger.info(`Success emiting heartbeat`);
             return true;
         } catch (err) {
