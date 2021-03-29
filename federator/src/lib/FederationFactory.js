@@ -19,10 +19,10 @@ module.exports = class FederationFactory {
 
         if (version === 'v2') {
             federationContract = new web3.eth.Contract(abiFederationNew, address);
-            return new FederationInterfaceV2(federationContract);
+            return new FederationInterfaceV2(this.config, federationContract);
         } else {
             federationContract = new web3.eth.Contract(abiFederationOld, address);
-            return new FederationInterfaceV1(federationContract);
+            return new FederationInterfaceV1(this.config, federationContract);
         }
     }
 

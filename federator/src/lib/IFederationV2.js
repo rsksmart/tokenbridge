@@ -1,6 +1,7 @@
 module.exports = class IFederationV2 {
-    constructor(fedContract) {
+    constructor(config, fedContract) {
         this.federationContract = fedContract;
+        this.config = config;
     }
 
     getTransactionId(paramsObj = {}) {
@@ -50,7 +51,6 @@ module.exports = class IFederationV2 {
 
     async emitHeartbeat(
         txSender,
-        privateKey,
         fedRskBlock,
         fedEthBlock,
         fedVSN,
@@ -65,7 +65,7 @@ module.exports = class IFederationV2 {
             nodeEthInfo
         ).encodeABI();
 
-        await txSender.sendTransaction(this.getAddress(), txData, 0, privateKey);
+        await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
     }
 
 }
