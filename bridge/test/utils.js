@@ -118,6 +118,13 @@ function ascii_to_hexa(str)
 	return '0x' + arr1.join('');
    }
 
+function isLocalNetwork(network) {
+    return !network.toLowerCase().includes('mainnet') &&
+        !network.toLowerCase().includes('kovan') &&
+        !network.toLowerCase().includes('testnet');
+}
+
+
 module.exports = {
     checkGas: checkGas,
     checkRcpt: checkRcpt,
@@ -128,5 +135,6 @@ module.exports = {
     increaseTimestamp: increaseTimestamp,
     ascii_to_hexa: ascii_to_hexa,
     NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    isLocalNetwork: isLocalNetwork,
 };
 
