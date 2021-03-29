@@ -55,6 +55,31 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_smallAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_mediumAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_largeAmountConfirmations",
+                "type": "uint256"
+            }
+        ],
+        "name": "ConfirmationsChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
                 "indexed": true,
                 "internalType": "address",
                 "name": "previousOwner",
@@ -134,12 +159,12 @@
                 "components": [
                     {
                         "internalType": "uint256",
-                        "name": "max",
+                        "name": "min",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "min",
+                        "name": "max",
                         "type": "uint256"
                     },
                     {
@@ -436,12 +461,12 @@
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "max",
+                "name": "min",
                 "type": "uint256"
             },
             {
                 "internalType": "uint256",
-                "name": "min",
+                "name": "max",
                 "type": "uint256"
             },
             {
@@ -469,12 +494,7 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_manager",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_primary",
+                "name": "sender",
                 "type": "address"
             }
         ],
@@ -489,8 +509,28 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "sender",
+                "name": "_manager",
                 "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "_primary",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_smallAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_mediumAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_largeAmountConfirmations",
+                "type": "uint256"
             }
         ],
         "name": "initialize",
@@ -556,12 +596,12 @@
                 "components": [
                     {
                         "internalType": "uint256",
-                        "name": "max",
+                        "name": "min",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "min",
+                        "name": "max",
                         "type": "uint256"
                     },
                     {
@@ -622,11 +662,6 @@
                 "internalType": "uint256",
                 "name": "amount",
                 "type": "uint256"
-            },
-            {
-                "internalType": "bool",
-                "name": "isSideToken",
-                "type": "bool"
             }
         ],
         "name": "updateTokenTransfer",
@@ -647,12 +682,12 @@
                 "components": [
                     {
                         "internalType": "uint256",
-                        "name": "max",
+                        "name": "min",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "min",
+                        "name": "max",
                         "type": "uint256"
                     },
                     {
@@ -799,6 +834,33 @@
         "constant": false,
         "inputs": [
             {
+                "components": [
+                    {
+                        "internalType": "address",
+                        "name": "token",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "typeId",
+                        "type": "uint256"
+                    }
+                ],
+                "internalType": "struct AllowTokens.TokensAndType[]",
+                "name": "tokensAndTypes",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "setMultipleTokens",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "token",
                 "type": "address"
@@ -840,12 +902,12 @@
                 "components": [
                     {
                         "internalType": "uint256",
-                        "name": "max",
+                        "name": "min",
                         "type": "uint256"
                     },
                     {
                         "internalType": "uint256",
-                        "name": "min",
+                        "name": "max",
                         "type": "uint256"
                     },
                     {
@@ -873,6 +935,56 @@
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "_smallAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_mediumAmountConfirmations",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_largeAmountConfirmations",
+                "type": "uint256"
+            }
+        ],
+        "name": "setConfirmations",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [],
+        "name": "getConfirmations",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "smallAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "mediumAmount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "largeAmount",
+                "type": "uint256"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
         "type": "function"
     }
 ]

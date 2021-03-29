@@ -125,6 +125,22 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isAllowed, true);
         });
 
+        it('should add multiple tokens', async function() {
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
+            await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
+            let typeId = 0;
+            let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
+            await this.allowTokens.setMultipleTokens([
+                { token:this.token.address, typeId: typeId },
+                { token: otherToken.address, typeId: typeId }
+            ], { from: manager });
+            let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isAllowed, true);
+            isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
+            assert.equal(isAllowed, true);
+        });
+
         it('fail if setToken caller is not the owner', async function() {
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
