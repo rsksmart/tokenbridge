@@ -1069,7 +1069,7 @@ contract('Bridge', async function (accounts) {
                 this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: federation }));
             });
 
-            it('crossback with amount lower than granularity', async function () {
+            it.only('crossback with amount lower than granularity', async function () {
                 const granularity = '10000000000000000';
                 const decimals = 18;
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
@@ -1088,6 +1088,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
+                console.log('getInfoAndLimits', await this.mirrorAllowTokens.getInfoAndLimits(sideTokenAddress));
                 let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
@@ -1100,7 +1101,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance.toString(), '0');
             });
 
-            it('crossback with amount lower than granularity and no fees', async function () {
+            it.only('crossback with amount lower than granularity and no fees', async function () {
                 const granularity = '10000000000000000';
                 const decimals = 18;
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
