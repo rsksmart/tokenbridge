@@ -308,12 +308,7 @@ contract('Bridge', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                console.log('erc777.address', erc777.address)
-                console.log('his.typeId', this.typeId)
                 await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
-                console.log('isAllowed', await this.allowTokens.allowedContracts(erc777.address))
-                console.log('getTypeDescriptions', await this.allowTokens.getTypeDescriptions(this.typeId))
-                console.log('allowedTokens', await this.allowTokens.allowedTokens(erc777.address))
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = anAccount.toLowerCase();
@@ -472,8 +467,9 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,string,bytes,uint8,uint256)');
-                assert.equal(result.receipt.rawLogs[5].topics[0], eventSignature);
+                const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,string,bytes,uint8,uint256)');
+                const eventRawLog = result.receipt.rawLogs[3];
+                assert.equal(eventRawLog.topics[0], eventSignature);
 
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -516,7 +512,7 @@ contract('Bridge', async function (accounts) {
                       "name": "_granularity",
                       "type": "uint256"
                     }
-                  ], result.receipt.rawLogs[5].data, result.receipt.rawLogs[5].topics.slice(1));
+                  ], eventRawLog.data, eventRawLog.topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
                 assert.equal(decodedLog._from, tokenOwner);
@@ -1069,7 +1065,7 @@ contract('Bridge', async function (accounts) {
                 this.txReceipt.receipt.logs[0].logIndex, 0, this.granularity, { from: federation }));
             });
 
-            it.only('crossback with amount lower than granularity', async function () {
+            it('crossback with amount lower than granularity', async function () {
                 const granularity = '10000000000000000';
                 const decimals = 18;
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
@@ -1080,6 +1076,7 @@ contract('Bridge', async function (accounts) {
 
                 const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
+                await this.mirrorAllowTokens.setToken(sideToken.address, this.typeId, { from: bridgeManager });
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
                 const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
@@ -1088,7 +1085,6 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                console.log('getInfoAndLimits', await this.mirrorAllowTokens.getInfoAndLimits(sideTokenAddress));
                 let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
@@ -1101,7 +1097,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance.toString(), '0');
             });
 
-            it.only('crossback with amount lower than granularity and no fees', async function () {
+            it('crossback with amount lower than granularity and no fees', async function () {
                 const granularity = '10000000000000000';
                 const decimals = 18;
                 await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
@@ -1112,6 +1108,7 @@ contract('Bridge', async function (accounts) {
 
                 const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
+                await this.mirrorAllowTokens.setToken(sideToken.address, this.typeId, { from: bridgeManager });
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
                 const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
