@@ -67,7 +67,6 @@ module.exports = class Heartbeat {
 
             await fedContract.emitHeartbeat(
                 this.transactionSender,
-                this.config.privateKey,
                 fedRskBlock,
                 fedEthBlock,
                 fedVSN,
