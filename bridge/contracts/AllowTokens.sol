@@ -93,10 +93,10 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external onlyPrimary {
+    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary {
         if(isValidatingAllowedTokens) {
             (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
-            require(isSideToken || isTokenAllowed(token), "AllowTokens: Token not whitelisted");
+            require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
             require(amount >= limit.min, "AllowTokens: Amount lower than limit");
              // solium-disable-next-line security/no-block-members
             if (now > info.lastDay + 24 hours) {
