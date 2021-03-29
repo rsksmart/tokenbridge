@@ -25,7 +25,14 @@ module.exports = {
     development: {
       host: "127.0.0.1",
       port: 8545,
-      network_id: "*",
+      network_id: "5776",
+      gas: 6300000,
+      gasPrice: 20000000000
+    },
+    mirrorDevelopment: {
+      host: "127.0.0.1",
+      port: 8546,
+      network_id: "5777",
       gas: 6300000,
       gasPrice: 20000000000
     },
