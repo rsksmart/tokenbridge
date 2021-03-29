@@ -125,6 +125,22 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isAllowed, true);
         });
 
+        it('should add multiple tokens', async function() {
+            let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
+            assert.equal(isValidatingAllowedTokens, true);
+            await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
+            let typeId = 0;
+            let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
+            await this.allowTokens.setMultipleTokens([
+                { token:this.token.address, typeId: typeId },
+                { token: otherToken.address, typeId: typeId }
+            ], { from: manager });
+            let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+            assert.equal(isAllowed, true);
+            isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
+            assert.equal(isAllowed, true);
+        });
+
         it('fail if setToken caller is not the owner', async function() {
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
@@ -297,12 +313,12 @@ contract('AllowTokens', async function (accounts) {
             let maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
             assert.equal(maxWithdraw, newMaxTokens);
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, newMaxTokens, false);
+            await this.allowTokens.updateTokenTransfer(this.token.address, newMaxTokens);
             maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
             let expected = web3.utils.toWei('2000');
             assert.equal(maxWithdraw.toString(), expected);
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, expected, false);
+            await this.allowTokens.updateTokenTransfer(this.token.address, expected);
             maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
             assert.equal(maxWithdraw.toString(), '0');
         });
@@ -316,9 +332,9 @@ contract('AllowTokens', async function (accounts) {
             await this.allowTokens.addTokenType('RIF', { max:maxLimit, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit, true);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
 
-            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(maxLimit).add(new BN('1')), true));
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(maxLimit).add(new BN('1'))));
         });
 
         it('should check min value', async function() {
@@ -326,9 +342,9 @@ contract('AllowTokens', async function (accounts) {
             await this.allowTokens.addTokenType('RIF', {max:toWei('10000'), min:minLimit, daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, minLimit, true);
+            await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
 
-            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(minLimit).sub(new BN('1')), true));
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(minLimit).sub(new BN('1'))));
         });
 
         it('should check daily limit', async function() {
@@ -337,9 +353,9 @@ contract('AllowTokens', async function (accounts) {
             await this.allowTokens.addTokenType('RIF', { max:toWei('1'), min:minLimit, daily:dailyLimit, mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, minLimit, true);
+            await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
 
-            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, minLimit, dailyLimit, true));
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, minLimit, dailyLimit));
         });
 
         it('should allow side and whitelisted tokens', async function() {
@@ -347,29 +363,29 @@ contract('AllowTokens', async function (accounts) {
             await this.allowTokens.addTokenType('RIF', {max:maxLimit, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit, true);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
 
             await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit, false);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
 
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit, false);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
         });
 
         it('should check allowed token if not side or allowed token', async function() {
             let maxTokensAllowed = toWei('10000');
             //Token not allowed
-            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, false));
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed));
 
             await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, false);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed);
 
             await this.allowTokens.enableAllowedTokensValidation({ from: manager });
             await this.allowTokens.addTokenType('RIF', {max:maxTokensAllowed, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
             await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
-            await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, true);
+            await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed);
         });
 
     });
@@ -502,7 +518,7 @@ contract('AllowTokens', async function (accounts) {
 
         it('Should not allowed when not called by primary', async function() {
             let maxTokensAllowed = toWei('10000');
-            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, true, {from: anotherAccount}));
+            await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, {from: anotherAccount}));
         });
 
         it('Should not transfer primary when not called by the owner', async function() {

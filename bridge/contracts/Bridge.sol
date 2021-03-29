@@ -177,7 +177,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         address receiver = userData.length == 0 ? from : bytesToAddress(userData);
         //This can only be used with trusted contracts
-        require(isSideToken(tokenToUse) || allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
+        require(allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
@@ -193,35 +193,38 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
     function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData) private {
-        bool isASideToken = isSideToken(tokenToUse);
-        //Send the payment to the MultiSig of the Federation
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);
-        if (isASideToken) {
-            uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
+        (uint8 decimals, uint256 granularity, string memory symbol) = Utils.getTokenInfo(tokenToUse);
+        knownTokens[tokenToUse] = true;
+        uint formattedAmount = amount;
+        if(decimals != 18) {
+            formattedAmount = amount.mul(uint256(10)**(18-decimals));
+        }
+        //We consider the amount before fees converted to 18 decimals to check the limits
+        allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
+        if (isSideToken(tokenToUse)) {
+            //Side Token Crossing
+            uint256 modulo = amountMinusFees.mod(granularity);
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
-        }
-        if(fee > 0) {
-            IERC20(tokenToUse).safeTransfer(owner(), fee);
-        }
-        if (isASideToken) {
-            allowTokens.updateTokenTransfer(tokenToUse, amount, isASideToken);
-            //Side Token Crossing
             ISideToken(tokenToUse).burn(amountMinusFees, userData);
-            // solium-disable-next-line max-len
-            emit Cross(originalTokens[tokenToUse], from, to, amountMinusFees, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
-        } else {
-            //Main Token Crossing
-            knownTokens[tokenToUse] = true;
-            (uint8 decimals, uint256 granularity, string memory symbol) = Utils.getTokenInfo(tokenToUse);
-            uint formattedAmount = amount;
-            if(decimals != 18) {
-                formattedAmount = amount.mul(uint256(10)**(18-decimals));
-            }
-            //We consider the amount before fees converted to 18 decimals to check the limits
-            allowTokens.updateTokenTransfer(tokenToUse, formattedAmount, isASideToken);
-            emit Cross(tokenToUse, from, to, amountMinusFees, symbol, userData, decimals, granularity);
+        }
+
+        emit Cross(
+            tokenToUse,
+            from,
+            to,
+            amountMinusFees,
+            symbol,
+            userData,
+            decimals,
+            granularity
+        );
+
+        if (fee > 0) {
+            //Send the payment to the MultiSig of the Federation
+            IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
     }
 

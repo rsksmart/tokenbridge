@@ -37,6 +37,11 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         uint256 lastDay;
     }
 
+    struct TokensAndType {
+        address token;
+        uint256 typeId;
+    }
+
     event SetToken(address indexed _tokenAddress, uint256 _typeId);
     event AllowedTokenRemoved(address indexed _tokenAddress);
     event AllowedTokenValidation(bool _enabled);
@@ -93,10 +98,10 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount, bool isSideToken) external onlyPrimary {
+    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary {
         if(isValidatingAllowedTokens) {
             (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
-            require(isSideToken || isTokenAllowed(token), "AllowTokens: Token not whitelisted");
+            require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
             require(amount >= limit.min, "AllowTokens: Amount lower than limit");
              // solium-disable-next-line security/no-block-members
             if (now > info.lastDay + 24 hours) {
@@ -147,13 +152,20 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return true;
     }
 
-    function setToken(address token, uint256 typeId) external notNull(token) onlyOwner {
+    function setToken(address token, uint256 typeId) public notNull(token) onlyOwner {
         require(typeId < typeDescriptions.length, "AllowTokens: typeId does not exist");
         TokenInfo memory info = allowedTokens[token];
         info.allowed = true;
         info.typeId = typeId;
         allowedTokens[token] = info;
         emit SetToken(token, typeId);
+    }
+    function setMultipleTokens(TokensAndType[] calldata tokensAndTypes) external onlyOwner {
+        uint256 i;
+        require(tokensAndTypes.length > 0, "AllowTokens: empty tokens");
+        for(i = 0; i < tokensAndTypes.length; i = i + 1) {
+            setToken(tokensAndTypes[i].token, tokensAndTypes[i].typeId);
+        }
     }
 
     function removeAllowedToken(address token) external notNull(token) onlyOwner {
