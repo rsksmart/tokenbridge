@@ -1,6 +1,7 @@
 module.exports = class IFederationV1 {
-    constructor(fedContract) {
+    constructor(config, fedContract) {
         this.federationContract = fedContract;
+        this.config = config;
     }
 
     getTransactionId(paramsObj = {}) {
