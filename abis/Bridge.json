@@ -702,13 +702,7 @@
             }
         ],
         "name": "acceptTransfer",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
+        "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
@@ -736,47 +730,6 @@
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "tokenToUse",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "amount",
-                "type": "uint256"
-            }
-        ],
-        "name": "receiveTokens",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "from",
-                "type": "address"
-            }
-        ],
-        "name": "verifyIfContract",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -817,6 +770,27 @@
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": true,
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "tokenAddress",
+                "type": "address"
+            }
+        ],
+        "name": "isSideToken",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -895,18 +869,12 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "newValidator",
+                "name": "newFederation",
                 "type": "address"
             }
         ],
         "name": "changeFederation",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
+        "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
@@ -921,13 +889,7 @@
             }
         ],
         "name": "changeAllowTokens",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
+        "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
@@ -957,21 +919,6 @@
             }
         ],
         "name": "changeSideTokenFactory",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "startUpgrade",
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
@@ -979,8 +926,14 @@
     },
     {
         "constant": false,
-        "inputs": [],
-        "name": "endUpgrade",
+        "inputs": [
+            {
+                "internalType": "bool",
+                "name": "_isUpgrading",
+                "type": "bool"
+            }
+        ],
+        "name": "setUpgrading",
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
