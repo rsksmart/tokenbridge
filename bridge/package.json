@@ -5,7 +5,8 @@
   "description": "Token Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
-    "ganache": "npx ganache-cli -i 5777 -k istanbul -v",
+    "ganache-dev": "npx ganache-cli -i 5776 -p 8545 -k istanbul -v",
+    "ganache-dev-1": "npx ganache-cli -i 5777 -p 8546 -k istanbul -v",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solium -d contracts/",
     "compile": "rm -rf ./build && npx truffle compile",
@@ -14,7 +15,8 @@
     "coverage": "npx truffle run coverage",
     "size": "node calculateSize.js",
     "prepare": "npx truffle compile && node ./datagen.js",
-    "deployIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development"
+    "deployIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network development_1 && rm -rf ./build && npx truffle migrate --reset --network development",
+    "deployLocalIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network development && rm -rf ./build && npx truffle migrate --resek --network mirrorDevelopment"
   },
   "keywords": [
     "rsk",
