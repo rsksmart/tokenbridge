@@ -26,14 +26,14 @@ module.exports = {
       host: "127.0.0.1",
       port: 8545,
       network_id: "5777",
-      gas: 6300000,
+      gas: 6700000,
       gasPrice: 20000000000
     },
     mirrorDevelopment: {
       host: "127.0.0.1",
       port: 8546,
       network_id: "5776",
-      gas: 6300000,
+      gas: 6700000,
       gasPrice: 20000000000
     },
     //RSK
@@ -55,7 +55,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
       network_id: 31,
-      gas: 6300000,
+      gas: 6800000,
       gasPrice: 70000000, // 0.07 gwei
       skipDryRun: true
     },
@@ -63,7 +63,7 @@ module.exports = {
       provider: () =>
         new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
       network_id: 30,
-      gas: 6300000,
+      gas: 6800000,
       gasPrice: 65000000, // 0.065 gwei
       skipDryRun: true
     },
@@ -78,14 +78,14 @@ module.exports = {
     kovan: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
       network_id: 42,
-      gas: 6300000,
+      gas: 6700000,
       gasPrice: 10000000000,
       skipDryRun: true
     },
     rinkeby: {
       provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
       network_id: 4,
-      gas: 6300000,
+      gas: 6700000,
       gasPrice: 10000000000,
       skipDryRun: true
     },

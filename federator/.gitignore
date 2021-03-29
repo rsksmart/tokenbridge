@@ -2,6 +2,7 @@ config/config.js
 rskregtest.json
 development.json
 development_1.json
+mirrorDevelopment.json
 test.json
 latestBlock.txt
 config/federator.key
