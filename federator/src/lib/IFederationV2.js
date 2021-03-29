@@ -48,13 +48,24 @@ module.exports = class IFederationV2 {
         );
     }
 
-    emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
-        return this.federationContract.methods.emitHeartbeat(
-          fedRskBlock,
-          fedEthBlock,
-          fedVSN,
-          nodeRskInfo,
-          nodeEthInfo
-        );
+    async emitHeartbeat(
+        txSender,
+        privateKey,
+        fedRskBlock,
+        fedEthBlock,
+        fedVSN,
+        nodeRskInfo,
+        nodeEthInfo
+    ) {
+        let txData = await this.federationContract.methods.emitHeartbeat(
+            fedRskBlock,
+            fedEthBlock,
+            fedVSN,
+            nodeRskInfo,
+            nodeEthInfo
+        ).encodeABI();
+
+        await txSender.sendTransaction(this.getAddress(), txData, 0, privateKey);
     }
+
 }
