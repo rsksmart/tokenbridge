@@ -8,12 +8,7 @@ const MultiSigWallet = artifacts.require("MultiSigWallet");
 
 const fs = require('fs');
 const toWei = web3.utils.toWei;
-
-function shouldDeployToken(network) {
-    return !network.toLowerCase().includes('mainnet') &&
-        !network.toLowerCase().includes('kovan') &&
-        !network.toLowerCase().includes('testnet');
-}
+const utils = require('../test/utils');
 
 module.exports = async function(deployer, networkName, accounts) {
 
@@ -31,7 +26,7 @@ module.exports = async function(deployer, networkName, accounts) {
         multiSig: multiSig.address.toLowerCase(),
         allowTokens: allowTokensProxy.address.toLowerCase()
     };
-    if(shouldDeployToken(networkName)) {
+    if(utils.isLocalNetwork(networkName)) {
         const mainToken = await MainToken.deployed();
         config.testToken = mainToken.address.toLowerCase();
         const allowTokens = await AllowTokens.at(allowTokensProxy.address);
