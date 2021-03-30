@@ -16,10 +16,17 @@ module.exports = class Heartbeat {
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
+        this.sideFederationAddress = null;
+
         this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+    }
+
+    async getSideFederationAddress() {
+        return this.sideFederationAddress ||
+            (await (await this.bridgeFactory.getSideBridgeContract()).getFederation())
     }
 
     async run() {
@@ -63,7 +70,9 @@ module.exports = class Heartbeat {
 
     async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
         try {
-            const fedContract = await this.federationFactory.getSideFederationContract();
+            const fedContract = await this.federationFactory.getSideFederationContract(
+                await this.getSideFederationAddress()
+            );
 
             await fedContract.emitHeartbeat(
                 this.transactionSender,
