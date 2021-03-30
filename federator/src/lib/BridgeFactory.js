@@ -12,7 +12,6 @@ module.exports = class BridgeFactory {
         this.sideWeb3 = new Web3(config.sidechain.host);
     }
 
-
     async createInstance(web3, address) {
         let bridgeContract = new web3.eth.Contract(abiBridgeOld, address);
         const version = await bridgeContract.methods.version().call()
