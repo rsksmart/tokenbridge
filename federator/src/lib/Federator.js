@@ -19,12 +19,17 @@ module.exports = class Federator {
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
-        this.federationContract = null;
+        this.sideFederationAddress = null;
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+    }
+
+    async getSideFederationAddress() {
+        return this.sideFederationAddress ||
+            (await (await this.bridgeFactory.getSideBridgeContract()).getFederation())
     }
 
     async run() {
@@ -49,8 +54,10 @@ module.exports = class Federator {
                 }
 
                 const mainBridge = await this.bridgeFactory.getMainBridgeContract();
-                const fedContract = await this.federationFactory.getSideFederationContract();
-                
+                const fedContract = await this.federationFactory.getSideFederationContract(
+                    await this.getSideFederationAddress()
+                );
+
                 let confirmations = 0; //for rsk regtest and ganache
 
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
@@ -147,7 +154,9 @@ module.exports = class Federator {
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
-            const fedContract = await this.federationFactory.getSideFederationContract();
+            const fedContract = await this.federationFactory.getSideFederationContract(
+                await this.getSideFederationAddress()
+            );
 
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
@@ -259,7 +268,9 @@ module.exports = class Federator {
 
     async _voteTransaction(tokenAddress, sender, receiver, amount, symbol, blockHash, transactionHash, logIndex, decimals, granularity) {
         try {
-            const fedContract = await this.federationFactory.getSideFederationContract();
+            const fedContract = await this.federationFactory.getSideFederationContract(
+                await this.getSideFederationAddress()
+            );
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
