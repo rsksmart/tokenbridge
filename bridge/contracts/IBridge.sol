@@ -14,6 +14,11 @@ interface IBridge {
     function receiveTokensTo(address tokenToUse, address to, uint256 amount) external;
 
     /**
+     * Use network currency and cross it.
+     */
+    function depositTo(address to) external payable;
+
+    /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
      * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
      */
@@ -32,7 +37,7 @@ interface IBridge {
     function acceptTransfer(
         address originalTokenAddress,
         address sender,
-        address receiver,
+        address payable receiver,
         uint256 amount,
         string calldata symbol,
         bytes32 blockHash,

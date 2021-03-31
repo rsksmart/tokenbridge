@@ -19,6 +19,7 @@ import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
 import "./AllowTokens.sol";
 import "./Utils.sol";
+import "./IWrapped.sol";
 
 contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -44,12 +45,15 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     //Bridge_v1 variables
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
-    bytes32 constant _erc777Interface = keccak256("ERC777Token");
+    //Bridge_v3 variables
+    bytes32 constant private _erc777Interface = keccak256("ERC777Token");
+    IWrapped public wrappedCurrency;
 
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
     event Upgrading(bool isUpgrading);
+    event WrappedCurrencyChanged(address _wrappedCurrency);
 
     function initialize(
         address _manager,
@@ -68,6 +72,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
+    function () external payable {
+        // The fallback function is needed to use WRBTC
+        require(_msgSender() == address(wrappedCurrency), "Bridge: sender not wrappedCurrency");
+    }
+
     function version() external pure returns (string memory) {
         return "v3";
     }
@@ -80,7 +89,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     function acceptTransfer(
         address tokenAddress,
         address sender,
-        address receiver,
+        address payable receiver,
         uint256 amount,
         string calldata symbol,
         bytes32 blockHash,
@@ -99,7 +108,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(decimals <= 18, "Bridge: Decimals bigger 18");
         require(Utils.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
 
-        _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
+        require(!processed[compiledId], "Bridge: Already processed");
+        processed[compiledId] = true;
 
         if (knownTokens[tokenAddress]) {
             _acceptCrossBackToToken(sender, receiver, tokenAddress, decimals, granularity, amount);
@@ -110,18 +121,22 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function _acceptCrossToSideToken(
         address sender,
-        address receiver,
+        address payable receiver,
         address tokenAddress,
         uint8 decimals,
         uint256 granularity,
         uint256 amount,
         string memory symbol
     ) private {
-
         (uint256 calculatedGranularity,uint256 formattedAmount) = Utils.calculateGranularityAndAmount(decimals, granularity, amount);
         ISideToken sideToken = mappedTokens[tokenAddress];
         if (address(sideToken) == NULL_ADDRESS) {
-            sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
+            // Create side token
+            string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
+            sideToken = ISideToken(sideTokenFactory.createSideToken(newSymbol, newSymbol, calculatedGranularity));
+            mappedTokens[tokenAddress] = sideToken;
+            originalTokens[address(sideToken)] = tokenAddress;
+            emit NewSideToken(address(sideToken), tokenAddress, newSymbol, calculatedGranularity);
         } else {
             require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ");
         }
@@ -131,7 +146,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function _acceptCrossBackToToken(
         address sender,
-        address receiver,
+        address payable receiver,
         address tokenAddress,
         uint8 decimals,
         uint256 granularity,
@@ -140,7 +155,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(decimals == 18, "Bridge: Invalid decimals");
         //As side tokens are ERC777 we need to convert granularity to decimals
         (uint8 calculatedDecimals, uint256 formattedAmount) = Utils.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
-        IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
+        if(address(wrappedCurrency) == tokenAddress) {
+            wrappedCurrency.withdraw(formattedAmount);
+            receiver.transfer(formattedAmount);
+        } else {
+            IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
+        }
         emit AcceptedCrossTransfer(tokenAddress, sender, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
     }
 
@@ -148,14 +168,29 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokensTo(address tokenToUse, address to, uint256 amount) public whenNotUpgrading whenNotPaused nonReentrant {
+    function receiveTokensTo(address tokenToUse, address to, uint256 amount) public {
         address sender = _msgSender();
-        if(sender.isContract()) {
-            require(allowTokens.allowedContracts(sender), "Bridge: from contract not whitelisted ");
-        }
+        checkWhitelisted(sender);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
         crossTokens(tokenToUse, sender, to, amount, "");
+    }
+
+    function checkWhitelisted(address sender) private view {
+        if (sender.isContract()) {
+            require(allowTokens.allowedContracts(sender), "Bridge: from contract not whitelisted ");
+        }
+    }
+
+    /**
+     * Use network currency and cross it.
+     */
+    function depositTo(address to) external payable {
+        address sender = _msgSender();
+        checkWhitelisted(sender);
+        require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
+        wrappedCurrency.deposit.value(msg.value)();
+        crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
     }
 
     /**
@@ -169,30 +204,20 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused whenNotUpgrading {
+    ) external {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-        address receiver = userData.length == 0 ? from : bytesToAddress(userData);
+        address receiver = userData.length == 0 ? from : Utils.bytesToAddress(userData);
         //This can only be used with trusted contracts
         require(allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
-    function bytesToAddress(bytes memory bys) private pure returns (address addr) {
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            addr := mload(add(bys,20))
-        }
-    }
-
-    function isSideToken(address tokenAddress) public view returns (bool) {
-        return originalTokens[tokenAddress] != NULL_ADDRESS;
-    }
-
-    function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData) private {
+    function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData)
+    private whenNotUpgrading whenNotPaused nonReentrant {
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);
         (uint8 decimals, uint256 granularity, string memory symbol) = Utils.getTokenInfo(tokenToUse);
@@ -203,7 +228,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         }
         //We consider the amount before fees converted to 18 decimals to check the limits
         allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
-        if (isSideToken(tokenToUse)) {
+        if (originalTokens[tokenToUse] != NULL_ADDRESS) {
             //Side Token Crossing
             uint256 modulo = amountMinusFees.mod(granularity);
             fee = fee.add(modulo);
@@ -228,16 +253,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         }
     }
 
-    function _createSideToken(address token, string memory symbol, uint256 granularity) private returns (ISideToken sideToken){
-        string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-        address sideTokenAddress = sideTokenFactory.createSideToken(newSymbol, newSymbol, granularity);
-        sideToken = ISideToken(sideTokenAddress);
-        mappedTokens[token] = sideToken;
-        originalTokens[sideTokenAddress] = token;
-        emit NewSideToken(sideTokenAddress, token, newSymbol, granularity);
-        return sideToken;
-    }
-
     function getTransactionId(
         bytes32 _blockHash,
         bytes32 _transactionHash,
@@ -250,21 +265,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
     }
 
-    function _processTransaction(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    )
-        private
-    {
-        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-        require(!processed[compiledId], "Bridge: Already processed");
-        processed[compiledId] = true;
-    }
-
-    function setFeePercentage(uint amount) external onlyOwner whenNotPaused {
+    function setFeePercentage(uint amount) external onlyOwner {
         require(amount < (feePercentageDivider/10), "Bridge: bigger than 10%");
         feePercentage = amount;
         emit FeePercentageChanged(feePercentage);
@@ -300,6 +301,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     function setUpgrading(bool _isUpgrading) external onlyOwner {
         isUpgrading = _isUpgrading;
         emit Upgrading(isUpgrading);
+    }
+
+    function setWrappedCurrency(address _wrappedCurrency) external onlyOwner {
+        require(_wrappedCurrency != NULL_ADDRESS, "Bridge: wrapp is empty");
+        wrappedCurrency = IWrapped(_wrappedCurrency);
+        emit WrappedCurrencyChanged(_wrappedCurrency);
     }
 
 }
