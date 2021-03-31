@@ -63,7 +63,7 @@ function increaseTimestamp(web3, increase) {
             }
             return asyncMine().then( ()=> resolve(result));
           });
-    });    
+    });
 }
 
 function stripHexPrefix(hexString) {
@@ -77,7 +77,7 @@ function calculatePrefixesSuffixes(nodes) {
     const prefixes = [];
     const suffixes = [];
     const ns = [];
-    
+
     for (let i = 0; i < nodes.length; i++) {
         nodes[i] = stripHexPrefix(nodes[i]);
     }
@@ -85,26 +85,25 @@ function calculatePrefixesSuffixes(nodes) {
     for (let k = 0, l = nodes.length; k < l; k++) {
         if (k + 1 < l && nodes[k+1].indexOf(nodes[k]) >= 0)
             continue;
-        
+
         ns.push(nodes[k]);
     }
-    
+
     let hash = web3.utils.sha3(Buffer.from(ns[0], 'hex'));
     hash = stripHexPrefix(hash);
-    
+
     prefixes.push('0x');
     suffixes.push('0x');
-    
+
     for (let k = 1, l = ns.length; k < l; k++) {
         const p = ns[k].indexOf(hash);
-        
+
         prefixes.push('0x' + ns[k].substring(0, p));
         suffixes.push('0x' + ns[k].substring(p + hash.length));
-        
+
         hash = web3.utils.sha3(Buffer.from(ns[k], 'hex'));
         hash = stripHexPrefix(hash);
     }
-    
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
@@ -119,9 +118,7 @@ function ascii_to_hexa(str)
    }
 
 function isLocalNetwork(network) {
-    return !network.toLowerCase().includes('mainnet') &&
-        !network.toLowerCase().includes('kovan') &&
-        !network.toLowerCase().includes('testnet');
+    return !['mainnet', 'kovan', 'testnet'].includes(network.toLowerCase());
 }
 
 
