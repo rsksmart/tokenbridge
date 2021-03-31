@@ -5,8 +5,6 @@ const log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
 const logConfig = require('../config/heartbeat-log-config.json');
-
-//utils
 const Federator = require('../src/lib/Federator.js');
 const Heartbeat = require('../src/lib/Heartbeat.js');
 const utils = require('../src/lib/utils.js');
