@@ -25,7 +25,7 @@ module.exports = class Heartbeat {
     async run() {
         const chainId = await this.mainWeb3.eth.net.getId();
         if (!utils.checkIfItsInRSK(chainId)) {
-            this.logger.error(new Error('Heartbeat should only run on RSK'), err);
+            this.logger.error(new Error(`Heartbeat should only run on RSK ${chainId}`));
             process.exit();
         }
         let retries = 3;
@@ -79,11 +79,11 @@ module.exports = class Heartbeat {
                 nodeEthInfo
             )
             
-            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVSN}, ${nodeRskInfo}, ${nodeEthInfo})`);
+            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
             this.logger.info(`Success emiting heartbeat`);
             return true;
         } catch (err) {
-            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVSN: ${fedVSN}`, err);
+            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVSN: ${fedVersion}`, err);
         }
     }
 
