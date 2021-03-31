@@ -13,7 +13,7 @@
     "migrate": "rm -rf ./build && npx truffle migrate --reset",
     "test": "npx truffle test",
     "coverage": "npx truffle run coverage",
-    "size": "node calculateSize.js",
+    "size": "npm run compile && node calculateSize.js",
     "prepare": "npx truffle compile && node ./datagen.js",
     "deployIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development",
     "deployLocalIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network development && rm -rf ./build && npx truffle migrate --reset --network mirrorDevelopment"

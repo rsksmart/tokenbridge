@@ -456,7 +456,7 @@
                         "type": "address"
                     },
                     {
-                        "internalType": "address",
+                        "internalType": "address payable",
                         "name": "receiver",
                         "type": "address"
                     },
@@ -592,7 +592,7 @@
                         "type": "address"
                     },
                     {
-                        "internalType": "address",
+                        "internalType": "address payable",
                         "name": "receiver",
                         "type": "address"
                     },
