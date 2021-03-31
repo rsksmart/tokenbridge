@@ -119,4 +119,11 @@ library Utils {
         formattedAmount = amount.div(granularity);
     }
 
+    function bytesToAddress(bytes memory bys) public pure returns (address addr) {
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            addr := mload(add(bys,20))
+        }
+    }
+
 }

@@ -283,6 +283,24 @@
         "type": "event"
     },
     {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "_wrappedCurrency",
+                "type": "address"
+            }
+        ],
+        "name": "WrappedCurrencyChanged",
+        "type": "event"
+    },
+    {
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "fallback"
+    },
+    {
         "constant": false,
         "inputs": [
             {
@@ -574,6 +592,21 @@
         "type": "function"
     },
     {
+        "constant": true,
+        "inputs": [],
+        "name": "wrappedCurrency",
+        "outputs": [
+            {
+                "internalType": "contract IWrapped",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "constant": false,
         "inputs": [
             {
@@ -661,7 +694,7 @@
                 "type": "address"
             },
             {
-                "internalType": "address",
+                "internalType": "address payable",
                 "name": "receiver",
                 "type": "address"
             },
@@ -737,6 +770,21 @@
         "inputs": [
             {
                 "internalType": "address",
+                "name": "to",
+                "type": "address"
+            }
+        ],
+        "name": "depositTo",
+        "outputs": [],
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "internalType": "address",
                 "name": "operator",
                 "type": "address"
             },
@@ -770,27 +818,6 @@
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "tokenAddress",
-                "type": "address"
-            }
-        ],
-        "name": "isSideToken",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
         "type": "function"
     },
     {
@@ -934,6 +961,21 @@
             }
         ],
         "name": "setUpgrading",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "constant": false,
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_wrappedCurrency",
+                "type": "address"
+            }
+        ],
+        "name": "setWrappedCurrency",
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",
