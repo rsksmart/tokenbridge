@@ -4,10 +4,9 @@ const log4js = require('log4js');
 
 //configurations
 const config = require('../config/config.js');
-const logConfig = require('../config/log-config.json');
+const logConfig = require('../config/heartbeat-log-config.json');
 
 //utils
-const TransactionSender = require('../src/lib/TransactionSender.js');
 const Federator = require('../src/lib/Federator.js');
 const Heartbeat = require('../src/lib/Heartbeat.js');
 const utils = require('../src/lib/utils.js');
@@ -86,15 +85,12 @@ async function emitAndListenToHeartbeats(
 ) {
   try {
    
-    let data = '';
-    const originWeb3 = new Web3(config.mainchain.host);
-
     logger.debug('Starting heartbeat processes');
 
     // Start MAIN hearbeats with delay between them
     logger.debug('Fund heartbeats wallets');
     let heartbeatKeys = keys && keys.length ? keys : [config.privateKey];
-    await fundFederators(config.mainchain.host, heartbeatKeys, config.mainchain.privateKey, originWeb3.utils.toWei('1'));
+    await fundFederators(config.mainchain.host, heartbeatKeys, config.mainchain.privateKey, Web3.utils.toWei('1'));
 
     await heartbeats.reduce(function(promise, item) {
         return promise.then(function() { return item.run(); })
@@ -102,14 +98,26 @@ async function emitAndListenToHeartbeats(
 
     logger.debug('Starting federator processes');
 
-    // Start MAIN federators with delay between them
-    await federators.reduce(function(promise, item) {
-        return promise.then(function() { return item.run(); })
+    // Start readLogs processes...
+    await heartbeats.reduce(function(promise, item) {
+        return promise.then(function() { return item.readLogs(); })
     }, Promise.resolve());
+
+    // check if HeartBeat Event is in log file
+    const logFileContent = fs.readFileSync(
+      `${__dirname}/../heartbeat.log`,
+      {encoding:'utf8', flag:'r'}
+    );
+
+    if(logFileContent.indexOf('HeartBeat') > -1) {
+        logger.info('HeartBeat Event detected on Log File');
+    } else {
+        logger.error('HeartBeat Event NOT detected on Log File');
+        process.exit()
+    }
 
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
         process.exit();
     }
 }
-
