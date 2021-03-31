@@ -7,7 +7,6 @@ const ProxyAdmin = artifacts.require('ProxyAdmin');
 const BridgeProxy = artifacts.require('BridgeProxy');
 
 module.exports = async (deployer, networkName, accounts) => {
-    console.log('Deploy old Bridge');
     let symbol = 'e';
 
     if(networkName == 'rskregtest' || networkName == 'rsktestnet' || networkName == 'rskmainnet')

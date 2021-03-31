@@ -7,6 +7,7 @@ const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 const UtilsContract = artifacts.require('./Utils');
 const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
+const WRBTC = artifacts.require('./WRBTC');
 
 const utils = require('./utils');
 const BN = web3.utils.BN;
@@ -242,7 +243,7 @@ contract('Bridge', async function (accounts) {
             });
 
             it('receiveTokens approve and transferFrom Alternative ERC20 Detailed', async function () {
-                const amount = web3.utils.toWei('1000', 'gwei');
+                const amount = web3.utils.toWei('1000', 'gwei'); // In GWei cause it gas 10 decimals
                 const decimals = '10';
                 const symbol = "ERC20";
                 let erc20Alternative = await AlternativeERC20Detailed.new("AlternativeERC20Detailed", utils.ascii_to_hexa(symbol), decimals, amount, { from: tokenOwner });
@@ -251,13 +252,13 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await erc20Alternative.balanceOf(tokenOwner);
                 let receipt = await erc20Alternative.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(erc20Alternative.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(erc20Alternative.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 assert.equal(receipt.logs[0].event, 'Cross');
                 assert.equal(receipt.logs[0].args[0], erc20Alternative.address);
                 assert.equal(receipt.logs[0].args[1], tokenOwner);
-                assert.equal(receipt.logs[0].args[2], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], anAccount);
                 assert.equal(receipt.logs[0].args[3], amount);
                 assert.equal(receipt.logs[0].args[4], symbol);
                 assert.equal(receipt.logs[0].args[5], null);
@@ -270,6 +271,74 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance, amount);
                 const isKnownToken = await this.bridge.knownTokens(erc20Alternative.address);
                 assert.equal(isKnownToken, true);
+            });
+
+            it('depositTo using network currency', async function () {
+                const amount = web3.utils.toWei('1');
+                const wrbtc = await WRBTC.new({ from: tokenOwner });
+                const decimals = (await wrbtc.decimals()).toString();
+                const symbol = await wrbtc.symbol();
+
+                await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
+
+                receipt = await this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount });
+                utils.checkRcpt(receipt);
+
+                assert.equal(receipt.logs[0].event, 'Cross');
+                assert.equal(receipt.logs[0].args[0], wrbtc.address);
+                assert.equal(receipt.logs[0].args[1], tokenOwner);
+                assert.equal(receipt.logs[0].args[2], anAccount);
+                assert.equal(receipt.logs[0].args[3], amount);
+                assert.equal(receipt.logs[0].args[4], symbol);
+                assert.equal(receipt.logs[0].args[5], null);
+                assert.equal(receipt.logs[0].args[6].toString(), decimals);
+                assert.equal(receipt.logs[0].args[7].toString(), '1');
+
+                const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                assert.equal(isKnownToken, true);
+            });
+
+            it('fail depositTo no wrapped currency set', async function () {
+                const amount = web3.utils.toWei('1');
+                const wrbtc = await WRBTC.new({ from: tokenOwner });
+                const decimals = (await wrbtc.decimals()).toString();
+                const symbol = await wrbtc.symbol();
+
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
+                const originalBalance = await web3.eth.getBalance(tokenOwner);
+                await utils.expectThrow(this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount }));
+            });
+
+            it('call depositTo from a contract', async function () {
+                const amount = web3.utils.toWei('1');
+                const wrbtc = await WRBTC.new({ from: tokenOwner });
+                const decimals = (await wrbtc.decimals()).toString();
+                const symbol = await wrbtc.symbol();
+                const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
+                await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.addAllowedContract(mockContract.address, { from: bridgeManager });
+                receipt = await mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount });
+                utils.checkRcpt(receipt);
+
+                const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
+                assert.equal(bridgeBalance, amount);
+                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                assert.equal(isKnownToken, true);
+            });
+
+            it('fail call depositTo from a contract if not allowed', async function () {
+                const amount = web3.utils.toWei('1');
+                const wrbtc = await WRBTC.new({ from: tokenOwner });
+                const decimals = (await wrbtc.decimals()).toString();
+                const symbol = await wrbtc.symbol();
+                const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
+                await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
+                await utils.expectThrow(mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount }));
             });
 
             it('receiveTokens approve and transferFrom for ERC777', async function () {
@@ -762,6 +831,11 @@ contract('Bridge', async function (accounts) {
 
     describe('Mirror Side', async function () {
         beforeEach(async function () {
+            // Set wrapped currency for main bridge
+            this.wrbtc = await WRBTC.new({ from: tokenOwner });
+            await this.bridge.setWrappedCurrency(this.wrbtc.address, { from: bridgeManager });
+            await this.allowTokens.setToken(this.wrbtc.address, this.typeId, { from: bridgeManager });
+            // Deploy Mirror Bridge and necesary contracts
             this.mirrorAllowTokens = await AllowTokens.new();
             await this.mirrorAllowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](bridgeManager, bridgeOwner, '0', '0' , '0');
             await this.mirrorAllowTokens.addTokenType('eRIF', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: bridgeManager });
@@ -771,12 +845,19 @@ contract('Bridge', async function (accounts) {
                 federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
             await this.mirrorAllowTokens.transferPrimary(this.mirrorBridge.address);
-
+            // Set mirror wrapped currency
+            this.mirrorWrbtc = await WRBTC.new({ from: tokenOwner });
+            await this.mirrorBridge.setWrappedCurrency(this.mirrorWrbtc.address, { from: bridgeManager });
+            await this.mirrorAllowTokens.setToken(this.mirrorWrbtc.address, this.typeId, { from: bridgeManager });
+            //Cross a token
             this.amount = web3.utils.toWei('1000');
             this.decimals = (await this.token.decimals()).toString();
             this.granularity = 1;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
             this.txReceipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, this.amount, { from: tokenOwner });
+            //Cross wrapped token to test unwrap when crossing back
+            this.wrbtcAmount = web3.utils.toWei('2');
+            await this.bridge.depositTo(tokenOwner, { from: tokenOwner, value: this.wrbtcAmount });
         });
 
         describe('Cross the tokens', async function () {
@@ -1128,32 +1209,69 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance.toString(), '0');
             });
 
+            it('crossback wrapped network currency', async function () {
+                const granularity = '1';
+                const decimals = '18';
+                await this.mirrorBridge.acceptTransfer(this.wrbtc.address, anAccount, anAccount, this.amount, "WRBTC",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, decimals, granularity, { from: federation });
+                const amountToCrossBack = new BN(web3.utils.toWei('1'));
+                const payment = new BN(0);
+
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                await this.mirrorAllowTokens.setToken(sideToken.address, this.typeId, { from: bridgeManager });
+                const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
+                const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
+                const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
+                const originalTokenBalance = await sideToken.balanceOf(anAccount);
+
+                await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
+                await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
+
+                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                utils.checkRcpt(receipt);
+
+                const ownerBalance = await sideToken.balanceOf(bridgeManager);
+                assert.equal(ownerBalance.toString(), fees.add(modulo).toString());
+                const tokenBalance = await sideToken.balanceOf(anAccount);
+                assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amountToCrossBack));
+                const bridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
+                assert.equal(bridgeBalance.toString(), '0');
+            });
+
         });
 
         describe('Cross back the tokens', async function () {
             beforeEach(async function () {
-                await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount, "MAIN",
+                // Transfer to Side  Token
+                await this.mirrorBridge.acceptTransfer(this.token.address, tokenOwner, anAccount, this.amount, "MAIN",
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                     this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
                 this.amountToCrossBack = web3.utils.toWei('100');
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
-                let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-                await this.mirrorAllowTokens.setToken(sideTokenAddress, this.typeId, { from: bridgeManager });
+                this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                await this.mirrorAllowTokens.setToken(this.sideTokenAddress, this.typeId, { from: bridgeManager });
+                //Transfer Side WRBTC
+                await this.mirrorBridge.acceptTransfer(this.wrbtc.address, tokenOwner, anAccount, this.wrbtcAmount, "WRBTC",
+                    this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                    this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
+                this.wrbtcAmountToCrossBack = web3.utils.toWei('1');
+                this.sideWrbtcAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                await this.mirrorAllowTokens.setToken(this.sideWrbtcAddress, this.typeId, { from: bridgeManager });
             });
 
             describe('Should burn the side tokens when transfered to the bridge', function () {
                 it('using IERC20 approve and transferFrom', async function () {
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-
-                    let sideToken = await SideToken.at(sideTokenAddress);
+                    let sideToken = await SideToken.at(this.sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
 
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     let receipt = await sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
-                    receipt = await this.mirrorBridge.receiveTokensTo(sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
+                    receipt = await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -1164,9 +1282,7 @@ contract('Bridge', async function (accounts) {
                 });
 
                 it('using ERC777 tokensReceived', async function () {
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-
-                    let sideToken = await SideToken.at(sideTokenAddress);
+                    let sideToken = await SideToken.at(this.sideTokenAddress);
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
 
@@ -1186,17 +1302,19 @@ contract('Bridge', async function (accounts) {
 
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
-                    this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
-
-                    this.sideToken = await SideToken.at(this.sideTokenAddress);
-
+                    this.anEmptyAccount = randomHex(20);
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
+                    this.sideToken = await SideToken.at(this.sideTokenAddress);
                     await this.sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, this.anEmptyAccount, this.amountToCrossBack, { from: anAccount });
+                    //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
+                    this.sideWrbtc = await SideToken.at(this.sideWrbtcAddress);
+                    await this.sideWrbtc.approve(this.mirrorBridge.address, this.wrbtcAmountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(this.sideWrbtc.address, this.anEmptyAccount, this.wrbtcAmountToCrossBack, { from: anAccount });
                 });
 
                 it('main Bridge should release the tokens', async function () {
-                    let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amountToCrossBack, "MAIN",
+                    let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, this.anEmptyAccount, this.amountToCrossBack, "MAIN",
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex, this.decimals, this.granularity, { from: federation });
                     utils.checkRcpt(tx);
@@ -1204,8 +1322,20 @@ contract('Bridge', async function (accounts) {
                     let bridgeBalance = await this.token.balanceOf(this.bridge.address);
                     assert.equal(bridgeBalance, this.amount - this.amountToCrossBack);
 
-                    let anAccountBalance = await this.token.balanceOf(anAccount);
+                    let anAccountBalance = await this.token.balanceOf(this.anEmptyAccount);
                     assert.equal(anAccountBalance, this.amountToCrossBack);
+                });
+                it('main Bridge should release the network currency', async function () {
+                    let tx = await this.bridge.acceptTransfer(this.wrbtc.address, anAccount, this.anEmptyAccount, this.wrbtcAmountToCrossBack, "WRBTC",
+                        this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                        this.txReceipt.receipt.logs[0].logIndex, '18', '1', { from: federation });
+                    utils.checkRcpt(tx);
+
+                    let bridgeBalance = await this.wrbtc.balanceOf(this.bridge.address);
+                    assert.equal(Number(bridgeBalance), Number(this.wrbtcAmount) - Number(this.wrbtcAmountToCrossBack));
+
+                    let anAccountBalance = await web3.eth.getBalance(this.anEmptyAccount);
+                    assert.equal(anAccountBalance.toString(), this.wrbtcAmountToCrossBack);
                 });
             });
 
