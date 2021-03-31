@@ -35,7 +35,7 @@ module.exports = class FederationFactory {
         }
     }
 
-    async getSideFederationContract() {
+    async getSideFederationContract(sideFederationAddress = this.config.sidechain.federation) {
         try {
             return await this.createInstance(
                 this.sideWeb3,
