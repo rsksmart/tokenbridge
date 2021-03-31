@@ -37,6 +37,7 @@ module.exports = class Federator {
                 const chainId = await this.mainWeb3.eth.net.getId();
                 const mainBridge = await this.bridgeFactory.getMainBridgeContract();
                 const fedContract = await this.federationFactory.getSideFederationContract();
+                const mainFedContract = await this.federationFactory.getMainFederationContract();
 
                 let confirmations = 0; //for rsk regtest and ganache
 
@@ -96,9 +97,10 @@ module.exports = class Federator {
                     this.logger.info(`Found ${logs.length} logs`);
                     await this._processLogs(logs);
 
-                    // when mainBridge lives in RSK ...
+                    // when mainBridge & federation contract live in RSK ...
                     if (utils.checkIfItsInRSK(chainId)) {
-                        const heartbeatLogs = await fedContract.getPastEvents('HeartBeat', {
+
+                        const heartbeatLogs = await mainFedContract.getPastEvents('HeartBeat', {
                             fromBlock: fromPageBlock,
                             toBlock: toPagedBlock
                         });
