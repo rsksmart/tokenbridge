@@ -16,20 +16,18 @@ module.exports = class Heartbeat {
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
 
-        this.sideFederationAddress = null;
-
         this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
     }
 
-    async getSideFederationAddress() {
-        return this.sideFederationAddress ||
-            (await (await this.bridgeFactory.getSideBridgeContract()).getFederation())
-    }
-
     async run() {
+        const chainId = await this.mainWeb3.eth.net.getId();
+        if (!utils.checkIfItsInRSK(chainId)) {
+            this.logger.error(new Error('Heartbeat should only run on RSK'), err);
+            process.exit();
+        }
         let retries = 3;
         const sleepAfterRetrie = 3000;
         while(retries > 0) {
@@ -68,17 +66,15 @@ module.exports = class Heartbeat {
         }
     }
 
-    async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
+    async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVersion, nodeRskInfo, nodeEthInfo) {
         try {
-            const fedContract = await this.federationFactory.getSideFederationContract(
-                await this.getSideFederationAddress()
-            );
+            const fedContract = await this.federationFactory.getMainFederationContract();
 
             await fedContract.emitHeartbeat(
                 this.transactionSender,
                 fedRskBlock,
                 fedEthBlock,
-                fedVSN,
+                fedVersion,
                 nodeRskInfo,
                 nodeEthInfo
             )
