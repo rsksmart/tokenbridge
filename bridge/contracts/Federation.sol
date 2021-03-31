@@ -25,7 +25,7 @@ contract Federation is Ownable {
     event BridgeChanged(address bridge);
     struct TransactionInfo { // Struct
         address sender;
-        address receiver;
+        address payable receiver;
         uint256 amount;
         bytes32 blockHash;
         bytes32 transactionHash;
