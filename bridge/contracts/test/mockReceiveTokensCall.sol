@@ -14,4 +14,8 @@ contract mockReceiveTokensCall {
         IERC20(tokenToUse).approve(bridge, amount);
         IBridge(bridge).receiveTokensTo(tokenToUse, receiver, amount);
     }
+
+    function callDepositTo(address receiver) external payable {
+        IBridge(bridge).depositTo.value(msg.value)(receiver);
+    }
 }
