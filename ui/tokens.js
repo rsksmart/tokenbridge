@@ -94,6 +94,12 @@ const BUND_TOKEN = { token: 'BUND', name: 'Bundles Finance', icon: 'https://raw.
     42:{symbol:'BUND', address:'0x8d3e855f3f55109d473735ab76f753218400fe96', decimals:18},
 };
 
+const AMLT_TOKEN = { token: 'AMLT', name: 'AMLT Coinfirm', icon: 'https://raw.githubusercontent.com/rsksmart/rsk-contract-metadata/master/images/amlt.png',
+    30:{symbol:'rAMLT', address:'0xff9ea341d9ea91cb7c54342354377f5104fd403f', decimals:18},
+    1:{symbol:'AMLT', address:'0xca0e7269600d353f70b14ad118a49575455c0f2f', decimals:18},
+    //AMLT does not have a testnet token
+};
+
 // Remove INV token because its paused on mainnet
 const TOKENS = [ BUND_TOKEN, USDT_TOKEN, DAI_TOKEN, SAI_TOKEN, WETH_TOKEN, LINK_TOKEN, DOC_TOKEN, BITPRO_TOKEN, RIF_TOKEN, TUSD_TOKEN, USDC_TOKEN,
-    ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN, OLD_TOKEN, ];
+    ZRX_TOKEN, FLIXX_TOKEN, RFOX_TOKEN, OLD_TOKEN, AMLT_TOKEN, ];
