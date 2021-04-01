@@ -217,6 +217,12 @@
                 "internalType": "uint256",
                 "name": "granularity",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "typeId",
+                "type": "uint256"
             }
         ],
         "name": "Voted",
@@ -491,6 +497,11 @@
                         "type": "uint256"
                     },
                     {
+                        "internalType": "uint256",
+                        "name": "typeId",
+                        "type": "uint256"
+                    },
+                    {
                         "internalType": "string",
                         "name": "symbol",
                         "type": "string"
@@ -624,6 +635,11 @@
                     {
                         "internalType": "uint256",
                         "name": "granularity",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "typeId",
                         "type": "uint256"
                     },
                     {
