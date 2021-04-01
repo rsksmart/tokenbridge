@@ -17,6 +17,7 @@ const MainToken = artifacts.require('./MainToken');
 
 const utils = require('./utils');
 const randomHex = web3.utils.randomHex;
+const toWei = web3.utils.toWei;
 
 contract('Bridge upgrade test', async (accounts) => {
     const deployerAddress = accounts[0];
@@ -201,6 +202,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](managerAddress, deployerAddress, '0', '0' , '0');
                     await this.allowTokens.transferPrimary(this.proxy.options.address);
                     await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
+                    await this.allowTokens.addTokenType('MAIN', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: managerAddress });
                     const result = await this.proxy.methods.version().call();
                     assert.equal(result, 'v3');
                 });
@@ -240,7 +242,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
                     it('should accept Transfer', async () => {
                         let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, otherAccount, this.amount, "MAIN",
-                        randomHex(32), randomHex(32), 0, 18, 1).send({ from: federationAddress, gas: 4_000_000 });
+                        randomHex(32), randomHex(32), 0, 18, 1, 0).send({ from: federationAddress, gas: 4_000_000 });
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();

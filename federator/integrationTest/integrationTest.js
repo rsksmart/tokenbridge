@@ -196,7 +196,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         const sideMultiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
         const sideAllowTokensAddress = config.sidechain.allowTokens;
         const sideAllowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, sideAllowTokensAddress);
-        data = sideAllowTokensContract.methods.setToken(destinationTokenAddress, 0).encodeABI();
+
         if (federatorKeys.length === 1) {
             const multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
             await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '');
@@ -329,6 +329,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         logger.info('------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
         logger.debug('Getting final balances');
+        bridgeBalanceAfter = await originTokenContract.methods.balanceOf(originBridgeAddress).call();
         receiverBalanceAfter = await originTokenContract.methods.balanceOf(userAddress).call();
         senderBalanceAfter = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.debug(`bridge balance:${bridgeBalanceAfter}, receiver balance:${receiverBalanceAfter}, sender balance:${senderBalanceAfter} `);
