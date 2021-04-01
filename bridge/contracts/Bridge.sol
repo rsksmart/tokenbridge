@@ -55,6 +55,19 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     event Upgrading(bool isUpgrading);
     event WrappedCurrencyChanged(address _wrappedCurrency);
 
+    struct CrossInfo {
+        address tokenAddress;
+        address sender;
+        address payable receiver;
+        uint256 amount;
+        bytes32 blockHash;
+        bytes32 transactionHash;
+        uint32 logIndex;
+        uint256 granularity;
+        uint256 typeId;
+        string symbol;
+    }
+
     function initialize(
         address _manager,
         address _federation,
@@ -86,6 +99,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         _;
     }
 
+    function markAsProcessed(bytes32 blockHash, bytes32 transactionHash, address payable receiver, uint256 amount, uint32 logIndex) private {
+        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
+        require(!processed[compiledId], "Bridge: Already processed");
+        processed[compiledId] = true;
+    }
+
     function acceptTransfer(
         address tokenAddress,
         address sender,
@@ -96,9 +115,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         bytes32 transactionHash,
         uint32 logIndex,
         uint8 decimals,
-        uint256 granularity
+        uint256 granularity,
+        uint256 typeId
     ) external whenNotPaused nonReentrant {
-        require(msg.sender == federation, "Bridge: Sender not Federation");
+        require(_msgSender() == federation, "Bridge: Sender not Federation");
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
         require(amount > 0, "Bridge: Amount 0");
@@ -108,14 +128,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(decimals <= 18, "Bridge: Decimals bigger 18");
         require(Utils.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
 
-        bytes32 compiledId = getTransactionId(blockHash, transactionHash, receiver, amount, logIndex);
-        require(!processed[compiledId], "Bridge: Already processed");
-        processed[compiledId] = true;
+        markAsProcessed(blockHash, transactionHash, receiver, amount, logIndex);
 
         if (knownTokens[tokenAddress]) {
-            _acceptCrossBackToToken(sender, receiver, tokenAddress, decimals, granularity, amount);
+            _acceptCrossBackToToken(sender, receiver, tokenAddress, decimals, granularity, amount, typeId);
         } else {
-            _acceptCrossToSideToken(sender, receiver, tokenAddress, decimals, granularity, amount, symbol);
+            _acceptCrossToSideToken(sender, receiver, tokenAddress, decimals, granularity, amount, symbol, typeId);
         }
     }
 
@@ -126,9 +144,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint8 decimals,
         uint256 granularity,
         uint256 amount,
-        string memory symbol
+        string memory symbol,
+        uint256 typeId
     ) private {
-        (uint256 calculatedGranularity,uint256 formattedAmount) = Utils.calculateGranularityAndAmount(decimals, granularity, amount);
+        (uint256 calculatedGranularity, uint256 formattedAmount) = Utils.calculateGranularityAndAmount(decimals, granularity, amount);
         ISideToken sideToken = mappedTokens[tokenAddress];
         if (address(sideToken) == NULL_ADDRESS) {
             // Create side token
@@ -136,12 +155,23 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             sideToken = ISideToken(sideTokenFactory.createSideToken(newSymbol, newSymbol, calculatedGranularity));
             mappedTokens[tokenAddress] = sideToken;
             originalTokens[address(sideToken)] = tokenAddress;
+            allowTokens.setToken(address(sideToken), typeId);
             emit NewSideToken(address(sideToken), tokenAddress, newSymbol, calculatedGranularity);
         } else {
             require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ");
         }
         sideToken.mint(receiver, formattedAmount, "", "");
-        emit AcceptedCrossTransfer(tokenAddress, sender, receiver, amount, decimals, granularity, formattedAmount, 18, calculatedGranularity);
+        emit AcceptedCrossTransfer(
+            tokenAddress,
+            sender,
+            receiver,
+            amount,
+            decimals,
+            granularity,
+            formattedAmount,
+            18,
+            calculatedGranularity,
+            typeId);
     }
 
     function _acceptCrossBackToToken(
@@ -150,7 +180,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address tokenAddress,
         uint8 decimals,
         uint256 granularity,
-        uint256 amount)
+        uint256 amount,
+        uint256 typeId)
     private {
         require(decimals == 18, "Bridge: Invalid decimals");
         //As side tokens are ERC777 we need to convert granularity to decimals
@@ -161,7 +192,17 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         } else {
             IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
         }
-        emit AcceptedCrossTransfer(tokenAddress, sender, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
+        emit AcceptedCrossTransfer(
+            tokenAddress,
+            sender,
+            receiver,
+            amount,
+            decimals,
+            granularity,
+            formattedAmount,
+            calculatedDecimals,
+            1,
+            typeId);
     }
 
     /**
@@ -227,7 +268,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             formattedAmount = amount.mul(uint256(10)**(18-decimals));
         }
         //We consider the amount before fees converted to 18 decimals to check the limits
-        allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
+        uint256 typeId = allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
         if (originalTokens[tokenToUse] != NULL_ADDRESS) {
             //Side Token Crossing
             uint256 modulo = amountMinusFees.mod(granularity);
@@ -244,7 +285,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             symbol,
             userData,
             decimals,
-            granularity
+            granularity,
+            typeId
         );
 
         if (fee > 0) {

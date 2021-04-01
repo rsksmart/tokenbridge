@@ -4,11 +4,17 @@ module.exports = class IFederationV1 {
         this.config = config;
     }
 
-    getTransactionId(paramsObj = {}) {
-        delete paramsObj.sender;
-
+    getTransactionId(paramsObj) {
         return this.federationContract.methods.getTransactionId(
-            ...Object.values(paramsObj)
+            paramsObj.originalTokenAddress,
+            paramsObj.receiver,
+            paramsObj.amount,
+            paramsObj.symbol,
+            paramsObj.blockHash,
+            paramsObj.transactionHash,
+            paramsObj.logIndex,
+            paramsObj.decimals,
+            paramsObj.granularity
         );
     }
     
@@ -20,9 +26,17 @@ module.exports = class IFederationV1 {
         return this.federationContract.methods.hasVoted(txId);
     }
     
-    voteTransaction(paramsObj = {}) {
+    voteTransaction(paramsObj) {
         return this.federationContract.methods.voteTransaction(
-            ...Object.values(paramsObj)
+            paramsObj.originalTokenAddress,
+            paramsObj.receiver,
+            paramsObj.amount,
+            paramsObj.symbol,
+            paramsObj.blockHash,
+            paramsObj.transactionHash,
+            paramsObj.logIndex,
+            paramsObj.decimals,
+            paramsObj.granularity
         );
     } 
 

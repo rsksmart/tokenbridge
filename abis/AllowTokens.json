@@ -665,7 +665,13 @@
             }
         ],
         "name": "updateTokenTransfer",
-        "outputs": [],
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "typeId",
+                "type": "uint256"
+            }
+        ],
         "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
@@ -715,7 +721,7 @@
         "outputs": [
             {
                 "internalType": "uint256",
-                "name": "",
+                "name": "len",
                 "type": "uint256"
             }
         ],
