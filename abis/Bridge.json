@@ -55,6 +55,12 @@
                 "internalType": "uint256",
                 "name": "_calculatedGranularity",
                 "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_typeId",
+                "type": "uint256"
             }
         ],
         "name": "AcceptedCrossTransfer",
@@ -122,6 +128,12 @@
                 "indexed": false,
                 "internalType": "uint256",
                 "name": "_granularity",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "_typeId",
                 "type": "uint256"
             }
         ],
@@ -731,6 +743,11 @@
             {
                 "internalType": "uint256",
                 "name": "granularity",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "typeId",
                 "type": "uint256"
             }
         ],
