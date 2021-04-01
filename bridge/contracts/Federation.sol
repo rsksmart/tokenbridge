@@ -16,24 +16,27 @@ contract Federation is Ownable {
     mapping (address => bool) public isMember;
     mapping (bytes32 => mapping (address => bool)) public votes;
     mapping(bytes32 => bool) public processed;
-    // solium-disable-next-line max-len
-    event Voted(address indexed federator, bytes32 indexed transactionId, address originalTokenAddress, address sender, address receiver, uint256 amount, string symbol, bytes32 blockHash, bytes32 indexed transactionHash, uint32 logIndex, uint8 decimals, uint256 granularity);
+
     event Executed(bytes32 indexed transactionId);
     event MemberAddition(address indexed member);
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
     event BridgeChanged(address bridge);
-    struct TransactionInfo { // Struct
-        address sender;
-        address payable receiver;
-        uint256 amount;
-        bytes32 blockHash;
-        bytes32 transactionHash;
-        uint32 logIndex;
-        uint8 decimals;
-        uint256 granularity;
-        string symbol;
-    }
+    event Voted(
+        address indexed federator,
+        bytes32 indexed transactionId,
+        address originalTokenAddress,
+        address sender,
+        address receiver,
+        uint256 amount,
+        string symbol,
+        bytes32 blockHash,
+        bytes32 indexed transactionHash,
+        uint32 logIndex,
+        uint8 decimals,
+        uint256 granularity,
+        uint256 typeId
+    );
     event HeartBeat(
         address indexed sender,
         uint256 fedRskBlock,
@@ -42,6 +45,19 @@ contract Federation is Ownable {
         string nodeRskInfo,
         string nodeEthInfo
     );
+
+    struct TransactionInfo {
+        address sender;
+        address payable receiver;
+        uint256 amount;
+        bytes32 blockHash;
+        bytes32 transactionHash;
+        uint32 logIndex;
+        uint8 decimals;
+        uint256 granularity;
+        uint256 typeId;
+        string symbol;
+    }
 
     modifier onlyMember() {
         require(isMember[_msgSender()], "Federation: Caller not a Federator");
@@ -99,15 +115,26 @@ contract Federation is Ownable {
             transactionInfo.transactionHash,
             transactionInfo.logIndex,
             transactionInfo.decimals,
-            transactionInfo.granularity
+            transactionInfo.granularity,
+            transactionInfo.typeId
         );
 
         uint transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
-            bridge.acceptTransfer(originalTokenAddress, transactionInfo.sender, transactionInfo.receiver,
-                transactionInfo.amount, transactionInfo.symbol, transactionInfo.blockHash, transactionInfo.transactionHash,
-                transactionInfo.logIndex, transactionInfo.decimals, transactionInfo.granularity);
+            bridge.acceptTransfer(
+                originalTokenAddress,
+                transactionInfo.sender,
+                transactionInfo.receiver,
+                transactionInfo.amount,
+                transactionInfo.symbol,
+                transactionInfo.blockHash,
+                transactionInfo.transactionHash,
+                transactionInfo.logIndex,
+                transactionInfo.decimals,
+                transactionInfo.granularity,
+                transactionInfo.typeId
+            );
             emit Executed(transactionId);
             return true;
         }
@@ -150,7 +177,8 @@ contract Federation is Ownable {
             transactionInfo.transactionHash,
             transactionInfo.logIndex,
             transactionInfo.decimals,
-            transactionInfo.granularity
+            transactionInfo.granularity,
+            transactionInfo.typeId
             )
         );
     }
