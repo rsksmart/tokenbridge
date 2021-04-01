@@ -98,9 +98,9 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary {
+    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary returns(uint256 typeId){
+        (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
         if(isValidatingAllowedTokens) {
-            (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
             require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
             require(amount >= limit.min, "AllowTokens: Amount lower than limit");
              // solium-disable-next-line security/no-block-members
@@ -115,11 +115,12 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
             allowedTokens[token] = info;
             emit UpdateTokensTransfered(token, info.lastDay, info.spentToday);
         }
+        return info.typeId;
     }
 
-    function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256) {
+    function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256 len) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
-        uint256 len = typeDescriptions.length;
+        len = typeDescriptions.length;
         require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
         typeDescriptions.push(description);
         setTypeLimits(len, limits);
@@ -152,7 +153,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return true;
     }
 
-    function setToken(address token, uint256 typeId) public notNull(token) onlyOwner {
+    function setToken(address token, uint256 typeId) public notNull(token) {
+        require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
         require(typeId < typeDescriptions.length, "AllowTokens: typeId does not exist");
         TokenInfo memory info = allowedTokens[token];
         info.allowed = true;
@@ -160,6 +162,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         allowedTokens[token] = info;
         emit SetToken(token, typeId);
     }
+
     function setMultipleTokens(TokensAndType[] calldata tokensAndTypes) external onlyOwner {
         uint256 i;
         require(tokensAndTypes.length > 0, "AllowTokens: empty tokens");
