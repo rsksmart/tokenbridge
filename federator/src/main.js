@@ -45,6 +45,7 @@ async function run() {
     try {
         await mainFederator.run();
         await sideFederator.run();
+        await heartbeat.readLogs();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
         process.exit();
