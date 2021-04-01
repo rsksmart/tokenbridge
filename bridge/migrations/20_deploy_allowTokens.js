@@ -107,8 +107,6 @@ async function setTokensTestnet(allowTokens) {
         { token: '0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0', typeId: '3' }, //DOC
         { token: '0x4da7997a819bb46b6758b9102234c289dd2ad3bf', typeId: '0' }, //BPro
         // SideToken
-        // await allowTokens.setToken('0xd1b98b6607330172f1d991521145a22bce793277', '0'); //rKovWBTC
-        // await allowTokens.setToken('0x0a9add98c076448cbcfacf5e457da12ddbef4a8f', '0'); //rKovRenBTC
         { token: '0xd15cdd74dff1a6a81ca639b038839b126bc01ff9', typeId: '1' }, //rKovWETH
         { token: '0x0d86fca9be034a363cf12c9834af08d54a10451c', typeId: '3' }, //rKovSAI
         { token: '0x7b846216a194c69bb1ea52ea8faa92d314866451', typeId: '3' }, //rKovDAI
@@ -153,10 +151,6 @@ async function setTokensMainnet(allowTokens) {
         { token: '0x4991516df6053121121274397a8c1dad608bc95b', typeId: '2' }, //rBUND
         { token: '0x73c08467E23F7DCB7dDBbc8d05041B74467A498A', typeId: '5' }, //rFLIXX
         { token: '0x9c3a5f8d686fade293c0ce989a62a34408c4e307', typeId: '5' }, //rRFOX
-        // TODO  after crossing
-        // await allowTokens.setToken('0x2260fac5e5542a773aa44fbcfedf7c193bc2c599', '0'); //rWBTC
-        // await allowTokens.setToken('0xeb4c2781e4eba804ce9a9803c67d0893436bb27d', '0'); //rRenBTC
-        // await allowTokens.setToken('0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', '1'); //rWETH
     ]);
 }
 
@@ -175,8 +169,5 @@ async function setTokensEthereum(allowTokens) {
         // Side Tokens
         { token: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5', typeId: '4' }, //eRIF
         { token: '0xe700691da7b9851f2f35f8b8182c69c53ccad9db', typeId: '3' }, //eDOC
-        // TODO  after crossing
-        // await allowTokens.setToken('0x967f8799af07df1534d48a95a5c9febe92c53ae0', '0'); //WRBTC
-        // await allowTokens.setToken('0x440cd83c160de5c96ddb20246815ea44c7abbca8', '0'); //BPro
     ]);
 }

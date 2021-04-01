@@ -44,7 +44,8 @@ interface IBridge {
         bytes32 transactionHash,
         uint32 logIndex,
         uint8 decimals,
-        uint256 granularity
+        uint256 granularity,
+        uint256 typeId
     ) external;
 
     event Cross(
@@ -55,7 +56,8 @@ interface IBridge {
         string _symbol,
         bytes _userData,
         uint8 _decimals,
-        uint256 _granularity
+        uint256 _granularity,
+        uint256 _typeId
     );
     event NewSideToken(
         address indexed _newSideTokenAddress,
@@ -72,6 +74,7 @@ interface IBridge {
         uint256 _granularity,
         uint256 _formattedAmount,
         uint8 _calculatedDecimals,
-        uint256 _calculatedGranularity);
+        uint256 _calculatedGranularity,
+        uint256 _typeId);
     event FeePercentageChanged(uint256 _amount);
 }

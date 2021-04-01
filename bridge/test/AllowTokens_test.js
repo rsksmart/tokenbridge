@@ -116,11 +116,13 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(isValidatingAllowedTokens, true);
             await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
             let typeId = 0;
+            //Use owner to set the token
             await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
             let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isAllowed, true);
             let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
-            await this.allowTokens.setToken(otherToken.address, typeId, { from: manager });
+            //use primary to set token
+            await this.allowTokens.setToken(otherToken.address, typeId, { from: tokenDeployer });
             isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
             assert.equal(isAllowed, true);
         });
@@ -145,7 +147,7 @@ contract('AllowTokens', async function (accounts) {
             let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
             let typeId = 0;
-            await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: tokenDeployer }));
+            await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: anotherOwner }));
 
             let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
             assert.equal(isTokenAllowed, previousIsTokenAllowed);

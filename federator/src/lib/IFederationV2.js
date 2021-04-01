@@ -4,16 +4,22 @@ module.exports = class IFederationV2 {
         this.config = config;
     }
 
-    getTransactionId(paramsObj = {}) {
-        const {
-            originalTokenAddress
-        } = paramsObj;
-
-        delete paramsObj.originalTokenAddress;
+    getTransactionId(paramsObj) {
 
         return this.federationContract.methods.getTransactionId(
-            originalTokenAddress,
-            paramsObj
+            paramsObj.originalTokenAddress,
+            {
+                sender: paramsObj.sender,
+                receiver: paramsObj.receiver,
+                amount: paramsObj.amount,
+                symbol: paramsObj.symbol,
+                blockHash: paramsObj.blockHash,
+                transactionHash: paramsObj.transactionHash,
+                logIndex: paramsObj.logIndex,
+                decimals: paramsObj.decimals,
+                granularity: paramsObj.granularity,
+                typeId: paramsObj.typeId,
+            }
         );
     }
 
@@ -25,16 +31,21 @@ module.exports = class IFederationV2 {
         return this.federationContract.methods.hasVoted(txId);
     }
     
-    voteTransaction(paramsObj = {}) {
-        const {
-            originalTokenAddress
-        } = paramsObj;
-
-        delete paramsObj.originalTokenAddress;
-        
+    voteTransaction(paramsObj) { 
         return this.federationContract.methods.voteTransaction(
-            originalTokenAddress,
-            paramsObj
+            paramsObj.originalTokenAddress,
+            {
+                sender: paramsObj.sender,
+                receiver: paramsObj.receiver,
+                amount: paramsObj.amount,
+                symbol: paramsObj.symbol,
+                blockHash: paramsObj.blockHash,
+                transactionHash: paramsObj.transactionHash,
+                logIndex: paramsObj.logIndex,
+                decimals: paramsObj.decimals,
+                granularity: paramsObj.granularity,
+                typeId: paramsObj.typeId,
+            }
         );
     }
 
