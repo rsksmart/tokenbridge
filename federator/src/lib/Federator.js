@@ -33,7 +33,6 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-                const sideCurrentBlock = await this.sideWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
 
                 const isMainSyncing = await this.mainWeb3.eth.isSyncing();
@@ -49,7 +48,6 @@ module.exports = class Federator {
                 }
 
                 const mainBridge = await this.bridgeFactory.getMainBridgeContract();
-                const fedContract = await this.federationFactory.getSideFederationContract();
 
                 let confirmations = 0; //for rsk regtest and ganache
 
@@ -109,21 +107,6 @@ module.exports = class Federator {
                     this.logger.info(`Found ${logs.length} logs`);
                     await this._processLogs(logs);
 
-                    // when mainBridge lives in RSK ...
-                    if (utils.checkIfItsInRSK(chainId)) {
-                        const heartbeatLogs = await fedContract.getPastEvents('HeartBeat', {
-                            fromBlock: fromPageBlock,
-                            toBlock: toPagedBlock
-                        });
-
-                        if (!heartbeatLogs) throw new Error('Failed to obtain HeartBeat logs');
-                        await this._processHeartbeatLogs(
-                            heartbeatLogs,
-                            {
-                                ethLastBlock: sideCurrentBlock
-                            }
-                        );
-                    }
                     this._saveProgress(this.lastBlockPath, toPagedBlock);
                     fromPageBlock = toPagedBlock + 1;
                 }
@@ -210,50 +193,6 @@ module.exports = class Federator {
             return true;
         } catch (err) {
             throw new CustomError(`Exception processing logs`, err);
-        }
-    }
-
-    async _processHeartbeatLogs(logs, { ethLastBlock }) {
-        /*
-            if node it's not synchronizing, do ->
-        */
-
-        try {
-            for(let log of logs) {
-                this.logger.info('Processing Heartbeat event log:', log);
-
-                const {
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    blockNumber
-                } = log;
-
-                const {
-                    sender,
-                    fedRskBlock,
-                    fedEthBlock,
-                    federationVersion,
-                    nodeRskInfo,
-                    nodeEthInfo
-                } = log.returnValues;
-
-                let logInfo = `[sender: ${sender}],`;
-                logInfo    += `[fedRskBlock: ${fedRskBlock}],`;
-                logInfo    += `[fedEthBlock: ${fedEthBlock}],`;
-                logInfo    += `[federationVersion: ${federationVersion}],`;
-                logInfo    += `[nodeRskInfo: ${nodeRskInfo}],`;
-                logInfo    += `[nodeEthInfo: ${nodeEthInfo}],`;
-                logInfo    += `[blockNumber: ${blockNumber}],`;
-                logInfo    += `[RskBlockGap: ${blockNumber - fedRskBlock}],`;
-                logInfo    += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
-
-                this.logger.info(logInfo);
-            }
-
-            return true;
-        } catch (err) {
-            throw new CustomError(`Exception processing HeartBeat logs`, err);
         }
     }
 
