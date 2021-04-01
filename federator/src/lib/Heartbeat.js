@@ -119,7 +119,7 @@ module.exports = class Heartbeat {
                     await this._processHeartbeatLogs(
                         heartbeatLogs,
                         {
-                            ethLastBlock: currentBlock
+                            ethLastBlock: await this.sideWeb3.eth.getBlockNumber()
                         }
                     );
 
