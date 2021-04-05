@@ -934,7 +934,7 @@
             <!-- Copy to Clipboard https://clipboardjs.com/ -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.4/clipboard.min.js" integrity="sha384-8CYhPwYlLELodlcQV713V9ZikA3DlCVaXFDpjHfP8Z36gpddf/Vrt47XmKDsCttu" crossorigin="anonymous"></script>
             <!-- rLogin -->
-            <script src="https://unpkg.com/@rsksmart/rlogin@0.1.1/dist/main.js" integrity="sha384-BxkfkiqvSWCwmBJpdpHlhY1vJDZj/fYQI76nvqsTCMoYgoJEWGXQW2O/1wqNeudb" crossorigin="anonymous"></script>
+            <script src="https://unpkg.com/@rsksmart/rlogin@0.1.2/dist/main.js" integrity="sha384-OF4i3QYuqobWkAUdUS5XJ8XNKpsfo8TQ7ABflBzTmH9m1AlsrTsVDypZ/wNJgEZZ" crossorigin="anonymous"></script>
             <!-- Wallet Connect -->
             <script src="https://unpkg.com/@walletconnect/web3-provider@1.3.1/dist/umd/index.min.js" integrity="sha384-DOJahViDNA9y40Y+NIb/qcO4Cxfe58MRJvtlIzdHdHRrnnhppgFGnipStRNW2DXG" crossorigin="anonymous"></script>
             <!-- async-await-retry  https://github.com/VoodooTeam/async-await-retry -->
@@ -1127,13 +1127,13 @@
                     $('#logIn').attr('onclick', 'onLogInClick()');
 
                     let rpc = {
-                        1: 'https://mainnet.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
+                        1: 'https://mainnet.infura.io/v3/71a25cd2ef2b4f6ab89b2e47a5b81b84',
                         30: 'https://public-node.rsk.co',
                     };
                     supportedChains = [1,30];
                     if(isTestnet) {
                         rpc = {
-                            42: 'https://kovan.infura.io/v3/8043bb2cf99347b1bfadfb233c5325c0',
+                            42: 'https://kovan.infura.io/v3/71a25cd2ef2b4f6ab89b2e47a5b81b84',
                             31: 'https://public-node.testnet.rsk.co',
                         };
                         supportedChains = [42,31];
@@ -1997,7 +1997,8 @@
                         if (TXN_Storage.isStorageAvailable('localStorage')) {
                             console.log(`Local Storage Available!`);
                         } else {
-                            console.log(`Local Storage Unavailable!`);
+                            // TODO this should be a popup warning the user
+                            console.error(`Local Storage Unavailable!`);
                         }
 
                     } catch(err) {
