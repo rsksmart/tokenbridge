@@ -659,10 +659,6 @@
                         <div class="row justify-content-center">
                             <div class="approve-deposit">
                                 <button disabled id="approve" class="btn btn-primary mr-3 mt-3 mb-3">Approve</button>
-                                <div class="form-check">
-                                    <input disabled checked type="checkbox" class="form-check-input" id="doNotAskAgain">
-                                    <label class="form-check-label" for="doNotAskAgain">Do not ask me again</label>
-                                </div>
                             </div>
                             <button disabled id="deposit" type="submit" class="btn btn-primary ml-3 mt-3 mb-3">Convert tokens</button>
                         </div>
@@ -1120,7 +1116,6 @@
                     disableInputs(true);
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
 
@@ -1354,7 +1349,6 @@
                         crossTokenError('Choose a token to cross');
                         return;
                     }
-                    const isUnlimitedApproval = $('#doNotAskAgain').prop('checked');
                     const BN = web3.utils.BN;
                     const amount = $('#amount').val();
 
@@ -1378,11 +1372,7 @@
                         }
                     }
 
-                    const amountBN = isUnlimitedApproval ?
-                        new BN(web3.utils.toWei(Number.MAX_SAFE_INTEGER.toString(), 'ether')) :
-                        new BN(amountWithDecimals)
-                            .mul(new BN(feePercentageDivider))
-                            .div(new BN(feePercentageDivider - feePercentage));
+                    const amountBN = new BN(web3.utils.toWei(Number.MAX_SAFE_INTEGER.toString(), 'ether'));
 
                     var gasPriceParsed = 0;
                     if(config.networkId >= 30 && config.networkId <= 33) {
@@ -1428,7 +1418,6 @@
                         // approve disabled, cross tokens enabled
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: false
                         });
                     })
@@ -1618,22 +1607,19 @@
                     tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
 
                     let allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
-                    allowance = web3.utils.fromWei(allowance);
-                    let allowanceBN = new BigNumber(allowance);
-
+                    let allowanceBN = (new BigNumber(allowance.toString())).div(10**(token[1].decimals));
+                    debugger
                     if(totalCost.lte(allowanceBN)) {
                         $('.approve-deposit').hide();
                         // straight to convert
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: false
                         });
                     } else {
                         // user must first approve amount
                         disableApproveCross({
                             approvalDisable: false,
-                            doNotAskDisabled: false,
                             crossDisabled: true
                         });
                         $('.approve-deposit').show();
@@ -1649,7 +1635,6 @@
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
@@ -1661,7 +1646,6 @@
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
@@ -1689,7 +1673,6 @@
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
@@ -1753,11 +1736,9 @@
 
                 function disableApproveCross({
                     approvalDisable = true,
-                    doNotAskDisabled = true,
                     crossDisabled = true
                 }) {
                     $('#approve').prop('disabled', approvalDisable);
-                    $('#doNotAskAgain').prop('disabled', doNotAskDisabled);
                     $('#deposit').prop('disabled', crossDisabled);
                 }
 
@@ -1778,7 +1759,6 @@
                     disableInputs(false);
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
                 }
