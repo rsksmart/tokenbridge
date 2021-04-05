@@ -1396,7 +1396,15 @@
                     }
                     gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
 
+
                     $('#wait').show();
+                    // approve disabled, cross tokens enabled
+                    disableApproveCross({
+                        approvalDisable: true,
+                        doNotAskDisabled: true,
+                        crossDisabled: true
+                    });
+
 
                     return new Promise((resolve, reject) => {
 
@@ -1426,16 +1434,26 @@
                     })
                     .catch((err) => {
 
-                        $('#wait').hide();
-                        console.error(err);
-                        crossTokenError(`Couldn't approve amount. ${err.message}`);
+                        const { code = 0 } = err;
+                        if(code === 4001) { // user rejected Approve txn
+                           // approve enabled, cross tokens disabled
+                            disableApproveCross({
+                                approvalDisable: false,
+                                doNotAskDisabled: false,
+                                crossDisabled: true
+                            });
+                        } else {
+                            console.error(err);
+                            crossTokenError(`Couldn't approve amount. ${err.message}`);
 
-                        // all options disabled:
-                        disableApproveCross({
-                            approvalDisable: true,
-                            doNotAskDisabled: true,
-                            crossDisabled: true
-                        });
+                            // all options disabled:
+                            disableApproveCross({
+                                approvalDisable: true,
+                                doNotAskDisabled: true,
+                                crossDisabled: true
+                            });
+                        }
+                        $('#wait').hide();
                     })
                 }
 
@@ -1481,6 +1499,13 @@
                     $('#wait').show();
                     let gasPrice = '';
 
+                    // approve disabled, cross tokens disabled
+                    disableApproveCross({
+                        approvalDisable: true,
+                        doNotAskDisabled: true,
+                        crossDisabled: true
+                    });
+
                     return retry3Times(tokenContract.methods.balanceOf(address).call)
                     .then(async (balance) => {
                         const balanceBN = new BN(balance);
@@ -1513,12 +1538,6 @@
                                 if (err) return reject(err);
                                 try {
                                     let receipt = await waitForReceipt(txHash);
-
-                                    disableApproveCross({
-                                        approvalDisable: true,
-                                        doNotAskDisabled: true,
-                                        crossDisabled: true
-                                    })
 
                                     if(receipt.status) {
                                         resolve(receipt);
