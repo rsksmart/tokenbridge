@@ -1539,12 +1539,6 @@
                                 try {
                                     let receipt = await waitForReceipt(txHash);
 
-                                    disableApproveCross({
-                                        approvalDisable: true,
-                                        doNotAskDisabled: true,
-                                        crossDisabled: true
-                                    })
-
                                     if(receipt.status) {
                                         resolve(receipt);
                                     }
