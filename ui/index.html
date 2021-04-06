@@ -659,10 +659,6 @@
                         <div class="row justify-content-center">
                             <div class="approve-deposit">
                                 <button disabled id="approve" class="btn btn-primary mr-3 mt-3 mb-3">Approve</button>
-                                <div class="form-check">
-                                    <input disabled checked type="checkbox" class="form-check-input" id="doNotAskAgain">
-                                    <label class="form-check-label" for="doNotAskAgain">Do not ask me again</label>
-                                </div>
                             </div>
                             <button disabled id="deposit" type="submit" class="btn btn-primary ml-3 mt-3 mb-3">Convert tokens</button>
                         </div>
@@ -928,7 +924,7 @@
             <!-- Bootstrap Select https://developer.snapappointments.com/bootstrap-select/ -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/js/bootstrap-select.min.js" integrity="sha384-SfMwgGnc3UiUUZF50PsPetXLqH2HSl/FmkMW/Ja3N2WaJ/fHLbCHPUsXzzrM6aet" crossorigin="anonymous"></script>
             <!-- Updated Web3.js as MetaMsak uses 0.20.7 version -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.2.2/web3.min.js" integrity="sha384-5twr//DBZLxyCKhyQ993lJO6PM05f8HW/rTdv6zWhe8xgS8XAHH15oIcGFBTdwmM" crossorigin="anonymous"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.3.5/web3.min.js" integrity="sha512-S/O+gH5szs/+/dUylm15Jp/JZJsIoWlpSVMwT6yAS4Rh7kazaRUxSzFBwnqE2/jBphcr7xovTQJaopiEZAzi+A==" crossorigin="anonymous"></script>
             <!-- bignumber.js -->
             <script src="https://cdnjs.cloudflare.com/ajax/libs/bignumber.js/9.0.0/bignumber.min.js" integrity="sha384-W92bSiy/NxoN+p5YNhm8ybWnIFnqtH0/Bxc4l9jojSsPK2KQdOvQonrRBon0O/om" crossorigin="anonymous"></script>
             <!-- Copy to Clipboard https://clipboardjs.com/ -->
@@ -1120,7 +1116,6 @@
                     disableInputs(true);
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
 
@@ -1347,14 +1342,12 @@
                 }
 
                 async function approveSpend() {
-
                     var tokenToCross = $('#tokenAddress').val();
                     var token = TOKENS.find(element => element.token == tokenToCross);
                     if(!token) {
                         crossTokenError('Choose a token to cross');
                         return;
                     }
-                    const isUnlimitedApproval = $('#doNotAskAgain').prop('checked');
                     const BN = web3.utils.BN;
                     const amount = $('#amount').val();
 
@@ -1368,21 +1361,7 @@
                     }
 
                     const decimals = token[config.networkId].decimals;
-                    const splittedAmount = amount.split('.');
-                    var amountWithDecimals = splittedAmount[0];
-                    for(i=0; i < decimals; i++) {
-                        if(splittedAmount[1] && i < splittedAmount[1].length) {
-                            amountWithDecimals += splittedAmount[1][i];
-                        } else {
-                            amountWithDecimals += '0';
-                        }
-                    }
-
-                    const amountBN = isUnlimitedApproval ?
-                        new BN(web3.utils.toWei(Number.MAX_SAFE_INTEGER.toString(), 'ether')) :
-                        new BN(amountWithDecimals)
-                            .mul(new BN(feePercentageDivider))
-                            .div(new BN(feePercentageDivider - feePercentage));
+                    const amountBN = new BN(web3.utils.toWei(Number.MAX_SAFE_INTEGER.toString(), 'ether'));
 
                     var gasPriceParsed = 0;
                     if(config.networkId >= 30 && config.networkId <= 33) {
@@ -1401,34 +1380,58 @@
                     // approve disabled, cross tokens enabled
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
 
-
-                    return new Promise((resolve, reject) => {
-
-                        tokenContract.methods.approve(bridgeContract.options.address, amountBN.mul(new BN(101)).div(new BN(100)).toString())
-                            .send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
-                            if (err) return reject(err);
-                                try {
-                                let receipt = await waitForReceipt(txHash);
-                                if(receipt.status) {
-                                    resolve(receipt);
+                    return Promise.resolve().then(() => {
+                        return new Promise(async (resolve, reject) => {
+                            if (config.networkId == 31 && token.token === 'USDT') {
+                                const allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
+                                if (allowance.toString() != '0') {
+                                    // To change the approve amount you first have to reduce the addresses
+                                    // allowance to zero by calling `approve(_spender, 0)` for USDT
+                                    // https://etherscan.io/address/0xdac17f958d2ee523a2206206994597c13d831ec7#code
+                                    tokenContract.methods.approve(bridgeContract.options.address, '0')
+                                        .send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
+                                        if (err) return reject(err);
+                                            try {
+                                            let receipt = await waitForReceipt(txHash);
+                                            if(receipt.status) {
+                                                resolve(receipt);
+                                            }
+                                        } catch(err) {
+                                            reject(err);
+                                        }
+                                        reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
+                                    });
+                                } else {
+                                    resolve();
                                 }
-                            } catch(err) {
-                                reject(err);
+                            } else {
+                                resolve();
                             }
-                            reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
-                        });
+                        })
                     }).then(() => {
-
+                        return new Promise(async (resolve, reject) => {
+                            tokenContract.methods.approve(bridgeContract.options.address, amountBN.toString())
+                                .send({from: address, gasPrice:gasPrice, gas:70_000}, async (err, txHash) => {
+                                if (err) return reject(err);
+                                    try {
+                                    let receipt = await waitForReceipt(txHash);
+                                    if(receipt.status) {
+                                        resolve(receipt);
+                                    }
+                                } catch(err) {
+                                    reject(err);
+                                }
+                                reject(new Error(`Execution failed <a target="_blank" href="${config.explorer}/tx/${txHash}">see Tx</a>`));
+                            });
+                        })
+                    }).then(() => {
                         $('#wait').hide();
-
                         // approve disabled, cross tokens enabled
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: false
                         });
                     })
@@ -1439,7 +1442,6 @@
                            // approve enabled, cross tokens disabled
                             disableApproveCross({
                                 approvalDisable: false,
-                                doNotAskDisabled: false,
                                 crossDisabled: true
                             });
                         } else {
@@ -1449,7 +1451,6 @@
                             // all options disabled:
                             disableApproveCross({
                                 approvalDisable: true,
-                                doNotAskDisabled: true,
                                 crossDisabled: true
                             });
                         }
@@ -1502,7 +1503,6 @@
                     // approve disabled, cross tokens disabled
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
 
@@ -1618,22 +1618,19 @@
                     tokenContract = new web3.eth.Contract(ERC20_ABI, tokenAddress);
 
                     let allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
-                    allowance = web3.utils.fromWei(allowance);
-                    let allowanceBN = new BigNumber(allowance);
+                    let allowanceBN = (new BigNumber(allowance.toString())).div(10**(token[config.networkId].decimals));
 
                     if(totalCost.lte(allowanceBN)) {
                         $('.approve-deposit').hide();
                         // straight to convert
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: false
                         });
                     } else {
                         // user must first approve amount
                         disableApproveCross({
                             approvalDisable: false,
-                            doNotAskDisabled: false,
                             crossDisabled: true
                         });
                         $('.approve-deposit').show();
@@ -1649,19 +1646,17 @@
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
                         return;
                     }
                     let parsedAmount = new BigNumber(amount);
-                    if(parsedAmount <= 0) {
+                    if (parsedAmount <= 0) {
                         markInvalidAmount("Must be bigger than 0");
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
@@ -1689,7 +1684,6 @@
 
                         disableApproveCross({
                             approvalDisable: true,
-                            doNotAskDisabled: true,
                             crossDisabled: true
                         });
 
@@ -1753,11 +1747,9 @@
 
                 function disableApproveCross({
                     approvalDisable = true,
-                    doNotAskDisabled = true,
                     crossDisabled = true
                 }) {
                     $('#approve').prop('disabled', approvalDisable);
-                    $('#doNotAskAgain').prop('disabled', doNotAskDisabled);
                     $('#deposit').prop('disabled', crossDisabled);
                 }
 
@@ -1778,7 +1770,6 @@
                     disableInputs(false);
                     disableApproveCross({
                         approvalDisable: true,
-                        doNotAskDisabled: true,
                         crossDisabled: true
                     });
                 }
