@@ -1119,6 +1119,13 @@
                         crossDisabled: true
                     });
 
+                    const amountInput = $('#amount')[0];
+                    amountInput.addEventListener('input', function() {
+                        var duration = 1000;
+                        clearTimeout(amountInput._timer);
+                        amountInput._timer = setTimeout(checkAllowance, duration);
+                    })
+
                     $('#logIn').attr('onclick', 'onLogInClick()');
 
                     let rpc = {
