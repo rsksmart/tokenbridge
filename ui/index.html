@@ -1725,9 +1725,11 @@
                         showActiveTxnsTab();
                     });
                     provider.on('accountsChanged', function(newAddresses) {
-                        checkAllowance();
                         updateAddress(newAddresses).then(
-                            (addr) => updateActiveAddressTXNs(addr)
+                            (addr) => {
+                                updateActiveAddressTXNs(addr);
+                                checkAllowance();
+                            }
                         ).then(() => showActiveAddressTXNs());
                     });
                     return chainId;
