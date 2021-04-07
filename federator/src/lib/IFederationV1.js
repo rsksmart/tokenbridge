@@ -4,6 +4,14 @@ module.exports = class IFederationV1 {
         this.config = config;
     }
 
+    getVersion() {
+        return 'v1';
+    }
+
+    isMember(address) {
+        return this.federationContract.methods.isMember(address);
+    }
+
     getTransactionId(paramsObj) {
         return this.federationContract.methods.getTransactionId(
             paramsObj.originalTokenAddress,
@@ -17,7 +25,7 @@ module.exports = class IFederationV1 {
             paramsObj.granularity
         );
     }
-    
+
     transactionWasProcessed(txId) {
         return this.federationContract.methods.transactionWasProcessed(txId);
     }
@@ -25,7 +33,7 @@ module.exports = class IFederationV1 {
     hasVoted(txId) {
         return this.federationContract.methods.hasVoted(txId);
     }
-    
+
     voteTransaction(paramsObj) {
         return this.federationContract.methods.voteTransaction(
             paramsObj.originalTokenAddress,
@@ -38,18 +46,22 @@ module.exports = class IFederationV1 {
             paramsObj.decimals,
             paramsObj.granularity
         );
-    } 
+    }
 
     getAddress() {
         return this.federationContract.options.address;
     }
 
     getPastEvents(eventName, options) {
+        if(eventName === 'HeartBeat') {
+            //Version 1 does not have a HeartBeat event
+            return [];
+        }
         return this.federationContract.getPastEvents(
             eventName,
             options
         );
-    } 
+    }
 
     async emitHeartbeat(...args) {
         // no-op [Federation V1 does not feature an `emitHearbeat`
