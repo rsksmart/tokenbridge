@@ -119,6 +119,9 @@ module.exports = class Federator {
             const from = await transactionSender.getAddress(this.config.privateKey);
             const fedContract = await this.federationFactory.getSideFederationContract();
 
+            const isMember = await fedContract.isMember(from).call();
+            if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
+
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
@@ -200,7 +203,7 @@ module.exports = class Federator {
         logIndex,
         decimals,
         granularity,
-        typeId) 
+        typeId)
     {
         try {
 

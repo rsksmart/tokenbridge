@@ -4,5 +4,6 @@ module.exports = {
     sidechain: require('./kovan.json'), //the json containing the smart contract addresses in eth
     runEvery: 2, // In minutes,
     privateKey: fs.readFileSync(`${__dirname}/federation.key`, 'utf8'),
-    storagePath: './db'
+    storagePath: './db',
+    runHeartbeatEvery: 1 //In hours
 }
