@@ -2,8 +2,9 @@ const web3 = require('web3');
 const fs = require('fs');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
-const BridgeFactory = require('./BridgeFactory');
-const FederationFactory = require('./FederationFactory');
+const BridgeFactory = require('../contracts/BridgeFactory');
+const FederationFactory = require('../contracts/FederationFactory');
+const AllowTokensFactory = require('../contracts/AllowTokensFactory');
 const utils = require('./utils');
 
 module.exports = class Federator {
@@ -12,9 +13,9 @@ module.exports = class Federator {
         this.config = config;
         this.logger = logger;
 
-        if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
-            throw new Error(`Invalid host configuration, https or localhost required`);
-        }
+        // if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+        //     throw new Error(`Invalid host configuration, https or localhost required`);
+        // }
 
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
@@ -25,6 +26,7 @@ module.exports = class Federator {
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+        this.allowTokensFactory = new AllowTokensFactory(this.config, this.logger, Web3);
     }
 
     async run() {
@@ -33,21 +35,9 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-                const chainId = await this.mainWeb3.eth.net.getId();
-                const mainBridge = await this.bridgeFactory.getMainBridgeContract();
-
-                let confirmations = 0; //for rsk regtest and ganache
-
-                if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
-                    confirmations = 10
-                }
-                if(chainId == 1) { //ethereum mainnet 24hs
-                    confirmations = 5760
-                }
-                if(chainId == 30) { // rsk mainnet 24hs
-                    confirmations = 2880
-                }
-                const toBlock = currentBlock - confirmations;
+                const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
+                const confirmations = await allowTokens.getConfirmations();
+                const toBlock = currentBlock - confirmations.largeAmountConfirmations;
                 this.logger.info('Running to Block', toBlock);
 
                 if (toBlock <= 0) {
@@ -73,30 +63,10 @@ module.exports = class Federator {
                 }
                 fromBlock = parseInt(fromBlock)+1;
                 this.logger.debug('Running from Block', fromBlock);
-
-                const recordsPerPage = 1000;
-                const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
-                this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
-
-                var fromPageBlock = fromBlock;
-                for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) {
-                    var toPagedBlock = fromPageBlock + recordsPerPage-1;
-                    if(currentPage == numberOfPages) {
-                        toPagedBlock = toBlock
-                    }
-                    this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
-                    const logs = await mainBridge.getPastEvents('Cross', {
-                        fromBlock: fromPageBlock,
-                        toBlock: toPagedBlock
-                    });
-                    if (!logs) throw new Error('Failed to obtain the logs');
-
-                    this.logger.info(`Found ${logs.length} logs`);
-                    await this._processLogs(logs);
-
-                    this._saveProgress(this.lastBlockPath, toPagedBlock);
-                    fromPageBlock = toPagedBlock + 1;
-                }
+                await this.getLogsAndProcess(fromBlock, toBlock, currentBlock, false, confirmations);
+                let lastBlockProcessed = toBlock;
+                let newToBlock = currentBlock - confirmations.smallAmountConfirmations;
+                await this.getLogsAndProcess(lastBlockProcessed, newToBlock, currentBlock, true, confirmations);
 
                 return true;
             } catch (err) {
@@ -111,6 +81,38 @@ module.exports = class Federator {
                 }
             }
         }
+    }
+
+    async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, allowTokens) {
+        if (fromBlock == toBlock) return;
+
+        const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+
+        const recordsPerPage = 1000;
+        const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
+        this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
+
+        var fromPageBlock = fromBlock;
+        for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) {
+            var toPagedBlock = fromPageBlock + recordsPerPage-1;
+            if(currentPage == numberOfPages) {
+                toPagedBlock = toBlock
+            }
+            this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+            const logs = await mainBridge.getPastEvents('Cross', {
+                fromBlock: fromPageBlock,
+                toBlock: toPagedBlock
+            });
+            if (!logs) throw new Error('Failed to obtain the logs');
+
+            this.logger.info(`Found ${logs.length} logs`);
+            await this._processLogs(logs, currentBlock, medmiumAndSmall, allowTokens);
+            if (!medmiumAndSmall) {
+                this._saveProgress(this.lastBlockPath, toPagedBlock);
+            }
+            fromPageBlock = toPagedBlock + 1;
+        }
+
     }
 
     async _processLogs(logs) {
