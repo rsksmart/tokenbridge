@@ -1119,6 +1119,13 @@
                         crossDisabled: true
                     });
 
+                    const amountInput = $('#amount')[0];
+                    amountInput.addEventListener('input', function() {
+                        var duration = 1000;
+                        clearTimeout(amountInput._timer);
+                        amountInput._timer = setTimeout(checkAllowance, duration);
+                    })
+
                     $('#logIn').attr('onclick', 'onLogInClick()');
 
                     let rpc = {
@@ -1385,7 +1392,7 @@
 
                     return Promise.resolve().then(() => {
                         return new Promise(async (resolve, reject) => {
-                            if (config.networkId == 31 && token.token === 'USDT') {
+                            if (config.networkId == 1 && token.token === 'USDT') {
                                 const allowance = await retry3Times(tokenContract.methods.allowance(address, bridgeContract.options.address).call);
                                 if (allowance.toString() != '0') {
                                     // To change the approve amount you first have to reduce the addresses
@@ -1718,9 +1725,11 @@
                         showActiveTxnsTab();
                     });
                     provider.on('accountsChanged', function(newAddresses) {
-                        checkAllowance();
                         updateAddress(newAddresses).then(
-                            (addr) => updateActiveAddressTXNs(addr)
+                            (addr) => {
+                                updateActiveAddressTXNs(addr);
+                                checkAllowance();
+                            }
                         ).then(() => showActiveAddressTXNs());
                     });
                     return chainId;
