@@ -6,13 +6,17 @@ module.exports = class IBridge {
     getFederation() {
         return this.bridgeContract.methods.getFederation();
     }
-    
+
+    getAllowedTokens() {
+        return this.bridgeContract.methods.allowedTokens();
+    }
+
     getPastEvents(eventName, options) {
         return this.bridgeContract.getPastEvents(
             eventName,
             options
         );
-    } 
+    }
 
     getAddress() {
         return this.bridgeContract.options.address;
@@ -20,5 +24,9 @@ module.exports = class IBridge {
 
     getProcessed(transactionHash) {
         return this.bridgeContract.methods.processed(transactionHash).call();
+    }
+
+    getVersion() {
+        return this.bridgeContract.methods.version();
     }
 }
