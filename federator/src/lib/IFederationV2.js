@@ -4,6 +4,14 @@ module.exports = class IFederationV2 {
         this.config = config;
     }
 
+    getVersion() {
+        return 'v2';
+    }
+
+    isMember(address) {
+        return this.federationContract.methods.isMember(address);
+    }
+
     getTransactionId(paramsObj) {
 
         return this.federationContract.methods.getTransactionId(
@@ -30,8 +38,8 @@ module.exports = class IFederationV2 {
     hasVoted(txId) {
         return this.federationContract.methods.hasVoted(txId);
     }
-    
-    voteTransaction(paramsObj) { 
+
+    voteTransaction(paramsObj) {
         return this.federationContract.methods.voteTransaction(
             paramsObj.originalTokenAddress,
             {

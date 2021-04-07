@@ -13,3 +13,5 @@ manuallyCheck.txt
 !db/
 db/*
 !db/README.md
+heartbeat.log
+federator.log
