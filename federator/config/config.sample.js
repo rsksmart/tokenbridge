@@ -7,4 +7,5 @@ module.exports = {
     privateKey: fs.readFileSync(`${__dirname}/federator.key`, 'utf8'),
     storagePath: './db',
     etherscanApiKey: '',
+    runHeartbeatEvery: 1 //In hours
 }

@@ -20,7 +20,12 @@
     },
     "categories": {
         "default": {
-            "appenders": ["file", "console", "heartbeat"],
-            "level": "debug" }
+            "appenders": ["file", "console"],
+            "level": "debug"
+        },
+        "HEARTBEAT": {
+            "appenders": ["heartbeat", "console"],
+            "level": "debug"
+        }
     }
 }
