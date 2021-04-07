@@ -56,7 +56,7 @@ heartBeatScheduler.start().catch((err) => {
 
 async function runHeartbeat() {
     try {
-        await heartbeat.run(); 
+        await heartbeat.run();
     } catch(err) {
         logger.error('Unhandled Error on runHeartbeat()', err);
         process.exit();
