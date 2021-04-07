@@ -1,10 +1,9 @@
 const web3 = require('web3');
 const fs = require('fs');
-const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
-const BridgeFactory = require('./BridgeFactory');
-const FederationFactory = require('./FederationFactory');
+const BridgeFactory = require('../contracts/BridgeFactory');
+const FederationFactory = require('../contracts/FederationFactory');
 const utils = require('./utils');
 const scriptVersion = require('../../package.json').version;
 
