@@ -1,0 +1,12 @@
+{
+    "network": "rsktestnet",
+    "MultiSig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+    "ProxyAdmin": "0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab",
+    "Utils": "0xa8C48C20a5D66F706f43D5F749aB63e814A0C8F3",
+    "Federation": "0x925606edc5863c079b712daed560c31eff8335b9",
+    "SideTokenFactory": "0xF58B1e77EEfB75A553EB0AA11BAC0941DB4A3333",
+    "AllowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
+    "Bridge": "0xEBd9575bb670AF11be25F869FE11b9b5867dEc67",
+    "BridgeProxy": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
+    "WrappedCurrency": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e"
+}

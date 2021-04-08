@@ -13,20 +13,26 @@ module.exports = class AllowTokensFactory {
         this.sideWeb3 = new Web3(config.sidechain.host);
     }
 
-    async createInstance(web3, address) {
+    async getVersion(allowTokensContract) {
         try {
-            let allowTokensContract = new web3.eth.Contract(abiAllowTokensNew, address);
-            const chainId = await web3.eth.net.getId();
-            let version = 'v0';
-            try {
-                version = await allowTokensContract.methods.version().call();
-                return new IAllowTokensV1(allowTokensContract, chainId);
-            } catch (err) {
-                allowTokensContract = new web3.eth.Contract(abiAllowTokensOld, address);
-                return new IAllowTokensV0(allowTokensContract, chainId);
-            }
-        } catch (err) {
-            throw new CustomError(`Exception createInstance AllowTokens Contract`, err);
+            return await allowTokensContract.methods.version().call();
+        } catch(err) {
+            return 'v0';
+        }
+    }
+
+    async createInstance(web3, address) {
+        let allowTokensContract = new web3.eth.Contract(abiAllowTokensNew, address);
+        const version = await this.getVersion(allowTokensContract);
+        const chainId = await web3.eth.net.getId();
+
+        if (version === 'v1') {
+            return new IAllowTokensV1(allowTokensContract, chainId);
+        } else if (version === 'v0') {
+            allowTokensContract = new web3.eth.Contract(abiAllowTokensOld, address);
+            return new IAllowTokensV0(allowTokensContract, chainId);
+        } else {
+            throw Error('Unknown AllowTokens contract version');
         }
     }
 

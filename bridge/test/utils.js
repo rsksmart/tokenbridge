@@ -108,17 +108,13 @@ function calculatePrefixesSuffixes(nodes) {
 }
 
 function ascii_to_hexa(str)
-  {
-	var arr1 = [];
-	for (var n = 0, l = str.length; n < l; n ++) {
+{
+    var arr1 = [];
+    for (var n = 0, l = str.length; n < l; n ++) {
         var hex = Number(str.charCodeAt(n)).toString(16);
         arr1.push(hex);
     }
-	return '0x' + arr1.join('');
-   }
-
-function isLocalNetwork(network) {
-    return !['mainnet', 'kovan', 'testnet'].includes(network.toLowerCase());
+    return '0x' + arr1.join('');
 }
 
 
@@ -132,6 +128,5 @@ module.exports = {
     increaseTimestamp: increaseTimestamp,
     ascii_to_hexa: ascii_to_hexa,
     NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
-    isLocalNetwork: isLocalNetwork,
 };
 

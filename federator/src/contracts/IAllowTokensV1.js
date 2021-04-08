@@ -11,10 +11,10 @@ module.exports = class IAllowTokensV1 {
     }
 
     async getConfirmations() {
-        promises = [];
-        promises.push(getSmallAmountConfirmations());
-        promises.push(getMediumAmountConfirmations());
-        promises.push(getLargeAmountConfirmations());
+        let promises = [];
+        promises.push(this.getSmallAmountConfirmations());
+        promises.push(this.getMediumAmountConfirmations());
+        promises.push(this.getLargeAmountConfirmations());
         const result = await Promise.all(promises);
         return {
             smallAmountConfirmations: result[0],

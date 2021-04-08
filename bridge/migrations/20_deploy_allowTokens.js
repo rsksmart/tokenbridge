@@ -5,14 +5,17 @@ const ProxyAdmin = artifacts.require("ProxyAdmin");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const BridgeProxy = artifacts.require("BridgeProxy");
 const toWei = web3.utils.toWei;
+const deployHelper = require("../deployed/deployHelper");
 
 module.exports = async (deployer, networkName, accounts) => {
+    const deployedJson = deployHelper.getDeployed(networkName);
     await deployer.deploy(AllowTokens);
     const allowTokensLogic = await AllowTokens.deployed();
+    deployedJson.AllowTokens = allowTokensLogic.address;
 
-    const bridgeProxy = await BridgeProxy.deployed();
-    const multiSig = await MultiSigWallet.deployed();
-    const proxyAdmin = await ProxyAdmin.deployed();
+    const bridgeProxy = await BridgeProxy.at(deployedJson.BridgeProxy);
+    const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
+    const proxyAdmin = await ProxyAdmin.at(deployedJson.ProxyAdmin);
 
     let smallAmountConfirmations = '0';
     let mediumAmountConfirmations = '0';
@@ -40,7 +43,9 @@ module.exports = async (deployer, networkName, accounts) => {
     const initData = allowTokensLogic.contract.methods.initialize(accounts[0], bridgeProxy.address, smallAmountConfirmations, mediumAmountConfirmations , largeAmountConfirmations).encodeABI();
     await deployer.deploy(AllowTokensProxy, allowTokensLogic.address, proxyAdmin.address, initData);
     const allowTokensProxy = await AllowTokensProxy.deployed();
+    deployedJson.AllowTokensProxy = allowTokensProxy.address.toLowerCase();
     const allowTokens = await AllowTokens.at(allowTokensProxy.address);
+    deployHelper.saveDeployed(deployedJson);
 
     await allowTokens.addTokenType('BTC', {
         min:toWei('0.001'),
