@@ -1,0 +1,12 @@
+{
+    "network": "kovan",
+    "MultiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
+    "ProxyAdmin": "0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6",
+    "Utils": "0xE18b8fb2942493EA96BfC46a044e4F966f2dFaB6",
+    "Federation": "0xDa2295255633c26EaadBacE5269b6e8bD2648ca0",
+    "SideTokenFactory": "0xEcfCa1C86251722C2F4a4c00c2738B865fEbcb07",
+    "AllowTokens": "0xe4aa0f414725C9322a1a9D80d469c5e234786653",
+    "Bridge": "0x8540E6adfEe9823a17728132F5Ac5E9E0446C4b2",
+    "BridgeProxy": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
+    "WrappedCurrency": "0xd0A1E359811322d97991E03f863a0C30C2cF029C"
+}

@@ -1,0 +1,12 @@
+{
+    "network": "ethmainnet",
+    "MultiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
+    "ProxyAdmin": "0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6",
+    "Utils": "0x5f989f2f323a1732a565c9a3f694f2Fa8f0b6120",
+    "Federation": "0x479F86eCbE766073D2712EF418acEb56d5362a2B",
+    "SideTokenFactory": "0x578a80AD3f6D56f873da81b73B8D192aB6BfB063",
+    "AllowTokens": "0xe4aa0f414725C9322a1a9D80d469c5e234786653",
+    "BridgeProxy": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
+    "Bridge": "0x8582f510817731Be46e6A8380cF4eEFfc05aa5f1",
+    "WrappedCurrency": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+}
