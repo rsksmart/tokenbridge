@@ -1,4 +1,4 @@
-pragma solidity >=0.4.21 <0.6.0;
+pragma solidity ^0.5.0;
 pragma experimental ABIEncoderV2;
 
 import "./zeppelin/math/SafeMath.sol";
@@ -37,6 +37,11 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         uint256 lastDay;
     }
 
+    struct TypeInfo {
+        string description;
+        Limits limits;
+    }
+
     struct TokensAndType {
         address token;
         uint256 typeId;
@@ -63,11 +68,15 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         address _primary,
         uint256 _smallAmountConfirmations,
         uint256 _mediumAmountConfirmations,
-        uint256 _largeAmountConfirmations) public initializer {
+        uint256 _largeAmountConfirmations,
+        TypeInfo[] memory typesInfo) public initializer {
         UpgradableOwnable.initialize(_manager);
         UpgradableSecondary.initialize(_primary);
         _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
         isValidatingAllowedTokens = true;
+        for(uint i = 0; i < typesInfo.length; i = i + 1) {
+            _addTokenType(typesInfo[i].description, typesInfo[i].limits);
+        }
     }
 
     function version() external pure returns (string memory) {
@@ -80,20 +89,20 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return (info, limit);
     }
     function calcMaxWithdraw(address token) public view returns (uint256 maxWithdraw) {
-        (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
-        return _calcMaxWithdraw(info, limit);
+        (TokenInfo memory info, Limits memory limits) = getInfoAndLimits(token);
+        return _calcMaxWithdraw(info, limits);
     }
 
-    function _calcMaxWithdraw(TokenInfo memory info, Limits memory limit) private view returns (uint256 maxWithdraw) {
+    function _calcMaxWithdraw(TokenInfo memory info, Limits memory limits) private view returns (uint256 maxWithdraw) {
         // solium-disable-next-line security/no-block-members
         if (now > info.lastDay + 24 hours) {
             info.spentToday = 0;
         }
-        if (limit.daily <= info.spentToday)
+        if (limits.daily <= info.spentToday)
             return 0;
-        maxWithdraw = limit.daily - info.spentToday;
-        if(maxWithdraw > limit.max)
-            maxWithdraw = limit.max;
+        maxWithdraw = limits.daily - info.spentToday;
+        if(maxWithdraw > limits.max)
+            maxWithdraw = limits.max;
         return maxWithdraw;
     }
 
@@ -118,15 +127,33 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return info.typeId;
     }
 
-    function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256 len) {
+     function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         len = typeDescriptions.length;
         require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
         typeDescriptions.push(description);
-        setTypeLimits(len, limits);
+        _setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
         return len;
+     }
+
+    function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256 len) {
+        return _addTokenType(description, limits);
     }
+
+    function _setTypeLimits(uint256 typeId, Limits memory limits) private {
+        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions length");
+        require(limits.max >= limits.min, "AllowTokens: maxTokens smaller than minTokens");
+        require(limits.daily >= limits.max, "AllowTokens: dailyLimit smaller than maxTokens");
+        require(limits.mediumAmount > limits.min, "AllowTokens: limits.mediumAmount smaller than min");
+        require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
+        typeLimits[typeId] = limits;
+        emit TypeLimitsChanged(typeId, limits);
+    }
+
+     function setTypeLimits(uint256 typeId, Limits memory limits) public onlyOwner {
+        _setTypeLimits(typeId, limits);
+     }
 
     function getTypeDescriptionsLength() external view returns(uint256) {
         return typeDescriptions.length;
@@ -164,9 +191,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     function setMultipleTokens(TokensAndType[] calldata tokensAndTypes) external onlyOwner {
-        uint256 i;
         require(tokensAndTypes.length > 0, "AllowTokens: empty tokens");
-        for(i = 0; i < tokensAndTypes.length; i = i + 1) {
+        for(uint256 i = 0; i < tokensAndTypes.length; i = i + 1) {
             setToken(tokensAndTypes[i].token, tokensAndTypes[i].typeId);
         }
     }
@@ -187,16 +213,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     function disableAllowedTokensValidation() external onlyOwner {
         isValidatingAllowedTokens = false;
         emit AllowedTokenValidation(isValidatingAllowedTokens);
-    }
-
-    function setTypeLimits(uint256 typeId, Limits memory limits) public onlyOwner {
-        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions length");
-        require(limits.max >= limits.min, "AllowTokens: maxTokens smaller than minTokens");
-        require(limits.daily >= limits.max, "AllowTokens: dailyLimit smaller than maxTokens");
-        require(limits.mediumAmount > limits.min, "AllowTokens: limits.mediumAmount smaller than min");
-        require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
-        typeLimits[typeId] = limits;
-        emit TypeLimitsChanged(typeId, limits);
     }
 
     function setConfirmations(

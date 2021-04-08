@@ -26,8 +26,23 @@ contract('Bridge', async function (accounts) {
     beforeEach(async function () {
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
         this.allowTokens = await AllowTokens.new();
-        await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](bridgeManager, bridgeOwner, '0', '0' , '0');
-        await this.allowTokens.addTokenType('MAIN', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: bridgeManager });
+        await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256,(string,(uint256,uint256,uint256,uint256,uint256))[])'](
+            bridgeManager,
+            bridgeOwner,
+            '0',
+            '0',
+            '0',
+            [{
+                description:'MAIN',
+                limits:{
+                    max:toWei('10000'),
+                    min:toWei('1'),
+                    daily:toWei('100000'),
+                    mediumAmount:toWei('2'),
+                    largeAmount:toWei('3')
+                }
+            }]
+        );
         this.typeId = 0;
         await this.allowTokens.setToken(this.token.address, this.typeId, { from: bridgeManager });
         this.sideTokenFactory = await SideTokenFactory.new();
@@ -855,8 +870,23 @@ contract('Bridge', async function (accounts) {
             await this.allowTokens.setToken(this.wrbtc.address, this.typeId, { from: bridgeManager });
             // Deploy Mirror Bridge and necesary contracts
             this.mirrorAllowTokens = await AllowTokens.new();
-            await this.mirrorAllowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](bridgeManager, bridgeOwner, '0', '0' , '0');
-            await this.mirrorAllowTokens.addTokenType('eRIF', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: bridgeManager });
+            await this.mirrorAllowTokens.methods['initialize(address,address,uint256,uint256,uint256,(string,(uint256,uint256,uint256,uint256,uint256))[])'](
+                bridgeManager,
+                bridgeOwner,
+                '0',
+                '0',
+                '0',
+                [{
+                    description: 'eRIF',
+                    limits:{
+                        max:toWei('10000'),
+                        min:toWei('1'),
+                        daily:toWei('100000'),
+                        mediumAmount:toWei('2'),
+                        largeAmount:toWei('3')
+                    }
+                }]
+            );
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
             await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
@@ -1365,7 +1395,14 @@ contract('Bridge', async function (accounts) {
             this.multiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.fedMultiSig = await MultiSigWallet.new([multiSigOnwerA, multiSigOnwerB], 2);
             this.allowTokens = await AllowTokens.new();
-            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](this.multiSig.address, bridgeOwner, '0', '0' , '0');
+            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256,(string,(uint256,uint256,uint256,uint256,uint256))[])'](
+                this.multiSig.address,
+                bridgeOwner,
+                '0',
+                '0',
+                '0',
+                []
+            );
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
             this.decimals = "18";

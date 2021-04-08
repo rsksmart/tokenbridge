@@ -4,6 +4,7 @@ const abiBridge = require('../../../abis/Bridge.json');
 const IAllowTokensV1 = require('./IAllowTokensV1');
 const IAllowTokensV0 = require('./IAllowTokensV0');
 const CustomError = require('../lib/CustomError');
+const utils = require('../lib/utils');
 
 module.exports = class AllowTokensFactory {
     constructor(config, logger, Web3) {
@@ -15,7 +16,7 @@ module.exports = class AllowTokensFactory {
 
     async getVersion(allowTokensContract) {
         try {
-            return await allowTokensContract.methods.version().call();
+            return await utils.retry3Times(allowTokensContract.methods.version().call);
         } catch(err) {
             return 'v0';
         }
@@ -24,8 +25,7 @@ module.exports = class AllowTokensFactory {
     async createInstance(web3, address) {
         let allowTokensContract = new web3.eth.Contract(abiAllowTokensNew, address);
         const version = await this.getVersion(allowTokensContract);
-        const chainId = await web3.eth.net.getId();
-
+        const chainId = await utils.retry3Times(web3.eth.net.getId);
         if (version === 'v1') {
             return new IAllowTokensV1(allowTokensContract, chainId);
         } else if (version === 'v0') {
@@ -39,7 +39,7 @@ module.exports = class AllowTokensFactory {
     async getMainAllowTokensContract() {
         try {
             const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-            const allowTokensAddress = await bridgeContract.methods.allowTokens().call();
+            const allowTokensAddress = await utils.retry3Times(bridgeContract.methods.allowTokens().call);
 
             return await this.createInstance(
                 this.mainWeb3,
@@ -53,7 +53,7 @@ module.exports = class AllowTokensFactory {
     async getSideAllowTokensContract() {
         try {
             const bridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-            const allowTokensAddress = await bridgeContract.methods.allowTokens().call();
+            const allowTokensAddress = await utils.retry3Times(bridgeContract.methods.allowTokens().call);
 
             return await this.createInstance(
                 this.sideWeb3,

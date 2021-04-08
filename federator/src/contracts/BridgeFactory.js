@@ -2,6 +2,7 @@ const abiBridgeOld = require('../../../abis/Bridge_old.json');
 const abiBridgeNew = require('../../../abis/Bridge.json');
 const BridgeInterface = require('./IBridge.js');
 const CustomError = require('../lib/CustomError');
+const utils = require('../lib/utils');
 
 module.exports = class BridgeFactory {
 
@@ -12,11 +13,18 @@ module.exports = class BridgeFactory {
         this.sideWeb3 = new Web3(config.sidechain.host);
     }
 
+    async getVersion(bridgeContract) {
+        return utils.retry3Times(bridgeContract.methods.version().call)
+    }
+
     async createInstance(web3, address) {
         let bridgeContract = new web3.eth.Contract(abiBridgeOld, address);
-        const version = await bridgeContract.methods.version().call()
+        const version = await this.getVersion(bridgeContract);
+        console.log('version', version)
         if (version === 'v3') {
             bridgeContract = new web3.eth.Contract(abiBridgeNew, address);
+        } else if (!['v2','v1'].includes(version)) {
+            throw Error('Unknown Bridge contract version');
         }
         return new BridgeInterface(bridgeContract);
     }

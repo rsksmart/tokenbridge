@@ -4,6 +4,7 @@ const abiBridge = require('../../../abis/Bridge.json');
 const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const CustomError = require('../lib/CustomError');
+const utils = require('../lib/utils');
 
 module.exports = class FederationFactory {
 
@@ -25,13 +26,13 @@ module.exports = class FederationFactory {
             federationContract = new web3.eth.Contract(abiFederationOld, address);
             return new FederationInterfaceV1(this.config, federationContract);
         } else {
-            throw Error('Unknown federation contract version');
+            throw Error('Unknown Federation contract version');
         }
     }
 
     async getVersion(federationContract) {
         try {
-            return await federationContract.methods.version().call();
+            return await utils.retry3Times(federationContract.methods.version().call);
         } catch(err) {
             return "v1";
         }
@@ -40,7 +41,7 @@ module.exports = class FederationFactory {
     async getMainFederationContract() {
         try {
             const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-            const federationAddress = await bridgeContract.methods.getFederation().call();
+            const federationAddress = await utils.retry3Times(bridgeContract.methods.getFederation().call);
             return await this.createInstance(
                 this.mainWeb3,
                 federationAddress
@@ -53,7 +54,7 @@ module.exports = class FederationFactory {
     async getSideFederationContract() {
         try {
             const bridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-            const federationAddress = await bridgeContract.methods.getFederation().call();
+            const federationAddress = await utils.retry3Times(bridgeContract.methods.getFederation().call);
             return await this.createInstance(
                 this.sideWeb3,
                 federationAddress
