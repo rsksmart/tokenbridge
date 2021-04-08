@@ -1,10 +1,9 @@
 const web3 = require('web3');
 const fs = require('fs');
-const abiFederation = require('../../../abis/Federation.json');
 const TransactionSender = require('./TransactionSender');
 const CustomError = require('./CustomError');
-const BridgeFactory = require('./BridgeFactory');
-const FederationFactory = require('./FederationFactory');
+const BridgeFactory = require('../contracts/BridgeFactory');
+const FederationFactory = require('../contracts/FederationFactory');
 const utils = require('./utils');
 const scriptVersion = require('../../package.json').version;
 
@@ -169,7 +168,8 @@ module.exports = class Heartbeat {
                     nodeEthInfo
                 } = log.returnValues;
 
-                let logInfo = `[sender: ${sender}],`;
+                let logInfo = `[event: HeartBeat],`;
+                logInfo    += `[sender: ${sender}],`;
                 logInfo    += `[fedRskBlock: ${fedRskBlock}],`;
                 logInfo    += `[fedEthBlock: ${fedEthBlock}],`;
                 logInfo    += `[federatorVersion: ${federatorVersion}],`;
@@ -191,7 +191,11 @@ module.exports = class Heartbeat {
     async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVersion, nodeRskInfo, nodeEthInfo) {
         try {
             const fedContract = await this.federationFactory.getMainFederationContract();
+            const from = await this.transactionSender.getAddress(this.config.privateKey);
+            const isMember = await fedContract.isMember(from).call();
+            if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
 
+            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
             await fedContract.emitHeartbeat(
                 this.transactionSender,
                 fedRskBlock,
@@ -200,12 +204,10 @@ module.exports = class Heartbeat {
                 nodeRskInfo,
                 nodeEthInfo
             )
-            
-            this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
             this.logger.info(`Success emiting heartbeat`);
             return true;
         } catch (err) {
-            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVSN: ${fedVersion}`, err);
+            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`, err);
         }
     }
 

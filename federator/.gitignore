@@ -3,13 +3,15 @@ rskregtest.json
 development.json
 development_1.json
 mirrorDevelopment.json
+soliditycoverage.json
 test.json
 latestBlock.txt
 config/federator.key
-federator.log
 test/lib/*.txt
 coverage
 manuallyCheck.txt
 !db/
 db/*
 !db/README.md
+heartbeat.log
+federator.log
