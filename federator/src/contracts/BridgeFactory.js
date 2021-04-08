@@ -1,7 +1,7 @@
 const abiBridgeOld = require('../../../abis/Bridge_old.json');
 const abiBridgeNew = require('../../../abis/Bridge.json');
 const BridgeInterface = require('./IBridge.js');
-const CustomError = require('./CustomError');
+const CustomError = require('../lib/CustomError');
 
 module.exports = class BridgeFactory {
 

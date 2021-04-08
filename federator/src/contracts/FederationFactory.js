@@ -3,7 +3,7 @@ const abiFederationNew = require('../../../abis/Federation.json');
 const abiBridge = require('../../../abis/Bridge.json');
 const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
-const CustomError = require('./CustomError');
+const CustomError = require('../lib/CustomError');
 
 module.exports = class FederationFactory {
 
@@ -21,9 +21,11 @@ module.exports = class FederationFactory {
         if (version === 'v2') {
             federationContract = new web3.eth.Contract(abiFederationNew, address);
             return new FederationInterfaceV2(this.config, federationContract);
-        } else {
+        } else if (version === 'v1') {
             federationContract = new web3.eth.Contract(abiFederationOld, address);
             return new FederationInterfaceV1(this.config, federationContract);
+        } else {
+            throw Error('Unknown federation contract version');
         }
     }
 
@@ -31,8 +33,20 @@ module.exports = class FederationFactory {
         try {
             return await federationContract.methods.version().call();
         } catch(err) {
-            console.log(err);
             return "v1";
+        }
+    }
+
+    async getMainFederationContract() {
+        try {
+            const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
+            const federationAddress = await bridgeContract.methods.getFederation().call();
+            return await this.createInstance(
+                this.mainWeb3,
+                federationAddress
+            );
+        } catch(err) {
+            throw new CustomError(`Exception creating Main Federation Contract`, err);
         }
     }
 
@@ -47,18 +61,5 @@ module.exports = class FederationFactory {
         } catch(err) {
             throw new CustomError(`Exception creating Side Federation Contract`, err);
         }
-    } 
-
-    async getMainFederationContract() {
-        try {
-            const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-            const federationAddress = await bridgeContract.methods.getFederation().call();
-            return await this.createInstance(
-                this.mainWeb3,
-                federationAddress
-            );
-        } catch(err) {
-            throw new CustomError(`Exception creating Main Federation Contract`, err);
-        }
-    } 
+    }
 }

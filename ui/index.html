@@ -839,7 +839,7 @@
                     return retry3Times(tokenContract.methods.balanceOf(address).call)
                     .then(async (balance) => {
                         balanceBNs = new BigNumber(balance).shiftedBy(-decimals);
-                        let maxWithdrawInWei = await retry3Times(allowTokensContract.methods.calcMaxWithdraw(tokenAddress).call);
+                        let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call);
                         let maxWithdraw = new BigNumber(web3.utils.fromWei(maxWithdrawInWei, 'ether'));
                         let maxValue = 0;
                         if( balanceBNs.isGreaterThan(maxWithdraw)) {
@@ -996,7 +996,7 @@
                             const showBalance = new BigNumber(balance);
                             throw new Error(`Insuficient Balance in your account, your current balance is ${showBalance.shiftedBy(-decimals)} ${token[config.networkId].symbol}`);
                         }
-                        let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw(tokenAddress).call);
+                        let maxWithdrawInWei = await retry3Times(bridgeContract.methods.calcMaxWithdraw().call);
                         const maxWithdraw = new BN(maxWithdrawInWei);
                         if(amountBN.gt(maxWithdraw)) {
                             throw new Error(`Amount bigger than the daily limit. Daily limit left ${web3.utils.fromWei(maxWithdrawInWei, 'ether')} tokens`);
@@ -1016,7 +1016,7 @@
                     }).then(async () => {
                         return new Promise((resolve, reject) => {
                             bridgeContract.methods
-                                .receiveTokensTo(tokenContract.options.address, address, amountBN.toString())
+                                .receiveTokens(tokenContract.options.address, amountBN.toString())
                                 .send({from: address, gasPrice:gasPrice, gas:200_000}, async (err, txHash) => {
                                 if (err) return reject(err);
                                 try {
@@ -1644,6 +1644,7 @@
                 // --------- CONFIGS  END --------------
 
                 // --------- ABI --------------
+                $.ajaxSetup({ cache: false });
                 var BRIDGE_ABI;
                 $.getJSON("/abis/bridge.json", function(json) {
                     BRIDGE_ABI = json;

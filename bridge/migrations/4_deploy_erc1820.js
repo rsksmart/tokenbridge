@@ -1,16 +1,13 @@
 require('@openzeppelin/test-helpers/configure')({ provider: web3.currentProvider, environment: 'truffle' });
 //const { singletons } = require('@openzeppelin/test-helpers');
-const utils = require('../test/utils');
+const deployHelper = require("../deployed/deployHelper");
 
-module.exports = function(deployer, networkName, accounts) {
-    deployer
-        .then(() => {
-            if (utils.isLocalNetwork(networkName)) {
-                // In a test environment an ERC777 token requires deploying an ERC1820 registry
-                // return singletons.ERC1820Registry(accounts[0]); //use a modified version cause RSK returns 0x00 whtn eth_Code is empty
-                return ERC1820Registry(accounts[0]); //Remove this and use singletons.ERC1820Registry(accounts[0]); when the nre version of RSKJ is released
-            }
-        });
+module.exports = async (deployer, networkName, accounts) => {
+    if (deployHelper.isLocalNetwork(networkName)) {
+        // In a test environment an ERC777 token requires deploying an ERC1820 registry
+        // return singletons.ERC1820Registry(accounts[0]); //use a modified version cause RSK returns 0x00 whtn eth_Code is empty
+        return ERC1820Registry(accounts[0]); //Remove this and use singletons.ERC1820Registry(accounts[0]); when the nre version of RSKJ is released
+    }
 };
 
 //This will be removed when the new RSKJ version is released
