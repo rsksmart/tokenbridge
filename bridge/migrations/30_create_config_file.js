@@ -1,35 +1,30 @@
-//We are actually gona use Bridge_v1 but truffle only knows the address of the proxy by using Bridge_v0
-const BridgeProxy = artifacts.require("BridgeProxy");
 const MainToken = artifacts.require('MainToken');
-const Federation = artifacts.require('Federation');
-const AllowTokensProxy = artifacts.require("AllowTokensProxy");
 const AllowTokens = artifacts.require("AllowTokens");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
+const deployHelper = require("../deployed/deployHelper");
 
 const fs = require('fs');
 const toWei = web3.utils.toWei;
-const utils = require('../test/utils');
 
 module.exports = async function(deployer, networkName, accounts) {
 
     if (networkName === 'soliditycoverage') {
         return;
     }
-    const bridgeProxy = await BridgeProxy.deployed();
-    const federation = await Federation.deployed();
-    const multiSig = await MultiSigWallet.deployed();
-    const allowTokensProxy = await AllowTokensProxy.deployed();
+    const deployedJson = deployHelper.getDeployed(networkName);
     const currentProvider = deployer.networks[networkName];
+
     const config = {
-        bridge: bridgeProxy.address.toLowerCase(),
-        federation: federation.address.toLowerCase(),
-        multiSig: multiSig.address.toLowerCase(),
-        allowTokens: allowTokensProxy.address.toLowerCase()
+        bridge: deployedJson.Bridge.toLowerCase(),
+        federation: deployedJson.Federation.toLowerCase(),
+        multiSig: deployedJson.MultiSig.toLowerCase(),
+        allowTokens: deployedJson.AllowTokensProxy.toLowerCase()
     };
-    if(utils.isLocalNetwork(networkName)) {
+    if(deployHelper.isLocalNetwork(networkName)) {
+        const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
         const mainToken = await MainToken.deployed();
         config.testToken = mainToken.address.toLowerCase();
-        const allowTokens = await AllowTokens.at(allowTokensProxy.address);
+        const allowTokens = await AllowTokens.at(deployedJson.AllowTokensProxy);
         let data = allowTokens.contract.methods.addTokenType('MAIN', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}).encodeABI();
         await multiSig.submitTransaction(allowTokens.address, 0, data, { from: accounts[0] });
         let typeId = 0;
