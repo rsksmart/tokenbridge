@@ -84,7 +84,6 @@ module.exports = class Federator {
 
                 return true;
             } catch (err) {
-                console.log(err)
                 this.logger.error(new Error('Exception Running Federator'), err);
                 retries--;
                 this.logger.debug(`Run ${3-retries} retrie`);
@@ -135,7 +134,7 @@ module.exports = class Federator {
             const from = await transactionSender.getAddress(this.config.privateKey);
             const fedContract = await this.federationFactory.getSideFederationContract();
 
-            const isMember = await fedContract.isMember(from).call();
+            const isMember = await utils.retry3Times(fedContract.isMember(from).call);
             if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
 
             for(let log of logs) {
@@ -158,7 +157,7 @@ module.exports = class Federator {
                     _typeId: typeId
                 } = log.returnValues;
 
-                let transactionId = await fedContract.getTransactionId({
+                let transactionId = await utils.retry3Times(fedContract.getTransactionId({
                     originalTokenAddress: tokenAddress,
                     sender: crossFrom,
                     receiver,
@@ -170,12 +169,12 @@ module.exports = class Federator {
                     decimals,
                     granularity,
                     typeId
-                }).call();
+                }).call);
                 this.logger.info('get transaction id:', transactionId);
 
-                let wasProcessed = await fedContract.transactionWasProcessed(transactionId).call();
+                let wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
                 if (!wasProcessed) {
-                    let hasVoted = await fedContract.hasVoted(transactionId).call({from: from});
+                    let hasVoted = await utils.retry3Times(fedContract.hasVoted(transactionId).call);
                     if(!hasVoted) {
                         this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} token: ${symbol}`);
                         await this._voteTransaction(
