@@ -9,3 +9,7 @@ coverage/
 coverage.json
 .coverage_contracts
 .coverage_artifacts
+deployed/development.json
+deployed/development_1.json
+deployed/mirrorDevelopment.json
+deployed/soliditycoverage.json
