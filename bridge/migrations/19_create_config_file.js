@@ -1,10 +1,9 @@
 const MainToken = artifacts.require('MainToken');
-const AllowTokens = artifacts.require("AllowTokens");
+const AllowTokens_old = artifacts.require("AllowTokens_old");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
 const deployHelper = require("../deployed/deployHelper");
 
 const fs = require('fs');
-const toWei = web3.utils.toWei;
 
 module.exports = async function(deployer, networkName, accounts) {
 
@@ -18,18 +17,16 @@ module.exports = async function(deployer, networkName, accounts) {
         bridge: deployedJson.BridgeProxy.toLowerCase(),
         federation: deployedJson.Federation.toLowerCase(),
         multiSig: deployedJson.MultiSig.toLowerCase(),
-        allowTokens: deployedJson.AllowTokensProxy.toLowerCase()
+        allowTokens: deployedJson.AllowTokens.toLowerCase()
     };
-    if(deployHelper.isLocalNetwork(networkName)) {
-        const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
-        const mainToken = await MainToken.deployed(deployedJson.MainToken);
+    if (deployHelper.isLocalNetwork(networkName)) {
+        const multiSig = await MultiSigWallet.deployed();
+        const mainToken = await MainToken.deployed();
         config.testToken = mainToken.address.toLowerCase();
-        const allowTokens = await AllowTokens.at(deployedJson.AllowTokensProxy);
-        let data = allowTokens.contract.methods.addTokenType('MAIN', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}).encodeABI();
-        await multiSig.submitTransaction(allowTokens.address, 0, data, { from: accounts[0] });
-        let typeId = 0;
-        data = allowTokens.contract.methods.setToken(mainToken.address, typeId).encodeABI();
-        await multiSig.submitTransaction(allowTokens.address, 0, data, { from: accounts[0] });
+
+        const allowTokens_old = await AllowTokens_old.deployed();
+        const data = allowTokens_old.contract.methods.addAllowedToken(mainToken.address).encodeABI();
+        await multiSig.submitTransaction(allowTokens_old.address, 0, data, { from: accounts[0] });
 
         // Uncomment below lines to use multiple federators
         // await multiSig.confirmTransaction(0, { from: accounts[1] });
