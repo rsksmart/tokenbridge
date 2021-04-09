@@ -15,7 +15,7 @@ module.exports = async function(deployer, networkName, accounts) {
     const currentProvider = deployer.networks[networkName];
 
     const config = {
-        bridge: deployedJson.Bridge.toLowerCase(),
+        bridge: deployedJson.BridgeProxy.toLowerCase(),
         federation: deployedJson.Federation.toLowerCase(),
         multiSig: deployedJson.MultiSig.toLowerCase(),
         allowTokens: deployedJson.AllowTokensProxy.toLowerCase()
