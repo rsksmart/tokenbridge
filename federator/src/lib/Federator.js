@@ -49,6 +49,7 @@ module.exports = class Federator {
                     return;
                 }
 
+                this.logger.debug('Current Block', currentBlock);
                 const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
                 const confirmations = await allowTokens.getConfirmations();
                 const toBlock = currentBlock - confirmations.largeAmountConfirmations;
