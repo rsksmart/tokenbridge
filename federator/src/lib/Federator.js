@@ -35,6 +35,7 @@ module.exports = class Federator {
         while(retries > 0) {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
+                this.logger.debug('Current Block', currentBlock);
                 const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
                 const confirmations = await allowTokens.getConfirmations();
                 const toBlock = currentBlock - confirmations.largeAmountConfirmations;
