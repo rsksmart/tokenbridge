@@ -1,18 +1,15 @@
-const BridgeProxy = artifacts.require("BridgeProxy");
 const Bridge = artifacts.require("Bridge");
-const SideTokenFactory = artifacts.require('SideTokenFactory');
 const MultiSigWallet = artifacts.require("MultiSigWallet");
+const deployHelper = require("../deployed/deployHelper");
 
 module.exports = async (deployer, networkName, accounts) => {
+    const deployedJson = deployHelper.getDeployed(networkName);
 
-    const sideTokenFactory = await SideTokenFactory.deployed();
-    const bridgeProxy = await BridgeProxy.deployed();
+    const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
 
-    const multiSig = await MultiSigWallet.deployed();
+    const bridge = new web3.eth.Contract(Bridge.abi, deployedJson.BridgeProxy);
+    let data = bridge.methods.changeSideTokenFactory(deployedJson.SideTokenFactory).encodeABI();
 
-    const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxy.address);
-    let data = bridge.methods.changeSideTokenFactory(sideTokenFactory.address).encodeABI();
-
-    await multiSig.submitTransaction(bridgeProxy.address, 0, data, { from: accounts[0] });
-
+    await bridge.methods.changeSideTokenFactory(deployedJson.SideTokenFactory).call({ from: deployedJson.MultiSig });
+    await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, data, { from: accounts[0] });
 }

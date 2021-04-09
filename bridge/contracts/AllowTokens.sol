@@ -127,7 +127,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         return info.typeId;
     }
 
-     function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
+    function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         len = typeDescriptions.length;
         require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
@@ -135,7 +135,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         _setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
         return len;
-     }
+    }
 
     function addTokenType(string calldata description, Limits calldata limits) external onlyOwner returns(uint256 len) {
         return _addTokenType(description, limits);
@@ -151,9 +151,9 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
         emit TypeLimitsChanged(typeId, limits);
     }
 
-     function setTypeLimits(uint256 typeId, Limits memory limits) public onlyOwner {
+    function setTypeLimits(uint256 typeId, Limits memory limits) public onlyOwner {
         _setTypeLimits(typeId, limits);
-     }
+    }
 
     function getTypeDescriptionsLength() external view returns(uint256) {
         return typeDescriptions.length;

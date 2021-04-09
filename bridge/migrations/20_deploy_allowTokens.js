@@ -1,9 +1,6 @@
 //We are actually gona use the latest Bridge but truffle only knows the address of the proxy
 const AllowTokens = artifacts.require('AllowTokens');
 const AllowTokensProxy = artifacts.require("AllowTokensProxy");
-const ProxyAdmin = artifacts.require("ProxyAdmin");
-const MultiSigWallet = artifacts.require("MultiSigWallet");
-const BridgeProxy = artifacts.require("BridgeProxy");
 const toWei = web3.utils.toWei;
 const deployHelper = require("../deployed/deployHelper");
 
@@ -12,10 +9,6 @@ module.exports = async (deployer, networkName, accounts) => {
     await deployer.deploy(AllowTokens);
     const allowTokensLogic = await AllowTokens.deployed();
     deployedJson.AllowTokens = allowTokensLogic.address;
-
-    const bridgeProxy = await BridgeProxy.at(deployedJson.BridgeProxy);
-    const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
-    const proxyAdmin = await ProxyAdmin.at(deployedJson.ProxyAdmin);
 
     deployedJson.smallAmountConfirmations = deployedJson.smallAmountConfirmations || '0';
     deployedJson.mediumAmountConfirmations = deployedJson.mediumAmountConfirmations || '0';
@@ -75,13 +68,13 @@ module.exports = async (deployer, networkName, accounts) => {
 
     const initData = allowTokensLogic.contract.methods.initialize(
         accounts[0],
-        bridgeProxy.address,
+        deployedJson.BridgeProxy,
         deployedJson.smallAmountConfirmations,
         deployedJson.mediumAmountConfirmations,
         deployedJson.largeAmountConfirmations,
         typesInfo
     ).encodeABI();
-    await deployer.deploy(AllowTokensProxy, allowTokensLogic.address, proxyAdmin.address, initData);
+    await deployer.deploy(AllowTokensProxy, allowTokensLogic.address, deployedJson.ProxyAdmin, initData);
 
     const allowTokensProxy = await AllowTokensProxy.deployed();
     deployedJson.AllowTokensProxy = allowTokensProxy.address.toLowerCase();
@@ -101,7 +94,7 @@ module.exports = async (deployer, networkName, accounts) => {
         await setTokensEthereum(allowTokens);
     }
     //Set multisig as the owner
-    await allowTokens.transferOwnership(multiSig.address);
+    await allowTokens.transferOwnership(deployedJson.MultiSig);
 }
 
 async function setTokensTestnet(allowTokens) {
