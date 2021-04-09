@@ -8,8 +8,8 @@
     "AllowTokens": "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
     "Bridge": "0x3b4353D80464af08Cc0787eA9C45BbC50f8c5cCE",
     "BridgeProxy": "0x9d11937E2179dC5270Aa86A3f8143232D6DA0E69",
-    "WrappedCurrency": "0x967f8799af07df1534d48a95a5c9febe92c53ae0",
     "smallAmountConfirmations": "60",
     "mediumAmountConfirmations": "120",
-    "largeAmountConfirmations": "2880"
+    "largeAmountConfirmations": "2880",
+    "WrappedCurrency": "0x967f8799af07df1534d48a95a5c9febe92c53ae0"
 }
