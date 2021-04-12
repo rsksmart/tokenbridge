@@ -314,8 +314,23 @@ contract('Federation', async function (accounts) {
 
         beforeEach(async function () {
             this.allowTokens = await AllowTokens.new();
-            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256)'](deployer, deployer, '0', '0' , '0');
-            await this.allowTokens.addTokenType('RIF', {max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')});
+            await this.allowTokens.methods['initialize(address,address,uint256,uint256,uint256,(string,(uint256,uint256,uint256,uint256,uint256))[])'](
+                deployer,
+                deployer,
+                '0',
+                '0',
+                '0',
+                [{
+                    description:'RIF',
+                    limits:{
+                        max:toWei('10000'),
+                        min:toWei('1'),
+                        daily:toWei('100000'),
+                        mediumAmount:toWei('2'),
+                        largeAmount:toWei('3')
+                    }
+                }]
+            );
             let typeId = 0;
             await this.allowTokens.setToken(originalTokenAddress, typeId);
             this.sideTokenFactory = await SideTokenFactory.new();
