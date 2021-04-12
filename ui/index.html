@@ -188,6 +188,7 @@
             .outline-rounded, .badge-outline {
                 border: 1px solid #00B520;
             }
+
             .disabled, .disabled .network, .max:disabled {
                 color: #E5E5E5;
             }
@@ -200,6 +201,10 @@
                 color: #00B520;
                 border-radius: .6em;
                 padding: .375rem .75rem;
+            }
+            .outline-rounded-warning {
+                color: #FEAD0D;
+                border: 1px solid #FEAD0D;
             }
             .badge-outline {
                 color: #00B520;
@@ -278,6 +283,11 @@
                 color: #03a335;
                 text-decoration: none;
             }
+            #warning-tx a:hover {
+                color: #007bff;
+                font-weight: bold;
+            }
+
             .navbar-item {
                 margin-top: 15px;
             }
@@ -409,7 +419,7 @@
                 line-height: 14px;
                 color: #919191;
             }
-            #success {
+            #success, #warning {
                 padding: 0px;
                 max-width: 222px;
             }
@@ -687,10 +697,19 @@
                             </div>
                         </div>
 
-                        <div id="success" class="mt-3 align-center text-center alert alert-dismissible fade show" style="display:none;">
+                        <div id="success" class="mt-3 align-center text-center alert alert-dismissible fade show" style="display:block;">
                             <div class="outline-rounded">
                                 <div style="font-size: 32px;"><i class="fas fa-check"></i></div>
                                 <div>You will receive <span id="receive" class="black">126 rKovDAI</span> in your wallet in aproximately <span id="confirmationTime">X minutes</span></div>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="warning" class="mt-3 align-center text-center alert alert-dismissible fade show" style="display:block;">
+                            <div class="outline-rounded outline-rounded-warning">
+                                <div style="font-size: 32px;"><i class="fas fa-exclamation"></i></div>
+                                <div>Your transaction <span id="warning-tx" class="black"></span> could not be confirmed, Please check it manually</div>
                                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                 </button>
@@ -1004,8 +1023,6 @@
                     return intervalId;
                 };
 
-
-
                 async function waitForReceipt(txHash) {
                     let timeElapsed = 0;
                     let interval = 10_000;
@@ -1017,8 +1034,10 @@
                                 clearInterval(checkInterval);
                                 resolve(receipt);
                             }
-                            if(timeElapsed > 90_000) {
-                                reject(new Error(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`));
+                            if(timeElapsed > 300_000) {
+                                const err = new Error(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`)
+                                err.name = 'Timeout';
+                                reject(err);
                             }
                         }, interval);
                     });
@@ -1222,24 +1241,6 @@
                     // isInstalled(); - uncomment to show popup on page load
                 });
 
-                async function waitForReceipt(txHash) {
-                    let timeElapsed = 0;
-                    let interval = 10_000;
-                    return new Promise((resolve, reject) => {
-                        const checkInterval = setInterval(async () => {
-                            timeElapsed += interval;
-                            let receipt = await web3.eth.getTransactionReceipt(txHash);
-                            if(receipt != null) {
-                                clearInterval(checkInterval);
-                                resolve(receipt);
-                            }
-                            if(timeElapsed > 90_000) {
-                                reject(new Error(`Operation took too long <a target="_blank" href="${config.explorer}/tx/${txHash}">check Tx on the explorer</a>`));
-                            }
-                        }, interval);
-                    });
-                }
-
                 function onLogInClick() {
                     if(!config) {
                         $('#logIn').html('<i class="fas fa-sync fa-spin">');
@@ -1382,7 +1383,6 @@
                     }
                     gasPrice = `0x${Math.ceil(gasPriceParsed).toString(16)}`;
 
-
                     $('#wait').show();
                     // approve disabled, cross tokens enabled
                     disableApproveCross({
@@ -1451,7 +1451,7 @@
                                 approvalDisable: false,
                                 crossDisabled: true
                             });
-                        } else {
+                        }  else {
                             console.error(err);
                             crossTokenError(`Couldn't approve amount. ${err.message}`);
 
@@ -1513,6 +1513,7 @@
                         crossDisabled: true
                     });
 
+                    let txn_hash = '';
                     return retry3Times(tokenContract.methods.balanceOf(address).call)
                     .then(async (balance) => {
                         const balanceBN = new BN(balance);
@@ -1544,6 +1545,7 @@
                                 .send({from: address, gasPrice:gasPrice, gas:200_000}, async (err, txHash) => {
                                 if (err) return reject(err);
                                 try {
+                                    txn_hash = txHash;
                                     let receipt = await waitForReceipt(txHash);
 
                                     if(receipt.status) {
@@ -1576,9 +1578,27 @@
                         showActiveAddressTXNs();
 
                     }).catch((err) => {
+                        if(err.name === 'Timeout') {
+                            // save pending transaction to local storage...
+                            TXN_Storage.addTxn(address, config.name, {
+                                networkId: config.networkId,
+                                tokenFrom: token[config.networkId].symbol,
+                                tokenTo: token[config.crossToNetwork.networkId].symbol,
+                                amount,
+                                transactionHash: txn_hash,
+                                status: false
+                            });
+
+                            updateActiveAddressTXNs(address);
+                            showActiveTxnsTab();
+                            showActiveAddressTXNs();
+                            warningMessage(txn_hash);
+                        } else {
+                            console.error(err);
+                            crossTokenError(`Couln't cross the tokens. ${err.message}`);
+                        }
+
                         $('#wait').hide();
-                        console.error(err);
-                        crossTokenError(`Couln't cross the tokens. ${err.message}`);
                     });
                 }
 
@@ -1589,6 +1609,18 @@
                 function cleanAlertError() {
                     $('#alert-danger-text').html('');
                     $('#alert-danger').hide();
+                }
+
+                function warningMessage(txn) {
+                    const txnLink = `<a target="_blank" href="${config.explorer}/tx/${txn}">
+                        ${`${txn.substring(0, 4)}...${txn.slice(-4)}`}
+                    </a>`;
+                    $('#warning-tx').html(txnLink);
+                    $('#warning').show();
+                }
+
+                function cleanWarningMessage() {
+                    $('#warning').hide();
                 }
 
                 function crossTokenError(err) {
