@@ -55,6 +55,7 @@ module.exports = class TransactionSender {
         const chainId =  this.chainId || await this.client.eth.net.getId();
         const gasPrice = await this.getGasPrice(chainId);
         let rawTx = {
+            chainId: chainId,
             gasPrice: this.numberToHexString(gasPrice),
             value: this.numberToHexString(value),
             to: to,
