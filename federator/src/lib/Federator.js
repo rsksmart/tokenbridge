@@ -30,6 +30,19 @@ module.exports = class Federator {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
+
+                const isMainSyncing = await this.mainWeb3.eth.isSyncing();
+                if (isMainSyncing !== false) {
+                    this.logger.warn(`ChainId ${chainId} is Syncing, ${JSON.stringify(isMainSyncing)}. Federator won't process requests till is synced`);
+                    return;
+                }
+                const isSideSyncing = await this.sideWeb3.eth.isSyncing();
+                if (isSideSyncing !== false) {
+                    const sideChainId = await this.sideWeb3.eth.net.getId();
+                    this.logger.warn(`ChainId ${sideChainId} is Syncing, ${JSON.stringify(isSideSyncing)}. Federator won't process requests till is synced`);
+                    return;
+                }
+
                 let confirmations = 0; //for rsk regtest and ganache
                 if(chainId == 31 || chainId == 42) { // rsk testnet and kovan
                     confirmations = 10
@@ -88,7 +101,7 @@ module.exports = class Federator {
                     await this._processLogs(logs, toPagedBlock);
                     fromPageBlock = toPagedBlock + 1;
                 }
-                
+
                 return true;
             } catch (err) {
                 console.log(err)
@@ -108,7 +121,7 @@ module.exports = class Federator {
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
-            
+
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
 
