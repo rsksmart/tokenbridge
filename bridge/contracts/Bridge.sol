@@ -17,7 +17,7 @@ import "./zeppelin/math/SafeMath.sol";
 import "./IBridge.sol";
 import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
-import "./AllowTokens.sol";
+import "./IAllowTokens.sol";
 import "./Utils.sol";
 import "./IWrapped.sol";
 
@@ -40,7 +40,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) public processed; // ProcessedHash => true
-    AllowTokens public allowTokens;
+    IAllowTokens public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
@@ -78,7 +78,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.initialize(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
+        allowTokens = IAllowTokens(_allowTokens);
         sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
         federation = _federation;
         //keccak256("ERC777TokensRecipient")
@@ -326,7 +326,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function changeAllowTokens(address newAllowTokens) external onlyOwner {
         require(newAllowTokens != NULL_ADDRESS, "Bridge: AllowTokens is empty");
-        allowTokens = AllowTokens(newAllowTokens);
+        allowTokens = IAllowTokens(newAllowTokens);
         emit AllowTokensChanged(newAllowTokens);
     }
 
