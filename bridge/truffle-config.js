@@ -107,7 +107,7 @@ module.exports = {
         version: "0.5.17",
         settings: {
           optimizer: {
-            enabled: false,
+            enabled: true,
             // Optimize for how many times you intend to run the code.
             // Lower values will optimize more for initial deployment cost, higher
             // values will optimize more for high-frequency usage.
