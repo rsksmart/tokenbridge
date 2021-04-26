@@ -7,7 +7,9 @@ import "./zeppelin/upgradable/Initializable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableSecondary.sol";
 
-contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
+import "./IAllowTokens.sol";
+
+contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
     using SafeMath for uint256;
 
     address constant private NULL_ADDRESS = address(0);
@@ -21,31 +23,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     uint256 public mediumAmountConfirmations;
     uint256 public largeAmountConfirmations;
     string[] typeDescriptions;
-
-    struct Limits {
-        uint256 min;
-        uint256 max;
-        uint256 daily;
-        uint256 mediumAmount;
-        uint256 largeAmount;
-    }
-
-    struct TokenInfo {
-        bool allowed;
-        uint256 typeId;
-        uint256 spentToday;
-        uint256 lastDay;
-    }
-
-    struct TypeInfo {
-        string description;
-        Limits limits;
-    }
-
-    struct TokensAndType {
-        address token;
-        uint256 typeId;
-    }
 
     event SetToken(address indexed _tokenAddress, uint256 _typeId);
     event AllowedTokenRemoved(address indexed _tokenAddress);
@@ -107,7 +84,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary {
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary returns(uint256 typeId){
+    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary returns(uint256 typeId) {
         (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
         if(isValidatingAllowedTokens) {
             require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
