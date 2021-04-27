@@ -238,9 +238,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-        address receiver = userData.length == 0 ? from : Utils.bytesToAddress(userData);
         //This can only be used with trusted contracts
+        checkWhitelisted(from);
         require(allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
+        require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
+        address receiver = userData.length == 0 ? from : Utils.bytesToAddress(userData);
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
