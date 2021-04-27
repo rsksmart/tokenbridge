@@ -23,42 +23,42 @@ module.exports = async (deployer, networkName, accounts) => {
             largeAmount:toWei('1') }
         },
         { description: 'ETH', limits: {
-            min:toWei('0.01'),
+            min:toWei('0.05'),
             max:toWei('750'),
             daily:toWei('3000'),
             mediumAmount:toWei('3'),
             largeAmount:toWei('30') }
         },
         { description: '<1000usd', limits: {
-            min:toWei('0.01'),
+            min:toWei('0.1'),
             max:toWei('2500'),
             daily:toWei('5000'),
-            mediumAmount:toWei('100'),
-            largeAmount:toWei('1000') }
+            mediumAmount:toWei('10'),
+            largeAmount:toWei('100') }
         },
         { description: '<100usd', limits: {
-            min:toWei('0.1'),
+            min:toWei('1'),
             max:toWei('25000'),
             daily:toWei('50000'),
             mediumAmount:toWei('100'),
             largeAmount:toWei('1000') }
         },
         { description: '=1usd', limits: {
-            min:toWei('1'),
+            min:toWei('100'),
             max:toWei('2500000'),
             daily:toWei('5000000'),
             mediumAmount:toWei('10000'),
             largeAmount:toWei('100000') }
         },
         { description: '<1usd', limits: {
-            min:toWei('100'),
+            min:toWei('10000'),
             max:toWei('250000000'),
             daily:toWei('500000000'),
             mediumAmount:toWei('1000000'),
             largeAmount:toWei('10000000') }
         },
         { description: '<1cent', limits: {
-            min:toWei('10000'),
+            min:toWei('1000000'),
             max:toWei('25000000000'),
             daily:toWei('50000000000'),
             mediumAmount:toWei('100000000'),
