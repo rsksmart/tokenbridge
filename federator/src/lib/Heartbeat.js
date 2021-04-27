@@ -153,9 +153,6 @@ module.exports = class Heartbeat {
                 this.logger.info('Processing Heartbeat event log:', log);
 
                 const {
-                    blockHash,
-                    transactionHash,
-                    logIndex,
                     blockNumber
                 } = log;
 

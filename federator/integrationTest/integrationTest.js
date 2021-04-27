@@ -195,7 +195,6 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.debug('Set side token limit');
         const sideMultiSigContract = new originWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
         const sideAllowTokensAddress = config.sidechain.allowTokens;
-        const sideAllowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, sideAllowTokensAddress);
 
         if (federatorKeys.length === 1) {
             const multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
