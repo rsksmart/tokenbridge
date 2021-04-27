@@ -49,7 +49,7 @@ module.exports = class Federator {
                     return;
                 }
 
-                this.logger.debug('Current Block', currentBlock);
+                this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
                 const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
                 const confirmations = await allowTokens.getConfirmations();
                 const toBlock = currentBlock - confirmations.largeAmountConfirmations;
@@ -73,7 +73,7 @@ module.exports = class Federator {
                     fromBlock = originalFromBlock;
                 }
                 if(fromBlock >= toBlock){
-                    this.logger.warn(`Current chain Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
+                    this.logger.warn(`Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
                     return false;
                 }
                 fromBlock = parseInt(fromBlock)+1;

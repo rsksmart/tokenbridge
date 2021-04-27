@@ -55,19 +55,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     event Upgrading(bool isUpgrading);
     event WrappedCurrencyChanged(address _wrappedCurrency);
 
-    struct CrossInfo {
-        address tokenAddress;
-        address sender;
-        address payable receiver;
-        uint256 amount;
-        bytes32 blockHash;
-        bytes32 transactionHash;
-        uint32 logIndex;
-        uint256 granularity;
-        uint256 typeId;
-        string symbol;
-    }
-
     function initialize(
         address _manager,
         address _federation,
