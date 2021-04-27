@@ -249,7 +249,7 @@ module.exports = class Federator {
 
     _saveProgress (path, value) {
         if (value) {
-            fs.writeFileSync(path, value);
+            fs.writeFileSync(path, value.toString());
         }
     }
 }
