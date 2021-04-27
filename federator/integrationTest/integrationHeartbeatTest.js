@@ -7,9 +7,7 @@ const config = require('../config/config.js');
 const logConfig = require('../config/log-config.json');
 
 //utils
-const Federator = require('../src/lib/Federator.js');
 const Heartbeat = require('../src/lib/Heartbeat.js');
-const utils = require('../src/lib/utils.js');
 const fundFederators = require('./fundFederators');
 
 const logger = log4js.getLogger('HEARTBEAT');
@@ -21,7 +19,7 @@ const keys = process.argv[2] ? process.argv[2].replace(/ /g, '').split(',') : []
 
 const heartbeats = getHeartbeats(keys, config);
 
-run({ 
+run({
   heartbeats,
   config
 });
