@@ -97,7 +97,7 @@ module.exports = class Federator {
         }
     }
 
-    async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, allowTokens) {
+    async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, confirmations) {
         if (fromBlock == toBlock) return;
 
         const mainBridge = await this.bridgeFactory.getMainBridgeContract();
@@ -120,7 +120,7 @@ module.exports = class Federator {
             if (!logs) throw new Error('Failed to obtain the logs');
 
             this.logger.info(`Found ${logs.length} logs`);
-            await this._processLogs(logs, currentBlock, medmiumAndSmall, allowTokens);
+            await this._processLogs(logs, currentBlock, medmiumAndSmall, confirmations);
             if (!medmiumAndSmall) {
                 this._saveProgress(this.lastBlockPath, toPagedBlock);
             }
@@ -129,14 +129,22 @@ module.exports = class Federator {
 
     }
 
-    async _processLogs(logs) {
+    async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
+
         try {
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
             const from = await transactionSender.getAddress(this.config.privateKey);
             const fedContract = await this.federationFactory.getSideFederationContract();
+            const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
 
             const isMember = await utils.retry3Times(fedContract.isMember(from).call);
             if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
+            
+            const {
+                smallAmountConfirmations,
+                mediumAmountConfirmations,
+                largeAmountConfirmations
+            } = confirmations;
 
             for(let log of logs) {
                 this.logger.info('Processing event log:', log);
@@ -144,7 +152,8 @@ module.exports = class Federator {
                 const {
                     blockHash,
                     transactionHash,
-                    logIndex
+                    logIndex,
+                    blockNumber
                 } = log;
 
                 const {
@@ -157,6 +166,31 @@ module.exports = class Federator {
                     _granularity: granularity,
                     _typeId: typeId
                 } = log.returnValues;
+
+                
+                const {
+                    mediumAmount,
+                    largeAmount              
+                } = await allowTokens.getLimits(tokenAddress);
+                
+                if(mediumAndSmall) {       
+                    // At this point we're processing blocks newer than largeAmountConfirmations
+                    // and older than smallAmountConfirmations
+                    if(amount >= largeAmount) {
+                        const c = currentBlock - blockNumber;
+                        const rC = largeAmountConfirmations;
+                        this.logger.debug(`[large amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
+                        continue;
+                    } else if(
+                        (amount >= mediumAmount) &&
+                        (currentBlock - blockNumber <= mediumAmountConfirmations)
+                    ) {
+                        const c = currentBlock - blockNumber;
+                        const rC = mediumAmountConfirmations;
+                        this.logger.debug(`[medium amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
+                        continue;
+                    }
+                }
 
                 let transactionId = await utils.retry3Times(fedContract.getTransactionId({
                     originalTokenAddress: tokenAddress,
