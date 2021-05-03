@@ -15,6 +15,7 @@ const abiMultiSig = require('../../abis/MultiSigWallet.json');
 const TransactionSender = require('../src/lib/TransactionSender.js');
 const Federator = require('../src/lib/Federator.js');
 const utils = require('../src/lib/utils.js');
+const localBlockchainUtils = require('./local-blockchain-utils.js');
 const fundFederators = require('./fundFederators');
 
 const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8');
@@ -101,7 +102,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         const destinationTransactionSender = new TransactionSender(destinationWeb3, logger, config);
 
         const originBridgeAddress = config.mainchain.bridge;
-        const amount = originWeb3.utils.toWei('1');
+        const amount = originWeb3.utils.toWei('10');
         const originAddress = originTokenContract.options.address;
         const cowAddress = (await originWeb3.eth.getAccounts())[0];
         const allowTokensContract = new originWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
@@ -339,6 +340,78 @@ async function transfer(originFederators, destinationFederators, config, origin,
 
         crossBackCompletedBalance = await originWeb3.eth.getBalance(userAddress);
         logger.debug('Final user balance', crossBackCompletedBalance);
+
+
+        logger.info('------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------');
+        /*
+        typeId = 0 ->
+        { 
+            description: 'BTC', 
+            limits: {
+                min:toWei('0.001'),
+                max:toWei('25'),
+                daily:toWei('100'),
+                mediumAmount:toWei('0.1'),
+                largeAmount:toWei('1') 
+            }
+        },
+        */
+
+        const {
+            limit: {
+                max,
+                min,
+                daily,
+                mediumAmount,
+                largeAmount
+            }              
+        } = await allowTokensContract.methods.getInfoAndLimits(anotherTokenAddress).call();
+
+        const {
+            smallAmountConfirmations,
+            mediumAmountConfirmations,
+            largeAmountConfirmations
+        } = await allowTokensContract.methods.getConfirmations().call();
+
+
+        let userBalanceAnotherToken = await AnotherToken.methods.balanceOf(userAddress).call();
+        logger.debug('AnotherToken Pre Cross user balance', userBalanceAnotherToken);
+
+        // Cross AnotherToken (type id 0) Small Amount < toWei('0.1')   
+        const smallAmount = originWeb3.utils.toWei('0.05');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, smallAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, smallAmount).encodeABI();
+        await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
+
+
+        // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.1') && < toWei('1')   
+        const mediumAmount = originWeb3.utils.toWei('0.1');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, mediumAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, mediumAmount).encodeABI();
+        await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
+
+        // Cross AnotherToken (type id 0) Large Amount >= toWei('1')   
+        const largeAmount = originWeb3.utils.toWei('1');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, largeAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, largeAmount).encodeABI();
+        await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
+
+
+        const delta_1 = smallAmountConfirmations;
+        await localBlockchainUtils.evm_mine(delta_1, originWeb3);
+        // check smal amount txn went through
+
+        const delta_2 = mediumAmountConfirmations - delta_1;
+        await localBlockchainUtils.evm_mine(delta_2, originWeb3);
+        // check medium amount txn went through
+
+        const delta_3 = largeAmountConfirmations - delta_2;        
+        await localBlockchainUtils.evm_mine(delta_3, originWeb3);
+        // check large amount txn went through
+
+        userBalanceAnotherToken = await AnotherToken.methods.balanceOf(userAddress).call();
+        logger.debug('AnotherToken Post Cross user balance', userBalanceAnotherToken);
+
 
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
