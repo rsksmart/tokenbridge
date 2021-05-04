@@ -137,6 +137,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         console.log('Bridge AllowTokensAddr', await bridgeContract.methods.allowTokens().call())
         console.log('allowTokens primary', await allowTokensContract.methods.primary().call())
         console.log('allowTokens owner', await allowTokensContract.methods.owner().call())
+        console.log('accounts:', (await originWeb3.eth.getAccounts()));
         await bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).call({from: userAddress});
         data = bridgeContract.methods.receiveTokensTo(originAddress, userAddress, amount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
@@ -355,8 +356,48 @@ async function transfer(originFederators, destinationFederators, config, origin,
                 largeAmount:toWei('1') 
             }
         },
+
         */
 
+
+        await allowTokensContract.methods.setConfirmations(
+            '100',
+            '1000',
+            '2000'
+        ).call({ from: config.mainchain.multiSig })
+        data = allowTokensContract.methods.setConfirmations(
+            '100',
+            '1000',
+            '2000'
+        ).encodeABI();
+        
+        
+        if (federatorKeys.length === 1) {
+            const txId = await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
+            const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
+            const isConfirmed = await multiSigContract.methods.isConfirmed(txId).call();
+            const transaction = await multiSigContract.methods.transactions(txId).call();
+            const required = await multiSigContract.methods.required().call();
+            console.log(`txId: ${txId} isConfirmed? ${isConfirmed}`);
+            console.log(`transaction received from MS.transactions:`, transaction);
+            console.log(`required: ${required}`);
+        } else {
+            let multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0]);
+
+            let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
+            for (let i = 1; i < federatorKeys.length; i++) {
+                multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i]);
+            }
+        }
+        
+        await localBlockchainUtils.evm_mine(1, originWeb3);
+        const confirmations = await allowTokensContract.methods.getConfirmations().call();
+        console.log(`confirmations:`, confirmations);
+
+        /*
         const {
             limit: {
                 max,
@@ -367,35 +408,32 @@ async function transfer(originFederators, destinationFederators, config, origin,
             }              
         } = await allowTokensContract.methods.getInfoAndLimits(anotherTokenAddress).call();
 
-        const {
-            smallAmountConfirmations,
-            mediumAmountConfirmations,
-            largeAmountConfirmations
-        } = await allowTokensContract.methods.getConfirmations().call();
+        console.log(`max,min,daily,mediumAmount,largeAmount: ${max}, ${min}, ${daily}, ${mediumAmount}, ${largeAmount}`);
+        
+        console.log(`userAddress: ${userAddress}`);
+        console.log(`AnotherToken.options.address: ${anotherTokenAddress}`);
 
-
-        let userBalanceAnotherToken = await AnotherToken.methods.balanceOf(userAddress).call();
+        let userBalanceAnotherToken = await anotherTokenContract.methods.balanceOf(userAddress).call();
         logger.debug('AnotherToken Pre Cross user balance', userBalanceAnotherToken);
 
         // Cross AnotherToken (type id 0) Small Amount < toWei('0.1')   
-        const smallAmount = originWeb3.utils.toWei('0.05');
-        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, smallAmount).call({from: userAddress});
-        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, smallAmount).encodeABI();
+        const userSmallAmount = originWeb3.utils.toWei('0.05');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userSmallAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userSmallAmount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
 
 
         // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.1') && < toWei('1')   
-        const mediumAmount = originWeb3.utils.toWei('0.1');
-        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, mediumAmount).call({from: userAddress});
-        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, mediumAmount).encodeABI();
+        const userMediumAmount = originWeb3.utils.toWei('0.1');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userMediumAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userMediumAmount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
 
         // Cross AnotherToken (type id 0) Large Amount >= toWei('1')   
-        const largeAmount = originWeb3.utils.toWei('1');
-        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, largeAmount).call({from: userAddress});
-        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, largeAmount).encodeABI();
+        const userLargeAmount = originWeb3.utils.toWei('1');
+        await bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userLargeAmount).call({from: userAddress});
+        data = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userLargeAmount).encodeABI();
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
-
 
         const delta_1 = smallAmountConfirmations;
         await localBlockchainUtils.evm_mine(delta_1, originWeb3);
@@ -412,7 +450,26 @@ async function transfer(originFederators, destinationFederators, config, origin,
         userBalanceAnotherToken = await AnotherToken.methods.balanceOf(userAddress).call();
         logger.debug('AnotherToken Post Cross user balance', userBalanceAnotherToken);
 
+        // resetting confirmations for small, medium and large amounts on AllowTokens 
+        data = allowTokensContract.methods.setConfirmations(
+            0,
+            0,
+            0
+        ).encodeABI();
 
+        if (federatorKeys.length === 1) {
+            const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '');
+        } else {
+            let multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0]);
+
+            let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
+            for (let i = 1; i < federatorKeys.length; i++) {
+                multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i]);
+            }
+        }*/
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
         process.exit();
