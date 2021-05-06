@@ -63,10 +63,10 @@ module.exports = class Federator {
                 if (!fs.existsSync(this.config.storagePath)) {
                     fs.mkdirSync(this.config.storagePath);
                 }
-                let originalFromBlock = this.config.mainchain.fromBlock || 0;
+                let originalFromBlock = parseInt(this.config.mainchain.fromBlock) || 0;
                 let fromBlock = null;
                 try {
-                    fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
+                    fromBlock = parseInt(fs.readFileSync(this.lastBlockPath, 'utf8'));
                 } catch(err) {
                     fromBlock = originalFromBlock;
                 }
@@ -77,7 +77,7 @@ module.exports = class Federator {
                     this.logger.warn(`Current chain Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
                     return false;
                 }
-                fromBlock = parseInt(fromBlock)+1;
+                fromBlock = fromBlock + 1;
                 this.logger.debug('Running from Block', fromBlock);
                 
                 const recordsPerPage = 1000;
@@ -163,7 +163,8 @@ module.exports = class Federator {
                     this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol} was already processed`);
                 }
             }
-            this._saveProgress(this.lastBlockPath, toBlock);
+
+            this._saveProgress(this.lastBlockPath, toBlock.toString());
 
             return true;
         } catch (err) {
