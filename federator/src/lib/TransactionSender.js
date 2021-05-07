@@ -63,7 +63,7 @@ module.exports = class TransactionSender {
                 return semiFastGasPrice;
             }
             if (useGasPrice <= 25000000000) {
-                // Currengly when we restart an ethereum node the eth_getPrice is given values that are lower than the network
+                // Currently when we restart an ethereum node the eth_getPrice is given values that are lower than the network
                 // Usually around 9 GWei or 15 GWei that's why we set the limit in 25 GWei
                 // When this happens we will use the gas price provided by etherscan
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
@@ -75,11 +75,11 @@ module.exports = class TransactionSender {
                 // if useGasPrice is lower than proposeGasPrice the transaction will probably get stucked
                 // we add a control in case proposeGasPrice is way high
                 // Try to use semiFastGasPrice if the value is too high, use proposeGasPrice and add 2 Gwei to help avoid gas spikes
-                const recomendedGas = semiFastGasPrice < (useGasPrice * 5) ? semiFastGasPrice : proposeGasPrice + 2000000000;
+                const recommendedGas = semiFastGasPrice < (useGasPrice * 5) ? semiFastGasPrice : proposeGasPrice + 2000000000;
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
-                this.logger.debug('proposeGasPrice >= useGasPrice, we will use', recomendedGas);
-                return recomendedGas;
+                this.logger.debug('proposeGasPrice >= useGasPrice, we will use', recommendedGas);
+                return recommendedGas;
             }
         }
         return useGasPrice;
