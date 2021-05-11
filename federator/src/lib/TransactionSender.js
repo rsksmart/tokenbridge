@@ -53,14 +53,13 @@ module.exports = class TransactionSender {
             const gasOraclePrice = response.result;
             const proposeGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.ProposeGasPrice, 'gwei'));
             const fastGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.FastGasPrice, 'gwei'));
-            const semiFastGasPrice = Math.round(proposeGasPrice + (fastGasPrice - proposeGasPrice)/2);
-            if (semiFastGasPrice >= gasPrice && useGasPrice >= semiFastGasPrice) {
-                // If semiFastGasPrice is cheaper than gasPrice x1.5 use semiFastGasPrice
-                // we check that semiFastGasPrice is bigger than gasPrice to avoid posible attacks and API errors
+            if (fastGasPrice >= gasPrice && useGasPrice >= fastGasPrice) {
+                // If fastGasPrice is cheaper than gasPrice x1.5 use fastGasPrice
+                // we check that fastGasPrice is bigger than gasPrice to avoid posible attacks and API errors
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
-                this.logger.debug('useGasPrice >= semiFastGasPrice, we will use', semiFastGasPrice);
-                return semiFastGasPrice;
+                this.logger.debug('useGasPrice >= fastGasPrice, we will use', fastGasPrice);
+                return fastGasPrice;
             }
             if (useGasPrice <= 25000000000) {
                 // Currently when we restart an ethereum node the eth_getPrice is given values that are lower than the network
@@ -68,14 +67,14 @@ module.exports = class TransactionSender {
                 // When this happens we will use the gas price provided by etherscan
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
-                this.logger.debug('useGasPrice <= 25000000000, we will use', semiFastGasPrice);
-                return semiFastGasPrice;
+                this.logger.debug('useGasPrice <= 25000000000, we will use', fastGasPrice);
+                return fastGasPrice;
             }
             if (proposeGasPrice >= gasPrice && proposeGasPrice >= useGasPrice && proposeGasPrice < (useGasPrice * 5)) {
                 // if useGasPrice is lower than proposeGasPrice the transaction will probably get stucked
                 // we add a control in case proposeGasPrice is way high
-                // Try to use semiFastGasPrice if the value is too high, use proposeGasPrice and add 2 Gwei to help avoid gas spikes
-                const recommendedGas = semiFastGasPrice < (useGasPrice * 5) ? semiFastGasPrice : proposeGasPrice + 2000000000;
+                // Try to use fastGasPrice if the value is too high, use proposeGasPrice and add 2 Gwei to help avoid gas spikes
+                const recommendedGas = fastGasPrice < (useGasPrice * 5) ? fastGasPrice : proposeGasPrice + 2000000000;
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
                 this.logger.debug('proposeGasPrice >= useGasPrice, we will use', recommendedGas);
@@ -166,7 +165,7 @@ module.exports = class TransactionSender {
         let error = '';
         let errorInfo = '';
         try {
-            var from = await this.getAddress(privateKey);
+            let from = await this.getAddress(privateKey);
             let rawTx = await this.createRawTransaction(from, to, data, value);
             let receipt;
             if (privateKey && privateKey.length) {
