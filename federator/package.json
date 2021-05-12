@@ -24,7 +24,8 @@
     "ethereumjs-tx": "^1.3.7",
     "ethereumjs-util": "^6.1.0",
     "log4js": "^5.0.0",
-    "web3": "^1.2.11"
+    "web3": "^1.2.11",
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "jest": "^26.4.2",
