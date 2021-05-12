@@ -10,6 +10,11 @@ const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
 const Heartbeat = require('./lib/Heartbeat.js')
 
+// Server
+const express = require('express'); 
+const app = express();
+const port = 3000;
+
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
 logger.info('ETH Host', config.sidechain.host);
@@ -19,8 +24,26 @@ if(!config.mainchain || !config.sidechain) {
     process.exit();
 }
 
-const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
+/*********** status endpoint ***********/
+app.get('/isAlive', async (req, res) => {
+  try {
+    res.status(200).json({
+      status: 'ok'
+    });
+  } catch(err) {
+    res.status(400).json({
+      status: 'failed',
+      err
+    });
+  }
+})
 
+app.listen(port, () => {
+  console.log(`listening on http://localhost:${port}/`);
+})
+
+
+const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederator = new Federator({
     ...config,
