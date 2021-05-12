@@ -6,6 +6,7 @@ const BridgeFactory = require('../contracts/BridgeFactory');
 const FederationFactory = require('../contracts/FederationFactory');
 const AllowTokensFactory = require('../contracts/AllowTokensFactory');
 const utils = require('./utils');
+const BN = require('bn.js');
 
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
@@ -53,9 +54,11 @@ module.exports = class Federator {
                 const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
                 const confirmations = await allowTokens.getConfirmations();
                 const toBlock = currentBlock - confirmations.largeAmountConfirmations;
+                const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
+
                 this.logger.info('Running to Block', toBlock);
 
-                if (toBlock <= 0) {
+                if (toBlock <= 0 && newToBlock <= 0) {
                     return false;
                 }
 
@@ -72,7 +75,7 @@ module.exports = class Federator {
                 if(fromBlock < originalFromBlock) {
                     fromBlock = originalFromBlock;
                 }
-                if(fromBlock >= toBlock){
+                if(fromBlock >= toBlock && fromBlock >= newToBlock){
                     this.logger.warn(`Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`);
                     return false;
                 }
@@ -80,7 +83,6 @@ module.exports = class Federator {
                 this.logger.debug('Running from Block', fromBlock);
                 await this.getLogsAndProcess(fromBlock, toBlock, currentBlock, false, confirmations);
                 let lastBlockProcessed = toBlock;
-                let newToBlock = currentBlock - confirmations.smallAmountConfirmations;
                 await this.getLogsAndProcess(lastBlockProcessed, newToBlock, currentBlock, true, confirmations);
 
                 return true;
@@ -98,7 +100,7 @@ module.exports = class Federator {
     }
 
     async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, confirmations) {
-        if (fromBlock == toBlock) return;
+        if (fromBlock >= toBlock) return;
 
         const mainBridge = await this.bridgeFactory.getMainBridgeContract();
 
@@ -167,22 +169,26 @@ module.exports = class Federator {
                     _typeId: typeId
                 } = log.returnValues;
 
-                
                 const {
                     mediumAmount,
                     largeAmount              
                 } = await allowTokens.getLimits(tokenAddress);
                 
-                if(mediumAndSmall) {       
+                const BN = this.mainWeb3.utils.BN;
+                const mediumAmountBN = new BN(mediumAmount);
+                const largeAmountBN = new BN(largeAmount);
+                const amountBN = new BN(amount);
+
+                if(mediumAndSmall) {   
                     // At this point we're processing blocks newer than largeAmountConfirmations
                     // and older than smallAmountConfirmations
-                    if(amount >= largeAmount) {
+                    if(amountBN.gte(largeAmountBN)) {
                         const c = currentBlock - blockNumber;
                         const rC = largeAmountConfirmations;
                         this.logger.debug(`[large amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
                         continue;
                     } else if(
-                        (amount >= mediumAmount) &&
+                        (amountBN.gte(mediumAmountBN)) &&
                         (currentBlock - blockNumber <= mediumAmountConfirmations)
                     ) {
                         const c = currentBlock - blockNumber;
