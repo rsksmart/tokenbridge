@@ -12,12 +12,11 @@ router.use(logCall);
 
 router.get('/isAlive', async (req, res) => {
     try {
-      throw new Error("gato");
       res.status(200).json({
         status: 'ok'
       });
     } catch(err) {
-      logger.error('isAlive endpoint failed')
+      logger.error('isAlive/ endpoint failed')
     }
 })
 
