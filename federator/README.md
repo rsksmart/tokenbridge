@@ -78,3 +78,18 @@ docker run --rm \
 ```
 
 to start the image.
+
+### Status endpoint
+----
+This endpoint is introduced, in order to better monitor health status on the Federator processes running.
+
+* **<DOMAIN:PORT>/isAlive**
+
+* **Method:**
+
+  `GET`
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ "status" : "ok" }`
