@@ -304,22 +304,11 @@ async function transfer(originFederators, destinationFederators, config, origin,
             '2000'
         ).encodeABI();
                 
-        let txId = await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
+        await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).send({ from: cowAddress, gas: 500000 });
 
         await localBlockchainUtils.evm_mine(1, originWeb3);
         let confirmations = await allowTokensContract.methods.getConfirmations().call();
-
-        const {
-            limit: {
-                max,
-                min,
-                daily,
-                mediumAmount,
-                largeAmount
-            }              
-        } = await allowTokensContract.methods.getInfoAndLimits(anotherTokenAddress).call();
-
 
         data = anotherTokenContract.methods.mint(userAddress, amount, '0x', '0x').encodeABI();
         await transactionSender.sendTransaction(anotherTokenAddress, data, 0, userPrivateKey);
@@ -432,7 +421,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
             '0'
         ).encodeABI();
                
-        txId = await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
+        await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).send({ from: cowAddress, gas: 500000 });
         await localBlockchainUtils.evm_mine(1, originWeb3);
         confirmations = await allowTokensContract.methods.getConfirmations().call();

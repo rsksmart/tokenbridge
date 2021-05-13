@@ -6,7 +6,6 @@ const BridgeFactory = require('../contracts/BridgeFactory');
 const FederationFactory = require('../contracts/FederationFactory');
 const AllowTokensFactory = require('../contracts/AllowTokensFactory');
 const utils = require('./utils');
-const BN = require('bn.js');
 
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
@@ -143,7 +142,6 @@ module.exports = class Federator {
             if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
             
             const {
-                smallAmountConfirmations,
                 mediumAmountConfirmations,
                 largeAmountConfirmations
             } = confirmations;
