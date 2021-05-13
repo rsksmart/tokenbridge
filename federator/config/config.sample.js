@@ -5,5 +5,6 @@ module.exports = {
     runEvery: 2, // In minutes,
     privateKey: fs.readFileSync(`${__dirname}/federation.key`, 'utf8'),
     storagePath: './db',
-    runHeartbeatEvery: 1 //In hours
+    runHeartbeatEvery: 1, // In hours
+    endpointsPort: 5000, // Server port
 }

@@ -25,8 +25,6 @@ if(!config.mainchain || !config.sidechain) {
     process.exit();
 }
 
-console.log(Endpoints);
-
 app.use('/', Endpoints);
 
 app.listen(port, () => {
