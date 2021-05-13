@@ -8,12 +8,13 @@ log4js.configure(logConfig);
 // Services
 const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
-const Heartbeat = require('./lib/Heartbeat.js')
+const Heartbeat = require('./lib/Heartbeat.js');
+const Endpoints = require('./lib/Endpoints.js');
 
 // Server
 const express = require('express'); 
 const app = express();
-const port = 3000;
+const port = config.endpointsPort || 5000;
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
@@ -44,9 +45,12 @@ app.get('/isAlive', async (req, res) => {
     });
   }
 })
+console.log(Endpoints);
+
+app.use('/', Endpoints);
 
 app.listen(port, () => {
-  console.log(`listening on http://localhost:${port}/`);
+  logger.info(`listening on http://localhost:${port}/`);
 })
 
 
