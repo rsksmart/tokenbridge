@@ -1,23 +1,42 @@
 const express = require('express');
-const router = express.Router();
-const log4js = require('log4js');
-const logger = log4js.getLogger('Federators');
+const config = require('../../config/config.js');
 
-const logCall = function(req, res, next) {
+module.exports = function() {
+  let app;
+  let router;
+  let logger;
+  const port = config.endpointsPort || 5000;
+
+  function logCall(req, res, next) {
     logger.info('isAlive/');
     next();
-}
+  }
 
-router.use(logCall);
+  function init(_logger) {
+    app = express();
+    router = express.Router();
+    logger = _logger;
 
-router.get('/isAlive', async (req, res) => {
-    try {
-      res.status(200).json({
-        status: 'ok'
-      });
-    } catch(err) {
-      logger.error('isAlive/ endpoint failed')
-    }
-})
+    router.use(logCall);
+    router.get('/isAlive', async (req, res) => {
+      try {
+        res.status(200).json({
+          status: 'ok'
+        });
+      } catch(err) {
+        logger.error('isAlive/ endpoint failed')
+      }
+    });
 
-module.exports = router;
+    app.use('/', router);
+
+    app.listen(port, () => {
+      logger.info(`listening on http://localhost:${port}/`);
+    })
+  }
+
+  return {
+    init
+  }
+
+}();
