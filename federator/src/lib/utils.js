@@ -1,6 +1,7 @@
 const ethUtils = require('ethereumjs-util');
 const Web3 = require('web3');
 
+
 /**
  * Retry system with async / await
  *
@@ -147,6 +148,14 @@ function checkIfItsInRSK(chainId = -1) {
         chainId === 33;
 }
 
+async function getHeartbeatPollingInterval(host) {
+    const web3 = new Web3(host);
+    const chainId = await web3.eth.net.getId();
+    console.log("chainID", chainId);
+    let pollingInterval = [1, 30, 31, 42].includes(chainId) ? 1000 * 60 * 60 : null;
+    return pollingInterval;
+}
+
 module.exports = {
     waitBlocks,
     sleep,
@@ -160,5 +169,6 @@ module.exports = {
     checkIfItsInRSK,
     zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
     retry,
-    retry3Times
+    retry3Times,
+    getHeartbeatPollingInterval
 }
