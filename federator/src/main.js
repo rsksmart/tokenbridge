@@ -3,6 +3,7 @@ const log4js = require('log4js');
 // Configurations
 const config = require('../config/config.js');
 const logConfig = require('../config/log-config.json');
+const utils = require('./lib/utils.js')
 log4js.configure(logConfig);
 
 // Services
@@ -50,21 +51,29 @@ async function run() {
     }
 }
 
-let heartBeatPollingInterval = config.runHeartbeatEvery * 1000 * 60; // Minutes
-let heartBeatScheduler = new Scheduler(heartBeatPollingInterval, logger, { run: () => runHeartbeat() });
 
-heartBeatScheduler.start().catch((err) => {
-    logger.error('Unhandled Error on start()', err);
-});
+async function scheduleHeartbeatProcesses() {
+    const pollingInterval = await utils.getHeartbeatPollingInterval(config.mainchain.host)
+    const heartBeatPollingInterval =  pollingInterval || config.runHeartbeatEvery * 1000 * 60; // Minutes
+    const heartBeatScheduler = new Scheduler(
+        heartBeatPollingInterval, logger, {
+            run: async function() {
+                try {
+                    await heartbeat.run();
+                } catch(err) {
+                    logger.error('Unhandled Error on runHeartbeat()', err);
+                    process.exit();
+                }
+            }
+        }
+    );
 
-async function runHeartbeat() {
-    try {
-        await heartbeat.run();
-    } catch(err) {
-        logger.error('Unhandled Error on runHeartbeat()', err);
-        process.exit();
-    }
+    heartBeatScheduler.start().catch((err) => {
+        logger.error('Unhandled Error on start()', err);
+    });
 }
+
+scheduleHeartbeatProcesses();
 
 async function exitHandler() {
     process.exit();
