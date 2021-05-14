@@ -151,8 +151,7 @@ function checkIfItsInRSK(chainId = -1) {
 async function getHeartbeatPollingInterval(host) {
     const web3 = new Web3(host);
     const chainId = await web3.eth.net.getId();
-    console.log("chainID", chainId);
-    let pollingInterval = [1, 30, 31, 42].includes(chainId) ? 1000 * 60 * 60 : null;
+    const pollingInterval = [1, 30, 31, 42].includes(chainId) ? 1000 * 60 * 60 : null;
     return pollingInterval;
 }
 
