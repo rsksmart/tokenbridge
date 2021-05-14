@@ -9,28 +9,19 @@ log4js.configure(logConfig);
 const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
 const Heartbeat = require('./lib/Heartbeat.js');
-const Endpoints = require('./lib/Endpoints.js');
-
-// Server
-const express = require('express'); 
-const app = express();
-const port = config.endpointsPort || 5000;
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
 logger.info('ETH Host', config.sidechain.host);
 
+// Status Server
+const StatusServer = require('./lib/Endpoints.js');
+StatusServer.init(logger);
+
 if(!config.mainchain || !config.sidechain) {
     logger.error('Mainchain and Sidechain configuration are required');
     process.exit();
 }
-
-app.use('/', Endpoints);
-
-app.listen(port, () => {
-  logger.info(`listening on http://localhost:${port}/`);
-})
-
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
