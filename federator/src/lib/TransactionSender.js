@@ -53,13 +53,15 @@ module.exports = class TransactionSender {
             const gasOraclePrice = response.result;
             const proposeGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.ProposeGasPrice, 'gwei'));
             const fastGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.FastGasPrice, 'gwei'));
+            // Add a 1.3% margin to avoid gas spikes as even fast gas price is not enough
+            const fastGasPricePlus = Math.ceil(fastGasPrice * 1.013);
             if (fastGasPrice >= gasPrice && useGasPrice >= fastGasPrice) {
                 // If fastGasPrice is cheaper than gasPrice x1.5 use fastGasPrice
                 // we check that fastGasPrice is bigger than gasPrice to avoid posible attacks and API errors
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
-                this.logger.debug('useGasPrice >= fastGasPrice, we will use', fastGasPrice);
-                return fastGasPrice;
+                this.logger.debug('useGasPrice >= fastGasPrice, we will use', fastGasPricePlus);
+                return fastGasPricePlus;
             }
             if (useGasPrice <= 25000000000) {
                 // Currently when we restart an ethereum node the eth_getPrice is given values that are lower than the network
@@ -67,14 +69,14 @@ module.exports = class TransactionSender {
                 // When this happens we will use the gas price provided by etherscan
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
-                this.logger.debug('useGasPrice <= 25000000000, we will use', fastGasPrice);
-                return fastGasPrice;
+                this.logger.debug('useGasPrice <= 25000000000, we will use', fastGasPricePlus);
+                return fastGasPricePlus;
             }
             if (proposeGasPrice >= gasPrice && proposeGasPrice >= useGasPrice && proposeGasPrice < (useGasPrice * 5)) {
                 // if useGasPrice is lower than proposeGasPrice the transaction will probably get stucked
                 // we add a control in case proposeGasPrice is way high
                 // Try to use fastGasPrice if the value is too high, use proposeGasPrice and add 2 Gwei to help avoid gas spikes
-                const recommendedGas = fastGasPrice < (useGasPrice * 5) ? fastGasPrice : proposeGasPrice + 2000000000;
+                const recommendedGas = fastGasPrice < (useGasPrice * 5) ? fastGasPricePlus : proposeGasPrice + 5000000000;
                 this.logger.info('gasPrice', gasPrice,'useGasPrice', useGasPrice);
                 this.logger.info('gasOraclePrice', gasOraclePrice);
                 this.logger.debug('proposeGasPrice >= useGasPrice, we will use', recommendedGas);
@@ -134,7 +136,7 @@ module.exports = class TransactionSender {
 
     async useEtherscanApi(data) {
         const chainId = await this.getChainId();
-        if(chainId !=1 && chainId != 42)
+        if(chainId != 1 && chainId != 42)
             throw new Error(`ChainId:${chainId} can't use Etherescan API`);
 
         const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
