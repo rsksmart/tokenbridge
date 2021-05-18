@@ -33,6 +33,8 @@ module.exports = {
     privateKey: require('federator.key'),
     storagePath: './db',
     etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
+    runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
+    endpointsPort: 5000, // Server port health status endpoint listens on
 }
 ```
 
