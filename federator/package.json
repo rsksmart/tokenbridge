@@ -16,7 +16,6 @@
     "test": "jest --detectOpenHandles test/",
     "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
     "integrationHeartbeatTest": "rm -rf ./db/* && node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log",
-    "integrationConfirmationsTest": "rm -rf ./db/* && node ./integrationTest/integrationConfirmationsTest.js",
     "clean": "rm -rf ./db/*"
   },
   "dependencies": {
