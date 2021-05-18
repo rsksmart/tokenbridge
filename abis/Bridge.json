@@ -333,7 +333,7 @@
         "name": "allowTokens",
         "outputs": [
             {
-                "internalType": "contract AllowTokens",
+                "internalType": "contract IAllowTokens",
                 "name": "",
                 "type": "address"
             }
