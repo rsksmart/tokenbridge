@@ -31,7 +31,9 @@ module.exports = {
     runEvery: 1, // In minutes,
     confirmations: 10,// Number of blocks before processing it (only use in development),
     privateKey: require('federator.key'),
-    storagePath: './db'
+    storagePath: './db',
+    runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
+    endpointsPort: 5000, // Server port health status endpoint listens on
 }
 ```
 
