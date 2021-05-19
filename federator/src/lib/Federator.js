@@ -24,6 +24,7 @@ module.exports = class Federator {
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+        this.revertedTxnsPath = `${config.storagePath || __dirname}/revertedTxns.json`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
         this.allowTokensFactory = new AllowTokensFactory(this.config, this.logger, Web3);
@@ -228,7 +229,8 @@ module.exports = class Federator {
                             log.logIndex,
                             decimals,
                             granularity,
-                            typeId
+                            typeId,
+                            transactionId
                         );
                     } else {
                         this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol}  has already been voted by us`);
@@ -257,8 +259,9 @@ module.exports = class Federator {
         logIndex,
         decimals,
         granularity,
-        typeId)
-    {
+        typeId,
+        txId
+    ) {
         try {
 
             const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
@@ -278,7 +281,37 @@ module.exports = class Federator {
                 typeId
             }).encodeABI();
 
-            await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            let revertedTxns = JSON.parse(fs.readFileSync(this.revertedTxnsPath, 'utf8'));
+            this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
+
+            let receipt;
+            if (revertedTxns[txId]) {
+                this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
+            } else {
+                receipt = await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            }
+
+            if(receipt && receipt.status == false) {
+                this._saveRevertedTxns(
+                    this.revertedTxnsPath,
+                    JSON.stringify({
+                        ...revertedTxns,
+                        [txId]: {
+                            originalTokenAddress: tokenAddress,
+                            sender,
+                            receiver,
+                            amount,
+                            symbol,
+                            blockHash,
+                            transactionHash,
+                            logIndex,
+                            decimals,
+                            granularity
+                        }
+                    })
+                )
+            }
+
             return true;
         } catch (err) {
             throw new CustomError(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`, err);
@@ -286,6 +319,12 @@ module.exports = class Federator {
     }
 
     _saveProgress (path, value) {
+        if (value) {
+            fs.writeFileSync(path, value.toString());
+        }
+    }
+
+    _saveRevertedTxns(path, value) {
         if (value) {
             fs.writeFileSync(path, value.toString());
         }

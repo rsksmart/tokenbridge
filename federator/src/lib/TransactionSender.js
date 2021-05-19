@@ -194,11 +194,16 @@ module.exports = class TransactionSender {
                 receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', hash => txHash = hash);
             }
             if(receipt.status == 1) {
-                this.logger.info(`Transaction Successful chain:${chainId} txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                return receipt;
+                this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
+            } else {
+                error = 'Transaction Receipt Status Failed';
+                errorInfo = receipt;
+                this.logger.error(error, errorInfo);
+                this.logger.error('RawTx that failed', rawTx);
             }
-            error = `Transaction Receipt Status Failed chain:${chainId}`;
-            errorInfo = receipt;
+
+            return receipt;
+
         } catch(err) {
             if (err.message.indexOf('it might still be mined') > 0) {
                 this.logger.warn(`Transaction was not mined within 750 seconds, please make sure your transaction was properly sent. Be aware that
@@ -206,12 +211,6 @@ module.exports = class TransactionSender {
                 fs.appendFileSync(this.manuallyCheck, `chain:${chainId} transactionHash:${txHash} to:${to} data:${data}\n`);
                 return { transactionHash: txHash };
             }
-            error = `Send Signed Transaction to chain:${chainId} Failed TxHash:${txHash}`;
-            errorInfo = err;
         }
-        this.logger.error(error, errorInfo);
-        this.logger.error('RawTx that failed', rawTx);
-        throw new CustomError(`Transaction Failed: ${error} ${stack}`, errorInfo);
     }
-
 }
