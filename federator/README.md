@@ -7,7 +7,7 @@ The federators will be the owners of the contracts willing to allow to cross the
 ## Config
 
 Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are suing, for example rsktestnet-kovan.json and kovan.json, `make sure to set the host parameter of those files`. Create the file `federator.key` inside the config folder, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
-
+You will also need to add an [etherscan api key](https://etherscan.io/myapikey) in this config file.
 ## Usage
 
 Run `npm install` to install the dependencies, make sure you followed the previous config step. Then to start the service run `npm start` which will start a single federator that listen to both networks. Check the logs to see that everything is working properly.
@@ -24,14 +24,15 @@ In order to test with multiple federators, ensure they're added as members of th
 
 To run the federator using Docker first, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will dedcide the networks the federate must be listening, for example for the bridge in testnet a federator config.js will look like
 
-```json
+```js
 module.exports = {
     mainchain: require('./rsktestnet-kovan.json'),
     sidechain: require('./kovan.json'),
     runEvery: 1, // In minutes,
     confirmations: 10,// Number of blocks before processing it,
     privateKey: require('federator.key'),
-    storagePath: './db'
+    storagePath: './db',
+    etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
 }
 ```
 
