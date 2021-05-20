@@ -281,18 +281,20 @@ module.exports = class Federator {
                 typeId
             }).encodeABI();
 
-            let revertedTxns = JSON.parse(fs.readFileSync(this.revertedTxnsPath, 'utf8'));
-            this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
-
-            let receipt;
-            if (revertedTxns[txId]) {
-                this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
-            } else {
-                receipt = await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            let revertedTxns = {};
+            if (fs.existsSync(this.revertedTxnsPath)) {
+                revertedTxns = JSON.parse(fs.readFileSync(this.revertedTxnsPath, 'utf8'));
+                this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
             }
 
-            if(receipt && receipt.status == false) {
-                this._saveRevertedTxns(
+            if (revertedTxns[txId]) {
+                this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
+                return false;
+            }
+            const receipt = await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+
+            if(receipt.status == false) {
+                fs.writeFileSync(
                     this.revertedTxnsPath,
                     JSON.stringify({
                         ...revertedTxns,
@@ -319,12 +321,6 @@ module.exports = class Federator {
     }
 
     _saveProgress (path, value) {
-        if (value) {
-            fs.writeFileSync(path, value.toString());
-        }
-    }
-
-    _saveRevertedTxns(path, value) {
         if (value) {
             fs.writeFileSync(path, value.toString());
         }

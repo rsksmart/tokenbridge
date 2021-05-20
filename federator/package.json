@@ -14,7 +14,7 @@
   "scripts": {
     "start": "node ./src/main.js",
     "test": "jest --detectOpenHandles test/",
-    "integrationTest": "rm ./db/lastBlock.txt --force && rm ./db/side-fed/lastBlock.txt --force && node ./integrationTest/integrationTest.js",
+    "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
     "integrationHeartbeatTest": "rm -rf ./db/* && node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log",
     "clean": "rm -rf ./db/*"
   },
