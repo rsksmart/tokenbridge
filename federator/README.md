@@ -6,7 +6,7 @@ The federators will be the owners of the contracts willing to allow to cross the
 
 ## Config
 
-Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are suing, for example rsktestnet-kovan.json and kovan.json, `make sure to set the host parameter of those files`. Create the file `federator.key` inside the config folder, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
+Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are suing, for example rsktestnet-kovan.json and kovan.json, `make sure to set the host parameter of those files`. Create the file `federator.key` inside the config folder, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts. To define an specific port for the health status server to listen on, set `endpointsPort`.
 
 ## Usage
 
@@ -31,7 +31,9 @@ module.exports = {
     runEvery: 1, // In minutes,
     confirmations: 10,// Number of blocks before processing it (only use in development),
     privateKey: require('federator.key'),
-    storagePath: './db'
+    storagePath: './db',
+    runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
+    endpointsPort: 5000, // Server port health status endpoint listens on
 }
 ```
 
@@ -77,3 +79,18 @@ docker run --rm \
 ```
 
 to start the image.
+
+### Status endpoint
+
+This endpoint is introduced, in order to better monitor health status on the Federator processes running.
+
+* **<DOMAIN:PORT>/isAlive**
+
+* **Method:**
+
+  `GET`
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ "status" : "ok" }`
