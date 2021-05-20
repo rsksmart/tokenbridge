@@ -51,7 +51,7 @@ module.exports = class IAllowTokensV1 {
         try {
             let result = this.mapTokenInfoAndLimits[tokenAddress];
             if(!result) {
-                const infoAndLimits = await  this.bridgeContract.methods.getTokenInfoAndLimits(tokenAddress).call();
+                const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(tokenAddress).call();
                 result = {
                     mediumAmount: infoAndLimits.limit.mediumAmount,
                     largeAmount: infoAndLimits.limit.largeAmount,
@@ -60,7 +60,7 @@ module.exports = class IAllowTokensV1 {
             }
             return result;
         } catch(err) {
-            throw new CustomError(`Exception getTokenInfoAndLimits at AllowTokens Contract`, err);
+            throw new CustomError(`Exception getInfoAndLimits at AllowTokens Contract`, err);
         }
     }
 }
