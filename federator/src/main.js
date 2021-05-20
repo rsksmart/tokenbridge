@@ -58,8 +58,7 @@ async function run() {
 
 
 async function scheduleHeartbeatProcesses() {
-    const pollingInterval = await utils.getHeartbeatPollingInterval(config.mainchain.host)
-    const heartBeatPollingInterval =  pollingInterval || config.runHeartbeatEvery * 1000 * 60; // Minutes
+    const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval(config.mainchain)
     const heartBeatScheduler = new Scheduler(
         heartBeatPollingInterval, logger, {
             run: async function() {

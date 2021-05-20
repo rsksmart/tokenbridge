@@ -155,7 +155,31 @@ async function getHeartbeatPollingInterval(host) {
     return pollingInterval;
 }
 
+async function asyncMine(anotherWeb3Instance = null) {
+    const web3Instance = anotherWeb3Instance || web3;
+    return new Promise((resolve, reject) => {
+        web3Instance.currentProvider.send({
+            jsonrpc: "2.0",
+            method: "evm_mine",
+            id: new Date().getTime()
+            }, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                return resolve(result);
+            });
+    });
+};
+
+async function evm_mine(iterations, web3Instance = null) {
+    for(var i = 0; i < iterations; i++ ) {
+        await asyncMine(web3Instance);
+    };
+};
+
 module.exports = {
+    asyncMine,
+    evm_mine,
     waitBlocks,
     sleep,
     hexStringToBuffer,
