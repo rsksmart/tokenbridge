@@ -15,7 +15,6 @@ const abiMultiSig = require('../../abis/MultiSigWallet.json');
 const TransactionSender = require('../src/lib/TransactionSender.js');
 const Federator = require('../src/lib/Federator.js');
 const utils = require('../src/lib/utils.js');
-const localBlockchainUtils = require('./local-blockchain-utils.js');
 const fundFederators = require('./fundFederators');
 
 const sideTokenBytecode = fs.readFileSync(`${__dirname}/sideTokenBytecode.txt`, 'utf8');
@@ -358,7 +357,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).send({ from: cowAddress, gas: 500000 });
 
-        await localBlockchainUtils.evm_mine(1, originWeb3);
+        await utils.evm_mine(1, originWeb3);
         let confirmations = await allowTokensContract.methods.getConfirmations().call();
 
         data = anotherTokenContract.methods.mint(userAddress, amount, '0x', '0x').encodeABI();
@@ -410,7 +409,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await transactionSender.sendTransaction(originBridgeAddress, data, 0, userPrivateKey);
 
         const delta_1 = parseInt(confirmations.smallAmount);
-        await localBlockchainUtils.evm_mine(delta_1, originWeb3);
+        await utils.evm_mine(delta_1, originWeb3);
 
         await originFederators.reduce(function(promise, item) {
           return promise.then(function() { return item.run(); })
@@ -426,7 +425,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         }
 
         const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
-        await localBlockchainUtils.evm_mine(delta_2, originWeb3);
+        await utils.evm_mine(delta_2, originWeb3);
 
         await originFederators.reduce(function(promise, item) {
             return promise.then(function() { return item.run(); })
@@ -442,7 +441,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
         }
 
         const delta_3 = parseInt(confirmations.largeAmount) - delta_2;        
-        await localBlockchainUtils.evm_mine(delta_3, originWeb3);
+        await utils.evm_mine(delta_3, originWeb3);
         
         await originFederators.reduce(function(promise, item) {
             return promise.then(function() { return item.run(); })
@@ -474,7 +473,7 @@ async function transfer(originFederators, destinationFederators, config, origin,
                
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).call({ from: cowAddress });
         await multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).send({ from: cowAddress, gas: 500000 });
-        await localBlockchainUtils.evm_mine(1, originWeb3);
+        await utils.evm_mine(1, originWeb3);
         confirmations = await allowTokensContract.methods.getConfirmations().call();
         logger.debug(`reset confirmations: ${confirmations.smallAmount}, ${confirmations.mediumAmount}, ${confirmations.largeAmount}`);
 
