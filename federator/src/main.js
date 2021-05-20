@@ -13,8 +13,13 @@ const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
 logger.info('ETH Host', config.sidechain.host);
 
-if(!config.mainchain || !config.sidechain) {
+if (!config.mainchain || !config.sidechain) {
     logger.error('Mainchain and Sidechain configuration are required');
+    process.exit();
+}
+
+if (!config.etherscanApiKey) {
+    logger.error('Etherscan API configuration is required');
     process.exit();
 }
 
