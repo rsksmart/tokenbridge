@@ -185,10 +185,10 @@ module.exports = class Federator {
                         const rC = largeAmountConfirmations;
                         this.logger.debug(`[large amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
                         continue;
-                    } else if(
-                        (amountBN.gte(mediumAmountBN)) &&
-                        (currentBlock - blockNumber <= mediumAmountConfirmations)
-                    ) {
+                    }
+
+                    if((amountBN.gte(mediumAmountBN)) &&
+                       (currentBlock - blockNumber < mediumAmountConfirmations)) {
                         const c = currentBlock - blockNumber;
                         const rC = mediumAmountConfirmations;
                         this.logger.debug(`[medium amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
