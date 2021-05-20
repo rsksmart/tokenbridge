@@ -1,6 +1,6 @@
 # Federator
 
-Presents the event and necesary information to validate it on the other network
+Presents the event and necessary information to validate it on the other network
 The federator is an off-chain process which performs voting actions to validate transactions between a Mainchain (source) and a Sidechain (target) network. These transactions are obtained from the Bridge contract on the Mainchain using event logs and voted in the Sidechain through a Federation contract. Once all required signers (federators) vote for a transaction the Federation contract starts the process to release the funds on the Sidechain.
 The federators will be the owners of the contracts willing to allow to cross their tokens, and by doing so staking they reputation.
 
