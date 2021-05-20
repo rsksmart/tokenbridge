@@ -8,7 +8,7 @@ module.exports = function() {
   const port = config.endpointsPort || 5000;
 
   function logCall(req, res, next) {
-    logger.info('isAlive/');
+    logger.info(req.originalUrl);
     next();
   }
 
