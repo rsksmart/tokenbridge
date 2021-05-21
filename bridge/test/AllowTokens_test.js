@@ -437,39 +437,6 @@ contract('AllowTokens', async function (accounts) {
 
         });
 
-        describe('AllowedContracts', async function() {
-
-            it('should addAllowedContract', async function() {
-                assert.equal(false, (await this.allowTokens.allowedContracts(anotherAccount)));
-                await this.allowTokens.addAllowedContract(anotherAccount, { from: manager });
-                assert.equal(true, (await this.allowTokens.allowedContracts(anotherAccount)));
-            });
-
-            it('should removeAllowedContract', async function() {
-                await this.allowTokens.addAllowedContract(anotherAccount, { from: manager });
-                assert.equal(true, (await this.allowTokens.allowedContracts(anotherAccount)));
-                await this.allowTokens.removeAllowedContract(anotherAccount, { from: manager });
-                assert.equal(false, (await this.allowTokens.allowedContracts(anotherAccount)));
-            });
-
-            it('should fail if addAllowedContract caller is not the owner', async function() {
-                await utils.expectThrow(this.allowTokens.addAllowedContract(anotherAccount, { from: tokenDeployer }));
-            });
-
-            it('should fail if removeAllowedContract caller is not the owner', async function() {
-                await utils.expectThrow(this.allowTokens.removeAllowedContract(anotherAccount, { from: tokenDeployer }));
-            });
-
-            it('should fail if addAllowedContract with zero address', async function() {
-                await utils.expectThrow(this.allowTokens.addAllowedContract(utils.NULL_ADDRESS, { from: manager }));
-            });
-
-            it('should fail if removeAllowedContract with zero address', async function() {
-                await utils.expectThrow(this.allowTokens.removeAllowedContract(utils.NULL_ADDRESS, { from: manager }));
-            });
-
-        });
-
         describe('Ownable methods', async function() {
 
             it('Should renounce ownership', async function() {
