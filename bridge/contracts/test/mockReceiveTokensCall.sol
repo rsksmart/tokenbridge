@@ -29,13 +29,14 @@ contract mockReceiveTokensCall is IERC777Recipient {
         IERC777(tokenToUse).send(bridge, amount, data);
     }
 
+    // Mandatory for IERC777Recipient
     function tokensReceived(
-        address operator,
-        address from,
-        address to,
-        uint amount,
-        bytes calldata userData,
-        bytes calldata operatorData
+        address,
+        address,
+        address,
+        uint,
+        bytes calldata,
+        bytes calldata
     ) external {
         this;
     }

@@ -43,19 +43,6 @@
         "inputs": [
             {
                 "indexed": false,
-                "internalType": "bool",
-                "name": "_enabled",
-                "type": "bool"
-            }
-        ],
-        "name": "AllowedTokenValidation",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": false,
                 "internalType": "uint256",
                 "name": "_smallAmountConfirmations",
                 "type": "uint256"
@@ -184,7 +171,7 @@
                     }
                 ],
                 "indexed": false,
-                "internalType": "struct AllowTokens.Limits",
+                "internalType": "struct IAllowTokens.Limits",
                 "name": "limits",
                 "type": "tuple"
             }
@@ -308,21 +295,6 @@
         "constant": true,
         "inputs": [],
         "name": "isOwner",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "constant": true,
-        "inputs": [],
-        "name": "isValidatingAllowedTokens",
         "outputs": [
             {
                 "internalType": "bool",
@@ -567,12 +539,12 @@
                                 "type": "uint256"
                             }
                         ],
-                        "internalType": "struct AllowTokens.Limits",
+                        "internalType": "struct IAllowTokens.Limits",
                         "name": "limits",
                         "type": "tuple"
                     }
                 ],
-                "internalType": "struct AllowTokens.TypeInfo[]",
+                "internalType": "struct IAllowTokens.TypeInfo[]",
                 "name": "typesInfo",
                 "type": "tuple[]"
             }
@@ -632,7 +604,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct AllowTokens.TokenInfo",
+                "internalType": "struct IAllowTokens.TokenInfo",
                 "name": "info",
                 "type": "tuple"
             },
@@ -664,7 +636,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct AllowTokens.Limits",
+                "internalType": "struct IAllowTokens.Limits",
                 "name": "limit",
                 "type": "tuple"
             }
@@ -756,7 +728,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct AllowTokens.Limits",
+                "internalType": "struct IAllowTokens.Limits",
                 "name": "limits",
                 "type": "tuple"
             }
@@ -809,7 +781,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct AllowTokens.Limits",
+                "internalType": "struct IAllowTokens.Limits",
                 "name": "limits",
                 "type": "tuple"
             }
@@ -943,7 +915,7 @@
                         "type": "uint256"
                     }
                 ],
-                "internalType": "struct AllowTokens.TokensAndType[]",
+                "internalType": "struct IAllowTokens.TokensAndType[]",
                 "name": "tokensAndTypes",
                 "type": "tuple[]"
             }
@@ -964,24 +936,6 @@
             }
         ],
         "name": "removeAllowedToken",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "enableAllowedTokensValidation",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [],
-        "name": "disableAllowedTokensValidation",
         "outputs": [],
         "payable": false,
         "stateMutability": "nonpayable",

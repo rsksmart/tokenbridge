@@ -87,51 +87,10 @@ contract('AllowTokens', async function (accounts) {
                 assert.equal(version, 'v1');
             });
 
-            it('should validate allowed tokens with initial values', async function () {
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
-            });
-
-            it('disables tokens whitelist validation', async function() {
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
-
-                await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-                isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, false);
-            });
-
             it('fails isTokenAllowed if null address provided', async function() {
                 await utils.expectThrow(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS));
             })
 
-            it('fail if disableAllowedTokensValidation caller is not the owner', async function() {
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
-                utils.expectThrow(this.allowTokens.disableAllowedTokensValidation({ from: tokenDeployer }));
-
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
-                assert.equal(isTokenAllowed, previousIsTokenAllowed);
-            });
-
-            it('enables tokens whitelist validation', async function() {
-                await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, false);
-
-                await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-
-                isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
-            });
-
-            it('fail if enableAllowedTokensValidation caller is not the owner', async function() {
-                await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
-                utils.expectThrow(this.allowTokens.enableAllowedTokensValidation({ from: tokenDeployer }));
-
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
-                assert.equal(isTokenAllowed, previousIsTokenAllowed);
-            });
 
             it('add token type', async function() {
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
@@ -155,8 +114,6 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('validates whitelisted token', async function() {
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 //Use owner to set the token
@@ -171,8 +128,6 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should add multiple tokens', async function() {
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
@@ -229,8 +184,6 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('removes allowed token', async function() {
-                let isValidatingAllowedTokens = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidatingAllowedTokens, true);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
@@ -409,13 +362,6 @@ contract('AllowTokens', async function (accounts) {
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
                 await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
-
-                await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
-
-                await this.allowTokens.enableAllowedTokensValidation({ from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
             });
 
             it('should check allowed token if not side or allowed token', async function() {
@@ -423,10 +369,6 @@ contract('AllowTokens', async function (accounts) {
                 //Token not allowed
                 await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed));
 
-                await this.allowTokens.disableAllowedTokensValidation({ from: manager });
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed);
-
-                await this.allowTokens.enableAllowedTokensValidation({ from: manager });
                 await this.allowTokens.addTokenType('RIF', {max:maxTokensAllowed, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
@@ -660,70 +602,6 @@ contract('AllowTokens', async function (accounts) {
 
                 isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, false);
-            });
-
-            it('should fail to disable tokens validation due to missing signatures', async function() {
-                let data = this.allowTokens.contract.methods.disableAllowedTokensValidation().encodeABI();
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-
-                let tx = await this.multiSig.transactions(this.txIndex);
-                assert.equal(tx.executed, false);
-
-                let isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, true);
-            });
-
-            it('should disable tokens validation', async function() {
-                let data = this.allowTokens.contract.methods.disableAllowedTokensValidation().encodeABI();
-
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-                await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
-
-                let isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, false);
-            });
-
-            it('should fail to enable tokens validation due to missing signatures', async function() {
-                let data = this.allowTokens.contract.methods.disableAllowedTokensValidation().encodeABI();
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-                await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
-
-                let isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, false);
-
-                data = this.allowTokens.contract.methods.enableAllowedTokensValidation().encodeABI();
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-
-                let tx = await this.multiSig.transactions(this.txIndex);
-                assert.equal(tx.executed, false);
-
-                isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, false);
-            });
-
-            it('should enable tokens validation', async function() {
-                let data = this.allowTokens.contract.methods.disableAllowedTokensValidation().encodeABI();
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-                await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
-
-                let isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, false);
-
-                data = this.allowTokens.contract.methods.enableAllowedTokensValidation().encodeABI();
-                await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
-                this.txIndex++;
-                await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
-
-                let tx = await this.multiSig.transactions(this.txIndex);
-                assert.equal(tx.executed, true);
-
-                isValidating = await this.allowTokens.isValidatingAllowedTokens();
-                assert.equal(isValidating, true);
             });
 
             it('should fail to set max tokens due to missing signatures', async function() {
