@@ -193,6 +193,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
             describe('after upgrade', () => {
                 beforeEach(async () => {
+                    this.typeId = 0;
                     const bridgeLogic = await Bridge.new();
                     await this.proxyAdmin.upgrade(this.proxy.options.address, bridgeLogic.address);
                     this.proxy = new web3.eth.Contract(Bridge.abi, this.proxy.options.address);
@@ -216,8 +217,8 @@ contract('Bridge upgrade test', async (accounts) => {
                             }
                         }]
                     );
+                    await this.allowTokens.setToken(this.token.address, this.typeId, { from: managerAddress });
                     await this.allowTokens.transferPrimary(this.proxy.options.address);
-                    await this.allowTokens.disableAllowedTokensValidation({from: managerAddress});
                     const result = await this.proxy.methods.version().call();
                     assert.equal(result, 'v3');
                 });

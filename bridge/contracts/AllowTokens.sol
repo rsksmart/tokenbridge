@@ -14,7 +14,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     address constant private NULL_ADDRESS = address(0);
     uint256 constant public MAX_TYPES = 250;
-    bool public isValidatingAllowedTokens;
     mapping (address => bool) public allowedContracts;
     mapping (address => TokenInfo) public allowedTokens;
     mapping (uint256 => Limits) public typeLimits;
@@ -26,7 +25,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     event SetToken(address indexed _tokenAddress, uint256 _typeId);
     event AllowedTokenRemoved(address indexed _tokenAddress);
-    event AllowedTokenValidation(bool _enabled);
     event AllowedContractAdded(address indexed _contractAddress);
     event AllowedContractRemoved(address indexed _contractAddress);
     event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
@@ -50,7 +48,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         UpgradableOwnable.initialize(_manager);
         UpgradableSecondary.initialize(_primary);
         _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
-        isValidatingAllowedTokens = true;
         for(uint i = 0; i < typesInfo.length; i = i + 1) {
             _addTokenType(typesInfo[i].description, typesInfo[i].limits);
         }
@@ -86,21 +83,20 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     // solium-disable-next-line max-len
     function updateTokenTransfer(address token, uint256 amount) external onlyPrimary returns(uint256 typeId) {
         (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
-        if(isValidatingAllowedTokens) {
-            require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
-            require(amount >= limit.min, "AllowTokens: Amount lower than limit");
-             // solium-disable-next-line security/no-block-members
-            if (now > info.lastDay + 24 hours) {
-                // solium-disable-next-line security/no-block-members
-                info.lastDay = now;
-                info.spentToday = 0;
-            }
-            uint maxWithdraw = _calcMaxWithdraw(info, limit);
-            require(amount <= maxWithdraw, "AllowTokens: Amount bigger than limit");
-            info.spentToday = info.spentToday.add(amount);
-            allowedTokens[token] = info;
-            emit UpdateTokensTransfered(token, info.lastDay, info.spentToday);
+        require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
+        require(amount >= limit.min, "AllowTokens: Amount lower than limit");
+            // solium-disable-next-line security/no-block-members
+        if (now > info.lastDay + 24 hours) {
+            // solium-disable-next-line security/no-block-members
+            info.lastDay = now;
+            info.spentToday = 0;
         }
+        uint maxWithdraw = _calcMaxWithdraw(info, limit);
+        require(amount <= maxWithdraw, "AllowTokens: Amount bigger than limit");
+        info.spentToday = info.spentToday.add(amount);
+        allowedTokens[token] = info;
+        emit UpdateTokensTransfered(token, info.lastDay, info.spentToday);
+
         return info.typeId;
     }
 
@@ -151,10 +147,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     }
 
     function isTokenAllowed(address token) public view notNull(token) returns (bool) {
-        if (isValidatingAllowedTokens) {
-            return allowedTokens[token].allowed;
-        }
-        return true;
+        return allowedTokens[token].allowed;
     }
 
     function setToken(address token, uint256 typeId) public notNull(token) {
@@ -180,16 +173,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         info.allowed = false;
         allowedTokens[token] = info;
         emit AllowedTokenRemoved(token);
-    }
-
-    function enableAllowedTokensValidation() external onlyOwner {
-        isValidatingAllowedTokens = true;
-        emit AllowedTokenValidation(isValidatingAllowedTokens);
-    }
-
-    function disableAllowedTokensValidation() external onlyOwner {
-        isValidatingAllowedTokens = false;
-        emit AllowedTokenValidation(isValidatingAllowedTokens);
     }
 
     function setConfirmations(
