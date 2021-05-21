@@ -14,7 +14,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     address constant private NULL_ADDRESS = address(0);
     uint256 constant public MAX_TYPES = 250;
-    mapping (address => bool) public allowedContracts;
     mapping (address => TokenInfo) public allowedTokens;
     mapping (uint256 => Limits) public typeLimits;
     address public bridge;
@@ -25,8 +24,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     event SetToken(address indexed _tokenAddress, uint256 _typeId);
     event AllowedTokenRemoved(address indexed _tokenAddress);
-    event AllowedContractAdded(address indexed _contractAddress);
-    event AllowedContractRemoved(address indexed _contractAddress);
     event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
     event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
     event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
@@ -134,16 +131,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     function getTypeDescriptions(uint index) external view returns(string memory) {
         return typeDescriptions[index];
-    }
-
-    function addAllowedContract(address _contract) external notNull(_contract) onlyOwner {
-        allowedContracts[_contract] = true;
-        emit AllowedContractAdded(_contract);
-    }
-
-    function removeAllowedContract(address _contract) external notNull(_contract) onlyOwner {
-        allowedContracts[_contract] = false;
-        emit AllowedContractRemoved(_contract);
     }
 
     function isTokenAllowed(address token) public view notNull(token) returns (bool) {
