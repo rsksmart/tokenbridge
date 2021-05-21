@@ -28,8 +28,6 @@ interface IAllowTokens {
         uint256 typeId;
     }
 
-    function allowedContracts(address sender) external view returns (bool);
-
     function version() external pure returns (string memory);
 
     function getInfoAndLimits(address token) external view returns (TokenInfo memory info, Limits memory limit);
