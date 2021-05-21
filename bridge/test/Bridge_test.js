@@ -319,23 +319,17 @@ contract('Bridge', async function (accounts) {
             it('fail depositTo no wrapped currency set', async function () {
                 const amount = web3.utils.toWei('1');
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
-                const decimals = (await wrbtc.decimals()).toString();
-                const symbol = await wrbtc.symbol();
 
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                const originalBalance = await web3.eth.getBalance(tokenOwner);
                 await utils.expectThrow(this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount }));
             });
 
             it('call depositTo from a contract', async function () {
                 const amount = web3.utils.toWei('1');
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
-                const decimals = (await wrbtc.decimals()).toString();
-                const symbol = await wrbtc.symbol();
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                await this.allowTokens.addAllowedContract(mockContract.address, { from: bridgeManager });
                 receipt = await mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
@@ -343,17 +337,6 @@ contract('Bridge', async function (accounts) {
                 assert.equal(bridgeBalance, amount);
                 const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
                 assert.equal(isKnownToken, true);
-            });
-
-            it('fail call depositTo from a contract if not allowed', async function () {
-                const amount = web3.utils.toWei('1');
-                const wrbtc = await WRBTC.new({ from: tokenOwner });
-                const decimals = (await wrbtc.decimals()).toString();
-                const symbol = await wrbtc.symbol();
-                const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
-                await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
-                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                await utils.expectThrow(mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount }));
             });
 
             it('receiveTokens approve and transferFrom for ERC777', async function () {
@@ -467,13 +450,12 @@ contract('Bridge', async function (accounts) {
                 assert.equal(isKnownToken, true);
             });
 
-            it('tokensReceived for ERC777 with whitelisted contract', async function () {
+            it('tokensReceived for ERC777 called with contract', async function () {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
                 await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address);
-                await this.allowTokens.addAllowedContract(mockContract.address, { from: bridgeManager });
                 await erc777.mint(mockContract.address, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(mockContract.address);
                 const userData = anAccount.toLowerCase();
@@ -826,19 +808,11 @@ contract('Bridge', async function (accounts) {
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount, { from: tokenOwner }));
             });
 
-            it('receiveTokens should work calling from an allowed contract', async function () {
+            it('receiveTokens should work calling from a contract', async function () {
                 let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
-                this.allowTokens.addAllowedContract(otherContract.address, { from: bridgeManager });
                 const amount = web3.utils.toWei('1000');
                 await this.token.transfer(otherContract.address, amount, { from: tokenOwner });
                 await otherContract.callReceiveTokens(this.token.address, tokenOwner, amount);
-            });
-
-            it('receiveTokens should reject calling from a contract', async function () {
-                let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
-                const amount = web3.utils.toWei('1000');
-                await this.token.transfer(otherContract.address, amount, { from: tokenOwner });
-                await utils.expectThrow(otherContract.callReceiveTokens(this.token.address, tokenOwner, amount));
             });
 
             it('rejects to receive tokens greater than  max tokens allowed 18 decimals', async function() {

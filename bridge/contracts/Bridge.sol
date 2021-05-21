@@ -198,16 +198,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      */
     function receiveTokensTo(address tokenToUse, address to, uint256 amount) public {
         address sender = _msgSender();
-        checkWhitelisted(sender);
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
         crossTokens(tokenToUse, sender, to, amount, "");
-    }
-
-    function checkWhitelisted(address sender) private view {
-        if (sender.isContract()) {
-            require(allowTokens.allowedContracts(sender), "Bridge: from contract not whitelisted ");
-        }
     }
 
     /**
@@ -215,7 +208,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      */
     function depositTo(address to) external payable {
         address sender = _msgSender();
-        checkWhitelisted(sender);
         require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
         wrappedCurrency.deposit.value(msg.value)();
         crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
@@ -238,8 +230,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-        //This can only be used with trusted contracts
-        checkWhitelisted(from);
         require(allowTokens.isTokenAllowed(tokenToUse), "Bridge: token not allowed");
         require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
         address receiver = userData.length == 0 ? from : Utils.bytesToAddress(userData);
