@@ -13,9 +13,9 @@ module.exports = class Federator {
         this.config = config;
         this.logger = logger;
 
-        if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
-            throw new Error(`Invalid host configuration, https or localhost required`);
-        }
+        //if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+        //    throw new Error(`Invalid host configuration, https or localhost required`);
+        //}
 
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
@@ -37,12 +37,13 @@ module.exports = class Federator {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
-
+                
                 const isMainSyncing = await this.mainWeb3.eth.isSyncing();
                 if (isMainSyncing !== false) {
                     this.logger.warn(`ChainId ${chainId} is Syncing, ${JSON.stringify(isMainSyncing)}. Federator won't process requests till is synced`);
                     return;
                 }
+
                 const isSideSyncing = await this.sideWeb3.eth.isSyncing();
                 if (isSideSyncing !== false) {
                     const sideChainId = await this.sideWeb3.eth.net.getId();
@@ -134,8 +135,7 @@ module.exports = class Federator {
     async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
 
         try {
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-            const from = await transactionSender.getAddress(this.config.privateKey);
+            const from = await this.transactionSender.getAddress(this.config.privateKey);
             const fedContract = await this.federationFactory.getSideFederationContract();
             const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
 
@@ -263,8 +263,7 @@ module.exports = class Federator {
         txId
     ) {
         try {
-
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
+            txId = txId.toLowerCase();
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
 
             let txData = await fedContract.voteTransaction({
@@ -291,8 +290,9 @@ module.exports = class Federator {
                 this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
                 return false;
             }
-            const receipt = await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
 
+            const receipt = await this.transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            
             if(receipt.status == false) {
                 fs.writeFileSync(
                     this.revertedTxnsPath,
