@@ -24,6 +24,7 @@ module.exports = class Federator {
 
         this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
+        this.revertedTxnsPath = `${config.storagePath || __dirname}/revertedTxns.json`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
         this.allowTokensFactory = new AllowTokensFactory(this.config, this.logger, Web3);
@@ -36,12 +37,13 @@ module.exports = class Federator {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
-
+                
                 const isMainSyncing = await this.mainWeb3.eth.isSyncing();
                 if (isMainSyncing !== false) {
                     this.logger.warn(`ChainId ${chainId} is Syncing, ${JSON.stringify(isMainSyncing)}. Federator won't process requests till is synced`);
                     return;
                 }
+
                 const isSideSyncing = await this.sideWeb3.eth.isSyncing();
                 if (isSideSyncing !== false) {
                     const sideChainId = await this.sideWeb3.eth.net.getId();
@@ -133,8 +135,7 @@ module.exports = class Federator {
     async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
 
         try {
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-            const from = await transactionSender.getAddress(this.config.privateKey);
+            const from = await this.transactionSender.getAddress(this.config.privateKey);
             const fedContract = await this.federationFactory.getSideFederationContract();
             const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
 
@@ -228,7 +229,8 @@ module.exports = class Federator {
                             log.logIndex,
                             decimals,
                             granularity,
-                            typeId
+                            typeId,
+                            transactionId
                         );
                     } else {
                         this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol}  has already been voted by us`);
@@ -257,11 +259,11 @@ module.exports = class Federator {
         logIndex,
         decimals,
         granularity,
-        typeId)
-    {
+        typeId,
+        txId
+    ) {
         try {
-
-            const transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
+            txId = txId.toLowerCase();
             this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
 
             let txData = await fedContract.voteTransaction({
@@ -278,7 +280,40 @@ module.exports = class Federator {
                 typeId
             }).encodeABI();
 
-            await transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            let revertedTxns = {};
+            if (fs.existsSync(this.revertedTxnsPath)) {
+                revertedTxns = JSON.parse(fs.readFileSync(this.revertedTxnsPath, 'utf8'));
+                this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
+            }
+
+            if (revertedTxns[txId]) {
+                this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
+                return false;
+            }
+
+            const receipt = await this.transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
+            
+            if(receipt.status == false) {
+                fs.writeFileSync(
+                    this.revertedTxnsPath,
+                    JSON.stringify({
+                        ...revertedTxns,
+                        [txId]: {
+                            originalTokenAddress: tokenAddress,
+                            sender,
+                            receiver,
+                            amount,
+                            symbol,
+                            blockHash,
+                            transactionHash,
+                            logIndex,
+                            decimals,
+                            granularity
+                        }
+                    })
+                )
+            }
+
             return true;
         } catch (err) {
             throw new CustomError(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`, err);
