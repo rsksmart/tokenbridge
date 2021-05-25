@@ -13,9 +13,9 @@ module.exports = class Federator {
         this.config = config;
         this.logger = logger;
 
-        //if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
-        //    throw new Error(`Invalid host configuration, https or localhost required`);
-        //}
+        if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+            throw new Error(`Invalid host configuration, https or localhost required`);
+        }
 
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
