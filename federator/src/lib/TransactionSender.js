@@ -2,7 +2,6 @@
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
-const CustomError = require('./CustomError');
 const fs = require('fs');
 
 module.exports = class TransactionSender {
@@ -95,13 +94,10 @@ module.exports = class TransactionSender {
     }
 
     async sendTransaction(to, data, value, privateKey) {
-        const stack = new Error().stack;
         var from = await this.getAddress(privateKey);
         let rawTx = await this.createRawTransaction(from, to, data, value);
 
         let txHash;
-        let error = '';
-        let errorInfo = '';
         let receipt;
         try {
             if (privateKey && privateKey.length) {
