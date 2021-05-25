@@ -2,7 +2,6 @@
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
-const CustomError = require('./CustomError');
 const fs = require('fs');
 const axios = require('axios');
 
@@ -167,7 +166,6 @@ module.exports = class TransactionSender {
     }
 
     async sendTransaction(to, data, value, privateKey) {
-        const stack = new Error().stack;
         const chainId =  await this.getChainId();
         let txHash;
         let receipt;
