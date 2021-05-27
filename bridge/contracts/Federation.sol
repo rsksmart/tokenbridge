@@ -46,19 +46,6 @@ contract Federation is Ownable {
         string nodeEthInfo
     );
 
-    struct TransactionInfo {
-        address sender;
-        address payable receiver;
-        uint256 amount;
-        bytes32 blockHash;
-        bytes32 transactionHash;
-        uint32 logIndex;
-        uint8 decimals;
-        uint256 granularity;
-        uint256 typeId;
-        string symbol;
-    }
-
     modifier onlyMember() {
         require(isMember[_msgSender()], "Federation: Caller not a Federator");
         _;
@@ -92,7 +79,7 @@ contract Federation is Ownable {
         emit BridgeChanged(_bridge);
     }
 
-    function voteTransaction(address originalTokenAddress, TransactionInfo memory transactionInfo)
+    function voteTransaction(address originalTokenAddress, IBridge.TransactionInfo memory transactionInfo)
     public onlyMember returns(bool)
     {
         bytes32 transactionId = getTransactionId(originalTokenAddress, transactionInfo);
@@ -124,16 +111,7 @@ contract Federation is Ownable {
             processed[transactionId] = true;
             bridge.acceptTransfer(
                 originalTokenAddress,
-                transactionInfo.sender,
-                transactionInfo.receiver,
-                transactionInfo.amount,
-                transactionInfo.symbol,
-                transactionInfo.blockHash,
-                transactionInfo.transactionHash,
-                transactionInfo.logIndex,
-                transactionInfo.decimals,
-                transactionInfo.granularity,
-                transactionInfo.typeId
+                transactionInfo
             );
             emit Executed(transactionId);
             return true;
@@ -163,7 +141,7 @@ contract Federation is Ownable {
 
     function getTransactionId(
         address originalTokenAddress,
-        TransactionInfo memory transactionInfo)
+        IBridge.TransactionInfo memory transactionInfo)
     public pure returns(bytes32)
     {
         return keccak256(
