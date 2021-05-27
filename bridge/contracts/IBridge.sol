@@ -1,6 +1,27 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 interface IBridge {
+
+    struct CrossedTransactions {
+        bytes32 transactionId;
+        TransactionInfo transactionInfo;
+    }
+
+    struct TransactionInfo {
+        address originalTokenAddress;
+        address sender;
+        address payable receiver;
+        uint256 amount;
+        bytes32 blockHash;
+        bytes32 transactionHash;
+        uint32 logIndex;
+        uint8 decimals;
+        uint256 granularity;
+        uint256 typeId;
+        string symbol;
+    }
+
     function version() external pure returns (string memory);
 
     function getFeePercentage() external view returns(uint);
@@ -34,16 +55,15 @@ interface IBridge {
      */
     function acceptTransfer(
         address originalTokenAddress,
-        address sender,
-        address payable receiver,
-        uint256 amount,
-        string calldata symbol,
-        bytes32 blockHash,
+        TransactionInfo calldata transactionInfo
+    ) external;
+
+    /**
+     * Claims the crossed transaction using the hash, this sends the funds to the address indicated in
+     */
+    function claim(
         bytes32 transactionHash,
-        uint32 logIndex,
-        uint8 decimals,
-        uint256 granularity,
-        uint256 typeId
+        bool preferWrapped
     ) external;
 
     event Cross(
@@ -64,15 +84,21 @@ interface IBridge {
         uint256 _granularity
     );
     event AcceptedCrossTransfer(
-        address indexed _tokenAddress,
+        address indexed _originalTokenAddress,
         address indexed _from,
         address indexed _to,
         uint256 _amount,
         uint8 _decimals,
-        uint256 _granularity,
-        uint256 _formattedAmount,
-        uint8 _calculatedDecimals,
-        uint256 _calculatedGranularity,
-        uint256 _typeId);
+        bytes32 _transactionHash,
+        bytes32 _transactionId
+    );
+    event Claim(
+        bytes32 indexed _transactionHash,
+        address indexed _tokenAddress,
+        address indexed receiver,
+        uint256 _amount,
+        uint8 _decimals,
+        bytes32 _transactionId
+    );
     event FeePercentageChanged(uint256 _amount);
 }

@@ -13,7 +13,7 @@
     "migrate": "rm -rf ./build && npx truffle migrate --reset",
     "test": "npx truffle test",
     "coverage": "npx truffle run coverage",
-    "size": "npm run compile && node calculateSize.js",
+    "size": "rm -rf ./build && npm run compile && node calculateSize.js",
     "prepare": "npx truffle compile && node ./datagen.js",
     "deployOld": "rm -rf ./build && npx truffle migrate -f 1 --to 19 --network",
     "upgrade": "rm -rf ./build && npx truffle migrate -f 20 --to 30 --network",
