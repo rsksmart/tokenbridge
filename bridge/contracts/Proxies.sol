@@ -1,13 +1,15 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
 
-import "./zeppelin/upgradable/Proxy-flattened.sol";
+pragma solidity ^0.7.0;
 
-contract BridgeProxy is AdminUpgradeabilityProxy {
-    constructor(address _logic, address _admin, bytes memory _data) AdminUpgradeabilityProxy(_logic,_admin, _data) public payable {
+import "./zeppelin/upgradable/proxy/TransparentUpgradeableProxy.sol";
+
+contract BridgeProxy is TransparentUpgradeableProxy {
+    constructor(address _logic, address _admin, bytes memory _data) TransparentUpgradeableProxy(_logic,_admin, _data) payable {
     }
 }
 
-contract AllowTokensProxy is AdminUpgradeabilityProxy {
-    constructor(address _logic, address _admin, bytes memory _data) AdminUpgradeabilityProxy(_logic,_admin, _data) public payable {
+contract AllowTokensProxy is TransparentUpgradeableProxy {
+    constructor(address _logic, address _admin, bytes memory _data) TransparentUpgradeableProxy(_logic,_admin, _data) payable {
     }
 }

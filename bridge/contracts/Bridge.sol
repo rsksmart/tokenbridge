@@ -1,5 +1,7 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 // Import base Initializable contract
 import "./zeppelin/upgradable/Initializable.sol";
@@ -14,6 +16,7 @@ import "./zeppelin/token/ERC20/IERC20.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/utils/Address.sol";
 import "./zeppelin/math/SafeMath.sol";
+import "./zeppelin/token/ERC777/IERC777.sol";
 
 import "./IBridge.sol";
 import "./ISideToken.sol";
@@ -37,7 +40,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     uint256 private _depprecatedLastDay;
     uint256 private _deprecatedSpentToday;
 
-    mapping (address => ISideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => address) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionId => true
@@ -65,7 +68,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         string memory _symbolPrefix
     ) public initializer {
         UpgradableOwnable.initialize(_manager);
-        UpgradablePausable.initialize(_manager);
+        UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = IAllowTokens(_allowTokens);
         sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
@@ -74,12 +77,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
-    function () external payable {
+    receive () external payable {
         // The fallback function is needed to use WRBTC
         require(_msgSender() == address(wrappedCurrency), "Bridge: not wrappedCurrency");
     }
 
-    function version() external pure returns (string memory) {
+    function version() override external pure returns (string memory) {
         return "v3";
     }
 
@@ -90,7 +93,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function acceptTransfer(
         TransactionInfo calldata transactionInfo
-    ) external whenNotPaused nonReentrant {
+    ) external whenNotPaused nonReentrant override {
         require(_msgSender() == federation, "Bridge: Sender not Federation");
         require(transactionInfo.originalTokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(transactionInfo.receiver != NULL_ADDRESS, "Bridge: Receiver is null");
@@ -126,7 +129,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
 
-    function claim(bytes32 transactionHash, bool preferWrapped) public {
+    function claim(bytes32 transactionHash, bool preferWrapped) public override {
         CrossedTransactions memory crossedTx = crossedTransactions[transactionHash];
         require(!claimed[crossedTx.transactionId], "Bridge: Already claimed");
         claimed[crossedTx.transactionId] = true;
@@ -145,23 +148,23 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             crossedTx.transactionInfo.granularity,
             crossedTx.transactionInfo.amount
         );
-        ISideToken sideToken = mappedTokens[crossedTx.transactionInfo.originalTokenAddress];
-        if (address(sideToken) == NULL_ADDRESS) {
+        address sideToken = mappedTokens[crossedTx.transactionInfo.originalTokenAddress];
+        if (sideToken == NULL_ADDRESS) {
             // Create side token
             string memory newSymbol = string(abi.encodePacked(symbolPrefix, crossedTx.transactionInfo.symbol));
-            sideToken = ISideToken(sideTokenFactory.createSideToken(newSymbol, newSymbol, calculatedGranularity));
+            sideToken = sideTokenFactory.createSideToken(newSymbol, newSymbol, calculatedGranularity);
             mappedTokens[crossedTx.transactionInfo.originalTokenAddress] = sideToken;
-            originalTokens[address(sideToken)] = crossedTx.transactionInfo.originalTokenAddress;
-            allowTokens.setToken(address(sideToken), crossedTx.transactionInfo.typeId);
-            emit NewSideToken(address(sideToken), crossedTx.transactionInfo.originalTokenAddress, newSymbol, calculatedGranularity);
+            originalTokens[sideToken] = crossedTx.transactionInfo.originalTokenAddress;
+            allowTokens.setToken(sideToken, crossedTx.transactionInfo.typeId);
+            emit NewSideToken(sideToken, crossedTx.transactionInfo.originalTokenAddress, newSymbol, calculatedGranularity);
         } else {
-            require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ");
+            require(calculatedGranularity == IERC777(sideToken).granularity(), "Bridge: Granularity differ");
         }
-        sideToken.mint(crossedTx.transactionInfo.receiver, formattedAmount, "", "");
+        ISideToken(sideToken).mint(crossedTx.transactionInfo.receiver, formattedAmount, "", "");
 
         emit Claim(
             crossedTx.transactionInfo.transactionHash,
-            address(sideToken),
+            sideToken,
             crossedTx.transactionInfo.receiver,
             formattedAmount,
             18,
@@ -200,7 +203,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokensTo(address tokenToUse, address to, uint256 amount) public {
+    function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
         address sender = _msgSender();
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
         IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
@@ -210,10 +213,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     /**
      * Use network currency and cross it.
      */
-    function depositTo(address to) external payable {
+    function depositTo(address to) override external payable {
         address sender = _msgSender();
         require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
-        wrappedCurrency.deposit.value(msg.value)();
+        wrappedCurrency.deposit{ value: msg.value }();
         crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
     }
 
@@ -228,7 +231,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external {
+    ) external override(IBridge, IERC777Recipient){
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to this address");
@@ -257,7 +260,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             uint256 modulo = amountMinusFees.mod(granularity);
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
-            ISideToken(tokenToUse).burn(amountMinusFees, userData);
+            IERC777(tokenToUse).burn(amountMinusFees, userData);
         }
 
         emit Cross(
@@ -296,7 +299,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         emit FeePercentageChanged(feePercentage);
     }
 
-    function getFeePercentage() external view returns(uint) {
+    function getFeePercentage() external view override returns(uint) {
         return feePercentage;
     }
 

@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../Initializable.sol";
 
@@ -31,8 +33,8 @@ contract UpgradablePausable is Initializable, Context, UpgradablePauserRole {
      * @dev Initializes the contract in unpaused state. Assigns the Pauser role
      * to the deployer.
      */
-    function initialize(address sender) public initializer {
-        UpgradablePauserRole.initialize(sender);
+    function __Pausable_init(address sender) public initializer {
+        UpgradablePauserRole.__PauserRol_init(sender);
 
         _paused = false;
     }

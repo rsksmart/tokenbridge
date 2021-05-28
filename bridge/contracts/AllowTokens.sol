@@ -1,5 +1,7 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "./zeppelin/math/SafeMath.sol";
 // Upgradables
@@ -43,30 +45,31 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         uint256 _largeAmountConfirmations,
         TypeInfo[] memory typesInfo) public initializer {
         UpgradableOwnable.initialize(_manager);
-        UpgradableSecondary.initialize(_primary);
+        UpgradableSecondary.__Secondary_init(_primary);
         _setConfirmations(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
         for(uint i = 0; i < typesInfo.length; i = i + 1) {
             _addTokenType(typesInfo[i].description, typesInfo[i].limits);
         }
     }
 
-    function version() external pure returns (string memory) {
+    function version() override external pure returns (string memory) {
         return "v1";
     }
 
-    function getInfoAndLimits(address token) public view returns (TokenInfo memory info, Limits memory limit) {
+    function getInfoAndLimits(address token)override public view
+    returns (TokenInfo memory info, Limits memory limit) {
         info = allowedTokens[token];
         limit = typeLimits[info.typeId];
         return (info, limit);
     }
-    function calcMaxWithdraw(address token) public view returns (uint256 maxWithdraw) {
+    function calcMaxWithdraw(address token) override public view returns (uint256 maxWithdraw) {
         (TokenInfo memory info, Limits memory limits) = getInfoAndLimits(token);
         return _calcMaxWithdraw(info, limits);
     }
 
     function _calcMaxWithdraw(TokenInfo memory info, Limits memory limits) private view returns (uint256 maxWithdraw) {
         // solium-disable-next-line security/no-block-members
-        if (now > info.lastDay + 24 hours) {
+        if (block.timestamp > info.lastDay + 24 hours) {
             info.spentToday = 0;
         }
         if (limits.daily <= info.spentToday)
@@ -78,14 +81,14 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     }
 
     // solium-disable-next-line max-len
-    function updateTokenTransfer(address token, uint256 amount) external onlyPrimary returns(uint256 typeId) {
+    function updateTokenTransfer(address token, uint256 amount) override external onlyPrimary returns(uint256 typeId) {
         (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
         require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
         require(amount >= limit.min, "AllowTokens: Amount lower than limit");
             // solium-disable-next-line security/no-block-members
-        if (now > info.lastDay + 24 hours) {
+        if (block.timestamp > info.lastDay + 24 hours) {
             // solium-disable-next-line security/no-block-members
-            info.lastDay = now;
+            info.lastDay = block.timestamp;
             info.spentToday = 0;
         }
         uint maxWithdraw = _calcMaxWithdraw(info, limit);
@@ -125,19 +128,19 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         _setTypeLimits(typeId, limits);
     }
 
-    function getTypeDescriptionsLength() external view returns(uint256) {
+    function getTypeDescriptionsLength() external view override returns(uint256) {
         return typeDescriptions.length;
     }
 
-    function getTypeDescriptions(uint index) external view returns(string memory) {
+    function getTypeDescriptions(uint index) external view override returns(string memory) {
         return typeDescriptions[index];
     }
 
-    function isTokenAllowed(address token) public view notNull(token) returns (bool) {
+    function isTokenAllowed(address token) public view notNull(token) override returns (bool) {
         return allowedTokens[token].allowed;
     }
 
-    function setToken(address token, uint256 typeId) public notNull(token) {
+    function setToken(address token, uint256 typeId) override public notNull(token) {
         require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
         require(typeId < typeDescriptions.length, "AllowTokens: typeId does not exist");
         TokenInfo memory info = allowedTokens[token];
@@ -181,7 +184,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         emit ConfirmationsChanged(_smallAmountConfirmations, _mediumAmountConfirmations, _largeAmountConfirmations);
     }
 
-    function getConfirmations() external view returns (uint256 smallAmount, uint256 mediumAmount, uint256 largeAmount) {
+    function getConfirmations() external view override
+    returns (uint256 smallAmount, uint256 mediumAmount, uint256 largeAmount) {
         return (smallAmountConfirmations, mediumAmountConfirmations, largeAmountConfirmations);
     }
 

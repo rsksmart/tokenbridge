@@ -1,7 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
 
-import "../zeppelin/token/ERC20/ERC20Detailed.sol";
-
+pragma solidity ^0.7.0;
 interface IBridge_old {function version() external pure returns (string memory);
 
     function getFeePercentage() external view returns(uint);
