@@ -1,6 +1,7 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
 
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 interface IBridge {
 
     struct CrossedTransactions {
@@ -53,10 +54,7 @@ interface IBridge {
     /**
      * Accepts the transaction from the other chain that was voted and sent by the Federation contract
      */
-    function acceptTransfer(
-        address originalTokenAddress,
-        TransactionInfo calldata transactionInfo
-    ) external;
+    function acceptTransfer(TransactionInfo calldata transactionInfo) external;
 
     /**
      * Claims the crossed transaction using the hash, this sends the funds to the address indicated in

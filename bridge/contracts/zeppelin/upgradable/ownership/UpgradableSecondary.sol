@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../Initializable.sol";
 
@@ -20,7 +22,7 @@ contract UpgradableSecondary is Initializable, Context {
     /**
      * @dev Sets the primary account to the one that is creating the Secondary contract.
      */
-    function initialize(address sender) public initializer {
+    function __Secondary_init(address sender) public initializer {
         _primary = sender;
         emit PrimaryTransferred(_primary);
     }

@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 /**
  * @dev Interface of the ERC777Token standard as defined in the EIP.
@@ -175,6 +177,8 @@ interface IERC777 {
         bytes data,
         bytes operatorData
     );
+
+    function decimals() external returns (uint8);
 
     event Minted(address indexed operator, address indexed to, uint256 amount, bytes data, bytes operatorData);
 

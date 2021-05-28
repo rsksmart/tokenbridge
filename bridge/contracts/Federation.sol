@@ -1,6 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
 
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "./IBridge.sol";
 import "./zeppelin/ownership/Ownable.sol";
@@ -57,7 +58,7 @@ contract Federation is Ownable {
         _;
     }
 
-    constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
+    constructor(address[] memory _members, uint _required) validRequirement(_members.length, _required) {
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
@@ -79,10 +80,10 @@ contract Federation is Ownable {
         emit BridgeChanged(_bridge);
     }
 
-    function voteTransaction(address originalTokenAddress, IBridge.TransactionInfo memory transactionInfo)
+    function voteTransaction(IBridge.TransactionInfo memory transactionInfo)
     public onlyMember returns(bool)
     {
-        bytes32 transactionId = getTransactionId(originalTokenAddress, transactionInfo);
+        bytes32 transactionId = getTransactionId(transactionInfo);
         if (processed[transactionId])
             return true;
 
@@ -93,7 +94,7 @@ contract Federation is Ownable {
         emit Voted(
             _msgSender(),
             transactionId,
-            originalTokenAddress,
+            transactionInfo.originalTokenAddress,
             transactionInfo.sender,
             transactionInfo.receiver,
             transactionInfo.amount,
@@ -110,7 +111,6 @@ contract Federation is Ownable {
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
             bridge.acceptTransfer(
-                originalTokenAddress,
                 transactionInfo
             );
             emit Executed(transactionId);
@@ -140,13 +140,12 @@ contract Federation is Ownable {
     }
 
     function getTransactionId(
-        address originalTokenAddress,
         IBridge.TransactionInfo memory transactionInfo)
     public pure returns(bytes32)
     {
         return keccak256(
             abi.encodePacked(
-            originalTokenAddress,
+            transactionInfo.originalTokenAddress,
             transactionInfo.sender,
             transactionInfo.receiver,
             transactionInfo.amount,
@@ -186,7 +185,7 @@ contract Federation is Ownable {
                 break;
             }
         }
-        members.length -= 1;
+        members.pop(); // remove an element from the end of the array.
         emit MemberRemoval(_oldMember);
     }
 
