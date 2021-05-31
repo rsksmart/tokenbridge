@@ -39,7 +39,7 @@ contract mockReceiveTokensCall is IERC777Recipient {
         uint,
         bytes calldata,
         bytes calldata
-    ) override external {
+    ) override external view {
         this;
     }
 }
