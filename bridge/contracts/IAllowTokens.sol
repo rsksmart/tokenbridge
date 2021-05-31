@@ -45,5 +45,5 @@ interface IAllowTokens {
 
     function isTokenAllowed(address token) external view returns (bool);
 
-    function updateTokenTransfer(address token, uint256 amount) external returns(uint256 typeId);
+    function updateTokenTransfer(address token, uint256 amount) external;
 }
