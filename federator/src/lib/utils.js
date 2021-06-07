@@ -176,9 +176,7 @@ async function evm_mine(iterations, web3Instance = null) {
         await asyncMine(web3Instance);
     };
 };
-function hsmPayloadBuilder(command, keyId, txnHash) {
-    return `{"command":"${command}","keyId":"${keyId}","message":{"hash":"${txnHash}"},"version":2}`;
-}
+
 
 module.exports = {
     asyncMine,
@@ -197,5 +195,4 @@ module.exports = {
     retry,
     retry3Times,
     getHeartbeatPollingInterval,
-    hsmPayloadBuilder
 }
