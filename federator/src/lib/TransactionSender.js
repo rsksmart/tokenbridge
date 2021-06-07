@@ -16,7 +16,7 @@ module.exports = class TransactionSender {
         this.hsm = new HSM({
             port: config.hsmPort,
             host: config.hsmHost
-        })
+        }, this.logger);
     }
 
     async getNonce(address) {
@@ -135,26 +135,22 @@ module.exports = class TransactionSender {
         if(!useHSM) {
             tx.sign(utils.hexStringToBuffer(privateKey));
         } else {
-            const txHash = tx.hash(false).toString();
-            const { 
+            const txHash = tx.hash(false).toString('hex');
+            const {
                 errorcode,
                 signature: {
                     r,
                     s
-                }
+                } = { r: '0x0', s: '0x0' }
             } = JSON.parse(await this.hsm.connectSendAndReceive(txHash));
 
             if(errorcode != 0) {
                 throw new Error(`error while signing txn with HSM`)
             }
-            
-            tx = {
-                ...tx,
-                r,
-                s,
-                v: this.getChainId() * 2 + 8
-            }
-            
+
+            tx.r = Buffer.from(r, 'hex');
+            tx.s = Buffer.from(s, 'hex');
+            tx.v = Buffer.from((this.getChainId() * 2 + 8).toString());
         }
         return tx;
     }

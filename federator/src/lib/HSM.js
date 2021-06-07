@@ -1,20 +1,17 @@
 const net = require('net');
-const utils = require('./utils');
 
-const payloadBuilder =
-    (
-        command,
-        keyId,
-        txnHash
-    ) => `{"command":"${command}","keyId":"${keyId}","message":{"hash":"${txnHash}"},"version":2}`;
+function hsmPayloadBuilder(command, keyId, txnHash) {
+    return `{"command":"${command}","keyId":"${keyId}","message":{"hash":"${txnHash}"},"version":2}`;
+}
 
 module.exports = class HSM {
     constructor({
         host = '127.0.0.1',
         port = 6000,
-    }) {
+    }, logger) {
         this.host = host;
         this.port = port;
+        this.logger = logger;
         this.client = null;
     }
 
@@ -36,7 +33,7 @@ module.exports = class HSM {
     }
 
     send(msgToSign = '') {
-        const payload = utils.hsmPayloadBuilder(`sign`, `m/44'/137'/0'/0/0`, msgToSign);
+        const payload = hsmPayloadBuilder(`sign`, `m/44'/137'/0'/0/0`, msgToSign);
         return this.client.write(`${payload}\n`);
     }
 
@@ -46,7 +43,8 @@ module.exports = class HSM {
             this.send(msgToSign);
             return this.receive();
         } catch(err) {
-            console.log(`HSM (connectSendAndReceive)`, err);
+            this.logger.error(`HSM (connectSendAndReceive)`, err);
+            throw err;
         }
     }
 }
