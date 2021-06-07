@@ -9,4 +9,6 @@ module.exports = {
     etherscanApiKey: '',
     runHeartbeatEvery: 1, // In hours
     endpointsPort: 5000, // Server port
+    hsmPort: 6000, // [HSM] signing service port
+    hsmHost: '127.0.0.1' // [HSM] signing service host
 }
