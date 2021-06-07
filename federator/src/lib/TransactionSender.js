@@ -1,9 +1,9 @@
-
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
 const fs = require('fs');
 const axios = require('axios');
+const HSM = require('./HSM');
 
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
@@ -13,6 +13,10 @@ module.exports = class TransactionSender {
         this.manuallyCheck = `${config.storagePath || __dirname}/manuallyCheck.txt`;
         this.etherscanApiKey = config.etherscanApiKey;
         this.debuggingMode = false;
+        this.hsm = new HSM({
+            port: config.hsmPort,
+            host: config.hsmHost
+        })
     }
 
     async getNonce(address) {
@@ -126,11 +130,35 @@ module.exports = class TransactionSender {
         return rawTx;
     }
 
-    signRawTransaction(rawTx, privateKey) {
+    async signRawTransaction(rawTx, privateKey, useHSM) {
         let tx = new Tx(rawTx);
-        tx.sign(utils.hexStringToBuffer(privateKey));
+        if(!useHSM) {
+            tx.sign(utils.hexStringToBuffer(privateKey));
+        } else {
+            const txHash = tx.hash(false).toString();
+            const { 
+                errorcode,
+                signature: {
+                    r,
+                    s
+                }
+            } = JSON.parse(await this.hsm.connectSendAndReceive(txHash));
+
+            if(errorcode != 0) {
+                throw new Error(`error while signing txn with HSM`)
+            }
+            
+            tx = {
+                ...tx,
+                r,
+                s,
+                v: this.getChainId() * 2 + 8
+            }
+            
+        }
         return tx;
     }
+
 
     async getAddress(privateKey) {
         let address = null;
@@ -170,15 +198,15 @@ module.exports = class TransactionSender {
         return response.data;
     }
 
-    async sendTransaction(to, data, value, privateKey) {
+    async sendTransaction(to, data, value, privateKey, useHSM = false) {
         const chainId =  await this.getChainId();
         let txHash;
         let receipt;
         try {
             let from = await this.getAddress(privateKey);
             let rawTx = await this.createRawTransaction(from, to, data, value);
-            if (privateKey && privateKey.length) {
-                let signedTx = this.signRawTransaction(rawTx, privateKey);
+            if (privateKey && privateKey.length || useHSM) {
+                let signedTx = await this.signRawTransaction(rawTx, privateKey, useHSM);
                 const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
                 receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
                     txHash = hash;
