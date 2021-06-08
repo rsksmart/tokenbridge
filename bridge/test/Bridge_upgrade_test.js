@@ -5,7 +5,6 @@ const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
 const UtilsContract_old = artifacts.require('Utils_old');
-const UtilsContract = artifacts.require('Utils');
 
 //Normal Contracts
 const SideTokenFactory_old = artifacts.require('./SideTokenFactory_old');
@@ -26,13 +25,19 @@ contract('Bridge upgrade test', async (accounts) => {
     const otherAccount = accounts[3];
     const federationAddress = accounts[5];
 
+    before(async function () {
+        await utils.saveState();
+    });
+
+    after(async function () {
+        await utils.revertState();
+    });
+
     beforeEach(async () => {
         this.proxyAdmin = await ProxyAdmin.new();
         this.allowTokens_old = await AllowTokens_old.new(managerAddress);
-        this.utilsContract = await UtilsContract.deployed();
         this.utilsContract_old = await UtilsContract_old.deployed();
         Bridge_old.link({ "Utils_old": this.utilsContract_old.address });
-        Bridge.link({ "Utils": this.utilsContract.address });
         await this.allowTokens_old.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory_old = await SideTokenFactory_old.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000'), { from: deployerAddress });
@@ -85,7 +90,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 assert.equal(result,  'r');
             });
 
-            it('should accept send Transaction', async () => {
+            it('should set fees pecentage', async () => {
                 let feePercentage = '20'; //0.2%
                 const tx = await this.proxy.methods.setFeePercentage(feePercentage).send({from: managerAddress});
                 assert.equal(tx.status, true);
@@ -191,7 +196,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
             });// end upgrade governance
 
-            describe('after upgrade', () => {
+            describe('after upgrade', async () => {
                 beforeEach(async () => {
                     this.typeId = 0;
                     const bridgeLogic = await Bridge.new();
@@ -231,14 +236,17 @@ contract('Bridge upgrade test', async (accounts) => {
                     await this.proxy.methods.changeAllowTokens(this.allowTokens.address).call({from: managerAddress});
                 });
 
-                describe('after changeSideTokenFactory and changeAllowTokens', () => {
+                describe('after changeSideTokenFactory and changeAllowTokens', async () => {
                     beforeEach(async () => {
                         await this.proxy.methods.changeSideTokenFactory(this.sideTokenFactory.address).send({from: managerAddress});
                         await this.proxy.methods.changeAllowTokens(this.allowTokens.address).send({from: managerAddress});
                     });
 
                     it('should have removed the method tokenFallback', async () => {
-                        await utils.expectThrow(this.token.transferAndCall(this.proxy.options.address, web3.utils.toWei('1000'), '0x'), { from: deployerAddress });
+                        await utils.expectThrow(
+                            this.token.transferAndCall(this.proxy.options.address, web3.utils.toWei('1000'), '0x'),
+                            { from: deployerAddress }
+                        );
                     });
 
                     it('should receive tokens', async () => {
@@ -257,17 +265,50 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
 
                     it('should accept Transfer', async () => {
-                        let tx = await this.proxy.methods.acceptTransfer(this.token.address, anAccount, otherAccount, this.amount, "MAIN",
-                        randomHex(32), randomHex(32), 0, 18, 1, 0).send({ from: federationAddress, gas: 4_000_000 });
-                        assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
-
+                        console.log(1)
+                        await this.proxy.methods.createSideToken(
+                            this.typeId,
+                            this.token.address,
+                            18,
+                            'MAIN',
+                            'MAIN'
+                        ).send({from: managerAddress, gas: 4_000_000});
+                        console.log(2)
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
                         let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
-
+                        console.log(3)
                         let originalTokenAddress = await this.proxy.methods.originalTokens(sideTokenAddress).call();
                         assert.equal(originalTokenAddress, this.token.address);
+                        console.log(4)
+                        const blockHash = randomHex(32);
+                        const txHash = randomHex(32);
+                        const logIndex = 0;
+                        let tx = await this.proxy.methods.acceptTransfer(
+                            this.token.address,
+                            anAccount,
+                            otherAccount,
+                            this.amount,
+                            blockHash,
+                            txHash,
+                            logIndex
+                        ).send({ from: federationAddress, gas: 200_000});
+                        assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
+                        console.log(5)
+
+                        await this.proxy.methods.claim(
+                            {
+                                to: otherAccount,
+                                amount: this.amount,
+                                blockHash: blockHash,
+                                transactionHash: txHash,
+                                logIndex: logIndex
+                            }
+                        ).send({ from: federationAddress, gas: 200_000 });
+    
+                        const hasBeenClaimed = await this.proxy.methods.hasBeenClaimed(txHash).call();
+                        assert.equal(hasBeenClaimed, true);
 
                         const mirrorBridgeBalance = await sideToken.balanceOf(this.proxy.options.address);
                         assert.equal(mirrorBridgeBalance, 0);

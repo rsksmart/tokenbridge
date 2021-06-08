@@ -13,6 +13,14 @@ contract('AllowTokens', async function (accounts) {
     const anotherAccount = accounts[2];
     const anotherOwner = accounts[3];
 
+    before(async function () {
+        await utils.saveState();
+    });
+
+    after(async function () {
+        await utils.revertState();
+    });
+
     describe('AllowTokens creation', async () => {
         it('should initialize correctly', async () => {
             const smallConfirmations = '100';
