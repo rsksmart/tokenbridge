@@ -1,5 +1,39 @@
 const gasLimit = 6800000;
 
+const saveState = async () =>
+  new Promise(resolve => {
+    web3.currentProvider.send(
+      {
+        jsonrpc: '2.0',
+        method: 'evm_snapshot',
+        id: 0
+      },
+      (error, res) => {
+        const result = parseInt(res.result, 0);
+        lastSnapshot = result;
+        resolve(result);
+      }
+    );
+  });
+
+const revertState = async () => {
+  await new Promise(resolve =>
+    web3.currentProvider.send(
+      {
+        jsonrpc: '2.0',
+        method: 'evm_revert',
+        params: lastSnapshot,
+        id: 0
+      },
+      (error, res) => {
+        resolve(res.result);
+      }
+    )
+  );
+
+  //lastSnapshot = await saveState();
+};
+
 // from https://ethereum.stackexchange.com/questions/11444/web3-js-with-promisified-api
 const promisify = (inner) =>
   new Promise((resolve, reject) =>
@@ -14,7 +48,7 @@ function expectThrow (promise) {
   return promise.then( (result) => {
     assert.equal(result.toString(), "It should have thrown an Error");
   }, (err) => {
-      return err;
+    return err;
   });
 }
 
@@ -128,5 +162,8 @@ module.exports = {
     increaseTimestamp: increaseTimestamp,
     ascii_to_hexa: ascii_to_hexa,
     NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    NULL_HASH: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    saveState : saveState,
+    revertState: revertState,
 };
 

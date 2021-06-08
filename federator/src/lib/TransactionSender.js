@@ -37,11 +37,11 @@ module.exports = class TransactionSender {
     async getGasLimit(rawTx) {
         const chainId = await this.getChainId();
         let estimatedGas = await this.client.eth.estimateGas({ gasPrice: rawTx.gasPrice, value: rawTx.value, to: rawTx.to, data: rawTx.data, from: rawTx.from});
-        
+
         if (chainId >= 30 && chainId <= 33) {
             estimatedGas = (estimatedGas < 300000) ? 300000 : 3500000;
         }
-        
+
         return estimatedGas;
     }
 
