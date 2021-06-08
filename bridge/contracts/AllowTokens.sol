@@ -22,7 +22,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     uint256 public smallAmountConfirmations;
     uint256 public mediumAmountConfirmations;
     uint256 public largeAmountConfirmations;
-    string[] typeDescriptions;
+    string[] public typeDescriptions;
 
     event SetToken(address indexed _tokenAddress, uint256 _typeId);
     event AllowedTokenRemoved(address indexed _tokenAddress);
@@ -33,7 +33,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
 
     modifier notNull(address _address) {
-        require(_address != NULL_ADDRESS, "AllowTokens: Address cannot be empty");
+        require(_address != NULL_ADDRESS, "AllowTokens: Null Address");
         _;
     }
 
@@ -103,7 +103,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
         require(bytes(description).length > 0, "AllowTokens: Empty description");
         len = typeDescriptions.length;
-        require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES limit");
+        require(len + 1 <= MAX_TYPES, "AllowTokens: Reached MAX_TYPES");
         typeDescriptions.push(description);
         _setTypeLimits(len, limits);
         emit TokenTypeAdded(len, description);
@@ -115,7 +115,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     }
 
     function _setTypeLimits(uint256 typeId, Limits memory limits) private {
-        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions length");
+        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions");
         require(limits.max >= limits.min, "AllowTokens: maxTokens smaller than minTokens");
         require(limits.daily >= limits.max, "AllowTokens: dailyLimit smaller than maxTokens");
         require(limits.mediumAmount > limits.min, "AllowTokens: limits.mediumAmount smaller than min");
@@ -159,7 +159,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     function removeAllowedToken(address token) external notNull(token) onlyOwner {
         TokenInfo memory info = allowedTokens[token];
-        require(info.allowed, "AllowTokens: Token does not exis in allowedTokens");
+        require(info.allowed, "AllowTokens: Not Allowed");
         info.allowed = false;
         allowedTokens[token] = info;
         emit AllowedTokenRemoved(token);

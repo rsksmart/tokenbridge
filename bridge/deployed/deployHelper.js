@@ -9,7 +9,9 @@ function getDeployed(network) {
         const deployedString = fs.readFileSync(`${__dirname}/${network}.json`, 'utf8');
         return JSON.parse(deployedString);
     } catch(err) {
-        console.error(err)
+        if(!err.message.includes('ENOENT')) {
+            throw err;
+        }
         return { network };
     }
 }

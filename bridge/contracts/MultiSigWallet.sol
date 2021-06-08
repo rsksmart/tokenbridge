@@ -277,6 +277,7 @@ contract MultiSigWallet {
             if (count == required)
                 return true;
         }
+        return false;
     }
 
     /*

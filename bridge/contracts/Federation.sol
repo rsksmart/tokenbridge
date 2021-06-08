@@ -19,14 +19,14 @@ contract Federation is Ownable {
 
     event Executed(
         address indexed federator,
+        bytes32 indexed transactionHash,
+        bytes32 indexed transactionId,
         address originalTokenAddress,
         address sender,
         address receiver,
         uint256 amount,
         bytes32 blockHash,
-        bytes32 indexed transactionHash,
-        uint32 logIndex,
-        bytes32 indexed transactionId
+        uint32 logIndex
     );
     event MemberAddition(address indexed member);
     event MemberRemoval(address indexed member);
@@ -34,14 +34,14 @@ contract Federation is Ownable {
     event BridgeChanged(address bridge);
     event Voted(
         address indexed federator,
+        bytes32 indexed transactionHash,
+        bytes32 indexed transactionId,
         address originalTokenAddress,
         address sender,
         address receiver,
         uint256 amount,
         bytes32 blockHash,
-        bytes32 indexed transactionHash,
-        uint32 logIndex,
-        bytes32 indexed transactionId
+        uint32 logIndex
     );
     event HeartBeat(
         address indexed sender,
@@ -53,7 +53,7 @@ contract Federation is Ownable {
     );
 
     modifier onlyMember() {
-        require(isMember[_msgSender()], "Federation: Caller not a Federator");
+        require(isMember[_msgSender()], "Federation: Not Federator");
         _;
     }
 
@@ -64,7 +64,7 @@ contract Federation is Ownable {
     }
 
     constructor(address[] memory _members, uint _required) validRequirement(_members.length, _required) {
-        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
+        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
             require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
@@ -114,46 +114,38 @@ contract Federation is Ownable {
         votes[transactionId][_msgSender()] = true;
         emit Voted(
             _msgSender(),
+            transactionHash,
+            transactionId,
             originalTokenAddress,
             sender,
             receiver,
             amount,
             blockHash,
-            transactionHash,
-            logIndex,
-            transactionId
+            logIndex
         );
 
         uint transactionCount = getTransactionCount(transactionId);
         if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
             processed[transactionId] = true;
-            bytes32 transactionDataHash = bridge.getTransactionDataHash(
+            bridge.acceptTransfer(
+                originalTokenAddress,
+                sender,
                 receiver,
                 amount,
                 blockHash,
                 transactionHash,
                 logIndex
             );
-            bridge.acceptTransfer(
-                originalTokenAddress,
-                sender,
-                // receiver,
-                // amount,
-                // blockHash,
-                transactionHash,
-                // logIndex,
-                transactionDataHash
-            );
             emit Executed(
                 _msgSender(),
+                transactionHash,
+                transactionId,
                 originalTokenAddress,
                 sender,
                 receiver,
                 amount,
                 blockHash,
-                transactionHash,
-                logIndex,
-                transactionId
+                logIndex
             );
             return true;
         }

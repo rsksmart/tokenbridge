@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 // Import base Initializable contract
 import "./zeppelin/upgradable/Initializable.sol";
@@ -17,11 +18,15 @@ import "./zeppelin/utils/Address.sol";
 import "./zeppelin/math/SafeMath.sol";
 import "./zeppelin/token/ERC777/IERC777.sol";
 
+import "./LibEIP712.sol";
+import "./LibUtils.sol";
+
 import "./IBridge.sol";
 import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
 import "./IAllowTokens.sol";
 import "./IWrapped.sol";
+
 
 contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -41,7 +46,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping (address => address) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
-    mapping (bytes32 => bool) public claimed; // transactionDataHash => true
+    mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
     IAllowTokens public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
@@ -51,8 +56,13 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 constant internal _erc777Interface = keccak256("ERC777Token");
     IWrapped public wrappedCurrency;
     mapping (bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
-    mapping (bytes32 => address) public originalTokenAddresses; // transactionDataHash => originalTokenAddress
-    mapping (bytes32 => address) public senderAddresses; // transactionDataHash => senderAddress
+    mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
+    mapping (bytes32 => address) public senderAddresses; // transactionHash => senderAddress
+
+    bytes32 public DOMAIN_SEPARATOR;
+    // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
+    bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
+    mapping(address => uint) public nonces;
 
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
@@ -75,6 +85,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         federation = _federation;
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
+        initDomainSeparator();
     }
 
     receive () external payable {
@@ -86,6 +97,20 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         return "v3";
     }
 
+    function initDomainSeparator() public {
+        uint chainId;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+            "RSK Token Bridge",
+            "1",
+            chainId,
+            address(this)
+        );
+    }
+
     modifier whenNotUpgrading() {
         require(!isUpgrading, "Bridge: Upgrading");
         _;
@@ -94,34 +119,46 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     function acceptTransfer(
         address _originalTokenAddress,
         address payable _from,
-        // address payable _to,
-        // uint256 _amount,
-        // bytes32 _blockHash,
+        address payable _to,
+        uint256 _amount,
+        bytes32 _blockHash,
         bytes32 _transactionHash,
-        // uint32 _logIndex
-        bytes32 _transactionDataHash
+        uint32 _logIndex
     ) external whenNotPaused nonReentrant override {
-        require(_msgSender() == federation, "Bridge: Sender not Federation");
-        require(_originalTokenAddress != NULL_ADDRESS, "Bridge: TokenAddr is null");
-        // require(_to != NULL_ADDRESS, "Bridge: To is null");
-        // require(_amount > 0, "Bridge: Amount 0");
-        // require(_blockHash != NULL_HASH, "Bridge: BlockHash is null");
-        require(_transactionHash != NULL_HASH, "Bridge: TxHash is null");
-        // require(crossedTransaction(_transactionHash), "Bridge: Already accepted");
+        require(_msgSender() == federation, "Bridge: Not Federation");
+        require(knownTokens[_originalTokenAddress] ||
+            mappedTokens[_originalTokenAddress] != NULL_ADDRESS,
+            "Bridge: Unknown token"
+        );
+        require(_to != NULL_ADDRESS, "Bridge: Null To");
+        require(_amount > 0, "Bridge: Amount 0");
+        require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
+        require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
+        require(transactionsDataHashes[_transactionHash] == bytes32(0), "Bridge: Already accepted");
+
+        bytes32 _transactionDataHash = getTransactionDataHash(
+            _to,
+            _amount,
+            _blockHash,
+            _transactionHash,
+            _logIndex
+        );
+        // Do not remove, claimed also has the previously processed using the older bridge version
+        // https://github.com/rsksmart/tokenbridge/blob/TOKENBRIDGE-1.2.0/bridge/contracts/Bridge.sol#L41
+        require(!claimed[_transactionDataHash], "Bridge: Already claimed");
 
         transactionsDataHashes[_transactionHash] = _transactionDataHash;
-        originalTokenAddresses[_transactionDataHash] = _originalTokenAddress;
-        senderAddresses[_transactionDataHash] = _from;
+        originalTokenAddresses[_transactionHash] = _originalTokenAddress;
+        senderAddresses[_transactionHash] = _from;
 
         emit AcceptedCrossTransfer(
-            _originalTokenAddress,
-            _from,
-            // _to,
-            // _amount,
-            // _blockHash,
             _transactionHash,
-            // _logIndex,
-            _transactionDataHash
+            _originalTokenAddress,
+            _to,
+            _from,
+            _amount,
+            _blockHash,
+            _logIndex
         );
     }
 
@@ -133,14 +170,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         string calldata _originalTokenSymbol,
         string calldata _originalTokenName
     ) external onlyOwner {
+        require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
         address sideToken = mappedTokens[_originalTokenAddress];
-        require(sideToken == NULL_ADDRESS, "Bridge: sideToken already exists");
-        // Create side token
+        require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
+        uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
         string memory newSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
-        string memory newName = string(abi.encodePacked(" on RSK", _originalTokenName));
-        uint256 granularity = decimalsToGranularity(_originalTokenDecimals);
 
-        sideToken = sideTokenFactory.createSideToken(newName, newSymbol, granularity);
+        // Create side token
+        sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
 
         mappedTokens[_originalTokenAddress] = sideToken;
         originalTokens[sideToken] = _originalTokenAddress;
@@ -149,152 +186,174 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity);
     }
 
-    function claim(
-        address payable _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint32 _logIndex,
-        bool _preferWrapped
-    ) external override {
+    function claim(ClaimData calldata _claimData)
+    external override returns (uint256 receivedAmount) {
 
-        (address originalTokenAddress, bytes32 transactionDataHash) = _verifyClaim(
-            _to,
-            _amount,
-            _blockHash,
-            _transactionHash,
-            _logIndex
+        receivedAmount = _claim(
+            _claimData,
+            _claimData.to,
+            payable(address(0)),
+            0
         );
+        return receivedAmount;
+    }
 
-        _claim(
-            originalTokenAddress,
-            transactionDataHash,
-            _to,
-            _amount,
-            _preferWrapped
+    function claimFallback(ClaimData calldata _claimData)
+    external override returns (uint256 receivedAmount) {
+        require(_msgSender() == senderAddresses[_claimData.transactionHash],"Bridge: invalid sender");
+        receivedAmount = _claim(
+            _claimData,
+            _msgSender(),
+            payable(address(0)),
+            0
         );
+        return receivedAmount;
+    }
 
-        emit Claimed(
-            originalTokenAddress,
-            senderAddresses[transactionDataHash],
-            _to,
-            _amount,
-            _blockHash,
-            _transactionHash,
-            _logIndex,
-            transactionDataHash
+    function getDigest(
+        ClaimData memory _claimData,
+        address payable _relayer,
+        uint256 _fee,
+        uint256 _deadline
+    ) internal returns (bytes32) {
+        return LibEIP712.hashEIP712Message(
+            DOMAIN_SEPARATOR,
+            keccak256(
+                abi.encode(
+                    CLAIM_TYPEHASH,
+                    _claimData.to,
+                    _claimData.amount,
+                    _claimData.transactionHash,
+                    _relayer,
+                    _fee,
+                    nonces[_claimData.to]++,
+                    _deadline
+                )
+            )
         );
     }
 
-    function claimFallback(
-        address payable _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint32 _logIndex,
-        bool _preferWrapped
-    ) external override {
-        (address originalTokenAddress, bytes32 transactionDataHash) = _verifyClaim(
-            _to,
-            _amount,
-            _blockHash,
-            _transactionHash,
-            _logIndex
-        );
+    // Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
+    function claimGasless(
+        ClaimData calldata _claimData,
+        address payable _relayer,
+        uint256 _fee,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external override returns (uint256 receivedAmount) {
+        require(_deadline >= block.timestamp, "Bridge: EXPIRED");
 
-        require(_msgSender() == senderAddresses[transactionDataHash],"Bridge: invalid sender");
-        _claim(
-            originalTokenAddress,
-            transactionDataHash,
-            _msgSender(),
-            _amount,
-            _preferWrapped
-        );
+        bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
+        address recoveredAddress = ecrecover(digest, _v, _r, _s);
+        require(_claimData.to != address(0) && recoveredAddress == _claimData.to, "Bridge: INVALID_SIGNATURE");
 
-        emit ClaimedWithFallback(
-            originalTokenAddress,
-            _msgSender(),
-            _to,
-            _amount,
-            _blockHash,
-            _transactionHash,
-            _logIndex,
-            transactionDataHash
+        receivedAmount = _claim(
+            _claimData,
+            _claimData.to,
+            _relayer,
+            _fee
         );
-    }
-
-    function _verifyClaim(
-        address payable _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint32 _logIndex
-    ) internal view returns(address originalTokenAddress, bytes32 transactionDataHash) {
-        transactionDataHash = getTransactionDataHash(
-            _to,
-            _amount,
-            _blockHash,
-            _transactionHash,
-            _logIndex
-        );
-        originalTokenAddress = originalTokenAddresses[transactionDataHash];
-        require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx has not crossed");
-        require(!claimed[transactionDataHash], "Bridge: Already claimed");
+        return receivedAmount;
     }
 
     function _claim(
-        address originalTokenAddress,
-        bytes32 _transactionDataHash,
-        address payable _to,
-        uint256 _amount,
-        bool preferWrapped
-    ) internal {
-        claimed[_transactionDataHash] = true;
+        ClaimData calldata _claimData,
+        address payable _reciever,
+        address payable _relayer,
+        uint256 _fee
+    ) internal returns (uint256 receivedAmount) {
+        address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
+        require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx has not crossed");
+
+        bytes32 transactionDataHash = getTransactionDataHash(
+            _claimData.to,
+            _claimData.amount,
+            _claimData.blockHash,
+            _claimData.transactionHash,
+            _claimData.logIndex
+        );
+        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong claim data values");
+        require(!claimed[transactionDataHash], "Bridge: Already claimed");
+
+        claimed[transactionDataHash] = true;
         if (knownTokens[originalTokenAddress]) {
-            _claimCrossBackToToken(
-                preferWrapped,
+            receivedAmount =_claimCrossBackToToken(
                 originalTokenAddress,
-                _to,
-                _amount
+                _reciever,
+                _claimData.amount,
+                _relayer,
+                _fee
             );
         } else {
-            _claimCrossToSideToken(
+            receivedAmount =_claimCrossToSideToken(
                 originalTokenAddress,
-                _to,
-                _amount
+                _reciever,
+                _claimData.amount,
+                _relayer,
+                _fee
             );
         }
+        emit Claimed(
+            _claimData.transactionHash,
+            originalTokenAddress,
+            _claimData.to,
+            senderAddresses[_claimData.transactionHash],
+            _claimData.amount,
+            _claimData.blockHash,
+            _claimData.logIndex,
+            _reciever,
+            _relayer,
+            _fee
+        );
+        return receivedAmount;
     }
 
     function _claimCrossToSideToken(
         address _originalTokenAddress,
-        address payable _to,
-        uint256 _amount
-    ) internal {
+        address payable _receiver,
+        uint256 _amount,
+        address payable _relayer,
+        uint256 _fee
+    ) internal returns (uint256 receivedAmount) {
         address sideToken = mappedTokens[_originalTokenAddress];
-        require(sideToken != NULL_ADDRESS, "Bridge: sideToken does not exist");
         uint256 granularity = IERC777(sideToken).granularity();
         uint256 formattedAmount = _amount.mul(granularity);
-
-        ISideToken(sideToken).mint(_to, formattedAmount, "", "");
+        require(_fee <= formattedAmount, "Bridge: fee too high");
+        receivedAmount = formattedAmount - _fee;
+        ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
+        if(_fee > 0) {
+            ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
+        }
+        return receivedAmount;
     }
 
     function _claimCrossBackToToken(
-        bool preferWrapped,
         address _originalTokenAddress,
-        address payable _to,
-        uint256 _amount
-    ) internal {
-        uint256 decimals = getDecimals(_originalTokenAddress);
+        address payable _receiver,
+        uint256 _amount,
+        address payable _relayer,
+        uint256 _fee
+    ) internal returns (uint256 receivedAmount) {
+        uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
         //As side tokens are ERC777 they will always have 18 decimals
         uint256 formattedAmount = _amount.div(uint256(10) ** (18 - decimals));
-
-        if(address(wrappedCurrency) == _originalTokenAddress && !preferWrapped) {
+        require(_fee <= formattedAmount, "Bridge: fee too high");
+        receivedAmount = formattedAmount - _fee;
+        if(address(wrappedCurrency) == _originalTokenAddress) {
             wrappedCurrency.withdraw(formattedAmount);
-            _to.transfer(formattedAmount);
+            _receiver.transfer(receivedAmount);
+            if(_fee > 0) {
+                _relayer.transfer(_fee);
+            }
         } else {
-            IERC20(_originalTokenAddress).safeTransfer(_to, formattedAmount);
+            IERC20(_originalTokenAddress).safeTransfer(_receiver, receivedAmount);
+            if(_fee > 0) {
+                IERC20(_originalTokenAddress).safeTransfer(_relayer, _fee);
+            }
         }
+        return receivedAmount;
     }
 
     /**
@@ -336,7 +395,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address tokenToUse = _msgSender();
         require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
-        address receiver = userData.length == 0 ? from : bytesToAddress(userData);
+        address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
@@ -345,7 +404,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         knownTokens[tokenToUse] = true;
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);
-        uint8 decimals = getDecimals(tokenToUse);
+        uint8 decimals = LibUtils.getDecimals(tokenToUse);
         uint formattedAmount = amount;
         if(decimals != 18) {
             formattedAmount = amount.mul(uint256(10)**(18-decimals));
@@ -357,7 +416,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         if (originalTokens[tokenToUse] != NULL_ADDRESS) {
             //Side Token Crossing
             originalTokenAddress = originalTokens[tokenToUse];
-            uint256 granularity = getGranularity(tokenToUse);
+            uint256 granularity = LibUtils.getGranularity(tokenToUse);
             uint256 modulo = amountMinusFees.mod(granularity);
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
@@ -434,37 +493,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         emit WrappedCurrencyChanged(_wrappedCurrency);
     }
 
-    function decimalsToGranularity(uint8 decimals) public pure returns (uint256) {
-        require(decimals <= 18, "Bridge: Decimals not in 0 to 18");
-        return uint256(10)**(18-decimals);
-    }
-
-    function getDecimals(address tokenToUse) public view returns (uint8) {
-        //support decimals as uint256 or uint8
-        (bool success, bytes memory data) = tokenToUse.staticcall(abi.encodeWithSignature("decimals()"));
-        require(success, "Bridge: No decimals");
-        // uint<M>: enc(X) is the big-endian encoding of X,
-        //padded on the higher-order (left) side with zero-bytes such that the length is 32 bytes.
-        return uint8(abi.decode(data, (uint256)));
-    }
-
-    function bytesToAddress(bytes memory bys) public pure returns (address addr) {
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            addr := mload(add(bys,20))
-        }
-    }
-
-    function getGranularity(address tokenToUse) public view returns (uint256) {
-        //support granularity if ERC777
-        (bool success, bytes memory data) = tokenToUse.staticcall(abi.encodeWithSignature("granularity()"));
-        require(success, "Bridge: No granularity");
-
-        return abi.decode(data, (uint256));
-    }
-
-    function crossedTransaction(bytes32 transactionHash) public view returns (bool) {
+    function hasCrossed(bytes32 transactionHash) public view returns (bool) {
         return transactionsDataHashes[transactionHash] != bytes32(0);
+    }
+
+    function hasBeenClaimed(bytes32 transactionHash) public view returns (bool) {
+        return claimed[transactionsDataHashes[transactionHash]];
     }
 
 }
