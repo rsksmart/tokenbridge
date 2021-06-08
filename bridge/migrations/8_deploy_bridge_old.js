@@ -16,8 +16,14 @@ module.exports = async (deployer, networkName, accounts) => {
     const bridgeLogic = await Bridge_old.deployed()
     deployedJson.Bridge = bridgeLogic.address.toLowerCase();
 
-    console.log('deployedJson.AllowTokens', deployedJson.AllowTokens)
-    const initData = bridgeLogic.contract.methods.initialize(deployedJson.MultiSig, deployedJson.Federation, deployedJson.AllowTokens, deployedJson.SideTokenFactory, symbol).encodeABI();
+    const initData = bridgeLogic.contract.methods.initialize(
+        deployedJson.MultiSig,
+        deployedJson.Federation,
+        deployedJson.AllowTokens,
+        deployedJson.SideTokenFactory,
+        symbol
+    ).encodeABI();
+
     await deployer.deploy(BridgeProxy, bridgeLogic.address, proxyAdmin.address, initData);
     const bridgeProxy = await BridgeProxy.deployed();
     deployedJson.BridgeProxy = bridgeProxy.address.toLowerCase();

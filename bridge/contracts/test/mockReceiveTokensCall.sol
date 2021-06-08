@@ -10,7 +10,7 @@ import "../zeppelin/introspection/IERC1820Registry.sol";
 
 contract mockReceiveTokensCall is IERC777Recipient {
     address public bridge;
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry constant public erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     constructor(address _bridge) {
         bridge = _bridge;

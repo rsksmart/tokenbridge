@@ -5,6 +5,7 @@ pragma solidity ^0.7.0;
 import "./zeppelin/token/ERC777/ERC777.sol";
 import "./IERC677Receiver.sol";
 import "./ISideToken.sol";
+import "./LibEIP712.sol";
 
 contract SideToken is ISideToken, ERC777 {
     using Address for address;
@@ -24,23 +25,21 @@ contract SideToken is ISideToken, ERC777 {
 
     constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr, uint256 _newGranularity)
     ERC777(_tokenName, _tokenSymbol, new address[](0)) {
-        require(_minterAddr != address(0), "SideToken: Minter address is null");
-        require(_newGranularity >= 1, "SideToken: Granularity must be >= 1");
+        require(_minterAddr != address(0), "SideToken: Empty Minter");
+        require(_newGranularity >= 1, "SideToken: Granularity < 1");
         minter = _minterAddr;
         _granularity = _newGranularity;
 
         uint chainId;
+        // solium-disable-next-line security/no-inline-assembly
         assembly {
             chainId := chainid()
         }
-        DOMAIN_SEPARATOR = keccak256(
-            abi.encode(
-                keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
-                keccak256(bytes(name())), // ERC-20 Name
-                keccak256(bytes("1")),  // Version
-                chainId,
-                address(this)
-            )
+        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+            name(),
+            "1",
+            chainId,
+            address(this)
         );
     }
 
@@ -81,17 +80,24 @@ contract SideToken is ISideToken, ERC777 {
         return _granularity;
     }
 
+    // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        require(deadline >= block.timestamp, 'SideToken: EXPIRED');
-        bytes32 digest = keccak256(
-            abi.encodePacked(
-                '\x19\x01',
-                DOMAIN_SEPARATOR,
-                keccak256(abi.encode(PERMIT_TYPEHASH, owner, spender, value, nonces[owner]++, deadline))
+        require(deadline >= block.timestamp, "SideToken: EXPIRED");
+        bytes32 digest = LibEIP712.hashEIP712Message(
+            DOMAIN_SEPARATOR,
+            keccak256(
+                abi.encode(
+                    PERMIT_TYPEHASH,
+                    owner,
+                    spender,
+                    value,
+                    nonces[owner]++,
+                    deadline
+                )
             )
         );
         address recoveredAddress = ecrecover(digest, v, r, s);
-        require(recoveredAddress != address(0) && recoveredAddress == owner, 'SideToken: INVALID_SIGNATURE');
+        require(recoveredAddress != address(0) && recoveredAddress == owner, "SideToken: INVALID_SIGNATURE");
         _approve(owner, spender, value);
     }
 

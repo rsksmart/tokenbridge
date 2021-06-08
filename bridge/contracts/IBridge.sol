@@ -1,7 +1,16 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+pragma abicoder v2;
 interface IBridge {
+
+    struct ClaimData {
+        address payable to;
+        uint256 amount;
+        bytes32 blockHash;
+        bytes32 transactionHash;
+        uint32 logIndex;
+    }
 
     function version() external pure returns (string memory);
 
@@ -37,34 +46,29 @@ interface IBridge {
     function acceptTransfer(
         address _originalTokenAddress,
         address payable _from,
-        // address payable _to,
-        // uint256 _amount,
-        // bytes32 _blockHash,
+        address payable _to,
+        uint256 _amount,
+        bytes32 _blockHash,
         bytes32 _transactionHash,
-        // uint32 _logIndex
-        bytes32 transactionId
+        uint32 _logIndex
     ) external;
 
     /**
      * Claims the crossed transaction using the hash, this sends the funds to the address indicated in
      */
-    function claim(
-        address payable _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint32 _logIndex,
-        bool preferWrapped
-    ) external;
+    function claim(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
 
-    function claimFallback(
-        address payable _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint32 _logIndex,
-        bool _preferWrapped
-    ) external;
+    function claimFallback(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
+
+    function claimGasless(
+        ClaimData calldata _claimData,
+        address payable _relayer,
+        uint256 _fee,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external returns (uint256 receivedAmount);
 
     function getTransactionDataHash(
         address _to,
@@ -88,34 +92,25 @@ interface IBridge {
         uint256 _granularity
     );
     event AcceptedCrossTransfer(
+        bytes32 indexed _transactionHash,
         address indexed _originalTokenAddress,
-        address indexed _from,
-        // address indexed _to,
-        // uint256 _amount,
-        // bytes32 _blockHash,
-        bytes32 _transactionHash,
-        // uint256 _logIndex,
-        bytes32 _transactionId
+        address indexed _to,
+        address  _from,
+        uint256 _amount,
+        bytes32 _blockHash,
+        uint256 _logIndex
     );
     event FeePercentageChanged(uint256 _amount);
     event Claimed(
+        bytes32 indexed _transactionHash,
         address indexed _originalTokenAddress,
-        address sender,
         address indexed _to,
+        address _sender,
         uint256 _amount,
         bytes32 _blockHash,
-        bytes32 _transactionHash,
         uint256 _logIndex,
-        bytes32 _transactionId
-    );
-    event ClaimedWithFallback(
-        address indexed _originalTokenAddress,
-        address indexed _sender,
-        address _to,
-        uint256 _amount,
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        uint256 _logIndex,
-        bytes32 _transactionId
+        address _reciever,
+        address _relayer,
+        uint256 _fee
     );
 }
