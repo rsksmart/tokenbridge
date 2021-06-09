@@ -177,6 +177,7 @@ async function evm_mine(iterations, web3Instance = null) {
     };
 };
 
+
 module.exports = {
     asyncMine,
     evm_mine,
@@ -193,5 +194,5 @@ module.exports = {
     zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
     retry,
     retry3Times,
-    getHeartbeatPollingInterval
+    getHeartbeatPollingInterval,
 }
