@@ -33,7 +33,7 @@ module.exports = class HSM {
     }
 
     send(msgToSign = '') {
-        const payload = hsmPayloadBuilder(`sign`, `m/44'/137'/0'/0/0`, msgToSign);
+        const payload = hsmPayloadBuilder(`sign`, `m/44'/60'/0'/0/0`, msgToSign);
         return this.client.write(`${payload}\n`);
     }
 

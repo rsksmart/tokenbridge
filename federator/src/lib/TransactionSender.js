@@ -198,9 +198,9 @@ module.exports = class TransactionSender {
         const chainId =  await this.getChainId();
         let txHash;
         let receipt;
+        let from = await this.getAddress(privateKey);
+        let rawTx = await this.createRawTransaction(from, to, data, value);
         try {
-            let from = await this.getAddress(privateKey);
-            let rawTx = await this.createRawTransaction(from, to, data, value);
             if (privateKey && privateKey.length || useHSM) {
                 let signedTx = await this.signRawTransaction(rawTx, privateKey, useHSM);
                 const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
