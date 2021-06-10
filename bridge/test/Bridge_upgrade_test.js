@@ -265,7 +265,6 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
 
                     it('should accept Transfer', async () => {
-                        console.log(1)
                         await this.proxy.methods.createSideToken(
                             this.typeId,
                             this.token.address,
@@ -273,15 +272,15 @@ contract('Bridge upgrade test', async (accounts) => {
                             'MAIN',
                             'MAIN'
                         ).send({from: managerAddress, gas: 4_000_000});
-                        console.log(2)
+
                         let sideTokenAddress = await this.proxy.methods.mappedTokens(this.token.address).call();
                         let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
-                        console.log(3)
+
                         let originalTokenAddress = await this.proxy.methods.originalTokens(sideTokenAddress).call();
                         assert.equal(originalTokenAddress, this.token.address);
-                        console.log(4)
+
                         const blockHash = randomHex(32);
                         const txHash = randomHex(32);
                         const logIndex = 0;
@@ -295,7 +294,6 @@ contract('Bridge upgrade test', async (accounts) => {
                             logIndex
                         ).send({ from: federationAddress, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
-                        console.log(5)
 
                         await this.proxy.methods.claim(
                             {

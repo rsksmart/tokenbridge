@@ -265,7 +265,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint256 _fee
     ) internal returns (uint256 receivedAmount) {
         address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
-        require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx has not crossed");
+        require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
 
         bytes32 transactionDataHash = getTransactionDataHash(
             _claimData.to,
@@ -274,7 +274,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             _claimData.transactionHash,
             _claimData.logIndex
         );
-        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong claim data values");
+        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong transactionDataHash");
         require(!claimed[transactionDataHash], "Bridge: Already claimed");
 
         claimed[transactionDataHash] = true;
