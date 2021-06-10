@@ -16,18 +16,12 @@ module.exports = class IFederationV2 {
 
         return this.federationContract.methods.getTransactionId(
             paramsObj.originalTokenAddress,
-            {
-                sender: paramsObj.sender,
-                receiver: paramsObj.receiver,
-                amount: paramsObj.amount,
-                symbol: paramsObj.symbol,
-                blockHash: paramsObj.blockHash,
-                transactionHash: paramsObj.transactionHash,
-                logIndex: paramsObj.logIndex,
-                decimals: paramsObj.decimals,
-                granularity: paramsObj.granularity,
-                typeId: paramsObj.typeId,
-            }
+            paramsObj.sender,
+            paramsObj.receiver,
+            paramsObj.amount,
+            paramsObj.blockHash,
+            paramsObj.transactionHash,
+            paramsObj.logIndex
         );
     }
 
@@ -42,18 +36,12 @@ module.exports = class IFederationV2 {
     voteTransaction(paramsObj) {
         return this.federationContract.methods.voteTransaction(
             paramsObj.originalTokenAddress,
-            {
-                sender: paramsObj.sender,
-                receiver: paramsObj.receiver,
-                amount: paramsObj.amount,
-                symbol: paramsObj.symbol,
-                blockHash: paramsObj.blockHash,
-                transactionHash: paramsObj.transactionHash,
-                logIndex: paramsObj.logIndex,
-                decimals: paramsObj.decimals,
-                granularity: paramsObj.granularity,
-                typeId: paramsObj.typeId,
-            }
+            paramsObj.sender,
+            paramsObj.receiver,
+            paramsObj.amount,
+            paramsObj.blockHash,
+            paramsObj.transactionHash,
+            paramsObj.logIndex
         );
     }
 

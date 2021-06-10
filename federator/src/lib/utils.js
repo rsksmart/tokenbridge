@@ -177,6 +177,23 @@ async function evm_mine(iterations, web3Instance = null) {
     };
 };
 
+
+function increaseTimestamp(web3, increase) {
+    return new Promise((resolve, reject) => {
+        web3.currentProvider.send({
+            method: "evm_increaseTime",
+            params: [increase],
+            jsonrpc: "2.0",
+            id: new Date().getTime()
+          }, (error, result) => {
+            if (error) {
+                return reject(error);
+            }
+            return asyncMine(web3).then( ()=> resolve(result));
+          });
+    });
+}
+
 module.exports = {
     asyncMine,
     evm_mine,
@@ -191,7 +208,9 @@ module.exports = {
     checkHttpsOrLocalhost,
     checkIfItsInRSK,
     zeroHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    zeroAddress: '0x0000000000000000000000000000000000000000',
     retry,
     retry3Times,
-    getHeartbeatPollingInterval
+    getHeartbeatPollingInterval,
+    increaseTimestamp
 }

@@ -83,8 +83,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     // solium-disable-next-line max-len
     function updateTokenTransfer(address token, uint256 amount) override external onlyPrimary {
         (TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
-        require(isTokenAllowed(token), "AllowTokens: Token not whitelisted");
-        require(amount >= limit.min, "AllowTokens: Amount lower than limit");
+        require(isTokenAllowed(token), "AllowTokens: Not whitelisted");
+        require(amount >= limit.min, "AllowTokens: Lower than limit");
 
         // solium-disable-next-line security/no-block-members
         if (block.timestamp > info.lastDay + 24 hours) {
@@ -93,7 +93,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
             info.spentToday = 0;
         }
         uint maxWithdraw = _calcMaxWithdraw(info, limit);
-        require(amount <= maxWithdraw, "AllowTokens: Amount bigger than limit");
+        require(amount <= maxWithdraw, "AllowTokens: Exceeded limit");
         info.spentToday = info.spentToday.add(amount);
         allowedTokens[token] = info;
 
