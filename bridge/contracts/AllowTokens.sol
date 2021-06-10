@@ -56,7 +56,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         return "v1";
     }
 
-    function getInfoAndLimits(address token)override public view
+    function getInfoAndLimits(address token) override public view
     returns (TokenInfo memory info, Limits memory limit) {
         info = allowedTokens[token];
         limit = typeLimits[info.typeId];

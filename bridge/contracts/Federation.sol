@@ -2,10 +2,13 @@
 
 pragma solidity ^0.7.0;
 
-import "./IBridge.sol";
-import "./zeppelin/ownership/Ownable.sol";
+// Upgradables
+import "./zeppelin/upgradable/Initializable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-contract Federation is Ownable {
+import "./IBridge.sol";
+
+contract Federation is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
@@ -63,7 +66,9 @@ contract Federation is Ownable {
         _;
     }
 
-    constructor(address[] memory _members, uint _required) validRequirement(_members.length, _required) {
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner)
+    validRequirement(_members.length, _required) public initializer {
+        UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
@@ -73,6 +78,7 @@ contract Federation is Ownable {
         }
         required = _required;
         emit RequirementChange(required);
+        _setBridge(_bridge);
     }
 
     function version() external pure returns (string memory) {
@@ -80,6 +86,10 @@ contract Federation is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
+        _setBridge(_bridge);
+    }
+
+    function _setBridge(address _bridge) internal {
         require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
         bridge = IBridge(_bridge);
         emit BridgeChanged(_bridge);

@@ -1,7 +1,9 @@
 const fs = require('fs')
 
 function isLocalNetwork(network) {
-    return !['mainnet', 'kovan', 'testnet'].includes(network.toLowerCase());
+    return !network.toLowerCase().includes('mainnet')
+        && !network.toLowerCase().includes('kovan')
+        && !network.toLowerCase().includes('testnet');
 }
 
 function getDeployed(network) {
