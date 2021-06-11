@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 /**
  * @dev Interface of the global ERC1820 Registry, as defined in the
@@ -50,25 +52,25 @@ interface IERC1820Registry {
      *
      * Requirements:
      *
-     * - the caller must be the current manager for `account`.
-     * - `interfaceHash` must not be an {IERC165} interface id (i.e. it must not
+     * - the caller must be the current manager for `_account`.
+     * - `_interfaceHash` must not be an {IERC165} interface id (i.e. it must not
      * end in 28 zeroes).
-     * - `implementer` must implement {IERC1820Implementer} and return true when
+     * - `_implementer` must implement {IERC1820Implementer} and return true when
      * queried for support, unless `implementer` is the caller. See
      * {IERC1820Implementer-canImplementInterfaceForAddress}.
      */
-    function setInterfaceImplementer(address account, bytes32 interfaceHash, address implementer) external;
+    function setInterfaceImplementer(address _account, bytes32 _interfaceHash, address _implementer) external;
 
     /**
-     * @dev Returns the implementer of `interfaceHash` for `account`. If no such
+     * @dev Returns the implementer of `_interfaceHash` for `_account`. If no such
      * implementer is registered, returns the zero address.
      *
-     * If `interfaceHash` is an {IERC165} interface id (i.e. it ends with 28
-     * zeroes), `account` will be queried for support of it.
+     * If `_interfaceHash` is an {IERC165} interface id (i.e. it ends with 28
+     * zeroes), `_account` will be queried for support of it.
      *
      * `account` being the zero address is an alias for the caller's address.
      */
-    function getInterfaceImplementer(address account, bytes32 interfaceHash) external view returns (address);
+    function getInterfaceImplementer(address _account, bytes32 _interfaceHash) external view returns (address);
 
     /**
      * @dev Returns the interface hash for an `interfaceName`, as defined in the

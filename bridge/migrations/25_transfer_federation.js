@@ -7,9 +7,9 @@ module.exports = async (deployer, networkName, accounts) => {
     const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
 
     const bridge = new web3.eth.Contract(Bridge.abi, deployedJson.BridgeProxy);
-    const data = bridge.methods.changeFederation(deployedJson.Federation).encodeABI();
+    const methodCall = bridge.methods.changeFederation(deployedJson.FederationProxy);
 
-    await bridge.methods.changeFederation(deployedJson.Federation).call({ from: deployedJson.MultiSig });
-    await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, data, { from: accounts[0] });
+    await methodCall.call({ from: deployedJson.MultiSig });
+    await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, methodCall.encodeABI(), { from: accounts[0] });
 
 }

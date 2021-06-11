@@ -8,10 +8,9 @@ module.exports = async (deployer, networkName, accounts) => {
     const multiSig = await MultiSigWallet.at(deployedJson.MultiSig);
 
     const bridge = new web3.eth.Contract(Bridge.abi, deployedJson.BridgeProxy);
-    console.log('AllowTokensProxy',deployedJson.AllowTokensProxy)
-    let data = bridge.methods.changeAllowTokens(deployedJson.AllowTokensProxy).encodeABI();
+    const methodCall = bridge.methods.changeAllowTokens(deployedJson.AllowTokensProxy);
 
     //Check before sending the transaction as it eats the error
-    await bridge.methods.changeAllowTokens(deployedJson.AllowTokensProxy).call({ from: deployedJson.MultiSig });
-    await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, data, { from: accounts[0] });
+    await methodCall.call({ from: deployedJson.MultiSig });
+    await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, methodCall.encodeABI(), { from: accounts[0] });
 }

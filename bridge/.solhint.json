@@ -1,0 +1,11 @@
+{
+    "extends": "solhint:recommended",
+    "rules": {
+      "func-order": "off",
+      "mark-callable-contracts": "off",
+      "compiler-version": "off",
+      "reason-string": "warn",
+      "no-inline-assembly": "off",
+      "func-visibility": ["error", { "ignoreConstructors": true }]
+    }
+  }

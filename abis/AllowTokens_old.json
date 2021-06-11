@@ -7,7 +7,6 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "constructor"
     },
@@ -109,7 +108,6 @@
         "type": "event"
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -125,12 +123,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "dailyLimit",
         "outputs": [
@@ -140,12 +137,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "isOwner",
         "outputs": [
@@ -155,12 +151,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -170,21 +165,18 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [],
         "name": "renounceOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -194,12 +186,10 @@
         ],
         "name": "transferOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "isValidatingAllowedTokens",
         "outputs": [
@@ -209,12 +199,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "getMaxTokensAllowed",
         "outputs": [
@@ -224,12 +213,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "getMinTokensAllowed",
         "outputs": [
@@ -239,12 +227,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -260,12 +247,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -275,12 +261,10 @@
         ],
         "name": "addAllowedToken",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -290,30 +274,24 @@
         ],
         "name": "removeAllowedToken",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [],
         "name": "enableAllowedTokensValidation",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [],
         "name": "disableAllowedTokensValidation",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -323,12 +301,10 @@
         ],
         "name": "setMaxTokensAllowed",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -338,12 +314,10 @@
         ],
         "name": "setMinTokensAllowed",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -353,12 +327,10 @@
         ],
         "name": "changeDailyLimit",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -389,12 +361,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -410,8 +381,8 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     }
 ]

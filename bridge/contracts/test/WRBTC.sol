@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../IWrapped.sol";
 
@@ -12,39 +14,39 @@ contract WRBTC is IWrapped {
     event  Deposit(address indexed dst, uint wad);
     event  Withdrawal(address indexed src, uint wad);
 
-    mapping (address => uint)                       public  balanceOf;
-    mapping (address => mapping (address => uint))  public  allowance;
+    mapping (address => uint) override public balanceOf;
+    mapping (address => mapping (address => uint)) public allowance;
 
-    function() external payable {
+    receive () external payable {
         deposit();
     }
-    function deposit() public payable {
+    function deposit() override public payable {
         balanceOf[msg.sender] += msg.value;
         emit Deposit(msg.sender, msg.value);
     }
-    function withdraw(uint wad) public {
+    function withdraw(uint wad) override public {
         require(balanceOf[msg.sender] >= wad, "WRBTC: Balance less than wad");
         balanceOf[msg.sender] -= wad;
         msg.sender.transfer(wad);
         emit Withdrawal(msg.sender, wad);
     }
 
-    function totalSupply() public view returns (uint) {
+    function totalSupply() override public view returns (uint) {
         return address(this).balance;
     }
 
-    function approve(address guy, uint wad) public returns (bool) {
+    function approve(address guy, uint wad) override public returns (bool) {
         allowance[msg.sender][guy] = wad;
         emit Approval(msg.sender, guy, wad);
         return true;
     }
 
-    function transfer(address dst, uint wad) public returns (bool) {
+    function transfer(address dst, uint wad) override public returns (bool) {
         return transferFrom(msg.sender, dst, wad);
     }
 
     function transferFrom(address src, address dst, uint wad)
-        public
+        override public
         returns (bool)
     {
         require(balanceOf[src] >= wad, "WRBTC: Balance less than wad");

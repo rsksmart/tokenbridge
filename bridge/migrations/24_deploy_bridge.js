@@ -1,6 +1,5 @@
 const Bridge = artifacts.require("Bridge");
 const MultiSigWallet = artifacts.require("MultiSigWallet");
-const Utils = artifacts.require("Utils");
 const ProxyAdmin = artifacts.require("ProxyAdmin");
 const WRBTC = artifacts.require("WRBTC");
 const AllowTokens = artifacts.require('AllowTokens');
@@ -8,7 +7,6 @@ const deployHelper = require("../deployed/deployHelper");
 
 module.exports = async (deployer, networkName, accounts) => {
     const deployedJson = deployHelper.getDeployed(networkName);
-    await Bridge.link(Utils, deployHelper.Utils);
     await deployer.deploy(Bridge);
     const bridgeLogic = await Bridge.deployed();
     deployedJson.Bridge = bridgeLogic.address.toLowerCase();

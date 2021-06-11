@@ -5,32 +5,6 @@
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "_contractAddress",
-                "type": "address"
-            }
-        ],
-        "name": "AllowedContractAdded",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "_contractAddress",
-                "type": "address"
-            }
-        ],
-        "name": "AllowedContractRemoved",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
                 "name": "_tokenAddress",
                 "type": "address"
             }
@@ -205,7 +179,6 @@
         "type": "event"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "MAX_TYPES",
         "outputs": [
@@ -215,33 +188,24 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
-                "name": "",
+                "name": "sender",
                 "type": "address"
             }
         ],
-        "name": "allowedContracts",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
-        "payable": false,
-        "stateMutability": "view",
+        "name": "__Secondary_init",
+        "outputs": [],
+        "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -272,12 +236,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "bridge",
         "outputs": [
@@ -287,12 +250,11 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "isOwner",
         "outputs": [
@@ -302,12 +264,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "largeAmountConfirmations",
         "outputs": [
@@ -317,12 +278,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "mediumAmountConfirmations",
         "outputs": [
@@ -332,12 +292,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -347,12 +306,11 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "primary",
         "outputs": [
@@ -362,21 +320,18 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [],
         "name": "renounceOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "smallAmountConfirmations",
         "outputs": [
@@ -386,12 +341,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -401,12 +355,10 @@
         ],
         "name": "transferOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -416,12 +368,30 @@
         ],
         "name": "transferPrimary",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "name": "typeDescriptions",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function",
+        "constant": true
+    },
+    {
         "inputs": [
             {
                 "internalType": "uint256",
@@ -457,12 +427,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -472,12 +441,10 @@
         ],
         "name": "initialize",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -551,12 +518,10 @@
         ],
         "name": "initialize",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "version",
         "outputs": [
@@ -566,12 +531,11 @@
                 "type": "string"
             }
         ],
-        "payable": false,
         "stateMutability": "pure",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -641,12 +605,11 @@
                 "type": "tuple"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -662,12 +625,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -681,19 +643,11 @@
             }
         ],
         "name": "updateTokenTransfer",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "typeId",
-                "type": "uint256"
-            }
-        ],
-        "payable": false,
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "string",
@@ -741,12 +695,10 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -788,12 +740,10 @@
         ],
         "name": "setTypeLimits",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "getTypeDescriptionsLength",
         "outputs": [
@@ -803,12 +753,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -824,42 +773,11 @@
                 "type": "string"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_contract",
-                "type": "address"
-            }
-        ],
-        "name": "addAllowedContract",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": false,
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "_contract",
-                "type": "address"
-            }
-        ],
-        "name": "removeAllowedContract",
-        "outputs": [],
-        "payable": false,
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -875,12 +793,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -895,12 +812,10 @@
         ],
         "name": "setToken",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "components": [
@@ -922,12 +837,10 @@
         ],
         "name": "setMultipleTokens",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -937,12 +850,10 @@
         ],
         "name": "removeAllowedToken",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -962,12 +873,10 @@
         ],
         "name": "setConfirmations",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "getConfirmations",
         "outputs": [
@@ -987,8 +896,8 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     }
 ]

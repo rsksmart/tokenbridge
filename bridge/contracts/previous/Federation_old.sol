@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "./IBridge_old.sol";
 import "../zeppelin/ownership/Ownable.sol";
@@ -33,7 +35,7 @@ contract Federation_old is Ownable {
         _;
     }
 
-    constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
+    constructor(address[] memory _members, uint _required) validRequirement(_members.length, _required) {
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
@@ -147,7 +149,7 @@ contract Federation_old is Ownable {
                 break;
             }
         }
-        members.length -= 1;
+        members.pop(); // remove last element
         emit MemberRemoval(_oldMember);
     }
 

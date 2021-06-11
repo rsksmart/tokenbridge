@@ -1,5 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
 
+pragma solidity ^0.7.0;
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
@@ -11,6 +12,7 @@ import "../zeppelin/introspection/IERC1820Registry.sol";
 import "../zeppelin/token/ERC777/IERC777Recipient.sol";
 import "../zeppelin/token/ERC20/IERC20.sol";
 import "../zeppelin/token/ERC20/SafeERC20.sol";
+import "../zeppelin/token/ERC777/IERC777.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
@@ -35,7 +37,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     uint256 public lastDay;
     uint256 public spentToday;
 
-    mapping (address => ISideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => address) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) public processed; // ProcessedHash => true
@@ -57,7 +59,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         string memory _symbolPrefix
     ) public initializer {
         UpgradableOwnable.initialize(_manager);
-        UpgradablePausable.initialize(_manager);
+        UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = AllowTokens_old(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
@@ -66,7 +68,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
-    function version() external pure returns (string memory) {
+    function version() external pure override returns (string memory) {
         return "v2";
     }
 
@@ -90,7 +92,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         uint32 logIndex,
         uint8 decimals,
         uint256 granularity
-    ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
+    ) external onlyFederation whenNotPaused nonReentrant override returns(bool) {
         require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
         require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
         require(amount > 0, "Bridge: Amount 0");
@@ -120,13 +122,13 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     ) private {
 
         (uint256 calculatedGranularity,uint256 formattedAmount) = Utils_old.calculateGranularityAndAmount(decimals, granularity, amount);
-        ISideToken sideToken = mappedTokens[tokenAddress];
-        if (address(sideToken) == NULL_ADDRESS) {
+        address sideToken = mappedTokens[tokenAddress];
+        if (sideToken == NULL_ADDRESS) {
             sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
         } else {
-            require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ from side token");
+            require(calculatedGranularity == IERC777(sideToken).granularity(), "Bridge: Granularity differ from side token");
         }
-        sideToken.mint(receiver, formattedAmount, "", "");
+        ISideToken(sideToken).mint(receiver, formattedAmount, "", "");
         emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, 18, calculatedGranularity);
     }
 
@@ -142,7 +144,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
+    function receiveTokens(address tokenToUse, uint256 amount) override external whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
         address sender = _msgSender();
         require(!sender.isContract(), "Bridge: Sender can't be a contract");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
@@ -162,7 +164,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused whenNotUpgrading {
+    ) external whenNotPaused whenNotUpgrading override(IBridge_old, IERC777Recipient) {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to address");
@@ -177,7 +179,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);
         if (isASideToken) {
-            uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
+            uint256 modulo = amountMinusFees.mod(IERC777(tokenToUse).granularity());
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
         }
@@ -187,9 +189,9 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         if (isASideToken) {
             verifyWithAllowTokens(tokenToUse, amount, isASideToken);
             //Side Token Crossing
-            ISideToken(tokenToUse).burn(amountMinusFees, userData);
+            IERC777(tokenToUse).burn(amountMinusFees, userData);
             // solium-disable-next-line max-len
-            emit Cross(originalTokens[tokenToUse], from, amountMinusFees, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
+            emit Cross(originalTokens[tokenToUse], from, amountMinusFees, IERC777(tokenToUse).symbol(), userData, IERC777(tokenToUse).decimals(), IERC777(tokenToUse).granularity());
         } else {
             //Main Token Crossing
             knownTokens[tokenToUse] = true;
@@ -204,10 +206,10 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         }
     }
 
-    function _createSideToken(address token, string memory symbol, uint256 granularity) private returns (ISideToken sideToken){
+    function _createSideToken(address token, string memory symbol, uint256 granularity) private returns (address sideToken){
         string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
         address sideTokenAddress = sideTokenFactory.createSideToken(newSymbol, newSymbol, granularity);
-        sideToken = ISideToken(sideTokenAddress);
+        sideToken = sideTokenAddress;
         mappedTokens[token] = sideToken;
         originalTokens[sideTokenAddress] = token;
         emit NewSideToken(sideTokenAddress, token, newSymbol, granularity);
@@ -216,9 +218,9 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
 
     function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
         // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours) {
+        if (block.timestamp > lastDay + 24 hours) {
             // solium-disable-next-line security/no-block-members
-            lastDay = now;
+            lastDay = block.timestamp;
             spentToday = 0;
         }
         require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Bigger than limit");
@@ -257,14 +259,14 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         emit FeePercentageChanged(feePercentage);
     }
 
-    function getFeePercentage() external view returns(uint) {
+    function getFeePercentage() override external view returns(uint) {
         return feePercentage;
     }
 
-    function calcMaxWithdraw() external view returns (uint) {
+    function calcMaxWithdraw() override external view returns (uint) {
         uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours)
+        if (block.timestamp > lastDay + 24 hours)
             spent = 0;
         return allowTokens.calcMaxWithdraw(spent);
     }
@@ -318,7 +320,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         for (uint i = 0; i < sideTokens.length; i++) {
             address originalToken = address(originalTokens[sideTokens[i]]);
             originalTokens[sideTokens[i]] = NULL_ADDRESS;
-            mappedTokens[originalToken] = ISideToken(NULL_ADDRESS);
+            mappedTokens[originalToken] = address(NULL_ADDRESS);
         }
         return true;
     }
