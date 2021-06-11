@@ -12,7 +12,6 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "constructor"
     },
@@ -34,9 +33,57 @@
         "inputs": [
             {
                 "indexed": true,
+                "internalType": "address",
+                "name": "federator",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
                 "internalType": "bytes32",
                 "name": "transactionId",
                 "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "originalTokenAddress",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "receiver",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "blockHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint32",
+                "name": "logIndex",
+                "type": "uint32"
             }
         ],
         "name": "Executed",
@@ -155,6 +202,12 @@
             {
                 "indexed": true,
                 "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
                 "name": "transactionId",
                 "type": "bytes32"
             },
@@ -184,20 +237,8 @@
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string"
-            },
-            {
-                "indexed": false,
                 "internalType": "bytes32",
                 "name": "blockHash",
-                "type": "bytes32"
-            },
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "transactionHash",
                 "type": "bytes32"
             },
             {
@@ -205,31 +246,12 @@
                 "internalType": "uint32",
                 "name": "logIndex",
                 "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint8",
-                "name": "decimals",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "granularity",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "typeId",
-                "type": "uint256"
             }
         ],
         "name": "Voted",
         "type": "event"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "MAX_MEMBER_COUNT",
         "outputs": [
@@ -239,12 +261,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "bridge",
         "outputs": [
@@ -254,12 +275,11 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -275,12 +295,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "isOwner",
         "outputs": [
@@ -290,12 +309,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -311,12 +329,11 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "owner",
         "outputs": [
@@ -326,12 +343,11 @@
                 "type": "address"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "bytes32",
@@ -347,21 +363,18 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [],
         "name": "renounceOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "required",
         "outputs": [
@@ -371,12 +384,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -386,12 +398,10 @@
         ],
         "name": "transferOwnership",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "bytes32",
@@ -412,12 +422,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "version",
         "outputs": [
@@ -427,12 +436,11 @@
                 "type": "string"
             }
         ],
-        "payable": false,
         "stateMutability": "pure",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -442,12 +450,10 @@
         ],
         "name": "setBridge",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -455,61 +461,34 @@
                 "type": "address"
             },
             {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "sender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "receiver",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "blockHash",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "transactionHash",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "logIndex",
-                        "type": "uint32"
-                    },
-                    {
-                        "internalType": "uint8",
-                        "name": "decimals",
-                        "type": "uint8"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "granularity",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "typeId",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "symbol",
-                        "type": "string"
-                    }
-                ],
-                "internalType": "struct Federation.TransactionInfo",
-                "name": "transactionInfo",
-                "type": "tuple"
+                "internalType": "address payable",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address payable",
+                "name": "receiver",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "blockHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint32",
+                "name": "logIndex",
+                "type": "uint32"
             }
         ],
         "name": "voteTransaction",
@@ -520,12 +499,10 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "bytes32",
@@ -541,12 +518,11 @@
                 "type": "uint256"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "bytes32",
@@ -562,12 +538,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "bytes32",
@@ -583,12 +558,11 @@
                 "type": "bool"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": true,
         "inputs": [
             {
                 "internalType": "address",
@@ -596,61 +570,34 @@
                 "type": "address"
             },
             {
-                "components": [
-                    {
-                        "internalType": "address",
-                        "name": "sender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address payable",
-                        "name": "receiver",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "blockHash",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "bytes32",
-                        "name": "transactionHash",
-                        "type": "bytes32"
-                    },
-                    {
-                        "internalType": "uint32",
-                        "name": "logIndex",
-                        "type": "uint32"
-                    },
-                    {
-                        "internalType": "uint8",
-                        "name": "decimals",
-                        "type": "uint8"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "granularity",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "typeId",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "string",
-                        "name": "symbol",
-                        "type": "string"
-                    }
-                ],
-                "internalType": "struct Federation.TransactionInfo",
-                "name": "transactionInfo",
-                "type": "tuple"
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "receiver",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "blockHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint32",
+                "name": "logIndex",
+                "type": "uint32"
             }
         ],
         "name": "getTransactionId",
@@ -661,12 +608,11 @@
                 "type": "bytes32"
             }
         ],
-        "payable": false,
         "stateMutability": "pure",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -676,12 +622,10 @@
         ],
         "name": "addMember",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "address",
@@ -691,12 +635,10 @@
         ],
         "name": "removeMember",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": true,
         "inputs": [],
         "name": "getMembers",
         "outputs": [
@@ -706,12 +648,11 @@
                 "type": "address[]"
             }
         ],
-        "payable": false,
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -721,12 +662,10 @@
         ],
         "name": "changeRequirement",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     },
     {
-        "constant": false,
         "inputs": [
             {
                 "internalType": "uint256",
@@ -756,7 +695,6 @@
         ],
         "name": "emitHeartbeat",
         "outputs": [],
-        "payable": false,
         "stateMutability": "nonpayable",
         "type": "function"
     }

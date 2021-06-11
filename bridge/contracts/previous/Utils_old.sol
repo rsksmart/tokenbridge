@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../zeppelin/math/SafeMath.sol";
 import "../zeppelin/introspection/IERC1820Registry.sol";
@@ -93,6 +95,7 @@ library Utils_old {
         if(granularity == 100000000000000000) return 1;
         if(granularity == 1000000000000000000) return 0;
         require(false, "Utils: invalid granularity");
+        return 0;
     }
 
     function calculateGranularityAndAmount(uint8 decimals, uint256 granularity, uint256 amount) external pure

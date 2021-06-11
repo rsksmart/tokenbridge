@@ -1,4 +1,6 @@
-pragma solidity ^0.5.2;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../Initializable.sol";
 

@@ -1,11 +1,14 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
 
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.7.0;
+
+// Upgradables
+import "./zeppelin/upgradable/Initializable.sol";
+import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./IBridge.sol";
-import "./zeppelin/ownership/Ownable.sol";
 
-contract Federation is Ownable {
+contract Federation is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
@@ -17,25 +20,31 @@ contract Federation is Ownable {
     mapping (bytes32 => mapping (address => bool)) public votes;
     mapping(bytes32 => bool) public processed;
 
-    event Executed(bytes32 indexed transactionId);
+    event Executed(
+        address indexed federator,
+        bytes32 indexed transactionHash,
+        bytes32 indexed transactionId,
+        address originalTokenAddress,
+        address sender,
+        address receiver,
+        uint256 amount,
+        bytes32 blockHash,
+        uint32 logIndex
+    );
     event MemberAddition(address indexed member);
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
     event BridgeChanged(address bridge);
     event Voted(
         address indexed federator,
+        bytes32 indexed transactionHash,
         bytes32 indexed transactionId,
         address originalTokenAddress,
         address sender,
         address receiver,
         uint256 amount,
-        string symbol,
         bytes32 blockHash,
-        bytes32 indexed transactionHash,
-        uint32 logIndex,
-        uint8 decimals,
-        uint256 granularity,
-        uint256 typeId
+        uint32 logIndex
     );
     event HeartBeat(
         address indexed sender,
@@ -46,21 +55,8 @@ contract Federation is Ownable {
         string nodeEthInfo
     );
 
-    struct TransactionInfo {
-        address sender;
-        address payable receiver;
-        uint256 amount;
-        bytes32 blockHash;
-        bytes32 transactionHash;
-        uint32 logIndex;
-        uint8 decimals;
-        uint256 granularity;
-        uint256 typeId;
-        string symbol;
-    }
-
     modifier onlyMember() {
-        require(isMember[_msgSender()], "Federation: Caller not a Federator");
+        require(isMember[_msgSender()], "Federation: Not Federator");
         _;
     }
 
@@ -70,8 +66,10 @@ contract Federation is Ownable {
         _;
     }
 
-    constructor(address[] memory _members, uint _required) public validRequirement(_members.length, _required) {
-        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Members larger than max allowed");
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner)
+    validRequirement(_members.length, _required) public initializer {
+        UpgradableOwnable.initialize(owner);
+        require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
         for (uint i = 0; i < _members.length; i++) {
             require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, "Federation: Invalid members");
@@ -80,6 +78,7 @@ contract Federation is Ownable {
         }
         required = _required;
         emit RequirementChange(required);
+        _setBridge(_bridge);
     }
 
     function version() external pure returns (string memory) {
@@ -87,15 +86,35 @@ contract Federation is Ownable {
     }
 
     function setBridge(address _bridge) external onlyOwner {
+        _setBridge(_bridge);
+    }
+
+    function _setBridge(address _bridge) internal {
         require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
         bridge = IBridge(_bridge);
         emit BridgeChanged(_bridge);
     }
 
-    function voteTransaction(address originalTokenAddress, TransactionInfo memory transactionInfo)
+    function voteTransaction(
+        address originalTokenAddress,
+        address payable sender,
+        address payable receiver,
+        uint256 amount,
+        bytes32 blockHash,
+        bytes32 transactionHash,
+        uint32 logIndex
+    )
     public onlyMember returns(bool)
     {
-        bytes32 transactionId = getTransactionId(originalTokenAddress, transactionInfo);
+        bytes32 transactionId = getTransactionId(
+            originalTokenAddress,
+            sender,
+            receiver,
+            amount,
+            blockHash,
+            transactionHash,
+            logIndex
+        );
         if (processed[transactionId])
             return true;
 
@@ -105,18 +124,14 @@ contract Federation is Ownable {
         votes[transactionId][_msgSender()] = true;
         emit Voted(
             _msgSender(),
+            transactionHash,
             transactionId,
             originalTokenAddress,
-            transactionInfo.sender,
-            transactionInfo.receiver,
-            transactionInfo.amount,
-            transactionInfo.symbol,
-            transactionInfo.blockHash,
-            transactionInfo.transactionHash,
-            transactionInfo.logIndex,
-            transactionInfo.decimals,
-            transactionInfo.granularity,
-            transactionInfo.typeId
+            sender,
+            receiver,
+            amount,
+            blockHash,
+            logIndex
         );
 
         uint transactionCount = getTransactionCount(transactionId);
@@ -124,18 +139,24 @@ contract Federation is Ownable {
             processed[transactionId] = true;
             bridge.acceptTransfer(
                 originalTokenAddress,
-                transactionInfo.sender,
-                transactionInfo.receiver,
-                transactionInfo.amount,
-                transactionInfo.symbol,
-                transactionInfo.blockHash,
-                transactionInfo.transactionHash,
-                transactionInfo.logIndex,
-                transactionInfo.decimals,
-                transactionInfo.granularity,
-                transactionInfo.typeId
+                sender,
+                receiver,
+                amount,
+                blockHash,
+                transactionHash,
+                logIndex
             );
-            emit Executed(transactionId);
+            emit Executed(
+                _msgSender(),
+                transactionHash,
+                transactionId,
+                originalTokenAddress,
+                sender,
+                receiver,
+                amount,
+                blockHash,
+                logIndex
+            );
             return true;
         }
 
@@ -163,22 +184,23 @@ contract Federation is Ownable {
 
     function getTransactionId(
         address originalTokenAddress,
-        TransactionInfo memory transactionInfo)
-    public pure returns(bytes32)
+        address sender,
+        address receiver,
+        uint256 amount,
+        bytes32 blockHash,
+        bytes32 transactionHash,
+        uint32 logIndex
+    ) public pure returns(bytes32)
     {
         return keccak256(
             abi.encodePacked(
             originalTokenAddress,
-            transactionInfo.sender,
-            transactionInfo.receiver,
-            transactionInfo.amount,
-            transactionInfo.symbol,
-            transactionInfo.blockHash,
-            transactionInfo.transactionHash,
-            transactionInfo.logIndex,
-            transactionInfo.decimals,
-            transactionInfo.granularity,
-            transactionInfo.typeId
+            sender,
+            receiver,
+            amount,
+            blockHash,
+            transactionHash,
+            logIndex
             )
         );
     }
@@ -208,7 +230,7 @@ contract Federation is Ownable {
                 break;
             }
         }
-        members.length -= 1;
+        members.pop(); // remove an element from the end of the array.
         emit MemberRemoval(_oldMember);
     }
 

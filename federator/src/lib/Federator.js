@@ -184,7 +184,7 @@ module.exports = class Federator {
                     if(amountBN.gte(largeAmountBN)) {
                         const c = currentBlock - blockNumber;
                         const rC = largeAmountConfirmations;
-                        this.logger.debug(`[large amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
+                        this.logger.debug(`[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`);
                         continue;
                     }
 
@@ -192,7 +192,7 @@ module.exports = class Federator {
                        (currentBlock - blockNumber < mediumAmountConfirmations)) {
                         const c = currentBlock - blockNumber;
                         const rC = mediumAmountConfirmations;
-                        this.logger.debug(`[medium amount] Tx: ${transactionHash} ${amount} ${symbol} won't be proccessed yet ${c} < ${rC}`);
+                        this.logger.debug(`[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`);
                         continue;
                     }
                 }
@@ -216,7 +216,7 @@ module.exports = class Federator {
                 if (!wasProcessed) {
                     let hasVoted = await utils.retry3Times(fedContract.hasVoted(transactionId).call);
                     if(!hasVoted) {
-                        this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} token: ${symbol}`);
+                        this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`);
                         await this._voteTransaction(
                             fedContract,
                             tokenAddress,
@@ -233,10 +233,10 @@ module.exports = class Federator {
                             transactionId
                         );
                     } else {
-                        this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol}  has already been voted by us`);
+                        this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`);
                     }
                 } else {
-                    this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} token: ${symbol} was already processed`);
+                    this.logger.debug(`Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`);
                 }
             }
 
@@ -264,7 +264,7 @@ module.exports = class Federator {
     ) {
         try {
             txId = txId.toLowerCase();
-            this.logger.info(`Voting Transfer ${amount} of ${symbol} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
+            this.logger.info(`Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
 
             let txData = await fedContract.voteTransaction({
                 originalTokenAddress: tokenAddress,
@@ -287,7 +287,7 @@ module.exports = class Federator {
             }
 
             if (revertedTxns[txId]) {
-                this.logger.info(`Skipping Voting Transfer ${txId} since it's marked as reverted.`, revertedTxns[txId])
+                this.logger.info(`Skipping Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} since it's marked as reverted.`, revertedTxns[txId])
                 return false;
             }
 
@@ -316,7 +316,7 @@ module.exports = class Federator {
 
             return true;
         } catch (err) {
-            throw new CustomError(`Exception Voting tx:${transactionHash} block: ${blockHash} token ${symbol}`, err);
+            throw new CustomError(`Exception Voting tx:${transactionHash} block: ${blockHash} originalTokenAddress: ${tokenAddress}`, err);
         }
     }
 

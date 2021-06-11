@@ -1,4 +1,6 @@
-pragma solidity >=0.4.21 <0.6.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../zeppelin/math/SafeMath.sol";
 import "../zeppelin/ownership/Ownable.sol";
@@ -26,7 +28,7 @@ contract AllowTokens_old is Ownable {
         _;
     }
 
-    constructor(address _manager) public  {
+    constructor(address _manager)  {
         transferOwnership(_manager);
         validateAllowedTokens = true;
         maxTokensAllowed = 10000 ether;

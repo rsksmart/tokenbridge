@@ -1,6 +1,7 @@
-pragma solidity ^0.5.0;
-pragma experimental ABIEncoderV2;
+// SPDX-License-Identifier: MIT
 
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 interface IAllowTokens {
 
     struct Limits {
@@ -44,5 +45,5 @@ interface IAllowTokens {
 
     function isTokenAllowed(address token) external view returns (bool);
 
-    function updateTokenTransfer(address token, uint256 amount) external returns(uint256 typeId);
+    function updateTokenTransfer(address token, uint256 amount) external;
 }

@@ -5,6 +5,8 @@ const utils = require('./utils');
 const fs = require('fs');
 const axios = require('axios');
 
+const CustomError = require('./CustomError');
+
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
         this.client = client;
@@ -36,12 +38,18 @@ module.exports = class TransactionSender {
 
     async getGasLimit(rawTx) {
         const chainId = await this.getChainId();
-        let estimatedGas = await this.client.eth.estimateGas({ gasPrice: rawTx.gasPrice, value: rawTx.value, to: rawTx.to, data: rawTx.data, from: rawTx.from});
-        
+        let estimatedGas = await this.client.eth.estimateGas({
+            gasPrice: rawTx.gasPrice,
+            value: rawTx.value,
+            to: rawTx.to,
+            data: rawTx.data,
+            from: rawTx.from
+        });
+
         if (chainId >= 30 && chainId <= 33) {
-            estimatedGas = (estimatedGas < 300000) ? 300000 : 3500000;
+            estimatedGas = 200000;
         }
-        
+
         return estimatedGas;
     }
 
@@ -53,7 +61,7 @@ module.exports = class TransactionSender {
             const data = {
                 module: 'gastracker',
                 action: 'gasoracle'
-            }
+            };
             const response = await this.useEtherscanApi(data);
             const gasOraclePrice = response.result;
             const proposeGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.ProposeGasPrice, 'gwei'));
@@ -151,7 +159,7 @@ module.exports = class TransactionSender {
 
         const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
 
-        const params = new URLSearchParams()
+        const params = new URLSearchParams();
         params.append('apikey', this.etherscanApiKey);
         for (const property in data) {
             params.append(property, data[property]);
@@ -170,7 +178,7 @@ module.exports = class TransactionSender {
         return response.data;
     }
 
-    async sendTransaction(to, data, value, privateKey) {
+    async sendTransaction(to, data, value, privateKey, throwOnError=false) {
         const chainId =  await this.getChainId();
         let txHash;
         let receipt;
@@ -211,6 +219,9 @@ module.exports = class TransactionSender {
             return receipt;
 
         } catch(err) {
+            if(throwOnError) 
+                throw new CustomError('Error in sendTransaction', err);
+
             if (err.message.indexOf('it might still be mined') > 0) {
                 this.logger.warn(`Transaction was not mined within 750 seconds, please make sure your transaction was properly sent. Be aware that
                 it might still be mined. transactionHash:${txHash}`);
