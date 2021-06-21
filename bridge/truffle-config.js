@@ -14,8 +14,15 @@
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require('fs');
 
-let MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', { encoding: 'utf8' }) : "";// Your metamask's recovery words
-const INFURA_API_KEY = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key',{ encoding: 'utf8' }) : "";// Your Infura API Key after its registration
+const MNEMONIC = fs.existsSync('./mnemonic.key')
+  ? fs.readFileSync('./mnemonic.key', { encoding: 'utf8' })
+  : "";// Your metamask's recovery words
+const INFURA_API_KEY = fs.existsSync('./infura.key')
+  ? fs.readFileSync('./infura.key',{ encoding: 'utf8' })
+  : "";// Your Infura API Key after its registration
+const ETHERSCAN_API_KEY = fs.existsSync('./etherscan.key')
+  ? fs.readFileSync('./etherscan.key',{ encoding: 'utf8' })
+  : "";// Your Etherscan API Key after its registration
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -53,51 +60,75 @@ module.exports = {
     },
     rsktestnet: {
       provider: () =>
-        new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"),
+        new HDWalletProvider(MNEMONIC, "http://18.218.165.234:4444"), //Use private node as public one will give a timeout error  "http://18.218.165.234:4444"
       network_id: 31,
       gas: 6800000,
       gasPrice: 70000000, // 0.07 gwei
-      skipDryRun: true
+      skipDryRun: true,
+      // // Higher polling interval to check for blocks less frequently
+      pollingInterval: 15e3,
+      deploymentPollingInterval: 15e3,
+      networkCheckTimeout: 1e6,
+      timeoutBlocks: 200,
     },
     rskmainnet: {
       provider: () =>
-        new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
+        new HDWalletProvider(MNEMONIC, "http://3.12.73.76:4444"),
       network_id: 30,
       gas: 6800000,
       gasPrice: 65000000, // 0.065 gwei
-      skipDryRun: true
+      skipDryRun: true,
+      // Higher polling interval to check for blocks less frequently
+      pollingInterval: 15e3,
+      deploymentPollingInterval: 15e3,
+      networkCheckTimeout: 1e6,
+      timeoutBlocks: 200,
     },
      //Ethereum
      ropsten: {
-      provider: () => new HDWalletProvider(MNEMONIC, "https://ropsten.infura.io/v3/" + INFURA_API_KEY),
+      provider: () => new HDWalletProvider(MNEMONIC, "wss://ropsten.infura.io/ws/v3/" + INFURA_API_KEY),
       network_id: 3,
       gas: 4700000,
       gasPrice: 10000000000,
-      skipDryRun: true
+      skipDryRun: true,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+      websockets: true,
     },
     kovan: {
-      provider: () => new HDWalletProvider(MNEMONIC, "https://kovan.infura.io/v3/" + INFURA_API_KEY),
+      provider: () => new HDWalletProvider(MNEMONIC, "wss://kovan.infura.io/ws/v3/" + INFURA_API_KEY),
       network_id: 42,
       gas: 6700000,
       gasPrice: 10000000000,
-      skipDryRun: true
+      skipDryRun: true,
+      pollingInterval: 15e3,
+      deploymentPollingInterval: 15e3,
+      networkCheckTimeout: 1e6,
+      timeoutBlocks: 200,
+      websockets: true,
     },
     rinkeby: {
-      provider: () => new HDWalletProvider(MNEMONIC, "https://rinkeby.infura.io/v3/" + INFURA_API_KEY),
+      provider: () => new HDWalletProvider(MNEMONIC, "wss://rinkeby.infura.io/ws/v3/" + INFURA_API_KEY),
       network_id: 4,
       gas: 6700000,
       gasPrice: 10000000000,
-      skipDryRun: true
+      skipDryRun: true,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+      websockets: true,
     },
     ethmainnet: {
-      provider: () => new HDWalletProvider(MNEMONIC, "https://mainnet.infura.io/v3/" + INFURA_API_KEY),
+      provider: () => new HDWalletProvider(MNEMONIC, "wss://mainnet.infura.io/ws/v3/" + INFURA_API_KEY),
       network_id: 1,
       gas: 6700000,
       gasPrice: 250000000000,
-      skipDryRun: true
+      skipDryRun: true,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+      websockets: true,
     },
   },
-  plugins: ["solidity-coverage"],
+  plugins: ['solidity-coverage', 'truffle-plugin-verify'], //truffle-plugin-blockscout-verify
   mocha: {
     reporter: 'eth-gas-reporter',
     //reporterOptions : { ... } // See options below
@@ -106,6 +137,7 @@ module.exports = {
       solc: {
         version: "0.7.6",
         settings: {
+          evmVersion: "istanbul",
           optimizer: {
             enabled: true,
             // Optimize for how many times you intend to run the code.
@@ -115,5 +147,8 @@ module.exports = {
           }
         }
       }
+  },
+  api_keys: {
+    etherscan: ETHERSCAN_API_KEY
   }
 };

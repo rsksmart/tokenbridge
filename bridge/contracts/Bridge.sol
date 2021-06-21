@@ -40,7 +40,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     address internal federation;
     uint256 internal feePercentage;
     string public symbolPrefix;
-    uint256 internal _depprecatedLastDay;
+    bytes32 public DOMAIN_SEPARATOR; // replaces uint256 internal _depprecatedLastDay;
     uint256 internal _deprecatedSpentToday;
 
     mapping (address => address) public mappedTokens; // OirignalToken => SideToken
@@ -59,7 +59,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
     mapping (bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
-    bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
     bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
     mapping(address => uint) public nonces;
@@ -263,7 +262,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address payable _reciever,
         address payable _relayer,
         uint256 _fee
-    ) internal returns (uint256 receivedAmount) {
+    ) internal nonReentrant returns (uint256 receivedAmount) {
         address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
         require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
 

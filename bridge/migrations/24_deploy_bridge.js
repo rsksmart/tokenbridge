@@ -18,9 +18,9 @@ module.exports = async (deployer, networkName, accounts) => {
     // We deploy the contract manually and point the proxy to the new logic
     const proxyAdmin = await ProxyAdmin.at(deployedJson.ProxyAdmin);
 
-    let data = proxyAdmin.contract.methods.upgrade(deployedJson.BridgeProxy, deployedJson.Bridge).encodeABI();
-    await proxyAdmin.contract.methods.upgrade(deployedJson.BridgeProxy, deployedJson.Bridge).call({from:deployedJson.MultiSig})
-    await multiSig.submitTransaction(proxyAdmin.address, 0, data, { from: accounts[0] });
+    let methodCall = proxyAdmin.contract.methods.upgrade(deployedJson.BridgeProxy, deployedJson.Bridge);
+    await methodCall.call({from:deployedJson.MultiSig})
+    await multiSig.submitTransaction(proxyAdmin.address, 0, methodCall.encodeABI(), { from: accounts[0] });
 
     const bridge = await Bridge.at(deployedJson.BridgeProxy);
     if (deployHelper.isLocalNetwork(networkName)) {
@@ -29,16 +29,19 @@ module.exports = async (deployer, networkName, accounts) => {
         deployedJson.WrappedCurrency = wrbtc.address.toLowerCase();
         deployHelper.saveDeployed(deployedJson);
 
-        data = bridge.contract.methods.setWrappedCurrency(wrbtc.address).encodeABI();
-        await bridge.contract.methods.setWrappedCurrency(wrbtc.address).call({from:deployedJson.MultiSig})
-        await multiSig.submitTransaction(proxyAdmin.address, 0, data, { from: accounts[0] });
+        methodCall = bridge.contract.methods.setWrappedCurrency(wrbtc.address);
+        await methodCall.call({from:deployedJson.MultiSig})
+        await multiSig.submitTransaction(bridge.address, 0, methodCall.encodeABI(), { from: accounts[0] });
         const allowTokens = await AllowTokens.at(deployedJson.AllowTokensProxy);
-        data = allowTokens.contract.methods.setToken(wrbtc.address, '0').encodeABI();
-        await allowTokens.contract.methods.setToken(wrbtc.address, '0').call({from:deployedJson.MultiSig})
-        await multiSig.submitTransaction(proxyAdmin.address, 0, data, { from: accounts[0] });
+        methodCall = allowTokens.contract.methods.setToken(wrbtc.address, '0');
+        await methodCall.call({from:deployedJson.MultiSig})
+        await multiSig.submitTransaction(allowTokens.address, 0, methodCall.encodeABI(), { from: accounts[0] });
     } else {
-        data = bridge.contract.methods.setWrappedCurrency(deployedJson.WrappedCurrency).encodeABI();
-        await bridge.contract.methods.setWrappedCurrency(deployedJson.WrappedCurrency).call({from:deployedJson.MultiSig})
-        await multiSig.submitTransaction(proxyAdmin.address, 0, data, { from: accounts[0] });
+        methodCall = bridge.contract.methods.setWrappedCurrency(deployedJson.WrappedCurrency);
+        await methodCall.call({from:deployedJson.MultiSig})
+        await multiSig.submitTransaction(bridge.address, 0, methodCall.encodeABI(), { from: accounts[0] });
     }
+    methodCall = bridge.contract.methods.initDomainSeparator();
+    await methodCall.call({from:deployedJson.MultiSig})
+    await multiSig.submitTransaction(bridge.address, 0, methodCall.encodeABI(), { from: accounts[0] });
 };
