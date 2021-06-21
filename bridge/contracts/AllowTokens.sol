@@ -18,7 +18,6 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     uint256 constant public MAX_TYPES = 250;
     mapping (address => TokenInfo) public allowedTokens;
     mapping (uint256 => Limits) public typeLimits;
-    address public bridge;
     uint256 public smallAmountConfirmations;
     uint256 public mediumAmountConfirmations;
     uint256 public largeAmountConfirmations;

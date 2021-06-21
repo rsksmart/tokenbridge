@@ -3,13 +3,15 @@
     "MultiSig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
     "ProxyAdmin": "0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab",
     "Utils": "0xa8C48C20a5D66F706f43D5F749aB63e814A0C8F3",
-    "Federation": "0x925606edc5863c079b712daed560c31eff8335b9",
-    "SideTokenFactory": "0xF58B1e77EEfB75A553EB0AA11BAC0941DB4A3333",
-    "AllowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
-    "Bridge": "0xEBd9575bb670AF11be25F869FE11b9b5867dEc67",
+    "Federation": "0xea949dddfcce8f00f0fba723b1a292da4fe0fa82",
+    "SideTokenFactory": "0x08c191a7b5edaa59853705f7eae95e3e4238d73e",
+    "AllowTokens": "0xC15007a6a6F75F12062B3485Cc0D31205880241E",
+    "Bridge": "0xe4eee200de268c47bd82a17710265cc4cd543aa6",
     "BridgeProxy": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
     "smallAmountConfirmations": "2",
     "mediumAmountConfirmations": "4",
     "largeAmountConfirmations": "10",
-    "WrappedCurrency": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e"
+    "WrappedCurrency": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e",
+    "AllowTokensProxy": "0x0efcc26c0b625931c6271f91d54228c5d546213b",
+    "FederationProxy": "0x5d663981d930e8ec108280b9d80885658148ab0f"
 }
