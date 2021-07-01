@@ -127,6 +127,14 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         _setTypeLimits(typeId, limits);
     }
 
+    function getTypesLimits() external view override returns(Limits[] memory limits) {
+        limits = new Limits[](typeDescriptions.length);
+        for (uint256 i = 0; i < typeDescriptions.length; i++) {
+            limits[i] = typeLimits[i];
+        }
+        return limits;
+    }
+
     function getTypeDescriptionsLength() external view override returns(uint256) {
         return typeDescriptions.length;
     }

@@ -148,11 +148,11 @@ function tokensTypesTestnet() {
             largeAmount:toWei('1000') }
         },
         { description: '<1cent', limits: {
-            min:toWei('100'),
+            min:toWei('10'),
             max:toWei('25000000000'),
             daily:toWei('50000000000'),
-            mediumAmount:toWei('1000'),
-            largeAmount:toWei('10000') }
+            mediumAmount:toWei('100'),
+            largeAmount:toWei('1000') }
         },
     ]
 }

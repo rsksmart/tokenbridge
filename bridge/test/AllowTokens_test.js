@@ -64,12 +64,14 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(typesInfo.length.toString(), typeDescriptionLength.toString());
             const typeDescription = await allowTokens.getTypeDescriptions('0');
             assert.equal(typesInfo[0].description, typeDescription);
-            for(let i = 0; i < typesInfo.length; i++) {
+            const typesLimits = await allowTokens.getTypesLimits();
+            assert.equal(typesLimits.length, typesInfo.length);
+            for(let i = 0; i < typesLimits.length; i++) {
                 let limits = await allowTokens.typeLimits(i.toString());
-                assert.equal(typesInfo[i].limits.min, limits.min.toString());
-                assert.equal(typesInfo[i].limits.max, limits.max.toString());
-                assert.equal(typesInfo[i].limits.mediumAmount, limits.mediumAmount.toString());
-                assert.equal(typesInfo[i].limits.largeAmount, limits.largeAmount.toString());
+                assert.equal(typesLimits[i].min, limits.min.toString());
+                assert.equal(typesLimits[i].max, limits.max.toString());
+                assert.equal(typesLimits[i].mediumAmount, limits.mediumAmount.toString());
+                assert.equal(typesLimits[i].largeAmount, limits.largeAmount.toString());
             }
         });
     });
