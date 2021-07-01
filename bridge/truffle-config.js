@@ -60,7 +60,7 @@ module.exports = {
     },
     rsktestnet: {
       provider: () =>
-        new HDWalletProvider(MNEMONIC, "http://18.218.165.234:4444"), //Use private node as public one will give a timeout error  "http://18.218.165.234:4444"
+        new HDWalletProvider(MNEMONIC, "https://public-node.testnet.rsk.co"), //Use private node as public one will give a timeout error 
       network_id: 31,
       gas: 6800000,
       gasPrice: 70000000, // 0.07 gwei
@@ -73,7 +73,7 @@ module.exports = {
     },
     rskmainnet: {
       provider: () =>
-        new HDWalletProvider(MNEMONIC, "http://3.12.73.76:4444"),
+        new HDWalletProvider(MNEMONIC, "https://public-node.rsk.co"),
       network_id: 30,
       gas: 6800000,
       gasPrice: 65000000, // 0.065 gwei

@@ -35,6 +35,8 @@ interface IAllowTokens {
 
     function calcMaxWithdraw(address token) external view returns (uint256 maxWithdraw);
 
+    function getTypesLimits() external view returns(Limits[] memory limits);
+
     function getTypeDescriptionsLength() external view returns(uint256);
 
     function getTypeDescriptions(uint index) external view returns(string memory);
