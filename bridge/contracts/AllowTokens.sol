@@ -139,8 +139,12 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         return typeDescriptions.length;
     }
 
-    function getTypeDescriptions(uint index) external view override returns(string memory) {
-        return typeDescriptions[index];
+    function getTypeDescriptions() external view override returns(string[] memory descriptions) {
+        descriptions = new string[](typeDescriptions.length);
+        for (uint256 i = 0; i < typeDescriptions.length; i++) {
+            descriptions[i] = typeDescriptions[i];
+        }
+        return descriptions;
     }
 
     function isTokenAllowed(address token) public view notNull(token) override returns (bool) {

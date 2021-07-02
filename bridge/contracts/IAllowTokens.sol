@@ -39,7 +39,7 @@ interface IAllowTokens {
 
     function getTypeDescriptionsLength() external view returns(uint256);
 
-    function getTypeDescriptions(uint index) external view returns(string memory);
+    function getTypeDescriptions() external view returns(string[] memory descriptions);
 
     function setToken(address token, uint256 typeId) external;
 
