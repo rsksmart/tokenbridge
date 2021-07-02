@@ -208,7 +208,7 @@ async function setTokensRskMainnet(allowTokens) {
         { token: '0x4991516df6053121121274397a8c1dad608bc95b', typeId: '3' }, //rBUND
         { token: '0x73c08467E23F7DCB7dDBbc8d05041B74467A498A', typeId: '6' }, //rFLIXX
         { token: '0x9c3a5f8d686fade293c0ce989a62a34408c4e307', typeId: '6' }, //rRFOX
-        { token: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '7' }, //rAMLT
+        { token: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '6' }, //rAMLT
     ]);
 }
 

@@ -5,13 +5,13 @@
     "Utils": "0xa8C48C20a5D66F706f43D5F749aB63e814A0C8F3",
     "Federation": "0xea949dddfcce8f00f0fba723b1a292da4fe0fa82",
     "SideTokenFactory": "0x08c191a7b5edaa59853705f7eae95e3e4238d73e",
-    "AllowTokens": "0xC15007a6a6F75F12062B3485Cc0D31205880241E",
+    "AllowTokens": "0xd425e5a6E9b2Ee86533Be807435Dd22047DBC6cf",
     "Bridge": "0xe4eee200de268c47bd82a17710265cc4cd543aa6",
     "BridgeProxy": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
     "smallAmountConfirmations": "2",
     "mediumAmountConfirmations": "4",
     "largeAmountConfirmations": "10",
     "WrappedCurrency": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e",
-    "AllowTokensProxy": "0x0efcc26c0b625931c6271f91d54228c5d546213b",
+    "AllowTokensProxy": "0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a",
     "FederationProxy": "0x5d663981d930e8ec108280b9d80885658148ab0f"
 }

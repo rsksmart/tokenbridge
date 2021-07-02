@@ -62,8 +62,11 @@ contract('AllowTokens', async function (accounts) {
             assert.equal(largeConfirmations, confirmations.largeAmount.toString());
             const typeDescriptionLength = await allowTokens.getTypeDescriptionsLength();
             assert.equal(typesInfo.length.toString(), typeDescriptionLength.toString());
-            const typeDescription = await allowTokens.getTypeDescriptions('0');
-            assert.equal(typesInfo[0].description, typeDescription);
+            const typeDescriptions = await allowTokens.getTypeDescriptions();
+            assert.equal(typeDescriptions.length, typesInfo.length);
+            for(let i = 0; i < typeDescriptions.length; i++) {
+                assert.equal(typeDescriptions[i], typesInfo[i].description);
+            }
             const typesLimits = await allowTokens.getTypesLimits();
             assert.equal(typesLimits.length, typesInfo.length);
             for(let i = 0; i < typesLimits.length; i++) {
@@ -106,7 +109,7 @@ contract('AllowTokens', async function (accounts) {
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 assert.equal('1', (await this.allowTokens.getTypeDescriptionsLength()).toString());
-                assert.equal('RIF', (await this.allowTokens.getTypeDescriptions('0')));
+                assert.equal('RIF', (await this.allowTokens.typeDescriptions('0')));
             });
 
             it('fail if add token type is empty', async function() {
