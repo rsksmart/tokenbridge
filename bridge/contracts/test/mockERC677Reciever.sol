@@ -4,7 +4,7 @@ pragma solidity ^0.7.0;
 
 import "../zeppelin/token/ERC20/ERC20Detailed.sol";
 import "../zeppelin/token/ERC20/ERC20.sol";
-import "../IERC677Receiver.sol";
+import "../interface/IERC677Receiver.sol";
 
 contract mockERC677Receiver is IERC677Receiver {
     event Success(address _sender, uint _value, bytes _data);
