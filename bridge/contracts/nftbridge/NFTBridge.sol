@@ -4,31 +4,30 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 // Import base Initializable contract
-import "./zeppelin/upgradable/Initializable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
-import "./zeppelin/upgradable/utils/ReentrancyGuard.sol";
-import "./zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/utils/ReentrancyGuard.sol";
+import "../zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "./zeppelin/introspection/IERC1820Registry.sol";
-import "./zeppelin/token/ERC777/IERC777Recipient.sol";
-import "./zeppelin/token/ERC20/IERC20.sol";
-import "./zeppelin/token/ERC20/SafeERC20.sol";
-import "./zeppelin/utils/Address.sol";
-import "./zeppelin/math/SafeMath.sol";
-import "./zeppelin/token/ERC777/IERC777.sol";
+import "../zeppelin/introspection/IERC1820Registry.sol";
+import "../zeppelin/token/ERC20/IERC20.sol";
+import "../zeppelin/token/ERC20/SafeERC20.sol";
+import "../zeppelin/token/ERC721/IERC721.sol";
+import "../zeppelin/utils/Address.sol";
+import "../zeppelin/math/SafeMath.sol";
 
-import "./lib/LibEIP712.sol";
-import "./lib/LibUtils.sol";
+import "../lib/LibEIP712.sol";
+import "../lib/LibUtils.sol";
 
-import "./interface/IBridge.sol";
-import "./interface/ISideToken.sol";
-import "./interface/ISideTokenFactory.sol";
-import "./interface/IAllowTokens.sol";
-import "./interface/IWrapped.sol";
+import "./INFTBridge.sol";
+import "./ISideNFTToken.sol";
+import "./ISideNFTTokenFactory.sol";
+import "../interface/IAllowTokens.sol";
+import "../interface/IWrapped.sol";
 
 
-contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract NFTBridge is Initializable, INFTBridge, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
@@ -40,7 +39,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     address internal federation;
     uint256 internal feePercentage;
     string public symbolPrefix;
-    bytes32 public DOMAIN_SEPARATOR; // replaces uint256 internal _depprecatedLastDay;
+    uint256 internal _depprecatedLastDay;
     uint256 internal _deprecatedSpentToday;
 
     mapping (address => address) public mappedTokens; // OirignalToken => SideToken
@@ -48,7 +47,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
     IAllowTokens public allowTokens;
-    ISideTokenFactory public sideTokenFactory;
+    ISideNFTTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
@@ -59,6 +58,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
     mapping (bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
+    bytes32 public DOMAIN_SEPARATOR;
     // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
     bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
     mapping(address => uint) public nonces;
@@ -80,7 +80,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
         allowTokens = IAllowTokens(_allowTokens);
-        sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
+        sideTokenFactory = ISideNFTTokenFactory(_sideTokenFactory);
         federation = _federation;
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
@@ -162,27 +162,25 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
 
-    function createSideToken(
+    function createSideNFTToken(
         uint256 _typeId,
         address _originalTokenAddress,
-        uint8 _originalTokenDecimals,
         string calldata _originalTokenSymbol,
         string calldata _originalTokenName
     ) external onlyOwner {
         require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
         address sideToken = mappedTokens[_originalTokenAddress];
         require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
-        uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
         string memory newSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
         // Create side token
-        sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
+        sideToken = sideTokenFactory.createSideNFTToken(_originalTokenName, newSymbol);
 
         mappedTokens[_originalTokenAddress] = sideToken;
         originalTokens[sideToken] = _originalTokenAddress;
         allowTokens.setToken(sideToken, _typeId);
 
-        emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity);
+        emit NewSideToken(sideToken, _originalTokenAddress, newSymbol);
     }
 
     function claim(ClaimData calldata _claimData)
@@ -262,7 +260,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address payable _reciever,
         address payable _relayer,
         uint256 _fee
-    ) internal nonReentrant returns (uint256 receivedAmount) {
+    ) internal returns (uint256 receivedAmount) {
         address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
         require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
 
@@ -316,16 +314,16 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address payable _relayer,
         uint256 _fee
     ) internal returns (uint256 receivedAmount) {
-        address sideToken = mappedTokens[_originalTokenAddress];
-        uint256 granularity = IERC777(sideToken).granularity();
-        uint256 formattedAmount = _amount.mul(granularity);
-        require(_fee <= formattedAmount, "Bridge: fee too high");
-        receivedAmount = formattedAmount - _fee;
-        ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
-        if(_fee > 0) {
-            ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
-        }
-        return receivedAmount;
+        // address sideToken = mappedTokens[_originalTokenAddress];
+        // uint256 granularity = IERC777(sideToken).granularity();
+        // uint256 formattedAmount = _amount.mul(granularity);
+        // require(_fee <= formattedAmount, "Bridge: fee too high");
+        // receivedAmount = formattedAmount - _fee;
+        // ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
+        // if(_fee > 0) {
+        //     ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
+        // }
+        // return receivedAmount;
     }
 
     function _claimCrossBackToToken(
@@ -359,21 +357,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
+    function receiveTokensTo(address tokenToUse, address to, uint256 tokenId) override public {
         address sender = _msgSender();
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-        IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
-        crossTokens(tokenToUse, sender, to, amount, "");
-    }
-
-    /**
-     * Use network currency and cross it.
-     */
-    function depositTo(address to) override external payable {
-        address sender = _msgSender();
-        require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
-        wrappedCurrency.deposit{ value: msg.value }();
-        crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
+        IERC721(tokenToUse).safeTransferFrom(sender, address(this), tokenId);
+        crossTokens(tokenToUse, sender, to, tokenId, "");
     }
 
     /**
@@ -384,68 +372,48 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         address operator,
         address from,
         address to,
-        uint amount,
+        uint tokenId,
         bytes calldata userData,
         bytes calldata
-    ) external override(IBridge, IERC777Recipient){
+    ) external override(INFTBridge){
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
-        require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
+        // require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
         address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
-        crossTokens(tokenToUse, from, receiver, amount, userData);
+        crossTokens(tokenToUse, from, receiver, tokenId, userData);
     }
 
-    function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData)
+    function crossTokens(address tokenToUse, address from, address to, uint256 tokenId, bytes memory userData)
     internal whenNotUpgrading whenNotPaused nonReentrant {
         knownTokens[tokenToUse] = true;
-        uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
-        uint256 amountMinusFees = amount.sub(fee);
-        uint8 decimals = LibUtils.getDecimals(tokenToUse);
-        uint formattedAmount = amount;
-        if(decimals != 18) {
-            formattedAmount = amount.mul(uint256(10)**(18-decimals));
-        }
         // We consider the amount before fees converted to 18 decimals to check the limits
         // updateTokenTransfer revert if token not allowed
-        allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
-        address originalTokenAddress = tokenToUse;
-        if (originalTokens[tokenToUse] != NULL_ADDRESS) {
-            //Side Token Crossing
-            originalTokenAddress = originalTokens[tokenToUse];
-            uint256 granularity = LibUtils.getGranularity(tokenToUse);
-            uint256 modulo = amountMinusFees.mod(granularity);
-            fee = fee.add(modulo);
-            amountMinusFees = amountMinusFees.sub(modulo);
-            IERC777(tokenToUse).burn(amountMinusFees, userData);
-        }
+        allowTokens.updateTokenTransfer(tokenToUse, tokenId);
 
         emit Cross(
-            originalTokenAddress,
+            tokenToUse,
             from,
             to,
-            amountMinusFees,
+            tokenId,
             userData
         );
 
-        if (fee > 0) {
-            //Send the payment to the MultiSig of the Federation
-            IERC20(tokenToUse).safeTransfer(owner(), fee);
-        }
+        // IERC20(tokenToUse).safeTransfer(owner(), fee);
     }
 
     function getTransactionDataHash(
         address _to,
-        uint256 _amount,
+        uint256 _tokenId,
         bytes32 _blockHash,
         bytes32 _transactionHash,
         uint32 _logIndex
     )
         public pure override returns(bytes32)
     {
-        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _to, _amount, _logIndex));
+        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _to, _tokenId, _logIndex));
     }
 
     function setFeePercentage(uint amount) external onlyOwner {
@@ -477,7 +445,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
         require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory is empty");
-        sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
+        sideTokenFactory = ISideNFTTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
     }
 
