@@ -2,7 +2,7 @@
 
 pragma solidity ^0.7.0;
 
-import "../IBridge.sol";
+import "../interface/IBridge.sol";
 import "../zeppelin/token/ERC20/IERC20.sol";
 import "../zeppelin/token/ERC777/IERC777.sol";
 import "../zeppelin/token/ERC777/IERC777Recipient.sol";
