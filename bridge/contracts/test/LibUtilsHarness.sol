@@ -2,7 +2,7 @@
 
 pragma solidity ^0.7.0;
 
-import "../LibUtils.sol";
+import "../lib/LibUtils.sol";
 
 contract LibUtilsHarness {
 
