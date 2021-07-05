@@ -38,9 +38,9 @@
     "@truffle/hdwallet-provider": "^1.4.0",
     "chalk": "^4.1.0",
     "eth-gas-reporter": "^0.2.22",
-    "solhint": "^3.3.6",
     "npm-force-resolutions": "0.0.3",
     "resolve": "^1.13.0",
+    "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.16",
     "table": "^6.0.3",
     "truffle": "^5.3.9",
@@ -48,7 +48,6 @@
     "truffle-plugin-verify": "^0.5.9"
   },
   "devDependencies": {
-    "web3": ">=1.0.0",
     "axios": ">=0.21.1",
     "css-what": ">=5.0.1",
     "elliptic": ">=6.5.4",

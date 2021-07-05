@@ -2,7 +2,7 @@
 
 pragma solidity ^0.7.0;
 
-import "../IWrapped.sol";
+import "../interface/IWrapped.sol";
 
 contract WRBTC is IWrapped {
     string public name     = "Wrapped RBTC";

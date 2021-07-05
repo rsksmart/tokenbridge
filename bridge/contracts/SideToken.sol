@@ -4,9 +4,9 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 import "./zeppelin/token/ERC777/ERC777.sol";
-import "./IERC677Receiver.sol";
-import "./ISideToken.sol";
-import "./LibEIP712.sol";
+import "./interface/IERC677Receiver.sol";
+import "./interface/ISideToken.sol";
+import "./lib/LibEIP712.sol";
 
 contract SideToken is ISideToken, ERC777 {
     using Address for address;
