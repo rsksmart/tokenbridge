@@ -9,7 +9,7 @@ import "./zeppelin/upgradable/Initializable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableSecondary.sol";
 
-import "./IAllowTokens.sol";
+import "./interface/IAllowTokens.sol";
 
 contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
     using SafeMath for uint256;
