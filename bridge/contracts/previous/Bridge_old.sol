@@ -18,8 +18,8 @@ import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
 import "./IBridge_old.sol";
-import "../ISideToken.sol";
-import "../ISideTokenFactory.sol";
+import "../interface/ISideToken.sol";
+import "../interface/ISideTokenFactory.sol";
 import "./AllowTokens_old.sol";
 import "./Utils_old.sol";
 
