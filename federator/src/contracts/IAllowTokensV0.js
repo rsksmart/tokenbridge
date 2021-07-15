@@ -15,10 +15,10 @@ module.exports = class IAllowTokensV0 {
             confirmations = 10
         }
         if (this.chainId == 1) { //ethereum mainnet 24hs
-            confirmations = 5760
+            confirmations = 240
         }
         if (this.chainId == 30) { // rsk mainnet 24hs
-            confirmations = 2880
+            confirmations = 120
         }
         return {
             smallAmountConfirmations: confirmations,

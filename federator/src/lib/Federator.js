@@ -37,7 +37,7 @@ module.exports = class Federator {
             try {
                 const currentBlock = await this.mainWeb3.eth.getBlockNumber();
                 const chainId = await this.mainWeb3.eth.net.getId();
-                
+
                 const isMainSyncing = await this.mainWeb3.eth.isSyncing();
                 if (isMainSyncing !== false) {
                     this.logger.warn(`ChainId ${chainId} is Syncing, ${JSON.stringify(isMainSyncing)}. Federator won't process requests till is synced`);
