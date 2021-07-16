@@ -8,7 +8,7 @@ module.exports = async (deployer, networkName, accounts) => {
     const deployedJson = deployHelper.getDeployed(networkName);
     await deployer.deploy(AllowTokens);
     const allowTokensLogic = await AllowTokens.deployed();
-    deployedJson.AllowTokens = allowTokensLogic.address;
+    deployedJson.AllowTokens = allowTokensLogic.address.toLowerCase();
 
     deployedJson.smallAmountConfirmations = deployedJson.smallAmountConfirmations || '0';
     deployedJson.mediumAmountConfirmations = deployedJson.mediumAmountConfirmations || '0';
