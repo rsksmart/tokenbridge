@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+
 interface IBridge_old {function version() external pure returns (string memory);
 
     function getFeePercentage() external view returns(uint);

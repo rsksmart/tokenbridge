@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
