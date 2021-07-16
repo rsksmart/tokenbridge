@@ -1,0 +1,12 @@
+# Ignore everything
+*
+
+# But not these files...
+!.gitignore
+!AllowTokens.sol
+!Bridge.sol
+!Federation.sol
+!Proxies.sol
+!ProxyAdmin.sol
+!SideToken.sol
+!SiteTokenFactory.sol

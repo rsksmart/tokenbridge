@@ -3,17 +3,23 @@ const log4js = require('log4js');
 // Configurations
 const config = require('../config/config.js');
 const logConfig = require('../config/log-config.json');
+const utils = require('./lib/utils.js')
 log4js.configure(logConfig);
 
 // Services
 const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
+const Heartbeat = require('./lib/Heartbeat.js');
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
 logger.info('ETH Host', config.sidechain.host);
 
-if (!config.mainchain || !config.sidechain) {
+// Status Server
+const StatusServer = require('./lib/Endpoints.js');
+StatusServer.init(logger);
+
+if(!config.mainchain || !config.sidechain) {
     logger.error('Mainchain and Sidechain configuration are required');
     process.exit();
 }
@@ -23,6 +29,7 @@ if (!config.etherscanApiKey) {
     process.exit();
 }
 
+const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederator = new Federator({
     ...config,
@@ -42,11 +49,35 @@ async function run() {
     try {
         await mainFederator.run();
         await sideFederator.run();
+        await heartbeat.readLogs();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
         process.exit();
     }
 }
+
+
+async function scheduleHeartbeatProcesses() {
+    const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval(config.mainchain)
+    const heartBeatScheduler = new Scheduler(
+        heartBeatPollingInterval, logger, {
+            run: async function() {
+                try {
+                    await heartbeat.run();
+                } catch(err) {
+                    logger.error('Unhandled Error on runHeartbeat()', err);
+                    process.exit();
+                }
+            }
+        }
+    );
+
+    heartBeatScheduler.start().catch((err) => {
+        logger.error('Unhandled Error on start()', err);
+    });
+}
+
+scheduleHeartbeatProcesses();
 
 async function exitHandler() {
     process.exit();

@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../zeppelin/token/ERC20/ERC20Detailed.sol";
 import "../zeppelin/token/ERC20/ERC20.sol";
@@ -10,7 +12,7 @@ contract mockERC677Receiver is IERC677Receiver {
      * ERC-677's only method implementation
      * See https://github.com/ethereum/EIPs/issues/677 for details
      */
-    function onTokenTransfer(address _sender, uint _value, bytes memory _data) public {
+    function onTokenTransfer(address _sender, uint _value, bytes memory _data) override public {
         emit Success(_sender, _value, _data);
     }
 }

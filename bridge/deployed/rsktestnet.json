@@ -1,0 +1,17 @@
+{
+    "network": "rsktestnet",
+    "MultiSig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+    "ProxyAdmin": "0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab",
+    "Utils": "0xa8C48C20a5D66F706f43D5F749aB63e814A0C8F3",
+    "Federation": "0x28d2f02381915275b2a42798739b0522fcb39339",
+    "SideTokenFactory": "0x08c191a7b5edaa59853705f7eae95e3e4238d73e",
+    "AllowTokens": "0xa39b89d1e36af95183cc09ab83e8fe374bd82f49",
+    "Bridge": "0x860cf53e001e74e1970f38c845b8cbe29b1c622a",
+    "BridgeProxy": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
+    "smallAmountConfirmations": "2",
+    "mediumAmountConfirmations": "4",
+    "largeAmountConfirmations": "10",
+    "WrappedCurrency": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e",
+    "AllowTokensProxy": "0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a",
+    "FederationProxy": "0x5d663981d930e8ec108280b9d80885658148ab0f"
+}

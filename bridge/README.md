@@ -66,7 +66,16 @@ truffle migrate --network rskregtest
 This will also generate the json files for that network with the addresses of the deployed contracts that will be called by the federator.
 
 
+## Verifying contracts
 
+If veryfing contracts on Kovan or Ethereum create a file called etherscan.key with the etherscan api key and run
+```
+truffle run verify ContractName [--network networkName]
+```
+
+If veryfing the contracts on Rsk Testnet or Mainnet first create the flattened file using
+https://www.npmjs.com/package/truffle-flattener
+and then verify it on the explorer
 
 
 
