@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
-
 pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "../../ownership/Ownable.sol";
 import "./TransparentUpgradeableProxy.sol";
