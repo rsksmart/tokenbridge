@@ -1,4 +1,6 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
 
 import "../zeppelin/token/ERC20/ERC20.sol";
 
@@ -7,7 +9,7 @@ contract AlternativeERC20Detailed is ERC20 {
     bytes32 private _symbol;
     uint256 private _decimals;
 
-    constructor(string memory aName, bytes32 aSymbol, uint256 someDecimals, uint256 aTotalSupply) public
+    constructor(string memory aName, bytes32 aSymbol, uint256 someDecimals, uint256 aTotalSupply)
     {
         _name = aName;
         _symbol = aSymbol;

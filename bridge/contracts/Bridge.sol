@@ -1,4 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 // Import base Initializable contract
 import "./zeppelin/upgradable/Initializable.sol";
@@ -13,42 +16,58 @@ import "./zeppelin/token/ERC20/IERC20.sol";
 import "./zeppelin/token/ERC20/SafeERC20.sol";
 import "./zeppelin/utils/Address.sol";
 import "./zeppelin/math/SafeMath.sol";
+import "./zeppelin/token/ERC777/IERC777.sol";
+
+import "./LibEIP712.sol";
+import "./LibUtils.sol";
 
 import "./IBridge.sol";
 import "./ISideToken.sol";
 import "./ISideTokenFactory.sol";
-import "./AllowTokens.sol";
-import "./Utils.sol";
+import "./IAllowTokens.sol";
+import "./IWrapped.sol";
+
 
 contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
 
-    address constant private NULL_ADDRESS = address(0);
-    bytes32 constant private NULL_HASH = bytes32(0);
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    address constant internal NULL_ADDRESS = address(0);
+    bytes32 constant internal NULL_HASH = bytes32(0);
+    IERC1820Registry constant internal erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-    address private federation;
-    uint256 private feePercentage;
+    address internal federation;
+    uint256 internal feePercentage;
     string public symbolPrefix;
-    uint256 public lastDay;
-    uint256 public spentToday;
+    bytes32 public DOMAIN_SEPARATOR; // replaces uint256 internal _depprecatedLastDay;
+    uint256 internal _deprecatedSpentToday;
 
-    mapping (address => ISideToken) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => address) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
-    mapping(bytes32 => bool) public processed; // ProcessedHash => true
-    AllowTokens public allowTokens;
+    mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
+    IAllowTokens public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
     uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
-    bool private alreadyRun;
+    //Bridge_v3 variables
+    bytes32 constant internal _erc777Interface = keccak256("ERC777Token");
+    IWrapped public wrappedCurrency;
+    mapping (bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
+    mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
+    mapping (bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
+    // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
+    bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
+    mapping(address => uint) public nonces;
+
+    event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
-    event Upgrading(bool isUpgrading);
+    event Upgrading(bool _isUpgrading);
+    event WrappedCurrencyChanged(address _wrappedCurrency);
 
     function initialize(
         address _manager,
@@ -58,22 +77,37 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         string memory _symbolPrefix
     ) public initializer {
         UpgradableOwnable.initialize(_manager);
-        UpgradablePausable.initialize(_manager);
+        UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens(_allowTokens);
-        _changeSideTokenFactory(_sideTokenFactory);
-        _changeFederation(_federation);
+        allowTokens = IAllowTokens(_allowTokens);
+        sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
+        federation = _federation;
         //keccak256("ERC777TokensRecipient")
         erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
+        initDomainSeparator();
     }
 
-    function version() external pure returns (string memory) {
-        return "v2";
+    receive () external payable {
+        // The fallback function is needed to use WRBTC
+        require(_msgSender() == address(wrappedCurrency), "Bridge: not wrappedCurrency");
     }
 
-    modifier onlyFederation() {
-        require(msg.sender == federation, "Bridge: Sender not Federation");
-        _;
+    function version() override external pure returns (string memory) {
+        return "v3";
+    }
+
+    function initDomainSeparator() public {
+        uint chainId;
+        // solium-disable-next-line security/no-inline-assembly
+        assembly {
+            chainId := chainid()
+        }
+        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+            "RSK Token Bridge",
+            "1",
+            chainId,
+            address(this)
+        );
     }
 
     modifier whenNotUpgrading() {
@@ -82,74 +116,264 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
     function acceptTransfer(
-        address tokenAddress,
-        address receiver,
-        uint256 amount,
-        string calldata symbol,
-        bytes32 blockHash,
-        bytes32 transactionHash,
-        uint32 logIndex,
-        uint8 decimals,
-        uint256 granularity
-    ) external onlyFederation whenNotPaused nonReentrant returns(bool) {
-        require(tokenAddress != NULL_ADDRESS, "Bridge: Token is null");
-        require(receiver != NULL_ADDRESS, "Bridge: Receiver is null");
-        require(amount > 0, "Bridge: Amount 0");
-        require(bytes(symbol).length > 0, "Bridge: Empty symbol");
-        require(blockHash != NULL_HASH, "Bridge: BlockHash is null");
-        require(transactionHash != NULL_HASH, "Bridge: Transaction is null");
-        require(decimals <= 18, "Bridge: Decimals bigger 18");
-        require(Utils.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
+        address _originalTokenAddress,
+        address payable _from,
+        address payable _to,
+        uint256 _amount,
+        bytes32 _blockHash,
+        bytes32 _transactionHash,
+        uint32 _logIndex
+    ) external whenNotPaused nonReentrant override {
+        require(_msgSender() == federation, "Bridge: Not Federation");
+        require(knownTokens[_originalTokenAddress] ||
+            mappedTokens[_originalTokenAddress] != NULL_ADDRESS,
+            "Bridge: Unknown token"
+        );
+        require(_to != NULL_ADDRESS, "Bridge: Null To");
+        require(_amount > 0, "Bridge: Amount 0");
+        require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
+        require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
+        require(transactionsDataHashes[_transactionHash] == bytes32(0), "Bridge: Already accepted");
 
-        _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
+        bytes32 _transactionDataHash = getTransactionDataHash(
+            _to,
+            _amount,
+            _blockHash,
+            _transactionHash,
+            _logIndex
+        );
+        // Do not remove, claimed also has the previously processed using the older bridge version
+        // https://github.com/rsksmart/tokenbridge/blob/TOKENBRIDGE-1.2.0/bridge/contracts/Bridge.sol#L41
+        require(!claimed[_transactionDataHash], "Bridge: Already claimed");
 
-        if (knownTokens[tokenAddress]) {
-            _acceptCrossBackToToken(receiver, tokenAddress, decimals, granularity, amount);
-        } else {
-            _acceptCrossToSideToken(receiver, tokenAddress, decimals, granularity, amount, symbol);
-        }
-        return true;
+        transactionsDataHashes[_transactionHash] = _transactionDataHash;
+        originalTokenAddresses[_transactionHash] = _originalTokenAddress;
+        senderAddresses[_transactionHash] = _from;
+
+        emit AcceptedCrossTransfer(
+            _transactionHash,
+            _originalTokenAddress,
+            _to,
+            _from,
+            _amount,
+            _blockHash,
+            _logIndex
+        );
     }
 
-    function _acceptCrossToSideToken(
-        address receiver,
-        address tokenAddress,
-        uint8 decimals,
-        uint256 granularity,
-        uint256 amount,
-        string memory symbol
-    ) private {
 
-        (uint256 calculatedGranularity,uint256 formattedAmount) = Utils.calculateGranularityAndAmount(decimals, granularity, amount);
-        ISideToken sideToken = mappedTokens[tokenAddress];
-        if (address(sideToken) == NULL_ADDRESS) {
-            sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
-        } else {
-            require(calculatedGranularity == sideToken.granularity(), "Bridge: Granularity differ from side token");
-        }
-        sideToken.mint(receiver, formattedAmount, "", "");
-        emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, 18, calculatedGranularity);
+    function createSideToken(
+        uint256 _typeId,
+        address _originalTokenAddress,
+        uint8 _originalTokenDecimals,
+        string calldata _originalTokenSymbol,
+        string calldata _originalTokenName
+    ) external onlyOwner {
+        require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
+        address sideToken = mappedTokens[_originalTokenAddress];
+        require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
+        uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
+        string memory newSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
+
+        // Create side token
+        sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
+
+        mappedTokens[_originalTokenAddress] = sideToken;
+        originalTokens[sideToken] = _originalTokenAddress;
+        allowTokens.setToken(sideToken, _typeId);
+
+        emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity);
     }
 
-    function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount) private {
-        require(decimals == 18, "Bridge: Invalid decimals cross back");
-        //As side tokens are ERC777 we need to convert granularity to decimals
-        (uint8 calculatedDecimals, uint256 formattedAmount) = Utils.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
-        IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
-        emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
+    function claim(ClaimData calldata _claimData)
+    external override returns (uint256 receivedAmount) {
+
+        receivedAmount = _claim(
+            _claimData,
+            _claimData.to,
+            payable(address(0)),
+            0
+        );
+        return receivedAmount;
+    }
+
+    function claimFallback(ClaimData calldata _claimData)
+    external override returns (uint256 receivedAmount) {
+        require(_msgSender() == senderAddresses[_claimData.transactionHash],"Bridge: invalid sender");
+        receivedAmount = _claim(
+            _claimData,
+            _msgSender(),
+            payable(address(0)),
+            0
+        );
+        return receivedAmount;
+    }
+
+    function getDigest(
+        ClaimData memory _claimData,
+        address payable _relayer,
+        uint256 _fee,
+        uint256 _deadline
+    ) internal returns (bytes32) {
+        return LibEIP712.hashEIP712Message(
+            DOMAIN_SEPARATOR,
+            keccak256(
+                abi.encode(
+                    CLAIM_TYPEHASH,
+                    _claimData.to,
+                    _claimData.amount,
+                    _claimData.transactionHash,
+                    _relayer,
+                    _fee,
+                    nonces[_claimData.to]++,
+                    _deadline
+                )
+            )
+        );
+    }
+
+    // Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
+    function claimGasless(
+        ClaimData calldata _claimData,
+        address payable _relayer,
+        uint256 _fee,
+        uint256 _deadline,
+        uint8 _v,
+        bytes32 _r,
+        bytes32 _s
+    ) external override returns (uint256 receivedAmount) {
+        require(_deadline >= block.timestamp, "Bridge: EXPIRED");
+
+        bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
+        address recoveredAddress = ecrecover(digest, _v, _r, _s);
+        require(_claimData.to != address(0) && recoveredAddress == _claimData.to, "Bridge: INVALID_SIGNATURE");
+
+        receivedAmount = _claim(
+            _claimData,
+            _claimData.to,
+            _relayer,
+            _fee
+        );
+        return receivedAmount;
+    }
+
+    function _claim(
+        ClaimData calldata _claimData,
+        address payable _reciever,
+        address payable _relayer,
+        uint256 _fee
+    ) internal nonReentrant returns (uint256 receivedAmount) {
+        address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
+        require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
+
+        bytes32 transactionDataHash = getTransactionDataHash(
+            _claimData.to,
+            _claimData.amount,
+            _claimData.blockHash,
+            _claimData.transactionHash,
+            _claimData.logIndex
+        );
+        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong transactionDataHash");
+        require(!claimed[transactionDataHash], "Bridge: Already claimed");
+
+        claimed[transactionDataHash] = true;
+        if (knownTokens[originalTokenAddress]) {
+            receivedAmount =_claimCrossBackToToken(
+                originalTokenAddress,
+                _reciever,
+                _claimData.amount,
+                _relayer,
+                _fee
+            );
+        } else {
+            receivedAmount =_claimCrossToSideToken(
+                originalTokenAddress,
+                _reciever,
+                _claimData.amount,
+                _relayer,
+                _fee
+            );
+        }
+        emit Claimed(
+            _claimData.transactionHash,
+            originalTokenAddress,
+            _claimData.to,
+            senderAddresses[_claimData.transactionHash],
+            _claimData.amount,
+            _claimData.blockHash,
+            _claimData.logIndex,
+            _reciever,
+            _relayer,
+            _fee
+        );
+        return receivedAmount;
+    }
+
+    function _claimCrossToSideToken(
+        address _originalTokenAddress,
+        address payable _receiver,
+        uint256 _amount,
+        address payable _relayer,
+        uint256 _fee
+    ) internal returns (uint256 receivedAmount) {
+        address sideToken = mappedTokens[_originalTokenAddress];
+        uint256 granularity = IERC777(sideToken).granularity();
+        uint256 formattedAmount = _amount.mul(granularity);
+        require(_fee <= formattedAmount, "Bridge: fee too high");
+        receivedAmount = formattedAmount - _fee;
+        ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
+        if(_fee > 0) {
+            ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
+        }
+        return receivedAmount;
+    }
+
+    function _claimCrossBackToToken(
+        address _originalTokenAddress,
+        address payable _receiver,
+        uint256 _amount,
+        address payable _relayer,
+        uint256 _fee
+    ) internal returns (uint256 receivedAmount) {
+        uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
+        //As side tokens are ERC777 they will always have 18 decimals
+        uint256 formattedAmount = _amount.div(uint256(10) ** (18 - decimals));
+        require(_fee <= formattedAmount, "Bridge: fee too high");
+        receivedAmount = formattedAmount - _fee;
+        if(address(wrappedCurrency) == _originalTokenAddress) {
+            wrappedCurrency.withdraw(formattedAmount);
+            _receiver.transfer(receivedAmount);
+            if(_fee > 0) {
+                _relayer.transfer(_fee);
+            }
+        } else {
+            IERC20(_originalTokenAddress).safeTransfer(_receiver, receivedAmount);
+            if(_fee > 0) {
+                IERC20(_originalTokenAddress).safeTransfer(_relayer, _fee);
+            }
+        }
+        return receivedAmount;
     }
 
     /**
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokens(address tokenToUse, uint256 amount) external whenNotUpgrading whenNotPaused nonReentrant returns(bool) {
+    function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
         address sender = _msgSender();
-        require(!sender.isContract(), "Bridge: Sender can't be a contract");
         //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-        IERC20(tokenToUse).safeTransferFrom(_msgSender(), address(this), amount);
-        crossTokens(tokenToUse, sender, amount, "");
-        return true;
+        IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
+        crossTokens(tokenToUse, sender, to, amount, "");
+    }
+
+    /**
+     * Use network currency and cross it.
+     */
+    function depositTo(address to) override external payable {
+        address sender = _msgSender();
+        require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
+        wrappedCurrency.deposit{ value: msg.value }();
+        crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
     }
 
     /**
@@ -163,165 +387,117 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused whenNotUpgrading {
+    ) external override(IBridge, IERC777Recipient){
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
-        require(to == address(this), "Bridge: Not to address");
+        require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
-        //This can only be used with trusted contracts
-        crossTokens(tokenToUse, from, amount, userData);
+        require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
+        require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
+        address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
+        crossTokens(tokenToUse, from, receiver, amount, userData);
     }
 
-    function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
-        bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
-        //Send the payment to the MultiSig of the Federation
+    function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData)
+    internal whenNotUpgrading whenNotPaused nonReentrant {
+        knownTokens[tokenToUse] = true;
         uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
         uint256 amountMinusFees = amount.sub(fee);
-        if (isASideToken) {
-            uint256 modulo = amountMinusFees.mod(ISideToken(tokenToUse).granularity());
+        uint8 decimals = LibUtils.getDecimals(tokenToUse);
+        uint formattedAmount = amount;
+        if(decimals != 18) {
+            formattedAmount = amount.mul(uint256(10)**(18-decimals));
+        }
+        // We consider the amount before fees converted to 18 decimals to check the limits
+        // updateTokenTransfer revert if token not allowed
+        allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
+        address originalTokenAddress = tokenToUse;
+        if (originalTokens[tokenToUse] != NULL_ADDRESS) {
+            //Side Token Crossing
+            originalTokenAddress = originalTokens[tokenToUse];
+            uint256 granularity = LibUtils.getGranularity(tokenToUse);
+            uint256 modulo = amountMinusFees.mod(granularity);
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
+            IERC777(tokenToUse).burn(amountMinusFees, userData);
         }
-        if(fee > 0) {
+
+        emit Cross(
+            originalTokenAddress,
+            from,
+            to,
+            amountMinusFees,
+            userData
+        );
+
+        if (fee > 0) {
+            //Send the payment to the MultiSig of the Federation
             IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
-        if (isASideToken) {
-            verifyWithAllowTokens(tokenToUse, amount, isASideToken);
-            //Side Token Crossing
-            ISideToken(tokenToUse).burn(amountMinusFees, userData);
-            // solium-disable-next-line max-len
-            emit Cross(originalTokens[tokenToUse], from, amountMinusFees, ISideToken(tokenToUse).symbol(), userData, ISideToken(tokenToUse).decimals(), ISideToken(tokenToUse).granularity());
-        } else {
-            //Main Token Crossing
-            knownTokens[tokenToUse] = true;
-            (uint8 decimals, uint256 granularity, string memory symbol) = Utils.getTokenInfo(tokenToUse);
-            uint formattedAmount = amount;
-            if(decimals != 18) {
-                formattedAmount = amount.mul(uint256(10)**(18-decimals));
-            }
-            //We consider the amount before fees converted to 18 decimals to check the limits
-            verifyWithAllowTokens(tokenToUse, formattedAmount, isASideToken);
-            emit Cross(tokenToUse, from, amountMinusFees, symbol, userData, decimals, granularity);
-        }
     }
 
-    function _createSideToken(address token, string memory symbol, uint256 granularity) private returns (ISideToken sideToken){
-        string memory newSymbol = string(abi.encodePacked(symbolPrefix, symbol));
-        address sideTokenAddress = sideTokenFactory.createSideToken(newSymbol, newSymbol, granularity);
-        sideToken = ISideToken(sideTokenAddress);
-        mappedTokens[token] = sideToken;
-        originalTokens[sideTokenAddress] = token;
-        emit NewSideToken(sideTokenAddress, token, newSymbol, granularity);
-        return sideToken;
-    }
-
-    function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
-        // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours) {
-            // solium-disable-next-line security/no-block-members
-            lastDay = now;
-            spentToday = 0;
-        }
-        require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Bigger than limit");
-        spentToday = spentToday.add(amount);
-    }
-
-    function getTransactionId(
+    function getTransactionDataHash(
+        address _to,
+        uint256 _amount,
         bytes32 _blockHash,
         bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
         uint32 _logIndex
     )
-        public pure returns(bytes32)
+        public pure override returns(bytes32)
     {
-        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _receiver, _amount, _logIndex));
+        return keccak256(abi.encodePacked(_blockHash, _transactionHash, _to, _amount, _logIndex));
     }
 
-    function _processTransaction(
-        bytes32 _blockHash,
-        bytes32 _transactionHash,
-        address _receiver,
-        uint256 _amount,
-        uint32 _logIndex
-    )
-        private
-    {
-        bytes32 compiledId = getTransactionId(_blockHash, _transactionHash, _receiver, _amount, _logIndex);
-        require(!processed[compiledId], "Bridge: Already processed");
-        processed[compiledId] = true;
-    }
-
-    function setFeePercentage(uint amount) external onlyOwner whenNotPaused {
+    function setFeePercentage(uint amount) external onlyOwner {
         require(amount < (feePercentageDivider/10), "Bridge: bigger than 10%");
         feePercentage = amount;
         emit FeePercentageChanged(feePercentage);
     }
 
-    function getFeePercentage() external view returns(uint) {
+    function getFeePercentage() external view override returns(uint) {
         return feePercentage;
     }
 
-    function calcMaxWithdraw() external view returns (uint) {
-        uint spent = spentToday;
-        // solium-disable-next-line security/no-block-members
-        if (now > lastDay + 24 hours)
-            spent = 0;
-        return allowTokens.calcMaxWithdraw(spent);
-    }
-
-    function changeFederation(address newFederation) external onlyOwner returns(bool) {
-        _changeFederation(newFederation);
-        return true;
-    }
-
-    function _changeFederation(address newFederation) internal {
+    function changeFederation(address newFederation) external onlyOwner {
         require(newFederation != NULL_ADDRESS, "Bridge: Federation is empty");
         federation = newFederation;
         emit FederationChanged(federation);
+    }
+
+
+    function changeAllowTokens(address newAllowTokens) external onlyOwner {
+        require(newAllowTokens != NULL_ADDRESS, "Bridge: AllowTokens is empty");
+        allowTokens = IAllowTokens(newAllowTokens);
+        emit AllowTokensChanged(newAllowTokens);
     }
 
     function getFederation() external view returns(address) {
         return federation;
     }
 
-    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner returns(bool) {
-        _changeSideTokenFactory(newSideTokenFactory);
-        return true;
-    }
-
-    function _changeSideTokenFactory(address newSideTokenFactory) internal {
+    function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
         require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory is empty");
         sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
     }
 
-    function startUpgrade() external onlyOwner {
-        isUpgrading = true;
+    function setUpgrading(bool _isUpgrading) external onlyOwner {
+        isUpgrading = _isUpgrading;
         emit Upgrading(isUpgrading);
     }
 
-    function endUpgrade() external onlyOwner {
-        isUpgrading = false;
-        emit Upgrading(isUpgrading);
+    function setWrappedCurrency(address _wrappedCurrency) external onlyOwner {
+        require(_wrappedCurrency != NULL_ADDRESS, "Bridge: wrapp is empty");
+        wrappedCurrency = IWrapped(_wrappedCurrency);
+        emit WrappedCurrencyChanged(_wrappedCurrency);
     }
 
-    //This method is only to recreate the USDT and USDC tokens on rsk without granularity restrictions.
-    function clearSideToken() external onlyOwner returns(bool) {
-        require(!alreadyRun, "already done");
-        alreadyRun = true;
-        address payable[4] memory sideTokens = [
-            0xe506F698b31a66049BD4653ed934E7a07Cbc5549,
-            0x5a42221D7AaE8e185BC0054Bb036D9757eC18857,
-            0xcdc8ccBbFB6407c53118fE47259e8d00C81F42CD,
-            0x6117C9529F15c52e2d3188d5285C745B757b5825
-        ];
-        for (uint i = 0; i < sideTokens.length; i++) {
-            address originalToken = address(originalTokens[sideTokens[i]]);
-            originalTokens[sideTokens[i]] = NULL_ADDRESS;
-            mappedTokens[originalToken] = ISideToken(NULL_ADDRESS);
-        }
-        return true;
+    function hasCrossed(bytes32 transactionHash) public view returns (bool) {
+        return transactionsDataHashes[transactionHash] != bytes32(0);
+    }
+
+    function hasBeenClaimed(bytes32 transactionHash) public view returns (bool) {
+        return claimed[transactionsDataHashes[transactionHash]];
     }
 
 }

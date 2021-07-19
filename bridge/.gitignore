@@ -1,5 +1,6 @@
 infura.key
 mnemonic.key
+etherscan.key
 build
 .openzeppelin/.session
 .openzeppelin/dev-*.json
@@ -9,3 +10,7 @@ coverage/
 coverage.json
 .coverage_contracts
 .coverage_artifacts
+deployed/development.json
+deployed/development_1.json
+deployed/mirrorDevelopment.json
+deployed/soliditycoverage.json

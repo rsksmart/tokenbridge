@@ -7,6 +7,13 @@
             "backups": 3,
             "compress": true
         },
+        "heartbeat": {
+            "type": "file",
+            "filename": "heartbeat.log",
+            "maxLogSize": 10485760,
+            "backups": 3,
+            "compress": true
+        },
         "console": {
             "type": "console"
         }
@@ -14,6 +21,11 @@
     "categories": {
         "default": {
             "appenders": ["file", "console"],
-            "level": "debug" }
+            "level": "debug"
+        },
+        "HEARTBEAT": {
+            "appenders": ["heartbeat", "console"],
+            "level": "debug"
+        }
     }
 }

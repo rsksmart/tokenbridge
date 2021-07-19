@@ -2,9 +2,10 @@
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
-const CustomError = require('./CustomError');
 const fs = require('fs');
 const axios = require('axios');
+
+const CustomError = require('./CustomError');
 
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
@@ -13,6 +14,7 @@ module.exports = class TransactionSender {
         this.chainId = null;
         this.manuallyCheck = `${config.storagePath || __dirname}/manuallyCheck.txt`;
         this.etherscanApiKey = config.etherscanApiKey;
+        this.debuggingMode = false;
     }
 
     async getNonce(address) {
@@ -35,8 +37,19 @@ module.exports = class TransactionSender {
     }
 
     async getGasLimit(rawTx) {
-        let estimatedGas = await this.client.eth.estimateGas({ gasPrice: rawTx.gasPrice, value: rawTx.value, to: rawTx.to, data: rawTx.data, from: rawTx.from});
-        estimatedGas = (estimatedGas < 300000) ? 300000 : 3500000;
+        const chainId = await this.getChainId();
+        let estimatedGas = await this.client.eth.estimateGas({
+            gasPrice: rawTx.gasPrice,
+            value: rawTx.value,
+            to: rawTx.to,
+            data: rawTx.data,
+            from: rawTx.from
+        });
+
+        if (chainId >= 30 && chainId <= 33) {
+            estimatedGas = 200000;
+        }
+
         return estimatedGas;
     }
 
@@ -48,7 +61,7 @@ module.exports = class TransactionSender {
             const data = {
                 module: 'gastracker',
                 action: 'gasoracle'
-            }
+            };
             const response = await this.useEtherscanApi(data);
             const gasOraclePrice = response.result;
             const proposeGasPrice = parseInt(this.client.utils.toWei(gasOraclePrice.ProposeGasPrice, 'gwei'));
@@ -89,7 +102,7 @@ module.exports = class TransactionSender {
     async getRskGasPrice() {
         let block = await this.client.eth.getBlock('latest');
         let gasPrice= parseInt(block.minimumGasPrice);
-        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.05);
+        return gasPrice <= 1 ? 1: Math.round(gasPrice * 1.03);
     }
 
     async getChainId() {
@@ -112,6 +125,11 @@ module.exports = class TransactionSender {
             s: 0
         }
         rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
+
+        if(this.debuggingMode) {
+            rawTx.gas = this.numberToHexString(100);
+            this.logger.debug(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`)
+        }
         this.logger.debug('RawTx', rawTx);
         return rawTx;
     }
@@ -141,7 +159,7 @@ module.exports = class TransactionSender {
 
         const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
 
-        const params = new URLSearchParams()
+        const params = new URLSearchParams();
         params.append('apikey', this.etherscanApiKey);
         for (const property in data) {
             params.append(property, data[property]);
@@ -160,16 +178,13 @@ module.exports = class TransactionSender {
         return response.data;
     }
 
-    async sendTransaction(to, data, value, privateKey) {
-        const stack = new Error().stack;
+    async sendTransaction(to, data, value, privateKey, throwOnError=false) {
         const chainId =  await this.getChainId();
         let txHash;
-        let error = '';
-        let errorInfo = '';
+        let receipt;
         try {
             let from = await this.getAddress(privateKey);
             let rawTx = await this.createRawTransaction(from, to, data, value);
-            let receipt;
             if (privateKey && privateKey.length) {
                 let signedTx = this.signRawTransaction(rawTx, privateKey);
                 const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
@@ -193,25 +208,29 @@ module.exports = class TransactionSender {
                 delete rawTx.v;
                 receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', hash => txHash = hash);
             }
+
             if(receipt.status == 1) {
-                this.logger.info(`Transaction Successful chain:${chainId} txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-                return receipt;
+                this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
+            } else {
+                this.logger.error('Transaction Receipt Status Failed', receipt);
+                this.logger.error('RawTx that failed', rawTx);
             }
-            error = `Transaction Receipt Status Failed chain:${chainId}`;
-            errorInfo = receipt;
+
+            return receipt;
+
         } catch(err) {
+            if(throwOnError) 
+                throw new CustomError('Error in sendTransaction', err);
+
             if (err.message.indexOf('it might still be mined') > 0) {
                 this.logger.warn(`Transaction was not mined within 750 seconds, please make sure your transaction was properly sent. Be aware that
-                it might still be mined. Chain:${chainId} transactionHash:${txHash}`);
-                fs.appendFileSync(this.manuallyCheck, `chain:${chainId} transactionHash:${txHash} to:${to} data:${data}\n`);
-                return { transactionHash: txHash };
+                it might still be mined. transactionHash:${txHash}`);
+                fs.appendFileSync(this.manuallyCheck, `transactionHash:${txHash} to:${to} data:${data}\n`);
+            } else {
+                this.logger.error('Transaction Hash Failed', txHash, err);
+                this.logger.error('RawTx that failed', rawTx);
             }
-            error = `Send Signed Transaction to chain:${chainId} Failed TxHash:${txHash}`;
-            errorInfo = err;
+            return { transactionHash: txHash, status: false };
         }
-        this.logger.error(error, errorInfo);
-        this.logger.error('RawTx that failed', rawTx);
-        throw new CustomError(`Transaction Failed: ${error} ${stack}`, errorInfo);
     }
-
 }

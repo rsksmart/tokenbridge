@@ -11,9 +11,9 @@ const config = JSON.parse(configFile);
 const logger = {
     trace: jest.fn(),
     debug: jest.fn(),
-    info: jest.fn(),
+    info: console.log,
     warn: jest.fn(),
-    error: jest.fn(),
+    error: console.log,
 };
 const storagePath = `${__dirname}`;
 const testPath = `${storagePath}/lastBlock.txt`;
@@ -103,12 +103,18 @@ describe('Federator module tests', () => {
             returnValues:{
                 '0': '0x5159345aaB821172e795d56274D0f5FDFdC6aBD9',
                 '1': '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
-                '2': '1000000000000000000',
-                '3': 'MAIN',
+                '2': '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+                '3': '1000000000000000000',
+                '4': 'MAIN',
+                '5': '18',
+                '6': '1',
                 _tokenAddress: '0x5159345aaB821172e795d56274D0f5FDFdC6aBD9',
+                _from: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
                 _to: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
                 _amount: '1000000000000000000',
-                _symbol: 'MAIN'
+                _symbol: 'MAIN',
+                _decimals: '18',
+                _granularity: '1',
             },
             event: 'Cross',
             signature:
@@ -143,12 +149,18 @@ describe('Federator module tests', () => {
             returnValues:{
                 '0': '0x5159345aaB821172e795d56274D0f5FDFdC6aBD9',
                 '1': '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
-                '2': '1000000000000000000',
-                '3': 'MAIN',
+                '2': '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
+                '3': '1000000000000000000',
+                '4': 'MAIN',
+                '5': '18',
+                '6': '1',
                 _tokenAddress: '0x5159345aaB821172e795d56274D0f5FDFdC6aBD9',
+                _from: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
                 _to: '0xCD2a3d9F938E13CD947Ec05AbC7FE734Df8DD826',
                 _amount: '1000000000000000000',
-                _symbol: 'MAIN'
+                _symbol: 'MAIN',
+                _decimals: '18',
+                _granularity: '1',
             },
             event: 'Cross',
             signature:

@@ -2,13 +2,25 @@ const SideToken = artifacts.require('./SideToken');
 const mockERC677Receiver = artifacts.require('./mockERC677Receiver');
 const mockERC777Recipient = artifacts.require('./mockERC777Recipient');
 
+const truffleAssert = require('truffle-assertions');
+const ethUtil = require('ethereumjs-util');
+
 const utils = require('./utils');
 const expectThrow = utils.expectThrow;
+const keccak256 = web3.utils.keccak256;
 
 contract('SideToken', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
     const anotherAccount = accounts[2];
+
+    before(async function () {
+        await utils.saveState();
+    });
+
+    after(async function () {
+        await utils.revertState();
+    });
 
     describe('constructor', async function () {
 
@@ -50,7 +62,7 @@ contract('SideToken', async function (accounts) {
         it('mint', async function () {
             let receipt = await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
             utils.checkRcpt(receipt);
-            
+
             const creatorBalance = await this.token.balanceOf(tokenCreator);
             assert.equal(creatorBalance, 0);
 
@@ -232,7 +244,7 @@ contract('SideToken', async function (accounts) {
     describe('granularity 1000', async function () {
         beforeEach(async function () {
             this.granularity = '1000';
-            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, this.granularity,);
+            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, this.granularity);
         });
 
         it('initial state', async function () {
@@ -306,6 +318,192 @@ contract('SideToken', async function (accounts) {
             newBalance = await this.token.balanceOf(anAccount);
             assert.equal(Number(balance) - amount, Number(newBalance));
         });
+    });
+
+    describe('permit', async function() {
+        beforeEach(async function () {
+            this.token = await SideToken.new("SIDE", "SIDE", tokenCreator, 1);
+        });
+
+        it('should have PERMIT_TYPEHASH', async function() {
+            const expectedTypeHash = keccak256('Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)');
+            const PERMIT_TYPEHASH = await this.token.PERMIT_TYPEHASH();
+            assert.equal(PERMIT_TYPEHASH, expectedTypeHash);
+        });
+
+        it('should have DOMAIN_SEPARATOR', async function() {
+            const name = await this.token.name();
+            // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
+            const chainId = '1';
+            
+            const expectedTypeHash = keccak256(
+                web3.eth.abi.encodeParameters(
+                    ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
+                    [
+                      keccak256('EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)'),
+                      keccak256(name),
+                      keccak256('1'),
+                      chainId,
+                      this.token.address
+                    ]
+                )
+            )
+            const DOMAIN_SEPARATOR = await this.token.DOMAIN_SEPARATOR();
+            assert.equal(DOMAIN_SEPARATOR, expectedTypeHash);
+        });
+
+        async function getApprovalDigest(
+            token,
+            approve, //{owner: string, spender: string, value: BigNumber},
+            nonce,
+            deadline
+          ) {
+            const PERMIT_TYPEHASH = await token.PERMIT_TYPEHASH();
+            const DOMAIN_SEPARATOR = await token.DOMAIN_SEPARATOR();
+            return web3.utils.soliditySha3(
+                {t:'bytes1', v:'0x19'},
+                {t:'bytes1', v:'0x01'},
+                {t:'bytes32', v:DOMAIN_SEPARATOR},
+                {t:'bytes32', v:keccak256(
+                        web3.eth.abi.encodeParameters(
+                            ['bytes32', 'address', 'address', 'uint256', 'uint256', 'uint256'],
+                            [PERMIT_TYPEHASH, approve.owner, approve.spender, approve.value, nonce, deadline]
+                        )
+                    )
+                }
+            )
+        }
+
+        it('should accept signed permit', async function () {
+            const amount = '1001';
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            await this.token.mint(accountWallet.address, amount, '0x', '0x');
+
+            const nonce = (await this.token.nonces(accountWallet.address)).toString();
+            const deadline = Number.MAX_SAFE_INTEGER.toString();
+            const digest = await getApprovalDigest(
+              this.token,
+              { owner: accountWallet.address, spender: anotherAccount, value: amount },
+              nonce,
+              deadline
+            );
+
+            const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
+
+            const receipt = await this.token.permit(
+                accountWallet.address,
+                anotherAccount, 
+                amount,
+                deadline,
+                v,
+                r,
+                s
+            );
+
+            truffleAssert.eventEmitted(receipt, 'Approval', (ev) => {
+                return ev.owner === accountWallet.address
+                && ev.spender === anotherAccount
+                && ev.value.toString() === amount
+            });
+
+            expect((await this.token.allowance(accountWallet.address, anotherAccount)).toString()).to.eq(amount);
+            expect((await this.token.nonces(accountWallet.address)).toString()).to.eq('1');
+          })
+
+          it('should fail invalid signature', async function () {
+            const amount = '1001';
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            await this.token.mint(accountWallet.address, amount, '0x', '0x');
+
+            const nonce = (await this.token.nonces(accountWallet.address)).toString();
+            const deadline = Number.MAX_SAFE_INTEGER.toString();
+            const digest = await getApprovalDigest(
+              this.token,
+              { owner: accountWallet.address, spender: anotherAccount, value: amount },
+              nonce,
+              deadline
+            );
+
+            const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
+
+            await utils.expectThrow(this.token.permit(
+                    accountWallet.address,
+                    anotherAccount, 
+                    amount,
+                    deadline,
+                    v,
+                    s,
+                    r
+                )
+            );
+          });
+
+          it('should fail invalid nonce', async function () {
+            const amount = '1001';
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            await this.token.mint(accountWallet.address, amount, '0x', '0x');
+
+            const nonce = (await this.token.nonces(accountWallet.address)).toString();
+            const deadline = Number.MAX_SAFE_INTEGER.toString();
+            const digest = await getApprovalDigest(
+              this.token,
+              { owner: accountWallet.address, spender: anotherAccount, value: amount },
+              nonce,
+              deadline
+            );
+
+            const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
+
+            await this.token.permit(
+                accountWallet.address,
+                anotherAccount, 
+                amount,
+                deadline,
+                v,
+                r,
+                s
+            );
+
+            await utils.expectThrow(
+                this.token.permit(
+                    accountWallet.address,
+                    anotherAccount, 
+                    amount,
+                    deadline,
+                    v,
+                    r,
+                    s
+                )
+            );
+          });
+
+          it('should fail expired deadline', async function () {
+            const amount = '1001';
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            await this.token.mint(accountWallet.address, amount, '0x', '0x');
+
+            const nonce = (await this.token.nonces(accountWallet.address)).toString();
+            const deadline = '1';
+            const digest = await getApprovalDigest(
+              this.token,
+              { owner: accountWallet.address, spender: anotherAccount, value: amount },
+              nonce,
+              deadline
+            );
+
+            const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
+
+            await utils.expectThrow(this.token.permit(
+                    accountWallet.address,
+                    anotherAccount, 
+                    amount,
+                    deadline,
+                    v,
+                    r,
+                    s
+                )
+            );
+          });
     });
 
 });

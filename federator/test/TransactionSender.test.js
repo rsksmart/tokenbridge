@@ -48,7 +48,7 @@ describe('TransactionSender module tests', () => {
         let gasPrice = 111;
         web3Mock.eth.getBlock = jest.fn().mockReturnValue(Promise.resolve({minimumGasPrice: gasPrice}));
         let sender = new TransactionSender(web3Mock, logger, {});
-        let result = await sender.getGasPrice(31); //Rsk Testnet 
+        let result = await sender.getGasPrice(31); //Rsk Testnet
         expect(result).toEqual(Math.round(gasPrice*1.05));
         result = await sender.getGasPrice(30); //Rsk mainnet
         expect(result).toEqual(Math.round(gasPrice*1.05));
@@ -63,7 +63,7 @@ describe('TransactionSender module tests', () => {
         const pk = '3f28f888373e9ad1651a1227a5efdc0d7ea55bce6de3b5448de56c8588c6bd4d';
         const expectedAddr = '0x3444f14CbC7081ADEd7203E32E65304D17fe3bdA';
         let sender = new TransactionSender(web3Mock, logger, {});
-        let result = await sender.getAddress(pk); //Rsk Testnet 
+        let result = await sender.getAddress(pk); //Rsk Testnet
         expect(result).toEqual(expectedAddr.toLocaleLowerCase());
 
         web3Mock.eth.getAccounts = jest.fn().mockReturnValue(Promise.resolve([expectedAddr.toLocaleLowerCase()]));

@@ -16,7 +16,8 @@ methods.transactionWasProcessed = () => ({
 });
 
 methods.voteTransaction = () => ({
-    encodeABI: () => '0x0'
+    encodeABI: () => '0x0',
+    call: () => Promise.resolve(true)
 });
 
 methods.confirmations = () => ({
