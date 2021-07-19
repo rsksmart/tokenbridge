@@ -1,4 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "../../Initializable.sol";
 
@@ -13,7 +16,7 @@ contract UpgradablePauserRole is Initializable, Context {
 
     Roles.Role private _pausers;
 
-    function initialize(address sender) public initializer {
+    function __PauserRol_init(address sender) public initializer {
         if (!isPauser(sender)) {
             _addPauser(sender);
         }

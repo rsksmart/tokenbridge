@@ -1,5 +1,39 @@
 const gasLimit = 6800000;
 
+const saveState = async () =>
+  new Promise(resolve => {
+    web3.currentProvider.send(
+      {
+        jsonrpc: '2.0',
+        method: 'evm_snapshot',
+        id: 0
+      },
+      (error, res) => {
+        const result = parseInt(res.result, 0);
+        lastSnapshot = result;
+        resolve(result);
+      }
+    );
+  });
+
+const revertState = async () => {
+  await new Promise(resolve =>
+    web3.currentProvider.send(
+      {
+        jsonrpc: '2.0',
+        method: 'evm_revert',
+        params: lastSnapshot,
+        id: 0
+      },
+      (error, res) => {
+        resolve(res.result);
+      }
+    )
+  );
+
+  //lastSnapshot = await saveState();
+};
+
 // from https://ethereum.stackexchange.com/questions/11444/web3-js-with-promisified-api
 const promisify = (inner) =>
   new Promise((resolve, reject) =>
@@ -14,7 +48,7 @@ function expectThrow (promise) {
   return promise.then( (result) => {
     assert.equal(result.toString(), "It should have thrown an Error");
   }, (err) => {
-      return err;
+    return err;
   });
 }
 
@@ -63,7 +97,7 @@ function increaseTimestamp(web3, increase) {
             }
             return asyncMine().then( ()=> resolve(result));
           });
-    });    
+    });
 }
 
 function stripHexPrefix(hexString) {
@@ -77,7 +111,7 @@ function calculatePrefixesSuffixes(nodes) {
     const prefixes = [];
     const suffixes = [];
     const ns = [];
-    
+
     for (let i = 0; i < nodes.length; i++) {
         nodes[i] = stripHexPrefix(nodes[i]);
     }
@@ -85,38 +119,38 @@ function calculatePrefixesSuffixes(nodes) {
     for (let k = 0, l = nodes.length; k < l; k++) {
         if (k + 1 < l && nodes[k+1].indexOf(nodes[k]) >= 0)
             continue;
-        
+
         ns.push(nodes[k]);
     }
-    
+
     let hash = web3.utils.sha3(Buffer.from(ns[0], 'hex'));
     hash = stripHexPrefix(hash);
-    
+
     prefixes.push('0x');
     suffixes.push('0x');
-    
+
     for (let k = 1, l = ns.length; k < l; k++) {
         const p = ns[k].indexOf(hash);
-        
+
         prefixes.push('0x' + ns[k].substring(0, p));
         suffixes.push('0x' + ns[k].substring(p + hash.length));
-        
+
         hash = web3.utils.sha3(Buffer.from(ns[k], 'hex'));
         hash = stripHexPrefix(hash);
     }
-    
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
 function ascii_to_hexa(str)
-  {
-	var arr1 = [];
-	for (var n = 0, l = str.length; n < l; n ++) {
+{
+    var arr1 = [];
+    for (var n = 0, l = str.length; n < l; n ++) {
         var hex = Number(str.charCodeAt(n)).toString(16);
         arr1.push(hex);
     }
-	return '0x' + arr1.join('');
-   }
+    return '0x' + arr1.join('');
+}
+
 
 module.exports = {
     checkGas: checkGas,
@@ -128,5 +162,8 @@ module.exports = {
     increaseTimestamp: increaseTimestamp,
     ascii_to_hexa: ascii_to_hexa,
     NULL_ADDRESS: '0x0000000000000000000000000000000000000000',
+    NULL_HASH: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    saveState : saveState,
+    revertState: revertState,
 };
 

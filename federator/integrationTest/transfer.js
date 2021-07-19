@@ -2,7 +2,7 @@ var Web3 = require('web3');
 var log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
-const abiBridge = require('../../abis/Bridge_v0.json');
+const abiBridge = require('../../abis/Bridge_v2.json');
 const erc20TokenAbi = require('../../abis/IERC20.json');
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');
@@ -38,7 +38,7 @@ async function run() {
 
         logger.debug('bridge receiveTokens (transferFrom)');
         let bridgeContract = new rskWeb3.eth.Contract(abiBridge, bridgeAddress);
-        data = bridgeContract.methods.receiveTokens(mainTokenAddress, amount).encodeABI();
+        data = bridgeContract.methods.receiveTokensTo(mainTokenAddress, senderAddress, amount).encodeABI();
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.privateKey);
 
         //Wait for confirmations

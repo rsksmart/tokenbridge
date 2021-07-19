@@ -1,9 +1,12 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "../../GSN/Context.sol";
 import "../Roles.sol";
 
-contract PauserRole is Context {
+abstract contract PauserRole is Context {
     using Roles for Roles.Role;
 
     event PauserAdded(address indexed account);
@@ -11,7 +14,7 @@ contract PauserRole is Context {
 
     Roles.Role private _pausers;
 
-    constructor () internal {
+    constructor () {
         _addPauser(_msgSender());
     }
 

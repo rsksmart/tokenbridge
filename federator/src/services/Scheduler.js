@@ -24,7 +24,7 @@ module.exports = class Scheduler {
             await this.service.run();
             this.logger.info("scheduler poll run succesful, trigger next poll in ", this.pollingInterval);
             // Trigger next poll
-            this.pollingTimeout = setTimeout(() => this.poll(), this.pollingInterval); 
+            this.pollingTimeout = setTimeout(() => this.poll(), this.pollingInterval);
         } else {
             this.logger.warn("can't poll, scheduler service already stopped");
         }

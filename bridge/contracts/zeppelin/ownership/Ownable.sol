@@ -1,4 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "../GSN/Context.sol";
 /**
@@ -10,7 +13,7 @@ import "../GSN/Context.sol";
  * `onlyOwner`, which can be applied to your functions to restrict their use to
  * the owner.
  */
-contract Ownable is Context {
+abstract contract Ownable is Context {
     address private _owner;
 
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
@@ -18,7 +21,7 @@ contract Ownable is Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    constructor () internal {
+    constructor () {
         _owner = _msgSender();
         emit OwnershipTransferred(address(0), _owner);
     }

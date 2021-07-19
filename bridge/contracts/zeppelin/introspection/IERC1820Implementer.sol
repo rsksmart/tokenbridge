@@ -1,4 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 /**
  * @dev Interface for an ERC1820 implementer, as defined in the
@@ -9,9 +12,9 @@ pragma solidity ^0.5.0;
 interface IERC1820Implementer {
     /**
      * @dev Returns a special value (`ERC1820_ACCEPT_MAGIC`) if this contract
-     * implements `interfaceHash` for `account`.
+     * implements `_interfaceHash` for `_account`.
      *
      * See {IERC1820Registry-setInterfaceImplementer}.
      */
-    function canImplementInterfaceForAddress(bytes32 interfaceHash, address account) external view returns (bytes32);
+    function canImplementInterfaceForAddress(bytes32 _interfaceHash, address _account) external view returns (bytes32);
 }

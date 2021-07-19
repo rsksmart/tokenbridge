@@ -1,6 +1,6 @@
 # Federator
 
-Presents the event and necessary information to validate it on the other network
+Presents the event and necesary information to validate it on the other network
 The federator is an off-chain process which performs voting actions to validate transactions between a Mainchain (source) and a Sidechain (target) network. These transactions are obtained from the Bridge contract on the Mainchain using event logs and voted in the Sidechain through a Federation contract. Once all required signers (federators) vote for a transaction the Federation contract starts the process to release the funds on the Sidechain.
 The federators will be the owners of the contracts willing to allow to cross their tokens, and by doing so staking they reputation.
 
@@ -33,6 +33,8 @@ module.exports = {
     privateKey: require('federator.key'),
     storagePath: './db',
     etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
+    runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
+    endpointsPort: 5000, // Server port health status endpoint listens on
 }
 ```
 
@@ -52,7 +54,8 @@ Inside the .json files there is also the host to that network, for example this 
 }
 ```
 
-You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node for that network and the json rpc port. `Remember to do it for both networks`.
+You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node for that network and the json rpc port,  host can only be `https or localhost`.
+`Remember to do it for both networks`.
 Also you need to create a `federators.key` file with the federator private in it.
 
 ### Latest block
@@ -77,3 +80,18 @@ docker run --rm \
 ```
 
 to start the image.
+
+### Status endpoint
+
+This endpoint is introduced, in order to better monitor health status on the Federator processes running.
+
+* **<DOMAIN:PORT>/isAlive**
+
+* **Method:**
+
+  `GET`
+
+* **Success Response:**
+
+  * **Code:** 200 <br />
+    **Content:** `{ "status" : "ok" }`

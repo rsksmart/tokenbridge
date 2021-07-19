@@ -1,7 +1,8 @@
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
-const expectThrow = require('./utils').expectThrow;
-const NULL_ADDRESS = require('./utils').NULL_ADDRESS;
+const utils = require('./utils');
+const expectThrow = utils.expectThrow;
+const NULL_ADDRESS = utils.NULL_ADDRESS;
 
 contract('MultiSigWallet', async (accounts) => {
     const multiSigOwner = accounts[0];
@@ -12,6 +13,14 @@ contract('MultiSigWallet', async (accounts) => {
         value: 0,
         data: '0x29ee8e450000000000000000000000007ba156fe5471185cb3eec2de9c058412c452bb4c000000000000000000000000cd2a3d9f938e13cd947ec05abc7fe734df8dd8260000000000000000000000000000000000000000000000000000002e90edd00000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000005654d41494e000000000000000000000000000000000000000000000000000000'
     };
+
+    before(async function () {
+        await utils.saveState();
+    });
+
+    after(async function () {
+        await utils.revertState();
+    });
 
     beforeEach(async () => {
         this.multiSig = await MultiSigWallet.new([multiSigOwner], 1);

@@ -7,6 +7,14 @@ contract('SideTokenFactory', async function (accounts) {
     const tokenCreator = accounts[0];
     const anAccount = accounts[1];
 
+    before(async function () {
+        await utils.saveState();
+    });
+
+    after(async function () {
+        await utils.revertState();
+    });
+
     beforeEach(async function () {
         this.sideTokenFactory = await SideTokenFactory.new();
     });
@@ -74,5 +82,5 @@ contract('SideTokenFactory', async function (accounts) {
         const minter = await sideToken.minter();
         assert.equal(minter, anAccount);
     });
-    
+
 });
