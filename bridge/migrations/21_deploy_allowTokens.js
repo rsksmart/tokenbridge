@@ -224,7 +224,7 @@ async function setTokensEthereum(allowTokens) {
         { token: '0x8d3e855f3f55109d473735ab76f753218400fe96', typeId: '3' }, //BUND
         { token: '0xf04a8ac553fcedb5ba99a64799155826c136b0be', typeId: '6' }, //FLIXX
         { token: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262', typeId: '6' }, //RFOX
-        { token: '0xca0e7269600d353f70b14ad118a49575455c0f2f', typeId: '7' }, //AMLT
+        { token: '0xca0e7269600d353f70b14ad118a49575455c0f2f', typeId: '6' }, //AMLT
         // Side Tokens
         { token: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5', typeId: '5' }, //eRIF
         { token: '0xe700691da7b9851f2f35f8b8182c69c53ccad9db', typeId: '4' }, //eDOC

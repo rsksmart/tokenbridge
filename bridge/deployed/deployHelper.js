@@ -1,5 +1,9 @@
 const fs = require('fs')
 
+function isMainnet(network) {
+    return network.toLowerCase().includes('mainnet')
+}
+
 function isLocalNetwork(network) {
     return !network.toLowerCase().includes('mainnet')
         && !network.toLowerCase().includes('kovan')
@@ -25,5 +29,6 @@ function saveDeployed(deployJson) {
 module.exports = {
     isLocalNetwork: isLocalNetwork,
     getDeployed: getDeployed,
-    saveDeployed: saveDeployed
+    saveDeployed: saveDeployed,
+    isMainnet: isMainnet,
 };
