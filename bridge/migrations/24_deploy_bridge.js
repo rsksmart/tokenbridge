@@ -19,7 +19,9 @@ module.exports = async (deployer, networkName, accounts) => {
     const proxyAdmin = await ProxyAdmin.at(deployedJson.ProxyAdmin);
 
     let methodCall = proxyAdmin.contract.methods.upgrade(deployedJson.BridgeProxy, deployedJson.Bridge);
-    await methodCall.call({from:deployedJson.MultiSig})
+    if (!deployHelper.isMainnet(networkName)) {
+        await methodCall.call({from:deployedJson.MultiSig});
+    }
     await multiSig.submitTransaction(proxyAdmin.address, 0, methodCall.encodeABI(), { from: accounts[0] });
 
     const bridge = await Bridge.at(deployedJson.BridgeProxy);
@@ -38,10 +40,14 @@ module.exports = async (deployer, networkName, accounts) => {
         await multiSig.submitTransaction(allowTokens.address, 0, methodCall.encodeABI(), { from: accounts[0] });
     } else {
         methodCall = bridge.contract.methods.setWrappedCurrency(deployedJson.WrappedCurrency);
-        await methodCall.call({from:deployedJson.MultiSig})
+        if (!deployHelper.isMainnet(networkName)) {
+            await methodCall.call({from:deployedJson.MultiSig});
+        }
         await multiSig.submitTransaction(bridge.address, 0, methodCall.encodeABI(), { from: accounts[0] });
     }
     methodCall = bridge.contract.methods.initDomainSeparator();
-    await methodCall.call({from:deployedJson.MultiSig})
+    if (!deployHelper.isMainnet(networkName)) {
+        await methodCall.call({from:deployedJson.MultiSig});
+    }
     await multiSig.submitTransaction(bridge.address, 0, methodCall.encodeABI(), { from: accounts[0] });
 };
