@@ -1,15 +1,17 @@
 {
     "network": "rskmainnet",
-    "MultiSig": "0x040007b1804aD78A97f541bEBED377dcb60E4138",
+    "MultiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
     "ProxyAdmin": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-    "Utils": "0x95eD2b8D3115bAE6c0Ce539781B7D44119e019Bc",
-    "Federation": "0xE37b6516F4FE2A27569a2751C1aD50F6340DF369",
-    "SideTokenFactory": "0x75c6e15702ebacd51177154ff383df9695e1b1da",
-    "AllowTokens": "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
-    "Bridge": "0x3b4353D80464af08Cc0787eA9C45BbC50f8c5cCE",
-    "BridgeProxy": "0x9d11937E2179dC5270Aa86A3f8143232D6DA0E69",
+    "Utils": "0x95ed2b8d3115bae6c0ce539781b7d44119e019bc",
+    "Federation": "0x950a384d950ea319f7d634cabac41ffee49320f0",
+    "SideTokenFactory": "0x44fcd0854d745efdef4cfe9868efe4d4eb51ecd6",
+    "AllowTokens": "0x882846c2792a999cee1d080e89bec9e17f885bdd",
+    "Bridge": "0x4e159f565555fc4eb27d864ff0bd308f1cefa0ac",
+    "BridgeProxy": "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
     "smallAmountConfirmations": "60",
     "mediumAmountConfirmations": "120",
     "largeAmountConfirmations": "2880",
-    "WrappedCurrency": "0x967f8799af07df1534d48a95a5c9febe92c53ae0"
+    "WrappedCurrency": "0x967f8799af07df1534d48a95a5c9febe92c53ae0",
+    "AllowTokensProxy": "0xcb789036894a83a008a2aa5b3c2dde41d0605a9a",
+    "FederationProxy": "0x7ecfda6072942577d36f939ad528b366b020004b"
 }
