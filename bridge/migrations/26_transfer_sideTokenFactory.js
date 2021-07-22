@@ -10,6 +10,9 @@ module.exports = async (deployer, networkName, accounts) => {
     const bridge = new web3.eth.Contract(Bridge.abi, deployedJson.BridgeProxy);
     const methodCall = bridge.methods.changeSideTokenFactory(deployedJson.SideTokenFactory);
 
-    await bridge.methods.changeSideTokenFactory(deployedJson.SideTokenFactory).call({ from: deployedJson.MultiSig });
+    if (!deployHelper.isMainnet(networkName)) {
+        // Check before sending the transaction as it eats the error
+        await methodCall.call({ from: deployedJson.MultiSig });
+    }
     await multiSig.submitTransaction(deployedJson.BridgeProxy, 0, methodCall.encodeABI(), { from: accounts[0] });
 }
