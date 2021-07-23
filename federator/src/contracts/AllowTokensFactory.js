@@ -40,7 +40,6 @@ module.exports = class AllowTokensFactory {
         try {
             const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
             const allowTokensAddress = await utils.retry3Times(bridgeContract.methods.allowTokens().call);
-
             return await this.createInstance(
                 this.mainWeb3,
                 allowTokensAddress

@@ -141,7 +141,7 @@ module.exports = class Federator {
 
             const isMember = await utils.retry3Times(fedContract.isMember(from).call);
             if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
-            
+
             const {
                 mediumAmountConfirmations,
                 largeAmountConfirmations
@@ -168,17 +168,35 @@ module.exports = class Federator {
                     _typeId: typeId
                 } = log.returnValues;
 
-                const {
+                let {
+                    allowed,
                     mediumAmount,
-                    largeAmount              
+                    largeAmount
                 } = await allowTokens.getLimits(tokenAddress);
-                
+
+                if (!allowed) {
+                    const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+                    const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(tokenAddress).call);
+                    if (sideTokenAddress == utils.zeroAddress) {
+                        throw new Error(`Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}`);
+                    } else {
+                        ({
+                            allowed,
+                            mediumAmount,
+                            largeAmount
+                        } = await allowTokens.getLimits(sideTokenAddress));
+                        if (!allowed) {
+                            this.logger.error(`Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`);
+                        }
+                    }
+                }
+
                 const BN = this.mainWeb3.utils.BN;
                 const mediumAmountBN = new BN(mediumAmount);
                 const largeAmountBN = new BN(largeAmount);
                 const amountBN = new BN(amount);
 
-                if(mediumAndSmall) {   
+                if(mediumAndSmall) {
                     // At this point we're processing blocks newer than largeAmountConfirmations
                     // and older than smallAmountConfirmations
                     if(amountBN.gte(largeAmountBN)) {
