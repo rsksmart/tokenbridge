@@ -508,9 +508,9 @@ async function transfer(originFederators, destinationFederators, config, origin,
         logger.info(`${destination} token balance`, balance);
         let destinationInitialUserBalance = balance;
 
-        // Cross AnotherToken (type id 0) Small Amount < toWei('0.1')   
-        const userSmallAmount = originWeb3.utils.toWei('0.0516');
-        const userMediumAmount = originWeb3.utils.toWei('0.109');
+        // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
+        const userSmallAmount = originWeb3.utils.toWei('0.0056');
+        const userMediumAmount = originWeb3.utils.toWei('0.019'); // < toWei('0.1')
         const userLargeAmount = originWeb3.utils.toWei('1.32');
         const userAppoveTotalAmount = originWeb3.utils.toWei('10');
 
@@ -520,18 +520,18 @@ async function transfer(originFederators, destinationFederators, config, origin,
         await methodCall.call({from: userAddress});
         await transactionSender.sendTransaction(anotherTokenAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
 
-        // Cross AnotherToken (type id 0) Small Amount < toWei('0.1')
+        // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
         methodCall = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userSmallAmount);
         await methodCall.call({from: userAddress});
         const smallAmountReceipt = await transactionSender.sendTransaction(originBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
 
-        // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.1') && < toWei('1')
+        // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
         methodCall = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userMediumAmount);
         await methodCall.call({from: userAddress});
         const mediumAmountReceipt = await transactionSender.sendTransaction(originBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
 
-        // Cross AnotherToken (type id 0) Large Amount >= toWei('1') 
-        methodCall = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userLargeAmount) 
+        // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
+        methodCall = bridgeContract.methods.receiveTokensTo(anotherTokenAddress, userAddress, userLargeAmount)
         await methodCall.call({from: userAddress});
         const largeAmountReceipt = await transactionSender.sendTransaction(originBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
 
