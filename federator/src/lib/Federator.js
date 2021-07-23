@@ -168,26 +168,28 @@ module.exports = class Federator {
                     _typeId: typeId
                 } = log.returnValues;
 
-                let {
-                    allowed,
+                const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+                const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(tokenAddress).call);
+                let allowed,
                     mediumAmount,
                     largeAmount
-                } = await allowTokens.getLimits(tokenAddress);
-
-                if (!allowed) {
-                    const mainBridge = await this.bridgeFactory.getMainBridgeContract();
-                    const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(tokenAddress).call);
-                    if (sideTokenAddress == utils.zeroAddress) {
+                if (sideTokenAddress == utils.zeroAddress) {
+                    ({
+                        allowed,
+                        mediumAmount,
+                        largeAmount
+                    } = await allowTokens.getLimits(tokenAddress));
+                    if (!allowed) {
                         throw new Error(`Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}`);
-                    } else {
-                        ({
-                            allowed,
-                            mediumAmount,
-                            largeAmount
-                        } = await allowTokens.getLimits(sideTokenAddress));
-                        if (!allowed) {
-                            this.logger.error(`Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`);
-                        }
+                    }
+                } else {
+                    ({
+                        allowed,
+                        mediumAmount,
+                        largeAmount
+                    } = await allowTokens.getLimits(sideTokenAddress));
+                    if (!allowed) {
+                        this.logger.error(`Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`);
                     }
                 }
 
@@ -196,7 +198,7 @@ module.exports = class Federator {
                 const largeAmountBN = new BN(largeAmount);
                 const amountBN = new BN(amount);
 
-                if(mediumAndSmall) {
+                if (mediumAndSmall) {
                     // At this point we're processing blocks newer than largeAmountConfirmations
                     // and older than smallAmountConfirmations
                     if(amountBN.gte(largeAmountBN)) {
@@ -232,7 +234,7 @@ module.exports = class Federator {
 
                 let wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
                 if (!wasProcessed) {
-                    let hasVoted = await utils.retry3Times(fedContract.hasVoted(transactionId).call);
+                    let hasVoted = await fedContract.hasVoted(transactionId).call({ from });
                     if(!hasVoted) {
                         this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`);
                         await this._voteTransaction(
@@ -310,7 +312,7 @@ module.exports = class Federator {
             }
 
             const receipt = await this.transactionSender.sendTransaction(fedContract.getAddress(), txData, 0, this.config.privateKey);
-            
+
             if(receipt.status == false) {
                 fs.writeFileSync(
                     this.revertedTxnsPath,
