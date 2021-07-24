@@ -53,10 +53,13 @@ module.exports = class IAllowTokensV1 {
             if(!result) {
                 const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(tokenAddress).call();
                 result = {
+                    allowed: infoAndLimits.info.allowed,
                     mediumAmount: infoAndLimits.limit.mediumAmount,
                     largeAmount: infoAndLimits.limit.largeAmount,
                 };
-                this.mapTokenInfoAndLimits[tokenAddress] = result;
+                if (result.allowed) {
+                    this.mapTokenInfoAndLimits[tokenAddress] = result;
+                }
             }
             return result;
         } catch(err) {

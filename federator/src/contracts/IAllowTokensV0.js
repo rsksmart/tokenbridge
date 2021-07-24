@@ -30,6 +30,7 @@ module.exports = class IAllowTokensV0 {
 
     async getLimits(tokenAddress) {
         return {
+            allowed: true,
             mediumAmount: -1,
             largeAmount: 0,
         };

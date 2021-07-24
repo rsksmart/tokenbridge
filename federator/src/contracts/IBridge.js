@@ -29,4 +29,8 @@ module.exports = class IBridge {
     getVersion() {
         return this.bridgeContract.methods.version();
     }
+
+    getMappedToken(originalTokenAddress) {
+        return this.bridgeContract.methods.mappedTokens(originalTokenAddress);
+    }
 }
