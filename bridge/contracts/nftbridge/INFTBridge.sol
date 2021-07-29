@@ -22,10 +22,6 @@ interface INFTBridge {
      */
     function receiveTokensTo(address tokenToUse, address to, uint256 amount) external;
 
-    /**
-     * Use network currency and cross it.
-     */
-    function depositTo(address to) external payable;
 
     /**
      * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
