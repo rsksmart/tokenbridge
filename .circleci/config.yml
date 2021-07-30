@@ -9,7 +9,9 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: circleci/mongo:3.4.4
       - image: trufflesuite/ganache-cli
-        command: ganache-cli -i 5777 -l 6700000
+        command: ganache-cli -i 5777 -l 6700000 -k istanbul
+      - image: trufflesuite/ganache-cli
+        command: ganache-cli -i 5776 -p 8546 -k istanbul
     steps:
       - checkout
       # Download and cache dependencies
@@ -19,6 +21,7 @@ jobs:
             # fallback to using the latest cache if no exact match is found
             - v1-dependencies-
       - run: cd bridge && npm ci
+      - run: cd federator && npm ci
       - save_cache:
           paths:
             - bridge/node_modules
@@ -29,12 +32,18 @@ jobs:
             cd bridge
             npm run lint
       - run:
-          name: contracts migrate
+          name: deploy contracts in development and mirror
           command: |
             cd bridge
-            npm run migrate
+            npm run deployLocalIntegrationTest
+      - run:
+          name: contracts integration test
+          command: |
+            cd federator
+            npm run integrationTest
       - run:
           name: contracts test
           command: |
             cd bridge
             npm test
+            
