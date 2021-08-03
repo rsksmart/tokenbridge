@@ -3,7 +3,8 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 
 //configurations
-const config = require('../config/config.js');
+// the following file should only be used for integration tests
+const config = require('../config/test.local.config.js');
 const logConfig = require('../config/log-config.json');
 const abiBridge = require('../../abis/Bridge.json');
 const abiMainToken = require('../../abis/ERC677.json');
