@@ -4,21 +4,30 @@ jobs:
     working_directory: ~/repo
     docker:
       - image: circleci/node:lts
-      # Specify service dependencies here if necessary
-      # CircleCI maintains a library of pre-built images
-      # documented at https://circleci.com/docs/2.0/circleci-images/
-      # - image: circleci/mongo:3.4.4
+      # The first ganache-cli container is meant to simulate a main chain, and the second one for a side chain (integration testing only)
       - image: trufflesuite/ganache-cli
-        command: ganache-cli -i 5777 -l 6700000
+        # The gas limit is 6700000 to avoid trying to deploy a contract larger than expected
+        command: ganache-cli -i 5777 -l 6700000 -k istanbul
+      - image: trufflesuite/ganache-cli
+        command: ganache-cli -i 5776 -p 8546 -l 6700000 -k istanbul
     steps:
       - checkout
       # Download and cache dependencies
       - restore_cache:
           keys:
             - v1-dependencies-{{ checksum "bridge/package.json" }}
-            # fallback to using the latest cache if no exact match is found
+            # Fallback to using the latest cache if no exact match is found
             - v1-dependencies-
-      - run: cd bridge && npm ci
+      - run:
+          name: install bridge dependencies
+          command: |
+            cd bridge
+            npm ci
+      - run:
+          name: install federator dependencies
+          command: |
+            cd federator
+            npm ci
       - save_cache:
           paths:
             - bridge/node_modules
@@ -29,12 +38,18 @@ jobs:
             cd bridge
             npm run lint
       - run:
-          name: contracts migrate
+          name: deploy contracts in development and mirror
           command: |
             cd bridge
-            npm run migrate
+            npm run deployLocalIntegrationTest
+      - run:
+          name: contracts integration test
+          command: |
+            cd federator
+            npm run integrationTest
       - run:
           name: contracts test
           command: |
             cd bridge
             npm test
+            
