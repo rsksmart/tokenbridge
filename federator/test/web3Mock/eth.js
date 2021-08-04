@@ -1,6 +1,6 @@
 const contractMapping = require('./contractMapping');
 const defaults = require('./defaults');
-var Web3PromiEvent = require('web3-core-promievent');
+const Web3PromiEvent = require('web3-core-promievent');
 
 let eth = {};
 
@@ -10,8 +10,8 @@ eth.getTransactionCount = () => defaults.data.ethTransactionCount;
 eth.getGasPrice = () => defaults.data.gasPrice;
 
 let promiseSend = function(){
-    var promiEvent = Web3PromiEvent();
-    
+    const promiEvent = Web3PromiEvent();
+
     setTimeout(function() {
         promiEvent.eventEmitter.emit('transactionHash', defaults.data.receipt.transactionHash);
         promiEvent.resolve(defaults.data.receipt);
