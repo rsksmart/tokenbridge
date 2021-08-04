@@ -101,10 +101,10 @@ module.exports = class Heartbeat {
                 const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
                 this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
 
-                var fromPageBlock = fromBlock;
-                for(var currentPage = 1; currentPage <= numberOfPages; currentPage++) {
-                    var toPagedBlock = fromPageBlock + recordsPerPage-1;
-                    if(currentPage == numberOfPages) {
+                let fromPageBlock = fromBlock;
+                for(let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
+                    let toPagedBlock = fromPageBlock + recordsPerPage - 1;
+                    if(currentPage === numberOfPages) {
                         toPagedBlock = toBlock
                     }
 
