@@ -16,10 +16,10 @@ module.exports = class BridgeFactory extends ContractFactory {
     }
 
     async createInstance(web3, address) {
-        let bridgeContract = this.getContractByAddressAndAbi(abiBridgeOld, address, web3);
+        let bridgeContract = this.getContractByAbi(abiBridgeOld, address, web3);
         const version = await this.getVersion(bridgeContract);
         if (version === 'v3') {
-            bridgeContract = this.getContractByAddressAndAbi(abiBridgeNew, address, web3);
+            bridgeContract = this.getContractByAbi(abiBridgeNew, address, web3);
         } else if (!['v2', 'v1'].includes(version)) {
             throw Error('Unknown Bridge contract version');
         }
