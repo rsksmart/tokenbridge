@@ -43,12 +43,17 @@ jobs:
             cd bridge
             npm run deployLocalIntegrationTest
       - run:
-          name: contracts integration test
+          name: federator integration tests
           command: |
             cd federator
             npm run integrationTest
       - run:
-          name: contracts test
+          name: federator unit tests
+          command: |
+            cd federator
+            npm test
+      - run:
+          name: bridge unit tests
           command: |
             cd bridge
             npm test
