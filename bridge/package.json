@@ -31,7 +31,7 @@
   ],
   "author": "IOVLabs",
   "engines": {
-    "node": ">=12"
+    "node": ">=16"
   },
   "dependencies": {
     "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.1",
