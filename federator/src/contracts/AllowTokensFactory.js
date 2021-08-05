@@ -23,13 +23,13 @@ module.exports = class AllowTokensFactory extends ContractFactory {
     }
 
     async createInstance(web3, address) {
-        let allowTokensContract = this.getContractByAddressAndAbi(abiAllowTokensNew, address, web3);
+        let allowTokensContract = this.getContractByAbi(abiAllowTokensNew, address, web3);
         const version = await this.getVersion(allowTokensContract);
         const chainId = await utils.retry3Times(web3.eth.net.getId);
         if (version === 'v1') {
             return new IAllowTokensV1(allowTokensContract, chainId);
         } else if (version === 'v0') {
-            allowTokensContract = this.getContractByAddressAndAbi(abiAllowTokensOld, address, web3);
+            allowTokensContract = this.getContractByAbi(abiAllowTokensOld, address, web3);
             return new IAllowTokensV0(allowTokensContract, chainId);
         } else {
             throw Error('Unknown AllowTokens contract version');

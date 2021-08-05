@@ -16,13 +16,13 @@ module.exports = class FederationFactory extends ContractFactory {
     }
 
     async createInstance(web3, address) {
-        let federationContract = this.getContractByAddressAndAbi(abiFederationNew, address, web3);
+        let federationContract = this.getContractByAbi(abiFederationNew, address, web3);
         const version = await this.getVersion(federationContract);
 
         if (version === 'v2') {
             return new FederationInterfaceV2(this.config, federationContract);
         } else if (version === 'v1') {
-            federationContract = this.getContractByAddressAndAbi(abiFederationOld, address, web3);
+            federationContract = this.getContractByAbi(abiFederationOld, address, web3);
             return new FederationInterfaceV1(this.config, federationContract);
         } else {
             throw Error('Unknown Federation contract version');

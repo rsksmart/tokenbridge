@@ -4,18 +4,16 @@ module.exports = class ContractFactory {
         this.logger = logger;
         this.mainWeb3 = new Web3(config.mainchain.host);
         this.sideWeb3 = new Web3(config.sidechain.host);
-        this.contractsByAddressAndAbi = new Map();
+        this.contractsByAbi = new Map();
     }
 
-    getContractByAddressAndAbi(abi, address, web3) {
-        if (!this.contractsByAddressAndAbi.has(abi)) {
-            this.contractsByAddressAndAbi.set(abi, new Map());
+    // There should only be one address per abi - the address is only needed to create a new web3.eth.Contract object.
+    getContractByAbi(abi, address, web3) {
+        let contractForAbi = this.contractsByAbi.get(abi)
+        if (!contractForAbi) {
+            contractForAbi = new web3.eth.Contract(abi, address);
+            this.contractsByAbi.set(abi, contractForAbi);
         }
-        let contractsByAddressForAbi = this.contractsByAddressAndAbi.get(abi)
-        if (!contractsByAddressForAbi.has(address)) {
-            const contract = new web3.eth.Contract(abi, address);
-            contractsByAddressForAbi.set(address, contract);
-        }
-        return this.contractsByAddressAndAbi.get(abi).get(address);
+        return contractForAbi;
     }
 }
