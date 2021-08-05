@@ -22,7 +22,7 @@ In order to test with multiple federators, ensure they're added as members of th
 
 ### config
 
-To run the federator using Docker first, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will dedcide the networks the federate must be listening, for example for the bridge in testnet a federator config.js will look like
+To run the federator using Docker, go to the /federator/config folder and rename `config.sample.js` to `config.js`. In that file you will determine the networks the federate must be listening to, for example for the bridge in testnet a federator config.js will look like
 
 ```js
 module.exports = {
