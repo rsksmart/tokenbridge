@@ -93,15 +93,6 @@ contract("Bridge NFT", async function(accounts) {
         });
         utils.checkRcpt(receipt);
 
-        receipt = await this.nft.setApprovalForAll(
-          this.bridgeNft.address,
-          tokenId,
-          {
-            from: tokenOwner,
-          }
-        );
-        utils.checkRcpt(receipt);
-
         receipt = await this.bridgeNft.receiveTokensTo(
           this.nft.address,
           anAccount,
@@ -111,12 +102,13 @@ contract("Bridge NFT", async function(accounts) {
         utils.checkRcpt(receipt);
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
-          // console.log(ev);
+          console.log(ev);
+
           return (
             ev._tokenAddress == this.nft.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
-            ev._tokenCreator == "0x0000000000000000000000000000000000000001" &&
+            ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
             ev._amount == totalSupply &&
             ev._tokenId == tokenId &&
