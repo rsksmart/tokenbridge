@@ -385,12 +385,13 @@ contract NFTBridge is
     return receivedAmount;
   }
 
-  function getTokenCreator() public pure returns (address) {
-    // @todo
-    // token creator
-    // if have creator method
-    // if not get the owner
-    return address(1);
+  function getTokenCreator(address tokenAddress, uint256 tokenId) public view returns (address) {
+    (bool success, bytes memory data) = tokenAddress.staticcall(abi.encodeWithSignature("creator()"));
+    if (success) {
+      return abi.decode(data, (address));
+    }
+
+    return IERC721(tokenAddress).ownerOf(tokenId);
   }
 
   /**
@@ -403,11 +404,10 @@ contract NFTBridge is
     uint256 tokenId
   ) public override {
     address sender = _msgSender();
+    address tokenCreator = getTokenCreator(tokenAddress, tokenId);
 
     // Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
     IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
-
-    address tokenCreator = getTokenCreator();
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
   }
