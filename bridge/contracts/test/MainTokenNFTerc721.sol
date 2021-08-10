@@ -15,4 +15,8 @@ contract MainTokenNFTerc721 is ERC721 {
     _setBaseURI(baseURI);
   }
 
+  function setTokenURI(uint256 tokenId, string memory _tokenURI) public {
+    _setTokenURI(tokenId, _tokenURI);
+  }
+
 }
