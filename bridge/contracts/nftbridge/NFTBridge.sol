@@ -14,6 +14,8 @@ import "../zeppelin/introspection/IERC1820Registry.sol";
 import "../zeppelin/token/ERC20/IERC20.sol";
 import "../zeppelin/token/ERC20/SafeERC20.sol";
 import "../zeppelin/token/ERC721/IERC721.sol";
+import "../zeppelin/token/ERC721/IERC721Metadata.sol";
+import "../zeppelin/token/ERC721/IERC721Enumerable.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
@@ -307,6 +309,7 @@ contract NFTBridge is Initializable, INFTBridge, UpgradablePausable, UpgradableO
         return receivedAmount;
     }
 
+
     function _claimCrossToSideToken(
         address _originalTokenAddress,
         address payable _receiver,
@@ -353,52 +356,56 @@ contract NFTBridge is Initializable, INFTBridge, UpgradablePausable, UpgradableO
         return receivedAmount;
     }
 
+    function getTokenCreator() public pure returns (address) {
+      // @todo
+      // token creator
+      // if have creator method
+      // if not get the owner
+      return address(1);
+    }
+
     /**
      * ERC-20 tokens approve and transferFrom pattern
      * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
      */
-    function receiveTokensTo(address tokenToUse, address to, uint256 tokenId) override public {
-        address sender = _msgSender();
-        //Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-        IERC721(tokenToUse).safeTransferFrom(sender, address(this), tokenId);
-        crossTokens(tokenToUse, sender, to, tokenId, "");
+    function receiveTokensTo(
+      address tokenAddress,
+      address to,
+      uint256 tokenId) override public {
+      address sender = _msgSender();
+      // Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
+      IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
+
+      address tokenCreator = getTokenCreator();
+
+      crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
     }
 
-    /**
-     * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
-     * See https://eips.ethereum.org/EIPS/eip-777#motivation for details
-     */
-    function tokensReceived (
-        address operator,
-        address from,
-        address to,
-        uint tokenId,
-        bytes calldata userData,
-        bytes calldata
-    ) external override(INFTBridge){
-        //Hook from ERC777address
-        if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
-        require(to == address(this), "Bridge: Not to this address");
-        address tokenToUse = _msgSender();
-        // require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-        require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
-        address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
-        crossTokens(tokenToUse, from, receiver, tokenId, userData);
-    }
-
-    function crossTokens(address tokenToUse, address from, address to, uint256 tokenId, bytes memory userData)
-    internal whenNotUpgrading whenNotPaused nonReentrant {
-        knownTokens[tokenToUse] = true;
+    function crossTokens(
+      address tokenAddress,
+      address to,
+      address tokenCreator,
+      bytes memory userData,
+      uint256 tokenId)
+      internal whenNotUpgrading whenNotPaused nonReentrant {
+        knownTokens[tokenAddress] = true;
         // We consider the amount before fees converted to 18 decimals to check the limits
         // updateTokenTransfer revert if token not allowed
-        allowTokens.updateTokenTransfer(tokenToUse, tokenId);
+        allowTokens.updateTokenTransfer(tokenAddress, tokenId);
+
+        IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
+        IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
+        string memory tokenURI = metadataIERC.tokenURI(tokenId);
 
         emit Cross(
-            tokenToUse,
-            from,
-            to,
-            tokenId,
-            userData
+          tokenAddress,
+          _msgSender(),
+          to,
+          tokenCreator,
+          userData,
+          enumerable.totalSupply(),
+          tokenId,
+          tokenURI
         );
 
         // IERC20(tokenToUse).safeTransfer(owner(), fee);
