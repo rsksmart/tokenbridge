@@ -23,11 +23,9 @@ const Web3 = require('web3');
     for (let i = 0; i < retriesMax; i++) {
         try {
             if (!config.isCb) {
-                const val = await fn.apply(null, args);
-                return val;
+                return await fn.apply(null, args);
             } else {
-                const val = await getPromise(fn, clone(args));
-                return val;
+                return await getPromise(fn, clone(args));
             }
         } catch (error) {
             if(retriesMax === i+1 || (error.hasOwnProperty('retryable') && !error.retryable)) throw error;
@@ -44,11 +42,11 @@ async function retry3Times(func, params = null) {
 }
 
 async function waitBlocks(client, numberOfBlocks) {
-    var startBlock = await client.eth.getBlockNumber();
-    var currentBlock = startBlock;
+    const startBlock = await client.eth.getBlockNumber();
+    let currentBlock = startBlock;
     while(numberOfBlocks > currentBlock - startBlock) {
-        var newBlock = await client.eth.getBlockNumber();
-        if(newBlock != currentBlock){
+        const newBlock = await client.eth.getBlockNumber();
+        if(newBlock !== currentBlock){
             currentBlock = newBlock;
         } else {
             await sleep(20000);
@@ -170,13 +168,13 @@ async function asyncMine(anotherWeb3Instance = null) {
                 return resolve(result);
             });
     });
-};
+}
 
 async function evm_mine(iterations, web3Instance = null) {
-    for(var i = 0; i < iterations; i++ ) {
+    for(let i = 0; i < iterations; i++ ) {
         await asyncMine(web3Instance);
-    };
-};
+    }
+}
 
 
 function increaseTimestamp(web3, increase) {

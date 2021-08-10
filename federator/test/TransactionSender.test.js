@@ -13,7 +13,7 @@ const logger = {
     warn: jest.fn(),
     error: jest.fn(),
 };
-var web3Mock = jest.fn();
+const web3Mock = jest.fn();
 
 describe('TransactionSender module tests', () => {
     beforeEach(async function () {
