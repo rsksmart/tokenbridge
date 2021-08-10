@@ -5,25 +5,24 @@ const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const CustomError = require('../lib/CustomError');
 const utils = require('../lib/utils');
+const ContractFactory = require('./ContractFactory');
 
-module.exports = class FederationFactory {
+module.exports = class FederationFactory extends ContractFactory {
 
     constructor(config, logger, Web3) {
-        this.config = config;
-        this.logger = logger;
-        this.mainWeb3 = new Web3(config.mainchain.host);
-        this.sideWeb3 = new Web3(config.sidechain.host);
+        super(config, logger, Web3)
+        this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
+        this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
     }
 
     async createInstance(web3, address) {
-        let federationContract = new web3.eth.Contract(abiFederationNew, address);
+        let federationContract = this.getContractByAbi(abiFederationNew, address, web3);
         const version = await this.getVersion(federationContract);
 
         if (version === 'v2') {
-            federationContract = new web3.eth.Contract(abiFederationNew, address);
             return new FederationInterfaceV2(this.config, federationContract);
         } else if (version === 'v1') {
-            federationContract = new web3.eth.Contract(abiFederationOld, address);
+            federationContract = this.getContractByAbi(abiFederationOld, address, web3);
             return new FederationInterfaceV1(this.config, federationContract);
         } else {
             throw Error('Unknown Federation contract version');
@@ -40,8 +39,7 @@ module.exports = class FederationFactory {
 
     async getMainFederationContract() {
         try {
-            const bridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-            const federationAddress = await utils.retry3Times(bridgeContract.methods.getFederation().call);
+            const federationAddress = await utils.retry3Times(this.mainChainBridgeContract.methods.getFederation().call);
             return await this.createInstance(
                 this.mainWeb3,
                 federationAddress
@@ -53,8 +51,7 @@ module.exports = class FederationFactory {
 
     async getSideFederationContract() {
         try {
-            const bridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
-            const federationAddress = await utils.retry3Times(bridgeContract.methods.getFederation().call);
+            const federationAddress = await utils.retry3Times(this.sideChainBridgeContract.methods.getFederation().call);
             return await this.createInstance(
                 this.sideWeb3,
                 federationAddress
