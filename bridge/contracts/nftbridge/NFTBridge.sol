@@ -29,6 +29,7 @@ import "./ISideNFTTokenFactory.sol";
 import "../interface/IAllowTokens.sol";
 import "../interface/IWrapped.sol";
 
+// solhint-disable-next-line max-states-count
 contract NFTBridge is
   Initializable,
   INFTBridge,
@@ -42,7 +43,7 @@ contract NFTBridge is
 
   address internal constant NULL_ADDRESS = address(0);
   bytes32 internal constant NULL_HASH = bytes32(0);
-  IERC1820Registry internal constant erc1820 =
+  IERC1820Registry internal constant ERC1820 =
       IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
   address internal federation;
@@ -59,15 +60,15 @@ contract NFTBridge is
   ISideNFTTokenFactory public sideTokenFactory;
   //Bridge_v1 variables
   bool public isUpgrading;
-  uint256 public constant feePercentageDivider = 10000; // Porcentage with up to 2 decimals
+  uint256 public constant FEE_PERCENTAGE_DIVIDER = 10000; // Porcentage with up to 2 decimals
   //Bridge_v3 variables
-  bytes32 internal constant _erc777Interface = keccak256("ERC777Token");
+  bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
   IWrapped public wrappedCurrency;
   mapping(bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
   mapping(bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
   mapping(bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
-  bytes32 public DOMAIN_SEPARATOR;
+  bytes32 public domainSeparator;
   // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
   bytes32 public constant CLAIM_TYPEHASH =
       0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
@@ -93,7 +94,7 @@ contract NFTBridge is
     sideTokenFactory = ISideNFTTokenFactory(_sideTokenFactory);
     federation = _federation;
     //keccak256("ERC777TokensRecipient")
-    erc1820.setInterfaceImplementer(
+    ERC1820.setInterfaceImplementer(
       address(this),
       0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b,
       address(this)
@@ -119,7 +120,7 @@ contract NFTBridge is
     assembly {
       chainId := chainid()
     }
-    DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+    domainSeparator = LibEIP712.hashEIP712Domain(
       "RSK Token Bridge",
       "1",
       chainId,
@@ -239,7 +240,7 @@ contract NFTBridge is
     uint256 _deadline
   ) internal returns (bytes32) {
     return LibEIP712.hashEIP712Message(
-      DOMAIN_SEPARATOR,
+      domainSeparator,
       keccak256(
         abi.encode(
           CLAIM_TYPEHASH,
@@ -265,6 +266,7 @@ contract NFTBridge is
     bytes32 _r,
     bytes32 _s
   ) external override returns (uint256 receivedAmount) {
+    // solhint-disable-next-line not-rely-on-time
     require(_deadline >= block.timestamp, "Bridge: EXPIRED");
 
     bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
@@ -297,9 +299,8 @@ contract NFTBridge is
       _claimData.logIndex
     );
     require(
-        transactionsDataHashes[_claimData.transactionHash] ==
-            transactionDataHash,
-        "Bridge: Wrong transactionDataHash"
+      transactionsDataHashes[_claimData.transactionHash] == transactionDataHash,
+      "Bridge: Wrong txDataHash"
     );
     require(!claimed[transactionDataHash], "Bridge: Already claimed");
 
@@ -336,13 +337,15 @@ contract NFTBridge is
     return receivedAmount;
   }
 
+
   function _claimCrossToSideToken(
     address _originalTokenAddress,
     address payable _receiver,
     uint256 _amount,
     address payable _relayer,
     uint256 _fee
-  ) internal returns (uint256 receivedAmount) {
+  ) internal returns (uint256 receivedAmount) { // solhint-disable-line no-empty-blocks
+    // claim logic here
       // address sideToken = mappedTokens[_originalTokenAddress];
       // uint256 granularity = IERC777(sideToken).granularity();
       // uint256 formattedAmount = _amount.mul(granularity);
@@ -457,7 +460,7 @@ contract NFTBridge is
 
   function setFeePercentage(uint256 amount) external onlyOwner {
     require(
-        amount < (feePercentageDivider / 10),
+        amount < (FEE_PERCENTAGE_DIVIDER / 10),
         "Bridge: bigger than 10%"
     );
     feePercentage = amount;
@@ -487,7 +490,7 @@ contract NFTBridge is
   function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
     require(
       newSideTokenFactory != NULL_ADDRESS,
-      "Bridge: SideTokenFactory is empty"
+      "Bridge: SideTokenFactory empty"
     );
     sideTokenFactory = ISideNFTTokenFactory(newSideTokenFactory);
     emit SideTokenFactoryChanged(newSideTokenFactory);
@@ -523,4 +526,5 @@ contract NFTBridge is
   ) public virtual override returns (bytes4) {
     return this.onERC721Received.selector;
   }
+
 }
