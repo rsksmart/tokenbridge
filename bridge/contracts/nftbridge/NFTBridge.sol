@@ -420,9 +420,6 @@ contract NFTBridge is
     uint256 tokenId
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
     knownTokens[tokenAddress] = true;
-    // We consider the amount before fees converted to 18 decimals to check the limits
-    // updateTokenTransfer revert if token not allowed
-    allowTokens.updateTokenTransfer(tokenAddress, tokenId);
 
     IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
