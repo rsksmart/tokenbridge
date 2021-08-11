@@ -46,7 +46,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
-    uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
+    uint256 constant public feePercentageDivider = 10000; // Percentage with up to 2 decimals
     bool private alreadyRun;
 
     event FederationChanged(address _newFederation);
