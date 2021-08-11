@@ -60,7 +60,7 @@ contract NFTBridge is
   ISideNFTTokenFactory public sideTokenFactory;
   //Bridge_v1 variables
   bool public isUpgrading;
-  uint256 public constant FEE_PERCENTAGE_DIVIDER = 10000; // Porcentage with up to 2 decimals
+  uint256 public constant FEE_PERCENTAGE_DIVIDER = 10000; // Percentage with up to 2 decimals
   //Bridge_v3 variables
   bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
   IWrapped public wrappedCurrency;
