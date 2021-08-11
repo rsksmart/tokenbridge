@@ -16,7 +16,7 @@ contract SideToken is ISideToken, ERC777 {
     uint256 private _granularity;
 
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
-    bytes32 public DOMAIN_SEPARATOR;
+    bytes32 public DOMAIN_SEPARATOR; // solhint-disable-line var-name-mixedcase
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public nonces;
@@ -45,8 +45,8 @@ contract SideToken is ISideToken, ERC777 {
     }
 
     modifier onlyMinter() {
-        require(_msgSender() == minter, "SideToken: Caller is not the minter");
-        _;
+      require(_msgSender() == minter, "SideToken: Caller not minter");
+      _;
     }
 
     function mint(
@@ -83,7 +83,7 @@ contract SideToken is ISideToken, ERC777 {
 
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        require(deadline >= block.timestamp, "SideToken: EXPIRED");
+        require(deadline >= block.timestamp, "SideToken: EXPIRED"); // solhint-disable-line not-rely-on-time
         bytes32 digest = LibEIP712.hashEIP712Message(
             DOMAIN_SEPARATOR,
             keccak256(
