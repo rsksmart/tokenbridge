@@ -1,4 +1,4 @@
-const MainTokenNFTerc721 = artifacts.require("./MainTokenNFTerc721");
+const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
 const NftBridge = artifacts.require("./NFTBridge");
 const AllowTokens = artifacts.require("./AllowTokens");
 const SideTokenFactory = artifacts.require("./SideTokenFactory");
@@ -27,10 +27,10 @@ contract("Bridge NFT", async function(accounts) {
   });
 
   beforeEach(async function() {
-    this.nft = await MainTokenNFTerc721.new(tokenName, tokenSymbol, {
+    this.token = await NFTERC721TestToken.new(tokenName, tokenSymbol, {
       from: tokenOwner,
     });
-    this.nft.setBaseURI(tokenBaseURI);
+    this.token.setBaseURI(tokenBaseURI);
 
     this.allowTokens = await AllowTokens.new();
     await this.allowTokens.methods[
@@ -49,7 +49,7 @@ contract("Bridge NFT", async function(accounts) {
     ]);
 
     this.typeId = 0;
-    await this.allowTokens.setToken(this.nft.address, this.typeId, {
+    await this.allowTokens.setToken(this.token.address, this.typeId, {
       from: bridgeManager,
     });
 
@@ -72,29 +72,29 @@ contract("Bridge NFT", async function(accounts) {
     });
   });
 
-  describe("Main network", async function() {
-    describe("receiveTokensNFT", async function() {
-      it("receiveTokens NFT ERC 721", async function() {
+  describe("Main NFT network", async function() {
+    describe("receiveTokensTo", async function() {
+      it("receives ERC721 NFT correctly", async function() {
         const tokenId = 9;
         const tokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
         let totalSupply = 0; // is the amount of nft minted
 
-        let receipt = await this.nft.safeMint(tokenOwner, tokenId, {
+        let receipt = await this.token.safeMint(tokenOwner, tokenId, {
           from: tokenOwner,
         });
         utils.checkRcpt(receipt);
         totalSupply++;
 
-        receipt = await this.nft.setTokenURI(tokenId, tokenURI);
+        receipt = await this.token.setTokenURI(tokenId, tokenURI);
         utils.checkRcpt(receipt);
 
-        receipt = await this.nft.approve(this.bridgeNft.address, tokenId, {
+        receipt = await this.token.approve(this.bridgeNft.address, tokenId, {
           from: tokenOwner,
         });
         utils.checkRcpt(receipt);
 
         receipt = await this.bridgeNft.receiveTokensTo(
-          this.nft.address,
+          this.token.address,
           anAccount,
           tokenId,
           { from: tokenOwner }
@@ -105,7 +105,7 @@ contract("Bridge NFT", async function(accounts) {
           console.log(ev);
 
           return (
-            ev._tokenAddress == this.nft.address &&
+            ev._tokenAddress == this.token.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
             ev._tokenCreator == tokenOwner &&
