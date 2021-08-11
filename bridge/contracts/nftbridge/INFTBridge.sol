@@ -16,10 +16,6 @@ interface INFTBridge {
 
   function getFeePercentage() external view returns (uint256);
 
-  /**
-    * ERC-20 tokens approve and transferFrom pattern
-    * See https://eips.ethereum.org/EIPS/eip-20#transferfrom
-    */
   function receiveTokensTo(
     address tokenAddress,
     address to,
