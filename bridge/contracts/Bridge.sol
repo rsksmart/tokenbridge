@@ -478,7 +478,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
     function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
-        require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory empty");
+        require(newSideTokenFactory != NULL_ADDRESS, "Bridge: empty SideTokenFactory");
         sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
     }
