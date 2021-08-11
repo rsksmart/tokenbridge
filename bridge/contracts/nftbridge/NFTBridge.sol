@@ -490,7 +490,7 @@ contract NFTBridge is
   function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
     require(
       newSideTokenFactory != NULL_ADDRESS,
-      "Bridge: SideTokenFactory empty"
+      "Bridge: empty SideTokenFactory"
     );
     sideTokenFactory = ISideNFTTokenFactory(newSideTokenFactory);
     emit SideTokenFactoryChanged(newSideTokenFactory);
