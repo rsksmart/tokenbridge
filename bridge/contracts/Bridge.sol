@@ -52,7 +52,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
-    // Porcentage with up to 2 decimals
+    // Percentage with up to 2 decimals
     uint256 constant public feePercentageDivider = 10000; // solhint-disable-line const-name-snakecase
     //Bridge_v3 variables
     bytes32 constant internal _erc777Interface = keccak256("ERC777Token"); // solhint-disable-line const-name-snakecase
