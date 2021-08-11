@@ -67,8 +67,8 @@ contract Federation is Initializable, UpgradableOwnable {
         _;
     }
 
-    function initialize(address[] memory _members, uint _required, address _bridge, address owner)
-    validRequirement(_members.length, _required) public initializer {
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner) public
+    validRequirement(_members.length, _required) initializer {
         UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
@@ -209,7 +209,7 @@ contract Federation is Initializable, UpgradableOwnable {
     function addMember(address _newMember) external onlyOwner
     {
         require(_newMember != NULL_ADDRESS, "Federation: Empty member");
-        require(!isMember[_newMember], "Federation: Member already exists");
+        require(!isMember[_newMember], "Federation: Member already exist");
         require(members.length < MAX_MEMBER_COUNT, "Federation: Max members reached");
 
         isMember[_newMember] = true;
@@ -220,9 +220,9 @@ contract Federation is Initializable, UpgradableOwnable {
     function removeMember(address _oldMember) external onlyOwner
     {
         require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
-        require(isMember[_oldMember], "Federation: Member doesn't exists");
-        require(members.length > 1, "Federation: Can't remove all the members");
-        require(members.length - 1 >= required, "Federation: Can't have less than required members");
+        require(isMember[_oldMember], "Federation: Member not exists");
+        require(members.length > 1, "Federation: Must have one member");
+        require(members.length - 1 >= required, "Federation: members < required");
 
         isMember[_oldMember] = false;
         for (uint i = 0; i < members.length - 1; i++) {
