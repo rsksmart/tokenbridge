@@ -114,11 +114,11 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
     }
 
     function _setTypeLimits(uint256 typeId, Limits memory limits) private {
-        require(typeId < typeDescriptions.length, "AllowTokens: > typeDescriptions");
-        require(limits.max >= limits.min, "AllowTokens: Tokens max < min");
-        require(limits.daily >= limits.max, "AllowTokens: daily < maxTokens");
-        require(limits.mediumAmount > limits.min, "AllowTokens: mediumAmount < min");
-        require(limits.largeAmount > limits.mediumAmount, "AllowTokens: large < medium");
+        require(typeId < typeDescriptions.length, "AllowTokens: bigger than typeDescriptions");
+        require(limits.max >= limits.min, "AllowTokens: maxTokens smaller than minTokens");
+        require(limits.daily >= limits.max, "AllowTokens: dailyLimit smaller than maxTokens");
+        require(limits.mediumAmount > limits.min, "AllowTokens: limits.mediumAmount smaller than min");
+        require(limits.largeAmount > limits.mediumAmount, "AllowTokens: limits.largeAmount smaller than mediumAmount");
         typeLimits[typeId] = limits;
         emit TypeLimitsChanged(typeId, limits);
     }
@@ -153,7 +153,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     function setToken(address token, uint256 typeId) override public notNull(token) {
         require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
-        require(typeId < typeDescriptions.length, "AllowTokens: typeId not exist");
+        require(typeId < typeDescriptions.length, "AllowTokens: typeId does not exist");
         TokenInfo memory info = allowedTokens[token];
         info.allowed = true;
         info.typeId = typeId;
@@ -187,8 +187,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         uint256 _smallAmountConfirmations,
         uint256 _mediumAmountConfirmations,
         uint256 _largeAmountConfirmations) private {
-        require(_smallAmountConfirmations <= _mediumAmountConfirmations, "AllowTokens: conf small > medium");
-        require(_mediumAmountConfirmations <= _largeAmountConfirmations, "AllowTokens: conf medium > large");
+        require(_smallAmountConfirmations <= _mediumAmountConfirmations, "AllowTokens: small bigger than medium confirmations");
+        require(_mediumAmountConfirmations <= _largeAmountConfirmations, "AllowTokens: medium bigger than large confirmations");
         smallAmountConfirmations = _smallAmountConfirmations;
         mediumAmountConfirmations = _mediumAmountConfirmations;
         largeAmountConfirmations = _largeAmountConfirmations;
