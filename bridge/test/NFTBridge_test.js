@@ -13,6 +13,7 @@ contract("Bridge NFT", async function(accounts) {
   const tokenOwner = accounts[1];
   const bridgeManager = accounts[2];
   const anAccount = accounts[3];
+  const newBridgeManager = accounts[4];
   const federation = accounts[5];
   const tokenName = "The Drops";
   const tokenSymbol = "drop";
@@ -77,6 +78,58 @@ contract("Bridge NFT", async function(accounts) {
   });
 
   describe("Main NFT network", async function() {
+
+    it('should retrieve the version', async function () {
+      const result = await this.bridgeNft.version();
+      assert.equal(result, "v1");
+    });
+
+    describe("owner", async function() {
+
+      it('check manager', async function () {
+        const manager = await this.bridgeNft.owner();
+        assert.equal(manager, bridgeManager);
+      });
+
+      it('change manager', async function () {
+        const receipt = await this.bridgeNft.transferOwnership(newBridgeManager, { from: bridgeManager });
+        utils.checkRcpt(receipt);
+        const manager = await this.bridgeNft.owner();
+        assert.equal(manager, newBridgeManager);
+      });
+
+      it('only manager can change manager', async function () {
+        await utils.expectThrow(this.bridgeNft.transferOwnership(newBridgeManager));
+        const manager = await this.bridgeNft.owner();
+        assert.equal(manager, bridgeManager);
+      });
+
+      it('check federation', async function () {
+        const federationAddress = await this.bridgeNft.getFederation();
+        assert.equal(federationAddress, federation);
+      });
+
+      it('change federation', async function () {
+        const receipt = await this.bridgeNft.changeFederation(newBridgeManager, { from: bridgeManager });
+        utils.checkRcpt(receipt);
+        const federationAddress = await this.bridgeNft.getFederation();
+        assert.equal(federationAddress, newBridgeManager);
+      });
+
+      it('only manager can change the federation', async function () {
+        await utils.expectThrow(this.bridgeNft.changeFederation(newBridgeManager));
+        const federationAddress = await this.bridgeNft.getFederation();
+        assert.equal(federationAddress, federation);
+      });
+
+      it('change federation new fed cant be null', async function () {
+        await utils.expectThrow(this.bridgeNft.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }));
+        const federationAddress = await this.bridgeNft.getFederation();
+        assert.equal(federationAddress, federation);
+      });
+
+    });
+
     describe("receiveTokensTo", async function() {
       it("receives ERC721 NFT correctly", async function() {
         const tokenId = 9;
