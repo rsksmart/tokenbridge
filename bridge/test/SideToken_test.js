@@ -187,7 +187,7 @@ contract('SideToken', async function (accounts) {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
             await expectThrow(this.token.transferAndCall('0x', 400, '0x', { from: anAccount }));
         });
-        
+
         it('transferAndCalls to contract', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
 
@@ -331,11 +331,11 @@ contract('SideToken', async function (accounts) {
             assert.equal(PERMIT_TYPEHASH, expectedTypeHash);
         });
 
-        it('should have DOMAIN_SEPARATOR', async function() {
+        it('should have domainSeparator', async function() {
             const name = await this.token.name();
             // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
             const chainId = '1';
-            
+
             const expectedTypeHash = keccak256(
                 web3.eth.abi.encodeParameters(
                     ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -348,7 +348,7 @@ contract('SideToken', async function (accounts) {
                     ]
                 )
             )
-            const DOMAIN_SEPARATOR = await this.token.DOMAIN_SEPARATOR();
+            const DOMAIN_SEPARATOR = await this.token.domainSeparator();
             assert.equal(DOMAIN_SEPARATOR, expectedTypeHash);
         });
 
@@ -359,7 +359,7 @@ contract('SideToken', async function (accounts) {
             deadline
           ) {
             const PERMIT_TYPEHASH = await token.PERMIT_TYPEHASH();
-            const DOMAIN_SEPARATOR = await token.DOMAIN_SEPARATOR();
+            const DOMAIN_SEPARATOR = await token.domainSeparator();
             return web3.utils.soliditySha3(
                 {t:'bytes1', v:'0x19'},
                 {t:'bytes1', v:'0x01'},
@@ -392,7 +392,7 @@ contract('SideToken', async function (accounts) {
 
             const receipt = await this.token.permit(
                 accountWallet.address,
-                anotherAccount, 
+                anotherAccount,
                 amount,
                 deadline,
                 v,
@@ -428,7 +428,7 @@ contract('SideToken', async function (accounts) {
 
             await utils.expectThrow(this.token.permit(
                     accountWallet.address,
-                    anotherAccount, 
+                    anotherAccount,
                     amount,
                     deadline,
                     v,
@@ -456,7 +456,7 @@ contract('SideToken', async function (accounts) {
 
             await this.token.permit(
                 accountWallet.address,
-                anotherAccount, 
+                anotherAccount,
                 amount,
                 deadline,
                 v,
@@ -467,7 +467,7 @@ contract('SideToken', async function (accounts) {
             await utils.expectThrow(
                 this.token.permit(
                     accountWallet.address,
-                    anotherAccount, 
+                    anotherAccount,
                     amount,
                     deadline,
                     v,
@@ -495,7 +495,7 @@ contract('SideToken', async function (accounts) {
 
             await utils.expectThrow(this.token.permit(
                     accountWallet.address,
-                    anotherAccount, 
+                    anotherAccount,
                     amount,
                     deadline,
                     v,
