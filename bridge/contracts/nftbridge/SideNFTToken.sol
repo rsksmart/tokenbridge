@@ -43,7 +43,7 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
     }
 
     modifier onlyMinter() {
-        require(_msgSender() == minter, "SideToken: Caller not minter");
+        require(_msgSender() == minter, "SideToken: Caller is not the minter");
         _;
     }
 
@@ -79,7 +79,7 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
                 )
             );
         address owner = ownerOf(tokenId);
-        require(spender != owner, "ERC721Permit: approval to owner");
+        require(spender != owner, "ERC721Permit: approval to current owner");
 
         if (Address.isContract(owner)) {
             require(IERC1271(owner).isValidSignature(digest, abi.encodePacked(r, s, v)) == 0x1626ba7e, "Unauthorized");
