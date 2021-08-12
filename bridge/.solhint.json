@@ -4,7 +4,7 @@
       "func-order": "off",
       "mark-callable-contracts": "off",
       "compiler-version": "off",
-      "reason-string": "warn",
+      "reason-string": ["warn", { "maxLength": 64 }],
       "no-inline-assembly": "off",
       "func-visibility": ["error", { "ignoreConstructors": true }]
     }
