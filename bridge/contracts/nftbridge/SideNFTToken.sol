@@ -11,12 +11,12 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
     using Address for address;
     using SafeMath for uint256;
 
-    mapping(uint256 => uint256) _nonces;
+    mapping(uint256 => uint256) public _nonces;
 
     address public minter;
 
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
-    bytes32 public DOMAIN_SEPARATOR;
+    bytes32 public domainSeparator;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public nonces;
@@ -34,7 +34,7 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
         assembly {
             chainId := chainid()
         }
-        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+        domainSeparator = LibEIP712.hashEIP712Domain(
             name(),
             "1",
             chainId,
@@ -68,13 +68,13 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
         bytes32 r,
         bytes32 s
     ) external payable {
-        require(block.timestamp <= deadline, "Permit expired");
+        require(block.timestamp <= deadline, "Permit expired"); // solhint-disable-line not-rely-on-time
 
         bytes32 digest =
             keccak256(
                 abi.encodePacked(
                     "\x19\x01",
-                    DOMAIN_SEPARATOR,
+                    domainSeparator,
                     keccak256(abi.encode(PERMIT_TYPEHASH, spender, tokenId, _getAndIncrementNonce(tokenId), deadline))
                 )
             );
