@@ -111,7 +111,7 @@ contract NFTBridge is
   }
 
   function version() external pure override returns (string memory) {
-    return "v3";
+    return "v1";
   }
 
   function initDomainSeparator() public {
