@@ -25,7 +25,7 @@ async function getClaimDigest(
     deadline
 ) {
     const CLAIM_TYPEHASH = await bridge.CLAIM_TYPEHASH();
-    const DOMAIN_SEPARATOR = await bridge.DOMAIN_SEPARATOR();
+    const DOMAIN_SEPARATOR = await bridge.domainSeparator();
 
     return web3.utils.soliditySha3(
         {t:'bytes1', v:'0x19'},
@@ -1339,7 +1339,7 @@ contract('Bridge', async function (accounts) {
                     const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
                 });
-                
+
             });
 
             describe('claim gasless', async function() {
@@ -1368,7 +1368,7 @@ contract('Bridge', async function (accounts) {
                     assert.equal(CLAIM_TYPEHASH, expectedTypeHash);
                 });
 
-                it('should have DOMAIN_SEPARATOR', async function() {
+                it('should have domainSeparator', async function() {
                     // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
                     const chainId = await web3.eth.getChainId();
 
@@ -1384,7 +1384,7 @@ contract('Bridge', async function (accounts) {
                             ]
                         )
                     )
-                    const DOMAIN_SEPARATOR = await this.mirrorBridge.DOMAIN_SEPARATOR();
+                    const DOMAIN_SEPARATOR = await this.mirrorBridge.domainSeparator();
                     assert.equal(DOMAIN_SEPARATOR, expectedTypeHash);
                 });
 
@@ -1402,7 +1402,7 @@ contract('Bridge', async function (accounts) {
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.gaslessTxHash);
                     assert.equal(obtainedTransactionDataHash, transactionDataHash);
-                    
+
                     const relayer = federation;
                     const fee = '11';
                     const nonce = (await this.mirrorBridge.nonces(this.accountWallet.address)).toString();
@@ -1420,7 +1420,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.mirrorBridge.claimGasless(
@@ -1474,7 +1474,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1515,7 +1515,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1556,7 +1556,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1597,7 +1597,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1638,7 +1638,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1679,7 +1679,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1720,7 +1720,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     await utils.expectThrow(
@@ -1742,7 +1742,7 @@ contract('Bridge', async function (accounts) {
                         )
                     );
                 });
-                
+
             }); // end claim gasless
 
             it('crossback with amount lower than granularity', async function () {
@@ -2053,7 +2053,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.bridge.claimGasless(
@@ -2105,7 +2105,7 @@ contract('Bridge', async function (accounts) {
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const originalToBalance = await web3.eth.getBalance(this.accountWallet.address);
