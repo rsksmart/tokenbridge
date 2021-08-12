@@ -220,9 +220,9 @@ contract Federation is Initializable, UpgradableOwnable {
     function removeMember(address _oldMember) external onlyOwner
     {
         require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
-        require(isMember[_oldMember], "Federation: Member not exists");
-        require(members.length > 1, "Federation: Must have one member");
-        require(members.length - 1 >= required, "Federation: members < required");
+        require(isMember[_oldMember], "Federation: Member doesn't exists");
+        require(members.length > 1, "Federation: Can't remove all the members");
+        require(members.length - 1 >= required, "Federation: Can't have less than required members");
 
         isMember[_oldMember] = false;
         for (uint i = 0; i < members.length - 1; i++) {
