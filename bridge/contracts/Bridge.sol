@@ -41,7 +41,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     uint256 internal feePercentage;
     string public symbolPrefix;
     // replaces uint256 internal _depprecatedLastDay;
-    bytes32 public DOMAIN_SEPARATOR; // solhint-disable-line var-name-mixedcase
+    bytes32 public domainSeparator;
     uint256 internal _deprecatedSpentToday;
 
     mapping (address => address) public mappedTokens; // OirignalToken => SideToken
@@ -104,7 +104,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         assembly {
             chainId := chainid()
         }
-        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+        domainSeparator = LibEIP712.hashEIP712Domain(
             "RSK Token Bridge",
             "1",
             chainId,
@@ -218,7 +218,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint256 _deadline
     ) internal returns (bytes32) {
         return LibEIP712.hashEIP712Message(
-            DOMAIN_SEPARATOR,
+            domainSeparator,
             keccak256(
                 abi.encode(
                     CLAIM_TYPEHASH,
