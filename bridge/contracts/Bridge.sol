@@ -27,7 +27,7 @@ import "./interface/ISideTokenFactory.sol";
 import "./interface/IAllowTokens.sol";
 import "./interface/IWrapped.sol";
 
-
+// solhint-disable-next-line max-states-count
 contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -35,12 +35,13 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
     address constant internal NULL_ADDRESS = address(0);
     bytes32 constant internal NULL_HASH = bytes32(0);
-    IERC1820Registry constant internal erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry constant internal ERC1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address internal federation;
     uint256 internal feePercentage;
     string public symbolPrefix;
-    bytes32 public DOMAIN_SEPARATOR; // replaces uint256 internal _depprecatedLastDay;
+    // replaces uint256 internal _depprecatedLastDay;
+    bytes32 public domainSeparator;
     uint256 internal _deprecatedSpentToday;
 
     mapping (address => address) public mappedTokens; // OirignalToken => SideToken
@@ -51,9 +52,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
-    uint256 constant public feePercentageDivider = 10000; // Porcentage with up to 2 decimals
+    // Percentage with up to 2 decimals
+    uint256 constant public feePercentageDivider = 10000; // solhint-disable-line const-name-snakecase
     //Bridge_v3 variables
-    bytes32 constant internal _erc777Interface = keccak256("ERC777Token");
+    bytes32 constant internal _erc777Interface = keccak256("ERC777Token"); // solhint-disable-line const-name-snakecase
     IWrapped public wrappedCurrency;
     mapping (bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
     mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
@@ -83,7 +85,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
         federation = _federation;
         //keccak256("ERC777TokensRecipient")
-        erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
+        ERC1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
         initDomainSeparator();
     }
 
@@ -102,7 +104,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         assembly {
             chainId := chainid()
         }
-        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+        domainSeparator = LibEIP712.hashEIP712Domain(
             "RSK Token Bridge",
             "1",
             chainId,
@@ -216,7 +218,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         uint256 _deadline
     ) internal returns (bytes32) {
         return LibEIP712.hashEIP712Message(
-            DOMAIN_SEPARATOR,
+            domainSeparator,
             keccak256(
                 abi.encode(
                     CLAIM_TYPEHASH,
@@ -242,7 +244,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         bytes32 _r,
         bytes32 _s
     ) external override returns (uint256 receivedAmount) {
-        require(_deadline >= block.timestamp, "Bridge: EXPIRED");
+        require(_deadline >= block.timestamp, "Bridge: EXPIRED"); // solhint-disable-line not-rely-on-time
 
         bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
         address recoveredAddress = ecrecover(digest, _v, _r, _s);
@@ -392,7 +394,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
-        require(erc1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
+        require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
         require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
         address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
         crossTokens(tokenToUse, from, receiver, amount, userData);

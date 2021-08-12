@@ -68,7 +68,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
     function _calcMaxWithdraw(TokenInfo memory info, Limits memory limits) private view returns (uint256 maxWithdraw) {
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > info.lastDay + 24 hours) {
+        if (block.timestamp > info.lastDay + 24 hours) { // solhint-disable-line not-rely-on-time
             info.spentToday = 0;
         }
         if (limits.daily <= info.spentToday)
@@ -86,9 +86,9 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
         require(amount >= limit.min, "AllowTokens: Lower than limit");
 
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > info.lastDay + 24 hours) {
+        if (block.timestamp > info.lastDay + 24 hours) { // solhint-disable-line not-rely-on-time
             // solium-disable-next-line security/no-block-members
-            info.lastDay = block.timestamp;
+            info.lastDay = block.timestamp; // solhint-disable-line not-rely-on-time
             info.spentToday = 0;
         }
         uint maxWithdraw = _calcMaxWithdraw(info, limit);

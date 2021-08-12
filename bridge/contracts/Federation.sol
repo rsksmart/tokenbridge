@@ -67,8 +67,8 @@ contract Federation is Initializable, UpgradableOwnable {
         _;
     }
 
-    function initialize(address[] memory _members, uint _required, address _bridge, address owner)
-    validRequirement(_members.length, _required) public initializer {
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner) public
+    validRequirement(_members.length, _required) initializer {
         UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
