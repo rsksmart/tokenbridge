@@ -24,11 +24,15 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
     // ERC677 Transfer Event
     event Transfer(address,address,uint256,bytes);
 
-    constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr)
-    ERC721(_tokenName, _tokenSymbol) {
-        require(_minterAddr != address(0), "SideToken: Empty Minter");
-        minter = _minterAddr;
+    constructor(string memory _name, string memory _symbol, address _minter, string memory _baseURI)
+    ERC721(_name, _symbol) {
+        require(_minter != address(0), "SideToken: Empty Minter");
+        minter = _minter;
+        _setBaseURI(_baseURI);
+        _setDomainSeparator();
+    }
 
+    function _setDomainSeparator() internal {
         uint chainId;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
