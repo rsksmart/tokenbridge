@@ -395,7 +395,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         require(to == address(this), "Bridge: Not to this address");
         address tokenToUse = _msgSender();
         require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-        require(userData.length != 0 || !from.isContract(), "Bridge: Receiver not in userData");
+        require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
         address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
         crossTokens(tokenToUse, from, receiver, amount, userData);
     }
@@ -478,7 +478,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
     function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
-        require(newSideTokenFactory != NULL_ADDRESS, "Bridge: empty SideTokenFactory");
+        require(newSideTokenFactory != NULL_ADDRESS, "Bridge: SideTokenFactory is empty");
         sideTokenFactory = ISideTokenFactory(newSideTokenFactory);
         emit SideTokenFactoryChanged(newSideTokenFactory);
     }
