@@ -45,7 +45,7 @@ contract SideToken is ISideToken, ERC777 {
     }
 
     modifier onlyMinter() {
-      require(_msgSender() == minter, "SideToken: Caller not minter");
+      require(_msgSender() == minter, "SideToken: Caller is not the minter");
       _;
     }
 
