@@ -275,7 +275,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
             _claimData.transactionHash,
             _claimData.logIndex
         );
-        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong txDataHash");
+        require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong transactionDataHash");
         require(!claimed[transactionDataHash], "Bridge: Already claimed");
 
         claimed[transactionDataHash] = true;
