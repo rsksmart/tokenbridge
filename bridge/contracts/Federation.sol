@@ -209,7 +209,7 @@ contract Federation is Initializable, UpgradableOwnable {
     function addMember(address _newMember) external onlyOwner
     {
         require(_newMember != NULL_ADDRESS, "Federation: Empty member");
-        require(!isMember[_newMember], "Federation: Member already exist");
+        require(!isMember[_newMember], "Federation: Member already exists");
         require(members.length < MAX_MEMBER_COUNT, "Federation: Max members reached");
 
         isMember[_newMember] = true;
