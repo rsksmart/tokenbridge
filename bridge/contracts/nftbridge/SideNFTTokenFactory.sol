@@ -8,10 +8,10 @@ import "./SideNFTToken.sol";
 
 contract SideNFTTokenFactory is ISideNFTTokenFactory, Secondary {
 
-    function createSideNFTToken(string calldata name, string calldata symbol)
-    external onlyPrimary override returns(address) {
-        address sideToken = address(new SideNFTToken(name, symbol, primary()));
-        emit SideNFTTokenCreated(sideToken, symbol);
-        return sideToken;
+    function createSideNFTToken(string calldata name, string calldata symbol, string calldata baseURI,
+        string calldata contractURI) external onlyPrimary override returns(address) {
+        address sideTokenAddress = address(new SideNFTToken(name, symbol, primary(), baseURI, contractURI));
+        emit SideNFTTokenCreated(sideTokenAddress, symbol, baseURI, contractURI);
+        return sideTokenAddress;
     }
 }
