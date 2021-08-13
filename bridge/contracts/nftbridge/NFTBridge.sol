@@ -76,7 +76,7 @@ contract NFTBridge is
 
   event AllowTokensChanged(address _newAllowTokens);
   event FederationChanged(address _newFederation);
-  event SideTokenFactoryChanged(address _newSideTokenFactory);
+  event SideTokenFactoryChanged(address _newSideNFTTokenFactory);
   event Upgrading(bool _isUpgrading);
   event WrappedCurrencyChanged(address _wrappedCurrency);
 
@@ -187,7 +187,8 @@ contract NFTBridge is
     address _originalTokenAddress,
     string calldata _originalTokenSymbol,
     string calldata _originalTokenName,
-    string calldata _baseURI
+    string calldata _baseURI,
+    string calldata _contractURI
   ) external onlyOwner {
     require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null original token address");
     address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[_originalTokenAddress];
@@ -195,11 +196,11 @@ contract NFTBridge is
     string memory sideTokenSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
     // Create side token
-    sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI);
+    sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI, _contractURI);
 
     sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] = sideTokenAddress;
     originalTokenAddressBySideTokenAddress[sideTokenAddress] = _originalTokenAddress;
-    emit NewSideToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol);
+    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol);
   }
 
   function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
@@ -480,13 +481,13 @@ contract NFTBridge is
     return federation;
   }
 
-  function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
+  function changeSideTokenFactory(address newSideNFTTokenFactory) external onlyOwner {
     require(
-      newSideTokenFactory != NULL_ADDRESS,
+      newSideNFTTokenFactory != NULL_ADDRESS,
       "Bridge: empty SideTokenFactory"
     );
-    sideTokenFactory = ISideNFTTokenFactory(newSideTokenFactory);
-    emit SideTokenFactoryChanged(newSideTokenFactory);
+    sideTokenFactory = ISideNFTTokenFactory(newSideNFTTokenFactory);
+    emit SideTokenFactoryChanged(newSideNFTTokenFactory);
   }
 
   function setUpgrading(bool _isUpgrading) external onlyOwner {
