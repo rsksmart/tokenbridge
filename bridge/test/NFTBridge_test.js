@@ -99,7 +99,11 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it('only manager can change manager', async function () {
-        await utils.expectThrow(this.bridgeNft.transferOwnership(newBridgeManager));
+        truffleAssert.fails(
+          this.bridgeNft.transferOwnership(newBridgeManager),
+          truffleAssert.ErrorType.REVERT,
+          'Ownable: caller is not the owner',
+        );
         const manager = await this.bridgeNft.owner();
         assert.equal(manager, bridgeManager);
       });
@@ -117,13 +121,21 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it('only manager can change the federation', async function () {
-        await utils.expectThrow(this.bridgeNft.changeFederation(newBridgeManager));
+        truffleAssert.fails(
+          this.bridgeNft.changeFederation(newBridgeManager),
+          truffleAssert.ErrorType.REVERT,
+          'Ownable: caller is not the owner',
+        );
         const federationAddress = await this.bridgeNft.getFederation();
         assert.equal(federationAddress, federation);
       });
 
       it('change federation new fed cant be null', async function () {
-        await utils.expectThrow(this.bridgeNft.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }));
+        truffleAssert.fails(
+          this.bridgeNft.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }),
+          truffleAssert.ErrorType.REVERT,
+          'Bridge: Federation is empty',
+        );
         const federationAddress = await this.bridgeNft.getFederation();
         assert.equal(federationAddress, federation);
       });
