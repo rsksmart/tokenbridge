@@ -47,7 +47,7 @@ contract NFTBridge is
       IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
   address internal federation;
-  uint256 internal feePercentage;
+  uint256 internal fixedFee;
   string public symbolPrefix;
   uint256 internal _deprecatedLastDay;
   uint256 internal _deprecatedSpentToday;
@@ -60,7 +60,6 @@ contract NFTBridge is
   ISideNFTTokenFactory public sideTokenFactory;
   //Bridge_v1 variables
   bool public isUpgrading;
-  uint256 public constant FEE_PERCENTAGE_DIVIDER = 10000; // Percentage with up to 2 decimals
   //Bridge_v3 variables
   bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
   IWrapped public wrappedCurrency;
@@ -452,17 +451,13 @@ contract NFTBridge is
     );
   }
 
-  function setFeePercentage(uint256 amount) external onlyOwner {
-    require(
-        amount < (FEE_PERCENTAGE_DIVIDER / 10),
-        "Bridge: bigger than 10%"
-    );
-    feePercentage = amount;
-    emit FeePercentageChanged(feePercentage);
+  function setFixedFee(uint256 amount) external onlyOwner {
+    fixedFee = amount;
+    emit FixedFeeNFTChanged(fixedFee);
   }
 
-  function getFeePercentage() external view override returns (uint256) {
-    return feePercentage;
+  function getFixedFee() external view override returns (uint256) {
+    return fixedFee;
   }
 
   function changeFederation(address newFederation) external onlyOwner {
