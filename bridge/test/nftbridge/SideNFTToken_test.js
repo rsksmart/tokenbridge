@@ -9,23 +9,20 @@ contract("SideNFTToken", async function(accounts) {
   const tokenBaseURI = "ipfs:/";
   const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
 
-  beforeEach(async function() {
-    this.token = await SideToken.new(
-      tokenName,
-      tokenSymbol,
-      tokenCreator,
-      tokenBaseURI,
-      tokenContractURI
-    );
-  });
-
   describe("constructor", async function() {
     it("should create side token", async function() {
-      assert.isNotEmpty(this.token.address);
+      let token = await SideToken.new(
+        tokenName,
+        tokenSymbol,
+        tokenCreator,
+        tokenBaseURI,
+        tokenContractURI
+      );
+      assert.isNotEmpty(token.address);
     });
 
     it("should fail empty minter address", async function() {
-      truffleAssert.fails(
+      await truffleAssert.fails(
         SideToken.new(
           tokenName,
           tokenSymbol,
@@ -33,7 +30,7 @@ contract("SideNFTToken", async function(accounts) {
           tokenBaseURI,
           tokenContractURI
         ),
-        null,
+        "Empty Minter",
         "SideToken: Empty Minter"
       );
     });
