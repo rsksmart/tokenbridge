@@ -21,14 +21,21 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public nonces;
 
+    string private _contractURI;
+
     // ERC677 Transfer Event
     event Transfer(address,address,uint256,bytes);
 
-    constructor(string memory _tokenName, string memory _tokenSymbol, address _minterAddr)
-    ERC721(_tokenName, _tokenSymbol) {
-        require(_minterAddr != address(0), "SideToken: Empty Minter");
-        minter = _minterAddr;
+    constructor(string memory _name, string memory _symbol, address _minter, string memory _baseURI,
+        string memory contractURI_) ERC721(_name, _symbol) {
+        require(_minter != address(0), "SideToken: Empty Minter");
+        minter = _minter;
+        _setBaseURI(_baseURI);
+        _setContractURI(contractURI_);
+        _setDomainSeparator();
+    }
 
+    function _setDomainSeparator() internal {
         uint chainId;
         // solium-disable-next-line security/no-inline-assembly
         assembly {
@@ -41,6 +48,14 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
             address(this)
         );
     }
+
+    function _setContractURI(string memory contractURI_) internal {
+        _contractURI = contractURI_;
+    }
+
+    function contractURI() public view returns (string memory) {
+        return _contractURI;
+    } // TODO: test
 
     modifier onlyMinter() {
         require(_msgSender() == minter, "SideToken: Caller is not the minter");

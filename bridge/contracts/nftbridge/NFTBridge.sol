@@ -49,11 +49,11 @@ contract NFTBridge is
   address internal federation;
   uint256 internal feePercentage;
   string public symbolPrefix;
-  uint256 internal _depprecatedLastDay;
+  uint256 internal _deprecatedLastDay;
   uint256 internal _deprecatedSpentToday;
 
-  mapping(address => address) public mappedTokens; // OirignalToken => SideToken
-  mapping(address => address) public originalTokens; // SideToken => OriginalToken
+  mapping(address => address) public sideTokenAddressByOriginalTokenAddress;
+  mapping(address => address) public originalTokenAddressBySideTokenAddress;
   mapping(address => bool) public knownTokens; // OriginalToken => true
   mapping(bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
   IAllowTokens public allowTokens;
@@ -76,7 +76,7 @@ contract NFTBridge is
 
   event AllowTokensChanged(address _newAllowTokens);
   event FederationChanged(address _newFederation);
-  event SideTokenFactoryChanged(address _newSideTokenFactory);
+  event SideTokenFactoryChanged(address _newSideNFTTokenFactory);
   event Upgrading(bool _isUpgrading);
   event WrappedCurrencyChanged(address _wrappedCurrency);
 
@@ -145,7 +145,7 @@ contract NFTBridge is
     require(_msgSender() == federation, "Bridge: Not Federation");
     require(
       knownTokens[_originalTokenAddress] ||
-          mappedTokens[_originalTokenAddress] != NULL_ADDRESS,
+          sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] != NULL_ADDRESS,
       "Bridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "Bridge: Null To");
@@ -184,29 +184,23 @@ contract NFTBridge is
   }
 
   function createSideNFTToken(
-    uint256 _typeId,
     address _originalTokenAddress,
     string calldata _originalTokenSymbol,
-    string calldata _originalTokenName
+    string calldata _originalTokenName,
+    string calldata _baseURI,
+    string calldata _contractURI
   ) external onlyOwner {
-    require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
-    address sideToken = mappedTokens[_originalTokenAddress];
-    require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
-    string memory newSymbol = string(
-      abi.encodePacked(symbolPrefix, _originalTokenSymbol)
-    );
+    require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null original token address");
+    address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[_originalTokenAddress];
+    require(sideTokenAddress == NULL_ADDRESS, "Bridge: Side token already exists");
+    string memory sideTokenSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
     // Create side token
-    sideToken = sideTokenFactory.createSideNFTToken(
-      _originalTokenName,
-      newSymbol
-    );
+    sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI, _contractURI);
 
-    mappedTokens[_originalTokenAddress] = sideToken;
-    originalTokens[sideToken] = _originalTokenAddress;
-    allowTokens.setToken(sideToken, _typeId);
-
-    emit NewSideToken(sideToken, _originalTokenAddress, newSymbol);
+    sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] = sideTokenAddress;
+    originalTokenAddressBySideTokenAddress[sideTokenAddress] = _originalTokenAddress;
+    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol);
   }
 
   function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
@@ -487,13 +481,13 @@ contract NFTBridge is
     return federation;
   }
 
-  function changeSideTokenFactory(address newSideTokenFactory) external onlyOwner {
+  function changeSideTokenFactory(address newSideNFTTokenFactory) external onlyOwner {
     require(
-      newSideTokenFactory != NULL_ADDRESS,
+      newSideNFTTokenFactory != NULL_ADDRESS,
       "Bridge: empty SideTokenFactory"
     );
-    sideTokenFactory = ISideNFTTokenFactory(newSideTokenFactory);
-    emit SideTokenFactoryChanged(newSideTokenFactory);
+    sideTokenFactory = ISideNFTTokenFactory(newSideNFTTokenFactory);
+    emit SideTokenFactoryChanged(newSideNFTTokenFactory);
   }
 
   function setUpgrading(bool _isUpgrading) external onlyOwner {
