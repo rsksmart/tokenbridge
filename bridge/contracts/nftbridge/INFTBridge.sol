@@ -71,8 +71,8 @@ interface INFTBridge {
     uint256 _tokenId,
     string _tokenURI
   );
-  event NewSideToken(
-    address indexed _newSideTokenAddress,
+  event NewSideNFTToken(
+    address indexed _newSideNFTTokenAddress,
     address indexed _originalTokenAddress,
     string _newSymbol
   );

@@ -10,31 +10,27 @@ contract('SideNFTTokenFactory', async function (accounts) {
     const tokenName = "The Drops";
     const tokenSymbol = "drop";
     const tokenBaseURI = "ipfs:/";
-    const sideTokenCreatedEventType = 'SideNFTTokenCreated';
+    const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
+    const sideNFTTokenCreatedEventType = 'SideNFTTokenCreated';
     const alternateTokenName = "The Peters";
     const alternateTokenSymbol = "peter";
     const alternateTokenBaseURI = "peter:/";
-
-    before(async function () {
-        await utils.saveState();
-    });
-
-    after(async function () {
-        await utils.revertState();
-    });
+    const alternateTokenContractURI = "https://api-mainnet.rarible.com/alternateContractMetadata"
 
     beforeEach(async function () {
         this.sideNFTTokenFactory = await SideNFTTokenFactory.new();
     });
 
     it('should create two correct side NFT tokens upon correct parameters', async function () {
-        let receipt = await this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenSymbol, tokenBaseURI);
+        let receipt = await this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenSymbol, tokenBaseURI, tokenContractURI);
         utils.checkRcpt(receipt);
         let firstSideTokenAddress;
-        truffleAssert.eventEmitted(receipt, sideTokenCreatedEventType, (event) => {
+        truffleAssert.eventEmitted(receipt, sideNFTTokenCreatedEventType, (event) => {
             firstSideTokenAddress = event.sideTokenAddress;
             return firstSideTokenAddress !== 0 &&
-                event.symbol === tokenSymbol;
+                event.symbol === tokenSymbol &&
+                event.baseURI === tokenBaseURI &&
+                event.contractURI === tokenContractURI;
         });
         const sideToken = await SideNFTToken.at(firstSideTokenAddress);
         const tokenBalance = await sideToken.balanceOf(tokenCreator);
@@ -48,31 +44,25 @@ contract('SideNFTTokenFactory', async function (accounts) {
         const minter = await sideToken.minter();
         assert.equal(minter, tokenCreator);
 
-        receipt = await this.sideNFTTokenFactory.createSideNFTToken(alternateTokenName, alternateTokenSymbol, alternateTokenBaseURI, {from: tokenCreator});
+        receipt = await this.sideNFTTokenFactory.createSideNFTToken(alternateTokenName, alternateTokenSymbol,
+            alternateTokenBaseURI, alternateTokenContractURI, {from: tokenCreator});
         utils.checkRcpt(receipt);
-        truffleAssert.eventEmitted(receipt, sideTokenCreatedEventType, (event) => {
+        truffleAssert.eventEmitted(receipt, sideNFTTokenCreatedEventType, (event) => {
             const secondSideTokenAddress = event.sideTokenAddress;
             return secondSideTokenAddress !== 0 &&
                 secondSideTokenAddress !== firstSideTokenAddress &&
-                event.symbol === alternateTokenSymbol;
+                event.symbol === alternateTokenSymbol &&
+                event.baseURI === alternateTokenBaseURI &&
+                event.contractURI === alternateTokenContractURI;
         });
-    });
-
-    it('fails to create a new side NFT token due to wrong parameters', async function () {
-        let expectedErrorMessage = 'Invalid number of parameters for "createSideNFTToken". Got 0 expected 3!';
-        let error = await utils.expectThrow(this.sideNFTTokenFactory.createSideNFTToken());
-        assert.equal(expectedErrorMessage, error.message);
-
-        expectedErrorMessage = 'Invalid number of parameters for "createSideNFTToken". Got 2 expected 3!';
-        error = await utils.expectThrow(this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenSymbol));
-        assert.equal(expectedErrorMessage, error.message);
     });
 
     it('fails to create a new side NFT token due to using a wrong caller', async function () {
         const expectedErrorReason = "Secondary: caller is not the primary account"
         assert.equal(await this.sideNFTTokenFactory.primary(), tokenCreator);
 
-        let error = await utils.expectThrow(this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenName, tokenBaseURI, {from: anAccount}));
+        let error = await utils.expectThrow(this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenName,
+            tokenBaseURI, tokenContractURI, {from: anAccount}));
 
         assert.equal(expectedErrorReason, error.reason)
     });
@@ -81,7 +71,8 @@ contract('SideNFTTokenFactory', async function (accounts) {
         await this.sideNFTTokenFactory.transferPrimary(anAccount);
         assert.equal(await this.sideNFTTokenFactory.primary(), anAccount);
 
-        let receipt = await this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenSymbol, tokenBaseURI, {from: anAccount});
+        let receipt = await this.sideNFTTokenFactory.createSideNFTToken(tokenName, tokenSymbol,
+            tokenBaseURI, tokenContractURI, {from: anAccount});
         let sideTokenAddress = receipt.logs[0].args[0];
         let sideToken = await SideNFTToken.at(sideTokenAddress);
 
