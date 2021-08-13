@@ -240,45 +240,43 @@ contract("Bridge NFT", async function(accounts) {
           }
 
           it("fails to create side NFT token if the original token address is a null address", async function () {
-              const expectedErrorReason = "Bridge: Null original token address";
-
-              let error = await utils.expectThrow(
+              truffleAssert.fails(
                   executeSideNFTTokenCreationTransaction.call(
                       this, utils.NULL_ADDRESS, symbol, name, baseURI, contractURI, bridgeManager
-                  )
+                  ),
+                  truffleAssert.ErrorType.REVERT,
+                  "Bridge: Null original token address"
+                  );
+                });
+
+                it("fails to create side NFT token if side token address already exists", async function () {
+                  let receipt = await executeSideNFTTokenCreationTransaction.call(
+                    this, tokenAddress, symbol, name, baseURI, contractURI, bridgeManager
+                    );
+
+                    truffleAssert.eventEmitted(receipt, newSideNFTTokenEventType);
+
+                    truffleAssert.fails(
+                      executeSideNFTTokenCreationTransaction.call(
+                        this, tokenAddress, symbol, name, baseURI, contractURI, bridgeManager
+                      ),
+                      truffleAssert.ErrorType.REVERT,
+                      "Bridge: Side token already exists"
+                      );
+
+                    });
+
+                    it("fails to create side NFT token if transaction sender is not bridge manager", async function () {
+
+                      truffleAssert.fails(
+                        executeSideNFTTokenCreationTransaction.call(
+                          this, tokenAddress, symbol, name, baseURI, contractURI, anAccount
+                        ),
+                        truffleAssert.ErrorType.REVERT,
+                        "Ownable: caller is not the owner"
+
               );
 
-              assert.equal(expectedErrorReason, error.reason);
-          });
-
-          it("fails to create side NFT token if side token address already exists", async function () {
-              let receipt = await executeSideNFTTokenCreationTransaction.call(
-                  this, tokenAddress, symbol, name, baseURI, contractURI, bridgeManager
-              );
-
-              truffleAssert.eventEmitted(receipt, newSideNFTTokenEventType);
-
-              const expectedErrorReason = "Bridge: Side token already exists";
-
-              let error = await utils.expectThrow(
-                  executeSideNFTTokenCreationTransaction.call(
-                      this, tokenAddress, symbol, name, baseURI, contractURI, bridgeManager
-                  )
-              );
-
-              assert.equal(expectedErrorReason, error.reason);
-          });
-
-          it("fails to create side NFT token if transaction sender is not bridge manager", async function () {
-              const expectedErrorReason = "Ownable: caller is not the owner";
-
-              let error = await utils.expectThrow(
-                  executeSideNFTTokenCreationTransaction.call(
-                      this, tokenAddress, symbol, name, baseURI, contractURI, anAccount
-                  )
-              );
-
-              assert.equal(expectedErrorReason, error.reason);
           });
 
       });
