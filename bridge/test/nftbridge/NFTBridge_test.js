@@ -3,7 +3,7 @@ const NftBridge = artifacts.require("./NFTBridge");
 const AllowTokens = artifacts.require("./AllowTokens");
 const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
 
-const utils = require("./utils");
+const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
 
 const toWei = web3.utils.toWei;
@@ -171,7 +171,7 @@ contract("Bridge NFT", async function(accounts) {
         utils.checkRcpt(receipt);
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
-          console.log(ev);
+          // console.log(ev);
 
           return (
             ev._tokenAddress == this.token.address &&
