@@ -1,11 +1,11 @@
 /* libraries used */
 const { toBN } = require('web3-utils')
-const utils = require('./utils');
+const utils = require('../utils');
 
 /* Contracts in this test */
 const OpenSea721 = artifacts.require('./OpenSea721.sol');
 
-contract.only('Interaction with OpenSea721', (accounts) => {
+contract('Interaction with OpenSea721', (accounts) => {
   const NAME = 'ERC-271 Test Contract';
   const SYMBOL = 'ERC71Test';
 
