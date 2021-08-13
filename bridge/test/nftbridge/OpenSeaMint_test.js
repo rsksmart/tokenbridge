@@ -27,7 +27,7 @@ contract('Interaction with OpenSea721', (accounts) => {
     instance = await OpenSea721.new(NAME, SYMBOL);
   });
 
-  describe('safeTransferFrom()', () => {
+  describe('#safeTransferFrom()', () => {
     it('should transfer the tokens to SmartWallet called by the owner', async () => {
       await instance.mintTo(owner)
       tokenId++;
