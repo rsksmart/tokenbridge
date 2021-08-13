@@ -7,23 +7,16 @@ contract('SideNFTToken', async function (accounts) {
     const tokenName = "The Drops";
     const tokenSymbol = "drop";
     const tokenBaseURI = "ipfs:/";
-
-    before(async function () {
-        await utils.saveState();
-    });
-
-    after(async function () {
-        await utils.revertState();
-    });
+    const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
 
     describe('constructor', async function () {
 
         it('should create side token', async function () {
-            let token = await SideToken.new(tokenName, tokenSymbol, tokenCreator, tokenBaseURI);
+            let token = await SideToken.new(tokenName, tokenSymbol, tokenCreator, tokenBaseURI, tokenContractURI);
             assert.isNotEmpty(token.address)
         });
         it('should fail empty minter address', async function () {
-            await utils.expectThrow(SideToken.new(tokenName, tokenSymbol, '0x', tokenBaseURI));
+            await utils.expectThrow(SideToken.new(tokenName, tokenSymbol, '0x', tokenBaseURI, tokenContractURI));
         });
 
     });

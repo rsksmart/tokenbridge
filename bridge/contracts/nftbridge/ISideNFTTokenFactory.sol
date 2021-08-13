@@ -4,8 +4,8 @@ pragma solidity ^0.7.0;
 
 interface ISideNFTTokenFactory {
 
-    function createSideNFTToken(string calldata name, string calldata symbol, string calldata baseURI)
-    external returns(address);
+    function createSideNFTToken(string calldata name, string calldata symbol, string calldata baseURI,
+        string calldata contractURI) external returns(address);
 
-    event SideNFTTokenCreated(address indexed sideTokenAddress, string symbol);
+    event SideNFTTokenCreated(address indexed sideTokenAddress, string symbol, string baseURI, string contractURI);
 }
