@@ -1,4 +1,6 @@
-version: 2
+version: 2.1
+orbs:
+  coveralls: coveralls/coveralls@1.0.6
 jobs:
   build:
     working_directory: ~/repo
@@ -23,6 +25,13 @@ jobs:
           command: |
             cd bridge
             npm ci
+      - run:
+          name: bridge coverage
+          command: |
+            cd bridge
+            npm run coverage
+      - coveralls/upload:
+          path_to_lcov: "./bridge/coverage"
       - run:
           name: install federator dependencies
           command: |
@@ -57,4 +66,3 @@ jobs:
           command: |
             cd bridge
             npm test
-            
