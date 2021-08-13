@@ -1,6 +1,6 @@
 /* libraries used */
 const { toBN } = require('web3-utils')
-const utils = require('./utils');
+const utils = require('../utils');
 
 /* Contracts in this test */
 const OpenSea721 = artifacts.require('./OpenSea721.sol');
@@ -27,7 +27,7 @@ contract.only('Interaction with OpenSea721', (accounts) => {
     instance = await OpenSea721.new(NAME, SYMBOL);
   });
 
-  describe('#safeTransferFrom()', () => {
+  describe('safeTransferFrom()', () => {
     it('should transfer the tokens to SmartWallet called by the owner', async () => {
       await instance.mintTo(owner)
       tokenId++;
