@@ -14,7 +14,7 @@ interface INFTBridge {
 
   function version() external pure returns (string memory);
 
-  function getFeePercentage() external view returns (uint256);
+  function getFixedFee() external view returns (uint256);
 
   function receiveTokensTo(
     address tokenAddress,
@@ -85,7 +85,7 @@ interface INFTBridge {
     bytes32 _blockHash,
     uint256 _logIndex
   );
-  event FeePercentageChanged(uint256 _amount);
+  event FixedFeeNFTChanged(uint256 _amount);
   event Claimed(
     bytes32 indexed _transactionHash,
     address indexed _originalTokenAddress,
