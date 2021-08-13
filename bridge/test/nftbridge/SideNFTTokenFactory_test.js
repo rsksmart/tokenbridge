@@ -83,7 +83,7 @@ contract("SideNFTTokenFactory", async function(accounts) {
   it("fails to create a new side NFT token due to using a wrong caller", async function() {
     assert.equal(await this.sideNFTTokenFactory.primary(), tokenCreator);
 
-    truffleAssert.fails(
+    await truffleAssert.fails(
       this.sideNFTTokenFactory.createSideNFTToken(
         tokenName,
         tokenName,
