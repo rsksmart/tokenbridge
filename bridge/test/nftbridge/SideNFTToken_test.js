@@ -1,5 +1,5 @@
 const SideToken = artifacts.require("./SideNFTToken");
-
+const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
 
 contract("SideNFTToken", async function(accounts) {
@@ -9,16 +9,19 @@ contract("SideNFTToken", async function(accounts) {
   const tokenBaseURI = "ipfs:/";
   const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
 
+  beforeEach(async function() {
+    this.token = await SideToken.new(
+      tokenName,
+      tokenSymbol,
+      tokenCreator,
+      tokenBaseURI,
+      tokenContractURI
+    );
+  });
+
   describe("constructor", async function() {
     it("should create side token", async function() {
-      let token = await SideToken.new(
-        tokenName,
-        tokenSymbol,
-        tokenCreator,
-        tokenBaseURI,
-        tokenContractURI
-      );
-      assert.isNotEmpty(token.address);
+      assert.isNotEmpty(this.token.address);
     });
 
     it("should fail empty minter address", async function() {
@@ -26,11 +29,11 @@ contract("SideNFTToken", async function(accounts) {
         SideToken.new(
           tokenName,
           tokenSymbol,
-          "0x",
+          utils.NULL_ADDRESS,
           tokenBaseURI,
           tokenContractURI
         ),
-        'invalid address',
+        null,
         "SideToken: Empty Minter"
       );
     });
