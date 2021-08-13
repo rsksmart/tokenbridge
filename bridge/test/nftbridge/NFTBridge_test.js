@@ -100,7 +100,7 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("only manager can change manager", async function() {
-        truffleAssert.fails(
+        await truffleAssert.fails(
           this.bridgeNft.transferOwnership(newBridgeManager),
           truffleAssert.ErrorType.REVERT,
           "Ownable: caller is not the owner"
@@ -125,7 +125,7 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("only manager can change the federation", async function() {
-        truffleAssert.fails(
+        await truffleAssert.fails(
           this.bridgeNft.changeFederation(newBridgeManager),
           truffleAssert.ErrorType.REVERT,
           "Ownable: caller is not the owner"
@@ -135,7 +135,7 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("change federation new fed cant be null", async function() {
-        truffleAssert.fails(
+        await truffleAssert.fails(
           this.bridgeNft.changeFederation(utils.NULL_ADDRESS, {
             from: bridgeManager,
           }),
@@ -269,7 +269,7 @@ contract("Bridge NFT", async function(accounts) {
       }
 
       it("fails to create side NFT token if the original token address is a null address", async function() {
-        truffleAssert.fails(
+        await truffleAssert.fails(
           executeSideNFTTokenCreationTransaction.call(
             this,
             utils.NULL_ADDRESS,
@@ -297,7 +297,7 @@ contract("Bridge NFT", async function(accounts) {
 
         truffleAssert.eventEmitted(receipt, newSideNFTTokenEventType);
 
-        truffleAssert.fails(
+        await truffleAssert.fails(
           executeSideNFTTokenCreationTransaction.call(
             this,
             tokenAddress,
@@ -313,7 +313,7 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("fails to create side NFT token if transaction sender is not bridge manager", async function() {
-        truffleAssert.fails(
+        await truffleAssert.fails(
           executeSideNFTTokenCreationTransaction.call(
             this,
             tokenAddress,
