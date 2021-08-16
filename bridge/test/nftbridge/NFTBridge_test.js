@@ -6,6 +6,7 @@ const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
 const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
 
+const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
 contract("Bridge NFT", async function(accounts) {
@@ -187,6 +188,55 @@ contract("Bridge NFT", async function(accounts) {
             ev._amount == totalSupply &&
             ev._tokenId == tokenId &&
             ev._tokenURI == tokenBaseURI + tokenURI
+          );
+        });
+      });
+
+      describe("Fixed Fee", async function() {
+        it.only("Federator should receive fee", async function() {
+          console.log("test");
+          const fixedFee = 10;
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          const tokenId = 9;
+          receipt = await this.token.safeMint(tokenOwner, tokenId, {
+            from: tokenOwner,
+          });
+          utils.checkRcpt(receipt);
+
+          receipt = await this.token.approve(this.bridgeNft.address, tokenId, {
+            from: tokenOwner,
+          });
+          utils.checkRcpt(receipt);
+
+          const tokenOwnerBalance = new BN(await web3.eth.getBalance(tokenOwner));
+          let tx = await this.bridgeNft.receiveTokensTo(
+            this.token.address,
+            anAccount,
+            tokenId,
+            {
+              from: tokenOwner,
+              value: fixedFee,
+            }
+          );
+          utils.checkRcpt(tx);
+          const gasUsed = new BN(tx.receipt.gasUsed);
+
+          let actualTokenOwnerBalance = new BN(await web3.eth.getBalance(tokenOwner));
+          let expectedBalance = tokenOwnerBalance.add(new BN(fixedFee)).add(gasUsed);
+
+          console.log('fixedFee', fixedFee);
+          console.log('gasUsed', gasUsed.toString());
+          console.log('tokenOwnerBalance', tokenOwnerBalance.toString());
+          console.log('actualTokenOwnerBalance', actualTokenOwnerBalance);
+          console.log('expectedBalance', expectedBalance.toString());
+
+          assert.deepEqual(
+            actualTokenOwnerBalance.eq(expectedBalance),
+            "Token Owner Balance should be balance - fixedFee"
           );
         });
       });
