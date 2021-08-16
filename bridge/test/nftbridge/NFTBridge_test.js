@@ -226,7 +226,7 @@ contract("Bridge NFT", async function(accounts) {
           const gasUsed = new BN(tx.receipt.gasUsed);
 
           let actualTokenOwnerBalance = new BN(await web3.eth.getBalance(tokenOwner));
-          let expectedBalance = tokenOwnerBalance.add(new BN(fixedFee)).add(gasUsed);
+          let expectedBalance = tokenOwnerBalance.sub(new BN(fixedFee)).sub(gasUsed);
 
           console.log('fixedFee', fixedFee);
           console.log('gasUsed', gasUsed.toString());
