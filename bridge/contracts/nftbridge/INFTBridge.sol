@@ -20,7 +20,7 @@ interface INFTBridge {
     address tokenAddress,
     address to,
     uint256 tokenId
-  ) external;
+  ) payable external;
 
   /**
     * Accepts the transaction from the other chain that was voted and sent by the Federation contract
