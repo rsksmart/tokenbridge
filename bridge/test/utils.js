@@ -82,6 +82,12 @@ const getGasUsed = async (tx) => {
   return gasUsed.mul(gasPrice);
 }
 
+// @param address string to check the amount of ether
+// @return BN the balance of ether
+const getBalance = async (address) => {
+  return new BN(await web3.eth.getBalance(address));
+}
+
 const asyncMine = async () => {
     return new Promise((resolve, reject) => {
         web3.currentProvider.send({
@@ -172,6 +178,7 @@ function ascii_to_hexa(str)
 
 
 module.exports = {
+    getBalance: getBalance,
     getGasUsed: getGasUsed,
     checkGas: checkGas,
     checkRcpt: checkRcpt,
