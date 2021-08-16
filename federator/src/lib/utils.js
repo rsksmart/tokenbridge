@@ -133,6 +133,7 @@ function checkHttpsOrLocalhost(url = '') {
     const isHttps = url.slice(0,8).toLowerCase() === 'https://';
     const isLocalhost = url.slice(0,16).toLowerCase() === 'http://127.0.0.1' ||
         url.slice(0,17).toLowerCase() === 'http://172.17.0.1' ||
+        url.slice(0,20).toLowerCase() ===  'host.docker.internal' ||
         url.slice(0,16).toLowerCase() === 'http://localhost' ||
         url.slice(0,14).toLowerCase() === 'http://0.0.0.0';
 
