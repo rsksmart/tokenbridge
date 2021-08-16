@@ -150,7 +150,6 @@ module.exports = class Heartbeat {
 
         try {
             for(let log of logs) {
-                this.logger.info('Processing Heartbeat event log:', log);
 
                 const {
                     blockNumber
