@@ -46,7 +46,7 @@ contract NFTBridge is
   IERC1820Registry internal constant ERC1820 =
       IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
-  address internal federation;
+  address payable internal federation;
   uint256 internal fixedFee;
   string public symbolPrefix;
   uint256 internal _deprecatedLastDay;
@@ -81,7 +81,7 @@ contract NFTBridge is
 
   function initialize(
     address _manager,
-    address _federation,
+    address payable _federation,
     address _allowTokens,
     address _sideTokenFactory,
     string memory _symbolPrefix
@@ -398,14 +398,20 @@ contract NFTBridge is
     address tokenAddress,
     address to,
     uint256 tokenId
-  ) public override {
-    address sender = _msgSender();
+  ) public payable override {
     address tokenCreator = getTokenCreator(tokenAddress, tokenId);
 
     // Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-    IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
+    IERC721(tokenAddress).safeTransferFrom(_msgSender(), address(this), tokenId);
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
+
+    if (fixedFee > 0) {
+      require(msg.value >= fixedFee, "NFTBridge: value is smaller than fixed fee");
+
+      // Send the payment to the MultiSig of the Federation
+      federation.transfer(fixedFee);
+    }
   }
 
   function crossTokens(
@@ -460,7 +466,7 @@ contract NFTBridge is
     return fixedFee;
   }
 
-  function changeFederation(address newFederation) external onlyOwner {
+  function changeFederation(address payable newFederation) external onlyOwner {
     require(newFederation != NULL_ADDRESS, "Bridge: Federation is empty");
     federation = newFederation;
     emit FederationChanged(federation);
