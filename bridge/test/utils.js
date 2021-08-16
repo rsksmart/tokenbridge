@@ -1,3 +1,5 @@
+const BN = web3.utils.BN;
+
 const gasLimit = 6800000;
 
 const saveState = async () =>
@@ -62,6 +64,23 @@ function checkRcpt(tx) {
     assert.equal(Number(tx.receipt.status), 1, "Should be a succesful Tx");
     checkGas(tx.receipt.gasUsed);
   }
+
+// @param tx is an object returned from the smartcontract tx {
+//  tx: @string,
+//  receipt: {
+//    gasUsed: @number
+//  }
+// }
+// @return BN the gas used multiplied by the gas price
+const getGasUsed = async (tx) => {
+  const gasUsed = new BN(tx.receipt.gasUsed);
+
+  // Obtain gasPrice from the transaction
+  const txWithPrice = await web3.eth.getTransaction(tx.tx);
+  const gasPrice = new BN(txWithPrice.gasPrice);
+
+  return gasUsed.mul(gasPrice);
+}
 
 const asyncMine = async () => {
     return new Promise((resolve, reject) => {
@@ -153,6 +172,7 @@ function ascii_to_hexa(str)
 
 
 module.exports = {
+    getGasUsed: getGasUsed,
     checkGas: checkGas,
     checkRcpt: checkRcpt,
     evm_mine: evm_mine,
