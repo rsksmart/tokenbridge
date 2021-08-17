@@ -211,8 +211,8 @@ contract("Bridge NFT", async function(accounts) {
 
           await mintAndApprove(this.token, this.bridgeNft.address);
 
-          const tokenOwnerBalance = await utils.getBalance(tokenOwner);
-          const federatorBalance = await utils.getBalance(federation);
+          const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const federatorBalance = await utils.getEtherBalance(federation);
 
           const tx = await this.bridgeNft.receiveTokensTo(
             this.token.address,
@@ -225,17 +225,17 @@ contract("Bridge NFT", async function(accounts) {
           );
           utils.checkRcpt(tx);
 
-          const currentTokenOwnerBalance = await utils.getBalance(tokenOwner);
+          const currentTokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
           const expectedTokenOwnerBalance = tokenOwnerBalance
             .sub(fixedFee)
-            .sub(await utils.getGasUsed(tx));
+            .sub(await utils.getGasUsedByTx(tx));
 
           assert(
             currentTokenOwnerBalance.eq(expectedTokenOwnerBalance),
             "Token Owner Balance should be balance - (fixedFee + gas Used)"
           );
 
-          const currentFederatorBalance = await utils.getBalance(federation);
+          const currentFederatorBalance = await utils.getEtherBalance(federation);
           const expectedFederatorBalance = federatorBalance.add(fixedFee);
 
           assert(
@@ -251,7 +251,7 @@ contract("Bridge NFT", async function(accounts) {
           utils.checkRcpt(receipt);
 
           await mintAndApprove(this.token, this.bridgeNft.address);
-          const federatorBalance = await utils.getBalance(federation);
+          const federatorBalance = await utils.getEtherBalance(federation);
 
           const tx = await this.bridgeNft.receiveTokensTo(
             this.token.address,
@@ -262,7 +262,7 @@ contract("Bridge NFT", async function(accounts) {
             }
           );
           utils.checkRcpt(tx);
-          const expectedFederatorBalance = await utils.getBalance(federation);
+          const expectedFederatorBalance = await utils.getEtherBalance(federation);
 
           assert(
             federatorBalance.eq(expectedFederatorBalance),
@@ -273,7 +273,7 @@ contract("Bridge NFT", async function(accounts) {
         it("should fail because the sender doesn't have balance", async function() {
           await mintAndApprove(this.token, this.bridgeNft.address);
 
-          const fixedFee = await utils.getBalance(tokenOwner);
+          const fixedFee = await utils.getEtherBalance(tokenOwner);
           let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
             from: bridgeManager,
           });
@@ -293,7 +293,7 @@ contract("Bridge NFT", async function(accounts) {
           );
         });
 
-        it("Should fail because the sended value is smaller than fixed fee", async function() {
+        it("should fail because the sent value is smaller than fixed fee", async function() {
           await mintAndApprove(this.token, this.bridgeNft.address);
 
           const fixedFee = new BN(15);
