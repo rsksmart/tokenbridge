@@ -167,7 +167,7 @@ contract("Bridge NFT", async function(accounts) {
     });
 
     describe("receiveTokensTo", async function() {
-      it("receives ERC721 NFT correctly", async function() {
+      it("receives ERC721 NFT correctly with token URI", async function() {
         const tokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
         let totalSupply = 0; // is the amount of nft minted
 
@@ -197,6 +197,36 @@ contract("Bridge NFT", async function(accounts) {
             ev._amount == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == tokenBaseURI + tokenURI
+          );
+        });
+      });
+
+      it.only("receives ERC721 NFT correctly without Token URI set", async function() {
+        let totalSupply = 0; // is the amount of nft minted
+
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          // console.log(ev);
+
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == tokenBaseURI + defaultTokenId
           );
         });
       });
