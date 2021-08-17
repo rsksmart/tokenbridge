@@ -201,8 +201,8 @@ contract("Bridge NFT", async function(accounts) {
         });
       });
 
-      describe("Fixed Fee", async function() {
-        it("Federator should receive fee", async function() {
+      describe("fixed fee", async function() {
+        it("should send fee to federator correctly", async function() {
           const fixedFee = new BN("15");
           let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
             from: bridgeManager,
@@ -225,26 +225,26 @@ contract("Bridge NFT", async function(accounts) {
           );
           utils.checkRcpt(tx);
 
-          const actualTokenOwnerBalance = await utils.getBalance(tokenOwner);
+          const currentTokenOwnerBalance = await utils.getBalance(tokenOwner);
           const expectedTokenOwnerBalance = tokenOwnerBalance
             .sub(fixedFee)
             .sub(await utils.getGasUsed(tx));
 
           assert(
-            actualTokenOwnerBalance.eq(expectedTokenOwnerBalance),
+            currentTokenOwnerBalance.eq(expectedTokenOwnerBalance),
             "Token Owner Balance should be balance - (fixedFee + gas Used)"
           );
 
-          const actualFederatorBalance = await utils.getBalance(federation);
+          const currentFederatorBalance = await utils.getBalance(federation);
           const expectedFederatorBalance = federatorBalance.add(fixedFee);
 
           assert(
-            actualFederatorBalance.eq(expectedFederatorBalance),
+            currentFederatorBalance.eq(expectedFederatorBalance),
             "Federator Balance should be balance + fixedFee"
           );
         });
 
-        it("Federator balance should remain the same, because fee is zero", async function() {
+        it("should reamin the same balance for the Federator, because the fixed fee is zero", async function() {
           let receipt = await this.bridgeNft.setFixedFee(new BN(0), {
             from: bridgeManager,
           });
@@ -270,7 +270,7 @@ contract("Bridge NFT", async function(accounts) {
           );
         });
 
-        it("Should fail because the sender doesn't have balance", async function() {
+        it("should fail because the sender doesn't have balance", async function() {
           await mintAndApprove(this.token, this.bridgeNft.address);
 
           const fixedFee = await utils.getBalance(tokenOwner);
