@@ -401,8 +401,9 @@ contract NFTBridge is
   ) public payable override {
     address tokenCreator = getTokenCreator(tokenAddress, tokenId);
 
+    address payable sender = _msgSender();
     // Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-    IERC721(tokenAddress).safeTransferFrom(_msgSender(), address(this), tokenId);
+    IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
 
@@ -411,6 +412,9 @@ contract NFTBridge is
 
       // Send the payment to the MultiSig of the Federation
       federation.transfer(fixedFee);
+      if (msg.value > fixedFee) { // refund of unused value
+        sender.transfer(msg.value - fixedFee);
+      }
     }
   }
 
