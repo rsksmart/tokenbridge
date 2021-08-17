@@ -23,6 +23,7 @@ contract("Bridge NFT", async function(accounts) {
   const sideTokenSymbolPrefix = "e";
   const newSideNFTTokenEventType = "NewSideNFTToken";
   const defaultTokenId = 9;
+  const defaultTokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
 
   before(async function() {
     await utils.saveState();
@@ -168,13 +169,12 @@ contract("Bridge NFT", async function(accounts) {
 
     describe("receiveTokensTo", async function() {
       it("receives ERC721 NFT correctly with token URI", async function() {
-        const tokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
         let totalSupply = 0; // is the amount of nft minted
 
         await mintAndApprove(this.token, this.bridgeNft.address);
         totalSupply++;
 
-        let receipt = await this.token.setTokenURI(defaultTokenId, tokenURI);
+        let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
         utils.checkRcpt(receipt);
 
         receipt = await this.bridgeNft.receiveTokensTo(
@@ -196,13 +196,13 @@ contract("Bridge NFT", async function(accounts) {
             ev._userData == null &&
             ev._amount == totalSupply &&
             ev._tokenId == defaultTokenId &&
-            ev._tokenURI == tokenBaseURI + tokenURI
+            ev._tokenURI == tokenBaseURI + defaultTokenURI
           );
         });
       });
 
-      it.only("receives ERC721 NFT correctly without Token URI set", async function() {
-        let totalSupply = 0; // is the amount of nft minted
+      it("receives ERC721 NFT correctly with base URI and without token URI set", async function() {
+        let totalSupply = 0;
 
         await mintAndApprove(this.token, this.bridgeNft.address);
         totalSupply++;
@@ -216,8 +216,6 @@ contract("Bridge NFT", async function(accounts) {
         utils.checkRcpt(receipt);
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
-          // console.log(ev);
-
           return (
             ev._tokenAddress == this.token.address &&
             ev._from == tokenOwner &&
@@ -227,6 +225,67 @@ contract("Bridge NFT", async function(accounts) {
             ev._amount == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == tokenBaseURI + defaultTokenId
+          );
+        });
+      });
+
+      it("receives ERC721 NFT correctly without token and base URI set", async function() {
+        let totalSupply = 0;
+
+        await this.token.setBaseURI('');
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == ''
+          );
+        });
+      });
+
+      it("receives ERC721 NFT correctly with token URI and without base URI", async function() {
+        let totalSupply = 0;
+
+        await this.token.setBaseURI('');
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
+        utils.checkRcpt(receipt);
+
+        receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == defaultTokenURI
           );
         });
       });
