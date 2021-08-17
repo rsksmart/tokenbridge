@@ -22,6 +22,7 @@ contract("Bridge NFT", async function(accounts) {
   const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
   const sideTokenSymbolPrefix = "e";
   const newSideNFTTokenEventType = "NewSideNFTToken";
+  const defaultTokenId = 9;
 
   before(async function() {
     await utils.saveState();
@@ -81,7 +82,7 @@ contract("Bridge NFT", async function(accounts) {
   const mintAndApprove = async (
     token,
     approveTo,
-    tokenId = 9,
+    tokenId = defaultTokenId,
     owner = tokenOwner
   ) => {
     let receipt = await token.safeMint(owner, tokenId, {
@@ -167,20 +168,19 @@ contract("Bridge NFT", async function(accounts) {
 
     describe("receiveTokensTo", async function() {
       it("receives ERC721 NFT correctly", async function() {
-        const tokenId = 9;
         const tokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
         let totalSupply = 0; // is the amount of nft minted
 
         await mintAndApprove(this.token, this.bridgeNft.address);
         totalSupply++;
 
-        let receipt = await this.token.setTokenURI(tokenId, tokenURI);
+        let receipt = await this.token.setTokenURI(defaultTokenId, tokenURI);
         utils.checkRcpt(receipt);
 
         receipt = await this.bridgeNft.receiveTokensTo(
           this.token.address,
           anAccount,
-          tokenId,
+          defaultTokenId,
           { from: tokenOwner }
         );
         utils.checkRcpt(receipt);
@@ -195,7 +195,7 @@ contract("Bridge NFT", async function(accounts) {
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
             ev._amount == totalSupply &&
-            ev._tokenId == tokenId &&
+            ev._tokenId == defaultTokenId &&
             ev._tokenURI == tokenBaseURI + tokenURI
           );
         });
@@ -209,8 +209,7 @@ contract("Bridge NFT", async function(accounts) {
           });
           utils.checkRcpt(receipt);
 
-          const tokenId = 9;
-          await mintAndApprove(this.token, this.bridgeNft.address, tokenId);
+          await mintAndApprove(this.token, this.bridgeNft.address);
 
           const tokenOwnerBalance = await utils.getBalance(tokenOwner);
           const federatorBalance = await utils.getBalance(federation);
@@ -218,7 +217,7 @@ contract("Bridge NFT", async function(accounts) {
           const tx = await this.bridgeNft.receiveTokensTo(
             this.token.address,
             anAccount,
-            tokenId,
+            defaultTokenId,
             {
               from: tokenOwner,
               value: fixedFee,
@@ -251,14 +250,13 @@ contract("Bridge NFT", async function(accounts) {
           });
           utils.checkRcpt(receipt);
 
-          const tokenId = 9;
-          await mintAndApprove(this.token, this.bridgeNft.address, tokenId);
+          await mintAndApprove(this.token, this.bridgeNft.address);
           const federatorBalance = await utils.getBalance(federation);
 
           const tx = await this.bridgeNft.receiveTokensTo(
             this.token.address,
             anAccount,
-            tokenId,
+            defaultTokenId,
             {
               from: tokenOwner
             }
@@ -273,8 +271,7 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("Should fail because the sender doesn't have balance", async function() {
-          const tokenId = 9;
-          await mintAndApprove(this.token, this.bridgeNft.address, tokenId);
+          await mintAndApprove(this.token, this.bridgeNft.address);
 
           const fixedFee = await utils.getBalance(tokenOwner);
           let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
@@ -286,7 +283,7 @@ contract("Bridge NFT", async function(accounts) {
             this.bridgeNft.receiveTokensTo(
               this.token.address,
               anAccount,
-              tokenId,
+              defaultTokenId,
               {
                 from: tokenOwner,
                 value: fixedFee,
@@ -297,8 +294,7 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("Should fail because the sended value is smaller than fixed fee", async function() {
-          const tokenId = 9;
-          await mintAndApprove(this.token, this.bridgeNft.address, tokenId);
+          await mintAndApprove(this.token, this.bridgeNft.address);
 
           const fixedFee = new BN(15);
           let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
@@ -310,7 +306,7 @@ contract("Bridge NFT", async function(accounts) {
             this.bridgeNft.receiveTokensTo(
               this.token.address,
               anAccount,
-              tokenId,
+              defaultTokenId,
               {
                 from: tokenOwner,
                 value: fixedFee.sub(new BN(1)),
