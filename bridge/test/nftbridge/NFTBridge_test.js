@@ -244,6 +244,48 @@ contract("Bridge NFT", async function(accounts) {
           );
         });
 
+        it("should send fixed fee + 10 to federator correctly and the remaining value sent it back to the sender", async function() {
+          const fixedFee = new BN("15");
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await mintAndApprove(this.token, this.bridgeNft.address);
+
+          const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const federatorBalance = await utils.getEtherBalance(federation);
+
+          const tx = await this.bridgeNft.receiveTokensTo(
+            this.token.address,
+            anAccount,
+            defaultTokenId,
+            {
+              from: tokenOwner,
+              value: fixedFee.add(new BN("10")),
+            }
+          );
+          utils.checkRcpt(tx);
+
+          const currentTokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const expectedTokenOwnerBalance = tokenOwnerBalance
+            .sub(fixedFee)
+            .sub(await utils.getGasUsedByTx(tx));
+
+          assert(
+            currentTokenOwnerBalance.eq(expectedTokenOwnerBalance),
+            "Token Owner Balance should be balance - (fixedFee + gas Used)"
+          );
+
+          const currentFederatorBalance = await utils.getEtherBalance(federation);
+          const expectedFederatorBalance = federatorBalance.add(fixedFee);
+
+          assert(
+            currentFederatorBalance.eq(expectedFederatorBalance),
+            "Federator Balance should be balance + fixedFee"
+          );
+        });
+
         it("should reamin the same balance for the Federator, because the fixed fee is zero", async function() {
           let receipt = await this.bridgeNft.setFixedFee(new BN(0), {
             from: bridgeManager,
