@@ -6,6 +6,7 @@ const fs = require('fs');
 const axios = require('axios');
 
 const CustomError = require('./CustomError');
+const ESTIMATED_GAS = 250000;
 
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
@@ -40,9 +41,7 @@ module.exports = class TransactionSender {
         // Gas estimation does not work correctly on RSK and after the London harfork, neither is working on Ethereum
         // example https://etherscan.io/tx/0xd30d6cf428606e2ef3667427b9b6baecb2f4c9cbb44a0c82c735a238ec8f72fb
         // To fix it, we decided to use a hardcoded gas estimation
-        const estimatedGas = 250000;
-
-        return estimatedGas;
+        return ESTIMATED_GAS;
     }
 
     async getEthGasPrice() {
