@@ -6,6 +6,7 @@ const fs = require('fs');
 const axios = require('axios');
 
 const CustomError = require('./CustomError');
+const ESTIMATED_GAS = 250000;
 
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
@@ -36,21 +37,11 @@ module.exports = class TransactionSender {
         return this.getEthGasPrice();
     }
 
-    async getGasLimit(rawTx) {
-        const chainId = await this.getChainId();
-        let estimatedGas = await this.client.eth.estimateGas({
-            gasPrice: rawTx.gasPrice,
-            value: rawTx.value,
-            to: rawTx.to,
-            data: rawTx.data,
-            from: rawTx.from
-        });
-
-        if (chainId >= 30 && chainId <= 33) {
-            estimatedGas = 200000;
-        }
-
-        return estimatedGas;
+    async getGasLimit() {
+        // Gas estimation does not work correctly on RSK and after the London harfork, neither is working on Ethereum
+        // example https://etherscan.io/tx/0xd30d6cf428606e2ef3667427b9b6baecb2f4c9cbb44a0c82c735a238ec8f72fb
+        // To fix it, we decided to use a hardcoded gas estimation
+        return ESTIMATED_GAS;
     }
 
     async getEthGasPrice() {
@@ -124,7 +115,7 @@ module.exports = class TransactionSender {
             r: 0,
             s: 0
         }
-        rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
+        rawTx.gas = this.numberToHexString(await this.getGasLimit());
 
         if(this.debuggingMode) {
             rawTx.gas = this.numberToHexString(100);
@@ -182,9 +173,10 @@ module.exports = class TransactionSender {
         const chainId =  await this.getChainId();
         let txHash;
         let receipt;
+        let rawTx;
         try {
             let from = await this.getAddress(privateKey);
-            let rawTx = await this.createRawTransaction(from, to, data, value);
+            rawTx = await this.createRawTransaction(from, to, data, value);
             if (privateKey && privateKey.length) {
                 let signedTx = this.signRawTransaction(rawTx, privateKey);
                 const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
@@ -219,7 +211,7 @@ module.exports = class TransactionSender {
             return receipt;
 
         } catch(err) {
-            if(throwOnError) 
+            if(throwOnError)
                 throw new CustomError('Error in sendTransaction', err);
 
             if (err.message.indexOf('it might still be mined') > 0) {
