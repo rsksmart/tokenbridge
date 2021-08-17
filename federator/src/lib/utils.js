@@ -130,11 +130,11 @@ function calculatePrefixesSuffixes(nodes) {
 }
 
 function checkHttpsOrLocalhost(url = '') {
-    const isHttps = url.slice(0,8).toLowerCase() === 'https://';
-    const isLocalhost = url.slice(0,16).toLowerCase() === 'http://127.0.0.1' ||
-        url.slice(0,17).toLowerCase() === 'http://172.17.0.1' ||
-        url.slice(0,16).toLowerCase() === 'http://localhost' ||
-        url.slice(0,14).toLowerCase() === 'http://0.0.0.0';
+    const isHttps = url.startsWith('https://');
+    const isLocalhost = url.startsWith('http://127.0.0.1') ||
+        url.startsWith('http://172.17.0.1') ||
+        url.startsWith('http://localhost') ||
+        url.startsWith('http://0.0.0.0');
 
     return isHttps || isLocalhost;
 }

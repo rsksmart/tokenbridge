@@ -232,9 +232,9 @@ module.exports = class Federator {
                 }).call);
                 this.logger.info('get transaction id:', transactionId);
 
-                let wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
+                const wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
                 if (!wasProcessed) {
-                    let hasVoted = await fedContract.hasVoted(transactionId).call({ from });
+                    const hasVoted = await fedContract.hasVoted(transactionId).call({ from });
                     if(!hasVoted) {
                         this.logger.info(`Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`);
                         await this._voteTransaction(
