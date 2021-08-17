@@ -6,6 +6,7 @@ const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
 const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
 
+const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
 contract("Bridge NFT", async function(accounts) {
@@ -21,6 +22,8 @@ contract("Bridge NFT", async function(accounts) {
   const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
   const sideTokenSymbolPrefix = "e";
   const newSideNFTTokenEventType = "NewSideNFTToken";
+  const defaultTokenId = 9;
+  const defaultTokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
 
   before(async function() {
     await utils.saveState();
@@ -76,6 +79,23 @@ contract("Bridge NFT", async function(accounts) {
       from: bridgeOwner,
     });
   });
+
+  const mintAndApprove = async (
+    token,
+    approveTo,
+    tokenId = defaultTokenId,
+    owner = tokenOwner
+  ) => {
+    let receipt = await token.safeMint(owner, tokenId, {
+      from: owner,
+    });
+    utils.checkRcpt(receipt);
+
+    receipt = await token.approve(approveTo, tokenId, {
+      from: owner,
+    });
+    utils.checkRcpt(receipt);
+  };
 
   describe("Main NFT network", async function() {
     it("should retrieve the version", async function() {
@@ -148,29 +168,19 @@ contract("Bridge NFT", async function(accounts) {
     });
 
     describe("receiveTokensTo", async function() {
-      it("receives ERC721 NFT correctly", async function() {
-        const tokenId = 9;
-        const tokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
+      it("receives ERC721 NFT correctly with token URI", async function() {
         let totalSupply = 0; // is the amount of nft minted
 
-        let receipt = await this.token.safeMint(tokenOwner, tokenId, {
-          from: tokenOwner,
-        });
-        utils.checkRcpt(receipt);
+        await mintAndApprove(this.token, this.bridgeNft.address);
         totalSupply++;
 
-        receipt = await this.token.setTokenURI(tokenId, tokenURI);
-        utils.checkRcpt(receipt);
-
-        receipt = await this.token.approve(this.bridgeNft.address, tokenId, {
-          from: tokenOwner,
-        });
+        let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
         utils.checkRcpt(receipt);
 
         receipt = await this.bridgeNft.receiveTokensTo(
           this.token.address,
           anAccount,
-          tokenId,
+          defaultTokenId,
           { from: tokenOwner }
         );
         utils.checkRcpt(receipt);
@@ -185,8 +195,255 @@ contract("Bridge NFT", async function(accounts) {
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
             ev._amount == totalSupply &&
-            ev._tokenId == tokenId &&
-            ev._tokenURI == tokenBaseURI + tokenURI
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == tokenBaseURI + defaultTokenURI
+          );
+        });
+      });
+
+      it("receives ERC721 NFT correctly with base URI and without token URI set", async function() {
+        let totalSupply = 0;
+
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == tokenBaseURI + defaultTokenId
+          );
+        });
+      });
+
+      it("receives ERC721 NFT correctly without token and base URI set", async function() {
+        let totalSupply = 0;
+
+        await this.token.setBaseURI('');
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == ''
+          );
+        });
+      });
+
+      it("receives ERC721 NFT correctly with token URI and without base URI", async function() {
+        let totalSupply = 0;
+
+        await this.token.setBaseURI('');
+        await mintAndApprove(this.token, this.bridgeNft.address);
+        totalSupply++;
+
+        let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
+        utils.checkRcpt(receipt);
+
+        receipt = await this.bridgeNft.receiveTokensTo(
+          this.token.address,
+          anAccount,
+          defaultTokenId,
+          { from: tokenOwner }
+        );
+        utils.checkRcpt(receipt);
+
+        truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
+          return (
+            ev._tokenAddress == this.token.address &&
+            ev._from == tokenOwner &&
+            ev._to == anAccount &&
+            ev._tokenCreator == tokenOwner &&
+            ev._userData == null &&
+            ev._amount == totalSupply &&
+            ev._tokenId == defaultTokenId &&
+            ev._tokenURI == defaultTokenURI
+          );
+        });
+      });
+
+      describe("fixed fee", async function() {
+        it("should send fee to federator correctly", async function() {
+          const fixedFee = new BN("15");
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await mintAndApprove(this.token, this.bridgeNft.address);
+
+          const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const federatorBalance = await utils.getEtherBalance(federation);
+
+          const tx = await this.bridgeNft.receiveTokensTo(
+            this.token.address,
+            anAccount,
+            defaultTokenId,
+            {
+              from: tokenOwner,
+              value: fixedFee,
+            }
+          );
+          utils.checkRcpt(tx);
+
+          const currentTokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const expectedTokenOwnerBalance = tokenOwnerBalance
+            .sub(fixedFee)
+            .sub(await utils.getGasUsedByTx(tx));
+
+          assert(
+            currentTokenOwnerBalance.eq(expectedTokenOwnerBalance),
+            "Token Owner Balance should be balance - (fixedFee + gas Used)"
+          );
+
+          const currentFederatorBalance = await utils.getEtherBalance(federation);
+          const expectedFederatorBalance = federatorBalance.add(fixedFee);
+
+          assert(
+            currentFederatorBalance.eq(expectedFederatorBalance),
+            "Federator Balance should be balance + fixedFee"
+          );
+        });
+
+        it("should send fixed fee + 10 to federator correctly and the remaining value sent it back to the sender", async function() {
+          const fixedFee = new BN("15");
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await mintAndApprove(this.token, this.bridgeNft.address);
+
+          const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const federatorBalance = await utils.getEtherBalance(federation);
+
+          const tx = await this.bridgeNft.receiveTokensTo(
+            this.token.address,
+            anAccount,
+            defaultTokenId,
+            {
+              from: tokenOwner,
+              value: fixedFee.add(new BN("10")),
+            }
+          );
+          utils.checkRcpt(tx);
+
+          const currentTokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
+          const expectedTokenOwnerBalance = tokenOwnerBalance
+            .sub(fixedFee)
+            .sub(await utils.getGasUsedByTx(tx));
+
+          assert(
+            currentTokenOwnerBalance.eq(expectedTokenOwnerBalance),
+            "Token Owner Balance should be balance - (fixedFee + gas Used)"
+          );
+
+          const currentFederatorBalance = await utils.getEtherBalance(federation);
+          const expectedFederatorBalance = federatorBalance.add(fixedFee);
+
+          assert(
+            currentFederatorBalance.eq(expectedFederatorBalance),
+            "Federator Balance should be balance + fixedFee"
+          );
+        });
+
+        it("should reamin the same balance for the Federator, because the fixed fee is zero", async function() {
+          let receipt = await this.bridgeNft.setFixedFee(new BN(0), {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await mintAndApprove(this.token, this.bridgeNft.address);
+          const federatorBalance = await utils.getEtherBalance(federation);
+
+          const tx = await this.bridgeNft.receiveTokensTo(
+            this.token.address,
+            anAccount,
+            defaultTokenId,
+            {
+              from: tokenOwner
+            }
+          );
+          utils.checkRcpt(tx);
+          const expectedFederatorBalance = await utils.getEtherBalance(federation);
+
+          assert(
+            federatorBalance.eq(expectedFederatorBalance),
+            "Federator Balance should be the same as before"
+          );
+        });
+
+        it("should fail because the sender doesn't have balance", async function() {
+          await mintAndApprove(this.token, this.bridgeNft.address);
+
+          const fixedFee = await utils.getEtherBalance(tokenOwner);
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await truffleAssert.fails(
+            this.bridgeNft.receiveTokensTo(
+              this.token.address,
+              anAccount,
+              defaultTokenId,
+              {
+                from: tokenOwner,
+                value: fixedFee,
+              }
+            ),
+            "sender doesn't have enough funds to send tx"
+          );
+        });
+
+        it("should fail because the sent value is smaller than fixed fee", async function() {
+          await mintAndApprove(this.token, this.bridgeNft.address);
+
+          const fixedFee = new BN(15);
+          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+            from: bridgeManager,
+          });
+          utils.checkRcpt(receipt);
+
+          await truffleAssert.fails(
+            this.bridgeNft.receiveTokensTo(
+              this.token.address,
+              anAccount,
+              defaultTokenId,
+              {
+                from: tokenOwner,
+                value: fixedFee.sub(new BN(1)),
+              }
+            ),
+            "NFTBridge: value is smaller than fixed fee"
           );
         });
       });
