@@ -63,7 +63,7 @@ contract NFTBridge is
   //Bridge_v3 variables
   bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
   IWrapped public wrappedCurrency;
-  mapping(bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
+  mapping(bytes32 => bytes32) public transactionDataHashes; // transactionHash => transactionDataHash
   mapping(bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
   mapping(bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
@@ -136,7 +136,7 @@ contract NFTBridge is
     address _originalTokenAddress,
     address payable _from,
     address payable _to,
-    uint256 _amount,
+    uint256 _tokenId,
     bytes32 _blockHash,
     bytes32 _transactionHash,
     uint32 _logIndex
@@ -148,35 +148,34 @@ contract NFTBridge is
       "Bridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "Bridge: Null To");
-    require(_amount > 0, "Bridge: Amount 0");
+    require(_from != NULL_ADDRESS, "Bridge: Null From");
     require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
     require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
     require(
-      transactionsDataHashes[_transactionHash] == bytes32(0),
+      transactionDataHashes[_transactionHash] == bytes32(0),
       "Bridge: Already accepted"
     );
 
     bytes32 _transactionDataHash = getTransactionDataHash(
       _to,
-      _amount,
+      _tokenId,
       _blockHash,
       _transactionHash,
       _logIndex
     );
-    // Do not remove, claimed also has the previously processed using the older bridge version
-    // https://github.com/rsksmart/tokenbridge/blob/TOKENBRIDGE-1.2.0/bridge/contracts/Bridge.sol#L41
+    // Do not remove, claimed will also have transactions previously processed using older bridge versions
     require(!claimed[_transactionDataHash], "Bridge: Already claimed");
 
-    transactionsDataHashes[_transactionHash] = _transactionDataHash;
+    transactionDataHashes[_transactionHash] = _transactionDataHash;
     originalTokenAddresses[_transactionHash] = _originalTokenAddress;
     senderAddresses[_transactionHash] = _from;
 
-    emit AcceptedCrossTransfer(
+    emit AcceptedNFTCrossTransfer(
       _transactionHash,
       _originalTokenAddress,
       _to,
       _from,
-      _amount,
+      _tokenId,
       _blockHash,
       _logIndex
     );
@@ -292,7 +291,7 @@ contract NFTBridge is
       _claimData.logIndex
     );
     require(
-      transactionsDataHashes[_claimData.transactionHash] == transactionDataHash,
+      transactionDataHashes[_claimData.transactionHash] == transactionDataHash,
       "Bridge: Wrong txDataHash"
     );
     require(!claimed[transactionDataHash], "Bridge: Already claimed");
@@ -507,11 +506,11 @@ contract NFTBridge is
   }
 
   function hasCrossed(bytes32 transactionHash) public view returns (bool) {
-    return transactionsDataHashes[transactionHash] != bytes32(0);
+    return transactionDataHashes[transactionHash] != bytes32(0);
   }
 
   function hasBeenClaimed(bytes32 transactionHash) public view returns (bool) {
-    return claimed[transactionsDataHashes[transactionHash]];
+    return claimed[transactionDataHashes[transactionHash]];
   }
 
   /**
