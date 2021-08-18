@@ -376,7 +376,7 @@ contract('SideToken', async function (accounts) {
 
         it('should accept signed permit', async function () {
             const amount = '1001';
-            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
             await this.token.mint(accountWallet.address, amount, '0x', '0x');
 
             const nonce = (await this.token.nonces(accountWallet.address)).toString();
@@ -412,7 +412,7 @@ contract('SideToken', async function (accounts) {
 
           it('should fail invalid signature', async function () {
             const amount = '1001';
-            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
             await this.token.mint(accountWallet.address, amount, '0x', '0x');
 
             const nonce = (await this.token.nonces(accountWallet.address)).toString();
@@ -440,7 +440,7 @@ contract('SideToken', async function (accounts) {
 
           it('should fail invalid nonce', async function () {
             const amount = '1001';
-            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
             await this.token.mint(accountWallet.address, amount, '0x', '0x');
 
             const nonce = (await this.token.nonces(accountWallet.address)).toString();
@@ -479,7 +479,7 @@ contract('SideToken', async function (accounts) {
 
           it('should fail expired deadline', async function () {
             const amount = '1001';
-            const accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+            const accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
             await this.token.mint(accountWallet.address, amount, '0x', '0x');
 
             const nonce = (await this.token.nonces(accountWallet.address)).toString();

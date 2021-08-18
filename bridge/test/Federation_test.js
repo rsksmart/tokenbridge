@@ -5,7 +5,6 @@ const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
 const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
-const randomHex = web3.utils.randomHex;
 const toWei = web3.utils.toWei;
 
 contract('Federation', async function (accounts) {
@@ -14,7 +13,7 @@ contract('Federation', async function (accounts) {
     const federator1 = accounts[2];
     const federator2 = accounts[3];
     const federator3 = accounts[4];
-    const bridge = randomHex(20);
+    const bridge = utils.getRandomAddress();
 
     before(async function () {
         await utils.saveState();
@@ -52,7 +51,7 @@ contract('Federation', async function (accounts) {
         it('should fail if bigger max memeber length', async function () {
             let members = [];
             for(let i = 0; i <= 50; i++) {
-                members[i]=randomHex(20);
+                members[i]=utils.getRandomAddress();
             }
             await utils.expectThrow(this.federators.initialize(members, 2, bridge, deployer));
         });
@@ -60,7 +59,7 @@ contract('Federation', async function (accounts) {
         it('should be successful with max memeber length', async function () {
             let members = [];
             for(let i = 0; i < 50; i++) {
-                members[i]=randomHex(20);
+                members[i]=utils.getRandomAddress();
             }
             await this.federators.initialize(members, 2, bridge, deployer);
             let resultMembers = await this.federators.getMembers();
@@ -158,7 +157,7 @@ contract('Federation', async function (accounts) {
 
                 it('should fail if max members', async function() {
                     for(i=2; i < 50; i++) {
-                        await this.federators.addMember(randomHex(20));
+                        await this.federators.addMember(utils.getRandomAddress());
                     }
 
                     await utils.expectThrow(this.federators.addMember(anAccount));
@@ -321,11 +320,11 @@ contract('Federation', async function (accounts) {
         });
 
         describe('Transactions', async function() {
-            const originalTokenAddress = randomHex(20);
+            const originalTokenAddress = utils.getRandomAddress();
             const amount = web3.utils.toWei('10');
             const symbol = 'e';
-            const blockHash = randomHex(32);
-            const transactionHash = randomHex(32);
+            const blockHash = utils.getRandomHash();
+            const transactionHash = utils.getRandomHash();
             const logIndex = 1;
             const decimals = 18;
             const typeId = 0;
