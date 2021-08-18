@@ -1,6 +1,9 @@
 const BN = web3.utils.BN;
 
-const gasLimit = 6800000;
+const GAS_LIMIT = 6800000;
+const ADDRESS_LENGTH = 20;
+const HASH_LENGTH = 32;
+const randomHex = web3.utils.randomHex;
 
 const saveState = async () =>
   new Promise((resolve) => {
@@ -61,7 +64,7 @@ function expectThrow(promise) {
 
 function checkGas(gas) {
   //process.stdout.write(`\x1b[36m[Gas:${gas}]\x1b[0m`);
-  assert(gas < gasLimit, "Gas used bigger than the maximum in mainnet");
+  assert(gas < GAS_LIMIT, "Gas used bigger than the maximum in mainnet");
 }
 
 function checkRcpt(tx) {
@@ -189,6 +192,14 @@ function ascii_to_hexa(str) {
   return "0x" + arr1.join("");
 }
 
+function getRandomAddress() {
+  return randomHex(ADDRESS_LENGTH);
+}
+
+function getRandomHash() {
+  return randomHex(HASH_LENGTH);
+}
+
 module.exports = {
   getEtherBalance: getEtherBalance,
   getGasUsedByTx: getGasUsedByTx,
@@ -205,4 +216,6 @@ module.exports = {
     "0x0000000000000000000000000000000000000000000000000000000000000000",
   saveState: saveState,
   revertState: revertState,
+  getRandomAddress: getRandomAddress,
+  getRandomHash: getRandomHash,
 };
