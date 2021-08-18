@@ -15,7 +15,6 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
 const utils = require('./utils');
-const randomHex = web3.utils.randomHex;
 const toWei = web3.utils.toWei;
 
 contract('Bridge upgrade test', async (accounts) => {
@@ -281,8 +280,8 @@ contract('Bridge upgrade test', async (accounts) => {
                         let originalTokenAddress = await this.proxy.methods.originalTokens(sideTokenAddress).call();
                         assert.equal(originalTokenAddress, this.token.address);
 
-                        const blockHash = randomHex(32);
-                        const txHash = randomHex(32);
+                        const blockHash = utils.getRandomHash();
+                        const txHash = utils.getRandomHash();
                         const logIndex = 0;
                         let tx = await this.proxy.methods.acceptTransfer(
                             this.token.address,
