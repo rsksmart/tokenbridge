@@ -15,10 +15,41 @@ contract Federation is Initializable, UpgradableOwnable {
 
     IBridge public bridge;
     address[] public members;
+
+    /**
+      @notice The minimum amount of votes to approve a transaction
+      @dev It should have more members than the required amount
+     */
     uint public required;
 
+    /**
+      @notice
+     */
     mapping (address => bool) public isMember;
+
+    /**
+      (bytes32) transactionId = keccak256(
+        abi.encodePacked(
+          originalTokenAddress,
+          sender,
+          receiver,
+          amount,
+          blockHash,
+          transactionHash,
+          logIndex
+        )
+      ) => (
+        (address) members => (bool) voted
+      )
+      @notice Votes by members by the transaction ID
+      @dev usually the members should approve the transaction by 50% + 1
+     */
     mapping (bytes32 => mapping (address => bool)) public votes;
+
+    /**
+      (bytes32) transactionId => (bool) voted
+      @notice Check if that transaction was already processed
+     */
     mapping(bytes32 => bool) public processed;
 
     event Executed(
