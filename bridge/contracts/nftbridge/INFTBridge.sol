@@ -29,7 +29,7 @@ interface INFTBridge {
     address _originalTokenAddress,
     address payable _from,
     address payable _to,
-    uint256 _amount,
+    uint256 _tokenId,
     bytes32 _blockHash,
     bytes32 _transactionHash,
     uint32 _logIndex
@@ -76,12 +76,12 @@ interface INFTBridge {
     address indexed _originalTokenAddress,
     string _newSymbol
   );
-  event AcceptedCrossTransfer(
+  event AcceptedNFTCrossTransfer(
     bytes32 indexed _transactionHash,
     address indexed _originalTokenAddress,
     address indexed _to,
     address _from,
-    uint256 _amount,
+    uint256 _tokenId,
     bytes32 _blockHash,
     uint256 _logIndex
   );
