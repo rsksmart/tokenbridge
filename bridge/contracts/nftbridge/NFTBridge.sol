@@ -148,6 +148,7 @@ contract NFTBridge is
       "Bridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "Bridge: Null To");
+    require(_from != NULL_ADDRESS, "Bridge: Null From");
     require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
     require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
     require(
