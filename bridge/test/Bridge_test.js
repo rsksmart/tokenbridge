@@ -12,7 +12,6 @@ const truffleAssert = require('truffle-assertions');
 const ethUtil = require('ethereumjs-util');
 
 const BN = web3.utils.BN;
-const randomHex = web3.utils.randomHex;
 const ONE_DAY = 24*3600;
 const toWei = web3.utils.toWei;
 
@@ -1181,7 +1180,7 @@ contract('Bridge', async function (accounts) {
                         {
                             to: anAccount,
                             amount: this.amount,
-                            blockHash: randomHex(32),
+                            blockHash: utils.getRandomHash(),
                             transactionHash: this.txReceipt.tx,
                             logIndex: this.txReceipt.receipt.logs[0].logIndex
                         },
@@ -1195,7 +1194,7 @@ contract('Bridge', async function (accounts) {
                             to: anAccount,
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: randomHex(32),
+                            transactionHash: utils.getRandomHash(),
                             logIndex: this.txReceipt.receipt.logs[0].logIndex
                         },
                         { from: federation }
@@ -1344,10 +1343,10 @@ contract('Bridge', async function (accounts) {
 
             describe('claim gasless', async function() {
                 beforeEach(async function() {
-                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
                     this.gaslessAmount = '1001';
-                    this.gaslessBlockHash = randomHex(32);
-                    this.gaslessTxHash = randomHex(32);
+                    this.gaslessBlockHash = utils.getRandomHash();
+                    this.gaslessTxHash = utils.getRandomHash();
                     this.gaslessLogIndex = '0';
 
                     await this.mirrorBridge.acceptTransfer(
@@ -1748,8 +1747,8 @@ contract('Bridge', async function (accounts) {
             it('crossback with amount lower than granularity', async function () {
                 const granularity = '10000000000000000';
                 const decimals = '2';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
@@ -1798,8 +1797,8 @@ contract('Bridge', async function (accounts) {
             it('crossback with amount lower than granularity and no fees', async function () {
                 const granularity = '10000000000000000';
                 const decimals = '2';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
@@ -1846,8 +1845,8 @@ contract('Bridge', async function (accounts) {
 
             it('crossback wrapped network currency', async function () {
                 const granularity = '1';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 await this.mirrorBridge.acceptTransfer(this.wrbtc.address, anAccount, anAccount, this.amount,
@@ -1971,8 +1970,7 @@ contract('Bridge', async function (accounts) {
 
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
-                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.
-                        utils.randomHex(32));
+                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
                     await this.sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
@@ -2393,8 +2391,8 @@ contract('Bridge', async function (accounts) {
                 const bridgeBalanceBeforeTransfer  = await sideToken.balanceOf(this.bridge.address);
 
                 const amount = web3.utils.toWei('1000');
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const transactionDataHash =  await this.bridge.getTransactionDataHash(
@@ -2434,7 +2432,7 @@ contract('Bridge', async function (accounts) {
         });
 
         it('should be successful', async function () {
-            let newAddress = randomHex(20);
+            let newAddress = utils.getRandomAddress();
             await this.bridge.changeSideTokenFactory(newAddress, { from: bridgeManager });
             let result = await this.bridge.sideTokenFactory();
             assert.equal(result.toLowerCase(), newAddress.toLowerCase());
