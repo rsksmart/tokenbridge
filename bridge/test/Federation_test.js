@@ -1049,7 +1049,7 @@ contract('Federation', async function (accounts) {
                 await this.federators.setNFTBridge(this.NFTBridge.address);
               });
 
-              it.only('should vote successfully', async function() {
+              it('should vote successfully', async function() {
                 let receipt = await this.NFTtoken.safeMint(deployer, tokenId, {
                   from: deployer,
                 });
