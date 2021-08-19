@@ -7,6 +7,7 @@ const FederationFactory = require('../contracts/FederationFactory');
 const AllowTokensFactory = require('../contracts/AllowTokensFactory');
 const utils = require('./utils');
 const TOKEN_TYPE_COIN = 0;
+
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
 
@@ -287,18 +288,18 @@ module.exports = class Federator {
             this.logger.info(`Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`);
 
             let txData = await fedContract.voteTransaction({
-                originalTokenAddress: tokenAddress,
-                sender,
-                receiver,
-                amount,
-                symbol,
-                blockHash,
-                transactionHash,
-                logIndex,
-                decimals,
-                granularity,
-                typeId,
-                TOKEN_TYPE_COIN,
+              originalTokenAddress: tokenAddress,
+              sender,
+              receiver,
+              number: amount,
+              symbol,
+              blockHash,
+              transactionHash,
+              logIndex,
+              decimals,
+              granularity,
+              typeId,
+              tokenType: TOKEN_TYPE_COIN,
             }).encodeABI();
 
             let revertedTxns = {};

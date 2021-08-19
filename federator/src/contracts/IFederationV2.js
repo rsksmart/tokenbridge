@@ -38,10 +38,11 @@ module.exports = class IFederationV2 {
             paramsObj.originalTokenAddress,
             paramsObj.sender,
             paramsObj.receiver,
-            paramsObj.amount,
+            paramsObj.number,
             paramsObj.blockHash,
             paramsObj.transactionHash,
-            paramsObj.logIndex
+            paramsObj.logIndex,
+            paramsObj.tokenType,
         );
     }
 
