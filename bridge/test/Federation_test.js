@@ -14,6 +14,8 @@ contract('Federation', async function (accounts) {
     const federator2 = accounts[3];
     const federator3 = accounts[4];
     const bridge = utils.getRandomAddress();
+    const TOKEN_TYPE_COIN = 0;
+    // const TOKEN_TYPE_NFT = 1;
 
     before(async function () {
         await utils.saveState();
@@ -388,6 +390,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -446,6 +449,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1})
                 );
 
@@ -485,6 +489,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -529,6 +534,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -550,6 +556,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -593,6 +600,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -614,6 +622,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -645,6 +654,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
 
@@ -672,6 +682,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
 
@@ -703,7 +714,9 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    {from: federator1});
+                    TOKEN_TYPE_COIN,
+                    {from: federator1}
+                );
 
                 let transactionId = await this.federators.getTransactionId(
                     originalTokenAddress,
@@ -729,6 +742,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
 
@@ -759,6 +773,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
 
@@ -786,6 +801,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
 
@@ -813,6 +829,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator3}
                 );
 
@@ -834,6 +851,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
 
@@ -861,6 +879,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator2}
                 );
 
@@ -887,6 +906,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator3}
                 );
 
@@ -909,7 +929,7 @@ contract('Federation', async function (accounts) {
 
             it('should fail if not federators member', async function() {
                 await utils.expectThrow(this.federators.voteTransaction(originalTokenAddress,
-                    anAccount, anAccount, amount, blockHash, transactionHash, logIndex));
+                    anAccount, anAccount, amount, blockHash, transactionHash, logIndex, TOKEN_TYPE_COIN));
             });
 
             it('voteTransaction should be successfull if already voted', async function() {
@@ -933,6 +953,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -948,6 +969,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    TOKEN_TYPE_COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
