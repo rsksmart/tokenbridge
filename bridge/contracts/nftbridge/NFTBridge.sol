@@ -141,19 +141,19 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex
   ) external override whenNotPaused nonReentrant {
-    require(_msgSender() == federation, "Bridge: Not Federation");
+    require(_msgSender() == federation, "BridgeNFT: Not Federation");
     require(
       knownTokens[_originalTokenAddress] ||
           sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] != NULL_ADDRESS,
-      "Bridge: Unknown token"
+      "BridgeNFT: Unknown token"
     );
-    require(_to != NULL_ADDRESS, "Bridge: Null To");
-    require(_from != NULL_ADDRESS, "Bridge: Null From");
-    require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
-    require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
+    require(_to != NULL_ADDRESS, "BridgeNFT: Null To");
+    require(_from != NULL_ADDRESS, "BridgeNFT: Null From");
+    require(_blockHash != NULL_HASH, "BridgeNFT: Null BlockHash");
+    require(_transactionHash != NULL_HASH, "BridgeNFT: Null TxHash");
     require(
       transactionDataHashes[_transactionHash] == bytes32(0),
-      "Bridge: Already accepted"
+      "BridgeNFT: Already accepted"
     );
 
     bytes32 _transactionDataHash = getTransactionDataHash(
