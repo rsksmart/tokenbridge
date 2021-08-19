@@ -144,7 +144,7 @@ contract Federation is Initializable, UpgradableOwnable {
       emit BridgeNFTChanged(_bridgeNFT);
     }
 
-    function validateTransaction(bytes32 transactionId) internal returns(bool) {
+    function validateTransaction(bytes32 transactionId) internal view returns(bool) {
       uint transactionCount = getTransactionCount(transactionId);
       return transactionCount >= required && transactionCount >= members.length / 2 + 1;
     }
@@ -241,6 +241,7 @@ contract Federation is Initializable, UpgradableOwnable {
     TokenType tokenType
   ) internal {
     if (tokenType == TokenType.NFT) {
+      require(bridgeNFT != INFTBridge(0), "Federation: Empty bridgeNFT");
       bridgeNFT.acceptTransfer(
         originalTokenAddress,
         sender,
