@@ -4,9 +4,9 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 interface INFTBridge {
-  struct ClaimData {
+  struct NFTClaimData {
     address payable to;
-    uint256 amount;
+    uint256 tokenId;
     bytes32 blockHash;
     bytes32 transactionHash;
     uint32 logIndex;
@@ -36,21 +36,11 @@ interface INFTBridge {
   ) external;
 
   /**
-    * Claims the crossed transaction using the hash, this sends the funds to the address indicated in
+    * Claims the crossed transaction using the hash, this sends the token to the address specified in the claim data
     */
-  function claim(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
+  function claim(NFTClaimData calldata _claimData) external;
 
-  function claimFallback(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
-
-  function claimGasless(
-    ClaimData calldata _claimData,
-    address payable _relayer,
-    uint256 _fee,
-    uint256 _deadline,
-    uint8 _v,
-    bytes32 _r,
-    bytes32 _s
-  ) external returns (uint256 receivedAmount);
+  function claimFallback(NFTClaimData calldata _claimData) external;
 
   function getTransactionDataHash(
     address _to,
@@ -86,16 +76,14 @@ interface INFTBridge {
     uint256 _logIndex
   );
   event FixedFeeNFTChanged(uint256 _amount);
-  event Claimed(
+  event ClaimedNFTToken(
     bytes32 indexed _transactionHash,
     address indexed _originalTokenAddress,
     address indexed _to,
     address _sender,
-    uint256 _amount,
+    uint256 _tokenId,
     bytes32 _blockHash,
     uint256 _logIndex,
-    address _reciever,
-    address _relayer,
-    uint256 _fee
+    address _receiver
   );
 }
