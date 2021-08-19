@@ -16,19 +16,6 @@
         "anonymous": false,
         "inputs": [
             {
-                "indexed": false,
-                "internalType": "address",
-                "name": "bridgeNFT",
-                "type": "address"
-            }
-        ],
-        "name": "BridgeNFTChanged",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
                 "indexed": true,
                 "internalType": "address",
                 "name": "federator",
@@ -159,6 +146,19 @@
         "anonymous": false,
         "inputs": [
             {
+                "indexed": false,
+                "internalType": "address",
+                "name": "NFTBridge",
+                "type": "address"
+            }
+        ],
+        "name": "NFTBridgeChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
                 "indexed": true,
                 "internalType": "address",
                 "name": "previousOwner",
@@ -263,10 +263,10 @@
     },
     {
         "inputs": [],
-        "name": "bridge",
+        "name": "NFTBridge",
         "outputs": [
             {
-                "internalType": "contract IBridge",
+                "internalType": "contract INFTBridge",
                 "name": "",
                 "type": "address"
             }
@@ -276,10 +276,10 @@
     },
     {
         "inputs": [],
-        "name": "bridgeNFT",
+        "name": "bridge",
         "outputs": [
             {
-                "internalType": "contract INFTBridge",
+                "internalType": "contract IBridge",
                 "name": "",
                 "type": "address"
             }
@@ -498,11 +498,11 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_bridgeNFT",
+                "name": "_NFTBridge",
                 "type": "address"
             }
         ],
-        "name": "setBridgeNFT",
+        "name": "setNFTBridge",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
