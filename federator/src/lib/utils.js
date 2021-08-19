@@ -195,6 +195,11 @@ function increaseTimestamp(web3, increase) {
     });
 }
 
+const tokenType = {
+  COIN: 0,
+  NFT: 1
+};
+
 module.exports = {
     asyncMine,
     evm_mine,
@@ -213,5 +218,6 @@ module.exports = {
     retry,
     retry3Times,
     getHeartbeatPollingInterval,
-    increaseTimestamp
+    increaseTimestamp,
+    tokenType,
 }
