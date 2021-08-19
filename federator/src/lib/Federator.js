@@ -289,7 +289,7 @@ module.exports = class Federator {
               originalTokenAddress: tokenAddress,
               sender,
               receiver,
-              number: amount,
+              amount,
               symbol,
               blockHash,
               transactionHash,
