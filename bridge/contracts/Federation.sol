@@ -241,7 +241,7 @@ contract Federation is Initializable, UpgradableOwnable {
     TokenType tokenType
   ) internal {
     if (tokenType == TokenType.NFT) {
-      require(bridgeNFT != INFTBridge(0), "Federation: Empty NFTBridge");
+      require(address(bridgeNFT) != NULL_ADDRESS, "Federation: Empty NFTBridge");
       bridgeNFT.acceptTransfer(
         originalTokenAddress,
         sender,
