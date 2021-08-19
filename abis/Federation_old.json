@@ -21,6 +21,49 @@
             {
                 "indexed": false,
                 "internalType": "address",
+                "name": "bridgeNFT",
+                "type": "address"
+            }
+        ],
+        "name": "BridgeNFTChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "federator",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "transactionId",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "originalTokenAddress",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
                 "name": "bridge",
                 "type": "address"
             }
@@ -199,6 +242,19 @@
         "type": "function"
     },
     {
+        "inputs": [],
+        "name": "bridgeNFT",
+        "outputs": [
+            {
+                "internalType": "contract INFTBridge",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
         "inputs": [
             {
                 "internalType": "address",
@@ -355,6 +411,19 @@
         "inputs": [
             {
                 "internalType": "address",
+                "name": "_bridgeNFT",
+                "type": "address"
+            }
+        ],
+        "name": "setBridgeNFT",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
                 "name": "originalTokenAddress",
                 "type": "address"
             },
@@ -365,7 +434,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "amount",
+                "name": "number",
                 "type": "uint256"
             },
             {
@@ -389,14 +458,9 @@
                 "type": "uint32"
             },
             {
-                "internalType": "uint8",
-                "name": "decimals",
+                "internalType": "enum Federation.TokenType",
+                "name": "tokenType",
                 "type": "uint8"
-            },
-            {
-                "internalType": "uint256",
-                "name": "granularity",
-                "type": "uint256"
             }
         ],
         "name": "voteTransaction",
