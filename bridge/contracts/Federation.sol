@@ -17,7 +17,7 @@ contract Federation is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    INFTBridge public bridgeNFT;
+    INFTBridge public NFTBridge;
     IBridge public bridge;
     address[] public members;
 
@@ -73,7 +73,7 @@ contract Federation is Initializable, UpgradableOwnable {
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
     event BridgeChanged(address bridge);
-    event BridgeNFTChanged(address bridgeNFT);
+    event NFTBridgeChanged(address NFTBridge);
     event Voted(
         address indexed federator,
         bytes32 indexed transactionHash,
@@ -134,14 +134,14 @@ contract Federation is Initializable, UpgradableOwnable {
         emit BridgeChanged(_bridge);
     }
 
-    function setBridgeNFT(address _bridgeNFT) external onlyOwner {
-      _setBridgeNFT(_bridgeNFT);
+    function setNFTBridge(address _NFTBridge) external onlyOwner {
+      _setNFTBridge(_NFTBridge);
     }
 
-    function _setBridgeNFT(address _bridgeNFT) internal {
-      require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
-      bridgeNFT = INFTBridge(_bridgeNFT);
-      emit BridgeNFTChanged(_bridgeNFT);
+    function _setNFTBridge(address _NFTBridge) internal {
+      require(_NFTBridge != NULL_ADDRESS, "Federation: Empty NFT bridge");
+      NFTBridge = INFTBridge(_NFTBridge);
+      emit NFTBridgeChanged(_NFTBridge);
     }
 
     function validateTransaction(bytes32 transactionId) internal view returns(bool) {
@@ -152,13 +152,13 @@ contract Federation is Initializable, UpgradableOwnable {
     /**
       @notice Vote in a transaction, if it has enough votes it accepts the transfer
       @dev Always return true
-      @param originalTokenAddress The address of the original token in the main chain
+      @param originalTokenAddress The address of the token in the origin chain
       @param sender The address who solicited the cross token
-      @param receiver Who is going to receive the token in the side chain
+      @param receiver Who is going to receive the token in the opposite chain
       @param number Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
-      @param blockHash The block hash of the transaction that occurs the cross event
-      @param transactionHash The transaction that occurs the cross event
-      @param logIndex index of log
+      @param blockHash The block hash in which the transaction with the cross event occurred
+      @param transactionHash The transaction in which the cross event occurred
+      @param logIndex Index of the event in the logs
       @param tokenType Is the type of bridge to be used
       @return True
      */
@@ -241,8 +241,8 @@ contract Federation is Initializable, UpgradableOwnable {
     TokenType tokenType
   ) internal {
     if (tokenType == TokenType.NFT) {
-      require(bridgeNFT != INFTBridge(0), "Federation: Empty bridgeNFT");
-      bridgeNFT.acceptTransfer(
+      require(NFTBridge != INFTBridge(0), "Federation: Empty NFTBridge");
+      NFTBridge.acceptTransfer(
         originalTokenAddress,
         sender,
         receiver,
@@ -254,7 +254,6 @@ contract Federation is Initializable, UpgradableOwnable {
       return;
     }
 
-    // if it is not the NFT token type it should send as coin
     bridge.acceptTransfer(
       originalTokenAddress,
       sender,
