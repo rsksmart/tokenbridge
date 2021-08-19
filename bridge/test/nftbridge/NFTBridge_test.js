@@ -97,7 +97,7 @@ contract("Bridge NFT", async function(accounts) {
     });
     utils.checkRcpt(receipt);
   };
-  
+
   describe("Main NFT network", async function() {
     it("should retrieve the version", async function() {
       const result = await this.bridgeNft.version();
@@ -610,7 +610,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: anAccount}
             ),
-            "Bridge: Not Federation"
+            "BridgeNFT: Not Federation"
         );
       });
 
@@ -621,7 +621,7 @@ contract("Bridge NFT", async function(accounts) {
                 unknownTokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Unknown token"
+            "BridgeNFT: Unknown token"
         );
       });
 
@@ -631,7 +631,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, anAccount, utils.NULL_ADDRESS, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null To"
+            "BridgeNFT: Null To"
         );
       });
 
@@ -641,7 +641,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, utils.NULL_ADDRESS, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null From"
+            "BridgeNFT: Null From"
         );
       });
 
@@ -651,7 +651,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, anAccount, anotherAccount, tokenId, utils.NULL_HASH, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null BlockHash"
+            "BridgeNFT: Null BlockHash"
         );
       });
 
@@ -661,7 +661,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, utils.NULL_HASH, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null TxHash"
+            "BridgeNFT: Null TxHash"
         );
       });
 
@@ -672,7 +672,7 @@ contract("Bridge NFT", async function(accounts) {
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Already accepted"
+            "BridgeNFT: Already accepted"
         );
       });
     });
