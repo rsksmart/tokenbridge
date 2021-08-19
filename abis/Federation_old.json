@@ -103,7 +103,7 @@
             {
                 "indexed": false,
                 "internalType": "address",
-                "name": "NFTBridge",
+                "name": "bridgeNFT",
                 "type": "address"
             }
         ],
@@ -230,10 +230,10 @@
     },
     {
         "inputs": [],
-        "name": "NFTBridge",
+        "name": "bridge",
         "outputs": [
             {
-                "internalType": "contract INFTBridge",
+                "internalType": "contract IBridge",
                 "name": "",
                 "type": "address"
             }
@@ -243,10 +243,10 @@
     },
     {
         "inputs": [],
-        "name": "bridge",
+        "name": "bridgeNFT",
         "outputs": [
             {
-                "internalType": "contract IBridge",
+                "internalType": "contract INFTBridge",
                 "name": "",
                 "type": "address"
             }
@@ -411,7 +411,7 @@
         "inputs": [
             {
                 "internalType": "address",
-                "name": "_NFTBridge",
+                "name": "_bridgeNFT",
                 "type": "address"
             }
         ],
@@ -434,7 +434,7 @@
             },
             {
                 "internalType": "uint256",
-                "name": "number",
+                "name": "value",
                 "type": "uint256"
             },
             {
@@ -464,13 +464,7 @@
             }
         ],
         "name": "voteTransaction",
-        "outputs": [
-            {
-                "internalType": "bool",
-                "name": "",
-                "type": "bool"
-            }
-        ],
+        "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
     },
