@@ -17,7 +17,7 @@ contract Federation is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    INFTBridge public NFTBridge;
+    INFTBridge public bridgeNFT;
     IBridge public bridge;
     address[] public members;
 
@@ -73,7 +73,7 @@ contract Federation is Initializable, UpgradableOwnable {
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
     event BridgeChanged(address bridge);
-    event NFTBridgeChanged(address NFTBridge);
+    event NFTBridgeChanged(address bridgeNFT);
     event Voted(
         address indexed federator,
         bytes32 indexed transactionHash,
@@ -134,14 +134,14 @@ contract Federation is Initializable, UpgradableOwnable {
         emit BridgeChanged(_bridge);
     }
 
-    function setNFTBridge(address _NFTBridge) external onlyOwner {
-      _setNFTBridge(_NFTBridge);
+    function setNFTBridge(address _bridgeNFT) external onlyOwner {
+      _setNFTBridge(_bridgeNFT);
     }
 
-    function _setNFTBridge(address _NFTBridge) internal {
-      require(_NFTBridge != NULL_ADDRESS, "Federation: Empty NFT bridge");
-      NFTBridge = INFTBridge(_NFTBridge);
-      emit NFTBridgeChanged(_NFTBridge);
+    function _setNFTBridge(address _bridgeNFT) internal {
+      require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
+      bridgeNFT = INFTBridge(_bridgeNFT);
+      emit NFTBridgeChanged(_bridgeNFT);
     }
 
     function validateTransaction(bytes32 transactionId) internal view returns(bool) {
@@ -241,8 +241,8 @@ contract Federation is Initializable, UpgradableOwnable {
     TokenType tokenType
   ) internal {
     if (tokenType == TokenType.NFT) {
-      require(NFTBridge != INFTBridge(0), "Federation: Empty NFTBridge");
-      NFTBridge.acceptTransfer(
+      require(bridgeNFT != INFTBridge(0), "Federation: Empty NFTBridge");
+      bridgeNFT.acceptTransfer(
         originalTokenAddress,
         sender,
         receiver,
