@@ -6,8 +6,6 @@ const BridgeFactory = require('../contracts/BridgeFactory');
 const FederationFactory = require('../contracts/FederationFactory');
 const AllowTokensFactory = require('../contracts/AllowTokensFactory');
 const utils = require('./utils');
-const TOKEN_TYPE_COIN = 0;
-
 module.exports = class Federator {
     constructor(config, logger, Web3 = web3) {
 
@@ -299,7 +297,7 @@ module.exports = class Federator {
               decimals,
               granularity,
               typeId,
-              tokenType: TOKEN_TYPE_COIN,
+              tokenType: utils.tokenType.COIN,
             }).encodeABI();
 
             let revertedTxns = {};
