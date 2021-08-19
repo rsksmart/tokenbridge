@@ -11,6 +11,7 @@ import "./nftbridge/INFTBridge.sol";
 import "./interface/IBridge.sol";
 
 contract Federation is Initializable, UpgradableOwnable {
+    /// @dev Starts at 0 [COIN == 0, NFT == 1]
     enum TokenType{ COIN, NFT }
 
     uint constant public MAX_MEMBER_COUNT = 50;
@@ -143,21 +144,39 @@ contract Federation is Initializable, UpgradableOwnable {
       emit BridgeNFTChanged(_bridgeNFT);
     }
 
+    function validateTransaction(bytes32 transactionId) internal returns(bool) {
+      uint transactionCount = getTransactionCount(transactionId);
+      return transactionCount >= required && transactionCount >= members.length / 2 + 1;
+    }
+
+    /**
+      @notice Vote in a transaction, if it has enough votes it accepts the transfer
+      @dev Always return true
+      @param originalTokenAddress The address of the original token in the main chain
+      @param sender The address who solicited the cross token
+      @param receiver Who is going to receive the token in the side chain
+      @param number Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+      @param blockHash The block hash of the transaction that occurs the cross event
+      @param transactionHash The transaction that occurs the cross event
+      @param logIndex index of log
+      @param tokenType Is the type of bridge to be used
+      @return True
+     */
     function voteTransaction(
-        address originalTokenAddress,
-        address payable sender,
-        address payable receiver,
-        uint256 amount,
-        bytes32 blockHash,
-        bytes32 transactionHash,
-        uint32 logIndex,
-        TokenType tokenType
+      address originalTokenAddress,
+      address payable sender,
+      address payable receiver,
+      uint256 number,
+      bytes32 blockHash,
+      bytes32 transactionHash,
+      uint32 logIndex,
+      TokenType tokenType
     ) public onlyMember returns(bool) {
         bytes32 transactionId = getTransactionId(
             originalTokenAddress,
             sender,
             receiver,
-            amount,
+            number,
             blockHash,
             transactionHash,
             logIndex
@@ -176,19 +195,18 @@ contract Federation is Initializable, UpgradableOwnable {
             originalTokenAddress,
             sender,
             receiver,
-            amount,
+            number,
             blockHash,
             logIndex
         );
 
-        uint transactionCount = getTransactionCount(transactionId);
-        if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
+        if (validateTransaction(transactionId)) {
             processed[transactionId] = true;
             acceptTransfer(
               originalTokenAddress,
               sender,
               receiver,
-              amount,
+              number,
               blockHash,
               transactionHash,
               logIndex,
@@ -202,7 +220,7 @@ contract Federation is Initializable, UpgradableOwnable {
                 originalTokenAddress,
                 sender,
                 receiver,
-                amount,
+                number,
                 blockHash,
                 logIndex
             );
@@ -216,13 +234,22 @@ contract Federation is Initializable, UpgradableOwnable {
     address originalTokenAddress,
     address payable sender,
     address payable receiver,
-    uint256 amount,
+    uint256 number,
     bytes32 blockHash,
     bytes32 transactionHash,
     uint32 logIndex,
     TokenType tokenType
   ) internal {
     if (tokenType == TokenType.NFT) {
+      bridgeNFT.acceptTransfer(
+        originalTokenAddress,
+        sender,
+        receiver,
+        number,
+        blockHash,
+        transactionHash,
+        logIndex
+      );
       return;
     }
 
@@ -231,7 +258,7 @@ contract Federation is Initializable, UpgradableOwnable {
       originalTokenAddress,
       sender,
       receiver,
-      amount,
+      number,
       blockHash,
       transactionHash,
       logIndex
@@ -265,19 +292,18 @@ contract Federation is Initializable, UpgradableOwnable {
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public pure returns(bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-            originalTokenAddress,
-            sender,
-            receiver,
-            amount,
-            blockHash,
-            transactionHash,
-            logIndex
-            )
-        );
+    ) public pure returns(bytes32) {
+      return keccak256(
+        abi.encodePacked(
+          originalTokenAddress,
+          sender,
+          receiver,
+          amount,
+          blockHash,
+          transactionHash,
+          logIndex
+        )
+      );
     }
 
     function addMember(address _newMember) external onlyOwner
