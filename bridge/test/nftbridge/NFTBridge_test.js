@@ -2,6 +2,7 @@ const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
 const NftBridge = artifacts.require("./NFTBridge");
 const AllowTokens = artifacts.require("./AllowTokens");
 const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
+const IERC721 = artifacts.require("./IERC721");
 
 const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
@@ -25,6 +26,9 @@ contract("Bridge NFT", async function(accounts) {
   const defaultTokenId = 9;
   const defaultTokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
   const acceptedNFTCrossTransferEventType = "AcceptedNFTCrossTransfer";
+  const claimedNFTTokenEventType = "ClaimedNFTToken";
+  const bigNumberZero = new BN(0);
+  const bigNumberOne = new BN(1);
 
   before(async function() {
     await utils.saveState();
@@ -61,9 +65,10 @@ contract("Bridge NFT", async function(accounts) {
     await this.allowTokens.setToken(this.token.address, this.typeId, {
       from: bridgeManager,
     });
-
-    this.sideTokenFactory = await SideNFTTokenFactory.new();
+    this.mainChainSideTokenFactory = await SideNFTTokenFactory.new();
     this.NFTBridge = await NftBridge.new();
+    this.sideNFTBridge = await NftBridge.new();
+    this.sideChainSideTokenFactory = await SideNFTTokenFactory.new();
 
     await this.NFTBridge.methods[
       "initialize(address,address,address,address,string)"
@@ -71,11 +76,22 @@ contract("Bridge NFT", async function(accounts) {
       bridgeManager,
       federation,
       this.allowTokens.address,
-      this.sideTokenFactory.address,
+      this.mainChainSideTokenFactory.address,
       sideTokenSymbolPrefix
     );
 
-    await this.sideTokenFactory.transferPrimary(this.NFTBridge.address);
+    await this.sideNFTBridge.methods[
+        "initialize(address,address,address,address,string)"
+        ](
+        bridgeManager,
+        federation,
+        this.allowTokens.address,
+        this.sideChainSideTokenFactory.address,
+        sideTokenSymbolPrefix
+    );
+
+    await this.mainChainSideTokenFactory.transferPrimary(this.NFTBridge.address);
+    await this.sideChainSideTokenFactory.transferPrimary(this.sideNFTBridge.address);
     await this.allowTokens.transferPrimary(this.NFTBridge.address, {
       from: bridgeOwner,
     });
@@ -377,7 +393,7 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("should reamin the same balance for the Federator, because the fixed fee is zero", async function() {
-          let receipt = await this.NFTBridge.setFixedFee(new BN(0), {
+          let receipt = await this.NFTBridge.setFixedFee(bigNumberZero, {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
@@ -441,7 +457,7 @@ contract("Bridge NFT", async function(accounts) {
               defaultTokenId,
               {
                 from: tokenOwner,
-                value: fixedFee.sub(new BN(1)),
+                value: fixedFee.sub(bigNumberOne),
               }
             ),
             "NFTBridge: value is smaller than fixed fee"
@@ -583,7 +599,7 @@ contract("Bridge NFT", async function(accounts) {
         let transactionDataHash = await this.NFTBridge.transactionDataHashes(transactionHash);
         assert.equal(expectedTransactionDataHash, transactionDataHash);
 
-        let originalTokenAddressForTransactionHash = await this.NFTBridge.originalTokenAddresses(transactionHash);
+        let originalTokenAddressForTransactionHash = await this.NFTBridge.tokenAddressByTransactionHash(transactionHash);
         assert.equal(tokenAddress, originalTokenAddressForTransactionHash)
 
         let senderAddressForTransactionHash = await this.NFTBridge.senderAddresses(transactionHash);
@@ -675,6 +691,158 @@ contract("Bridge NFT", async function(accounts) {
             "NFTBridge: Already accepted"
         );
       });
+    });
+
+    describe("claim", async function () {
+      let tokenAddress;
+      let symbol;
+      let name;
+      let baseURI;
+      let contractURI;
+      const tokenId = 1;
+      const blockHash = utils.getRandomHash();
+      const transactionHash = utils.getRandomHash();
+      const logIndex = 1;
+      let sideTokenAddress;
+
+      beforeEach(async function () {
+        symbol = await this.token.symbol();
+        name = await this.token.name();
+        baseURI = await this.token.baseURI();
+        contractURI = await this.token.contractURI();
+        tokenAddress = this.token.address;
+
+        // Side NFT token contract is created.
+        let receipt = await this.sideNFTBridge.createSideNFTToken(
+            tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+        );
+        utils.checkRcpt(receipt);
+        sideTokenAddress = receipt.logs[0].args[0];
+
+        // Mint token for anAccount (owner of the token).
+        receipt = await this.token.safeMint(anAccount, tokenId, {from: tokenOwner});
+        utils.checkRcpt(receipt);
+
+        // Allow bridge to move it around.
+        receipt = await this.token.approve(this.NFTBridge.address, tokenId, {from: anAccount});
+        utils.checkRcpt(receipt);
+
+        // Lock token into bridge.
+        receipt = await this.NFTBridge.receiveTokensTo(
+            this.token.address, anotherAccount, tokenId, {from: anAccount}
+        );
+        utils.checkRcpt(receipt);
+
+        // Simulate Federator calling Bridge to accept the transfer.
+        receipt = await this.sideNFTBridge.acceptTransfer(
+            tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+            {from: federation}
+        );
+        utils.checkRcpt(receipt);
+        truffleAssert.eventEmitted(receipt, acceptedNFTCrossTransferEventType);
+      });
+
+      async function assertTokenIsLockedInBridge(bridgeAddress, receiverAddress, token) {
+        let bridgeBalance = await token.balanceOf(bridgeAddress);
+        assert(
+            bigNumberOne.eq(bridgeBalance), "Bridge should still have the token locked"
+        )
+        let anotherAccountBalance = await token.balanceOf(receiverAddress);
+        assert(
+            bigNumberZero.eq(anotherAccountBalance), "Receiver account should still not have the token"
+        )
+      }
+
+      async function assertTokenHasBeenClaimed(bridgeAddress, receiverAddress, token) {
+        let bridgeBalance = await token.balanceOf(bridgeAddress);
+        assert(
+            bigNumberZero.eq(bridgeBalance), "Bridge should not have the token locked anymore"
+        )
+        let anotherAccountBalance = await token.balanceOf(receiverAddress);
+        assert(
+            bigNumberOne.eq(anotherAccountBalance), "Receiver account should have the token"
+        )
+      }
+
+      it("emits expected event and modifies affected balances correctly in successful case - throws error if re-claim is attempted",
+          async function () {
+            await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+
+            const receipt = await this.sideNFTBridge.claim(
+                {
+                  to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: transactionHash,
+                  logIndex: logIndex
+                },
+                {from: anotherAccount}
+            );
+
+            truffleAssert.eventEmitted(receipt, claimedNFTTokenEventType, (event) => {
+              return (
+                  event._transactionHash === transactionHash &&
+                  event._originalTokenAddress === tokenAddress &&
+                  event._to === anotherAccount &&
+                  event._sender === anAccount &&
+                  event._tokenId.eq(new BN(tokenId)) &&
+                  event._blockHash === blockHash &&
+                  event._logIndex.eq(new BN(logIndex)) &&
+                  event._receiver === anotherAccount
+              );
+            });
+
+            let sideToken = await IERC721.at(sideTokenAddress);
+            await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken);
+
+            await truffleAssert.fails(
+                this.sideNFTBridge.claim(
+                    {
+                      to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: transactionHash,
+                      logIndex: logIndex
+                    },
+                    {from: anotherAccount}
+                ),
+                "Bridge: Already claimed"
+            );
+
+            // Original token is still locked in main chain bridge, it was claimed (minted) in side chain.
+            await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+            await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken)
+          });
+
+      it("throws an error when transaction was not crossed", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+
+        await truffleAssert.fails(
+            this.sideNFTBridge.claim(
+                {
+                  to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: utils.getRandomHash(),
+                  logIndex: logIndex
+                },
+                {from: anotherAccount}
+            ),
+            "Bridge: Tx not crossed"
+        );
+
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+      });
+
+      it("throws an error when claim data doesn't match acceptTransfer transaction hash data", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+
+        const unexpectedTokenId = tokenId + 1;
+        await truffleAssert.fails(
+            this.sideNFTBridge.claim(
+                {
+                  to: anotherAccount, tokenId: unexpectedTokenId, blockHash: blockHash, transactionHash: transactionHash,
+                  logIndex: logIndex
+                },
+                {from: anotherAccount}
+            ),
+            "Bridge: Wrong txDataHash"
+        );
+
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+      });
+
     });
   });
 });
