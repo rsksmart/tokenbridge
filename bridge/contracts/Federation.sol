@@ -151,41 +151,39 @@ contract Federation is Initializable, UpgradableOwnable {
 
     /**
       @notice Vote in a transaction, if it has enough votes it accepts the transfer
-      @dev Always return true
-      @param originalTokenAddress The address of the token in the origin chain
+      @param originalTokenAddress The address of the token in the origin (main) chain
       @param sender The address who solicited the cross token
       @param receiver Who is going to receive the token in the opposite chain
-      @param number Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+      @param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
       @param blockHash The block hash in which the transaction with the cross event occurred
       @param transactionHash The transaction in which the cross event occurred
       @param logIndex Index of the event in the logs
       @param tokenType Is the type of bridge to be used
-      @return True
      */
     function voteTransaction(
       address originalTokenAddress,
       address payable sender,
       address payable receiver,
-      uint256 number,
+      uint256 value,
       bytes32 blockHash,
       bytes32 transactionHash,
       uint32 logIndex,
       TokenType tokenType
-    ) public onlyMember returns(bool) {
+    ) public onlyMember {
         bytes32 transactionId = getTransactionId(
             originalTokenAddress,
             sender,
             receiver,
-            number,
+            value,
             blockHash,
             transactionHash,
             logIndex
         );
         if (processed[transactionId])
-            return true;
+            return;
 
         if (votes[transactionId][_msgSender()])
-            return true;
+            return;
 
         votes[transactionId][_msgSender()] = true;
         emit Voted(
@@ -195,7 +193,7 @@ contract Federation is Initializable, UpgradableOwnable {
             originalTokenAddress,
             sender,
             receiver,
-            number,
+            value,
             blockHash,
             logIndex
         );
@@ -206,7 +204,7 @@ contract Federation is Initializable, UpgradableOwnable {
               originalTokenAddress,
               sender,
               receiver,
-              number,
+              value,
               blockHash,
               transactionHash,
               logIndex,
@@ -220,21 +218,19 @@ contract Federation is Initializable, UpgradableOwnable {
                 originalTokenAddress,
                 sender,
                 receiver,
-                number,
+                value,
                 blockHash,
                 logIndex
             );
-            return true;
+            return;
         }
-
-        return true;
     }
 
   function acceptTransfer(
     address originalTokenAddress,
     address payable sender,
     address payable receiver,
-    uint256 number,
+    uint256 value,
     bytes32 blockHash,
     bytes32 transactionHash,
     uint32 logIndex,
@@ -246,7 +242,7 @@ contract Federation is Initializable, UpgradableOwnable {
         originalTokenAddress,
         sender,
         receiver,
-        number,
+        value,
         blockHash,
         transactionHash,
         logIndex
@@ -258,7 +254,7 @@ contract Federation is Initializable, UpgradableOwnable {
       originalTokenAddress,
       sender,
       receiver,
-      number,
+      value,
       blockHash,
       transactionHash,
       logIndex
