@@ -54,7 +54,7 @@ contract NFTBridge is
 
   mapping(address => address) public sideTokenAddressByOriginalTokenAddress;
   mapping(address => address) public originalTokenAddressBySideTokenAddress;
-  mapping(address => bool) public knownTokens; // OriginalToken => true
+  mapping(address => bool) public isAddressFromCrossedOriginalToken; // address => returns true if it's an original token address crossed previously (whether it comes from main or side chain)
   mapping(bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
   IAllowTokens public allowTokens;
   ISideNFTTokenFactory public sideTokenFactory;
@@ -62,9 +62,8 @@ contract NFTBridge is
   bool public isUpgrading;
   //Bridge_v3 variables
   bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
-  IWrapped public wrappedCurrency;
   mapping(bytes32 => bytes32) public transactionDataHashes; // transactionHash => transactionDataHash
-  mapping(bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
+  mapping(bytes32 => address) public tokenAddressByTransactionHash; // transactionHash => originalTokenAddress
   mapping(bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
   bytes32 public domainSeparator;
@@ -77,7 +76,6 @@ contract NFTBridge is
   event FederationChanged(address _newFederation);
   event SideTokenFactoryChanged(address _newSideNFTTokenFactory);
   event Upgrading(bool _isUpgrading);
-  event WrappedCurrencyChanged(address _wrappedCurrency);
 
   function initialize(
     address _manager,
@@ -99,14 +97,6 @@ contract NFTBridge is
       address(this)
     );
     initDomainSeparator();
-  }
-
-  receive() external payable {
-    // The fallback function is needed to use WRBTC
-    require(
-      _msgSender() == address(wrappedCurrency),
-      "Bridge: not wrappedCurrency"
-    );
   }
 
   function version() external pure override returns (string memory) {
@@ -133,7 +123,7 @@ contract NFTBridge is
   }
 
   function acceptTransfer(
-    address _originalTokenAddress,
+    address _tokenAddress,
     address payable _from,
     address payable _to,
     uint256 _tokenId,
@@ -143,8 +133,8 @@ contract NFTBridge is
   ) external override whenNotPaused nonReentrant {
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
-      knownTokens[_originalTokenAddress] ||
-          sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] != NULL_ADDRESS,
+      isAddressFromCrossedOriginalToken[_tokenAddress] ||
+          sideTokenAddressByOriginalTokenAddress[_tokenAddress] != NULL_ADDRESS,
       "NFTBridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "NFTBridge: Null To");
@@ -167,12 +157,12 @@ contract NFTBridge is
     require(!claimed[_transactionDataHash], "NFTBridge: Already claimed");
 
     transactionDataHashes[_transactionHash] = _transactionDataHash;
-    originalTokenAddresses[_transactionHash] = _originalTokenAddress;
+    tokenAddressByTransactionHash[_transactionHash] = _tokenAddress;
     senderAddresses[_transactionHash] = _from;
 
     emit AcceptedNFTCrossTransfer(
       _transactionHash,
-      _originalTokenAddress,
+      _tokenAddress,
       _to,
       _from,
       _tokenId,
@@ -201,32 +191,20 @@ contract NFTBridge is
     emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol);
   }
 
-  function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
-    receivedAmount = _claim(
-      _claimData,
-      _claimData.to,
-      payable(address(0)),
-      0
-    );
-    return receivedAmount;
+  function claim(NFTClaimData calldata _claimData) external override {
+    _claim(_claimData, _claimData.to);
   }
 
-  function claimFallback(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
+  function claimFallback(NFTClaimData calldata _claimData) external override {
     require(
       _msgSender() == senderAddresses[_claimData.transactionHash],
       "NFTBridge: invalid sender"
     );
-    receivedAmount = _claim(
-      _claimData,
-      _msgSender(),
-      payable(address(0)),
-      0
-    );
-    return receivedAmount;
+    _claim(_claimData, _msgSender());
   }
 
   function getDigest(
-    ClaimData memory _claimData,
+    NFTClaimData memory _claimData,
     address payable _relayer,
     uint256 _fee,
     uint256 _deadline
@@ -237,7 +215,7 @@ contract NFTBridge is
         abi.encode(
           CLAIM_TYPEHASH,
           _claimData.to,
-          _claimData.amount,
+          _claimData.tokenId,
           _claimData.transactionHash,
           _relayer,
           _fee,
@@ -248,44 +226,20 @@ contract NFTBridge is
     );
   }
 
-  // Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
-  function claimGasless(
-    ClaimData calldata _claimData,
-    address payable _relayer,
-    uint256 _fee,
-    uint256 _deadline,
-    uint8 _v,
-    bytes32 _r,
-    bytes32 _s
-  ) external override returns (uint256 receivedAmount) {
-    // solhint-disable-next-line not-rely-on-time
-    require(_deadline >= block.timestamp, "NFTBridge: EXPIRED");
-
-    bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
-    address recoveredAddress = ecrecover(digest, _v, _r, _s);
-    require(
-      _claimData.to != address(0) && recoveredAddress == _claimData.to,
-      "NFTBridge: INVALID_SIGNATURE"
-    );
-
-    receivedAmount = _claim(_claimData, _claimData.to, _relayer, _fee);
-    return receivedAmount;
-  }
-
   function _claim(
-    ClaimData calldata _claimData,
-    address payable _reciever,
-    address payable _relayer,
-    uint256 _fee
+    NFTClaimData calldata _claimData,
+    address payable _receiver
   ) internal returns (uint256 receivedAmount) {
-    address originalTokenAddress = originalTokenAddresses[
+    address tokenAddress = tokenAddressByTransactionHash[
       _claimData.transactionHash
     ];
-    require(originalTokenAddress != NULL_ADDRESS, "NFTBridge: Tx not crossed");
+    require(tokenAddress != NULL_ADDRESS, "NFTBridge: Tx not crossed");
+
+    uint256 tokenId = _claimData.tokenId;
 
     bytes32 transactionDataHash = getTransactionDataHash(
       _claimData.to,
-      _claimData.amount,
+      tokenId,
       _claimData.blockHash,
       _claimData.transactionHash,
       _claimData.logIndex
@@ -297,86 +251,24 @@ contract NFTBridge is
     require(!claimed[transactionDataHash], "NFTBridge: Already claimed");
 
     claimed[transactionDataHash] = true;
-    if (knownTokens[originalTokenAddress]) {
-      receivedAmount = _claimCrossBackToToken(
-        originalTokenAddress,
-        _reciever,
-        _claimData.amount,
-        _relayer,
-        _fee
-      );
+    bool isClaimBeingRequestedInMainChain = isAddressFromCrossedOriginalToken[tokenAddress];
+    if (isClaimBeingRequestedInMainChain) {
+      IERC721(tokenAddress).safeTransferFrom(address(this), _receiver, tokenId);
     } else {
-      receivedAmount = _claimCrossToSideToken(
-        originalTokenAddress,
-        _reciever,
-        _claimData.amount,
-        _relayer,
-        _fee
-      );
+      address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[tokenAddress];
+      ISideNFTToken(sideTokenAddress).mint(_receiver, tokenId);
     }
-    emit Claimed(
+
+    emit ClaimedNFTToken(
       _claimData.transactionHash,
-      originalTokenAddress,
+      tokenAddress,
       _claimData.to,
       senderAddresses[_claimData.transactionHash],
-      _claimData.amount,
+      _claimData.tokenId,
       _claimData.blockHash,
       _claimData.logIndex,
-      _reciever,
-      _relayer,
-      _fee
+      _receiver
     );
-    return receivedAmount;
-  }
-
-
-  function _claimCrossToSideToken(
-    address _originalTokenAddress,
-    address payable _receiver,
-    uint256 _amount,
-    address payable _relayer,
-    uint256 _fee
-  ) internal returns (uint256 receivedAmount) { // solhint-disable-line no-empty-blocks
-    // claim logic here
-      // address sideToken = mappedTokens[_originalTokenAddress];
-      // uint256 granularity = IERC777(sideToken).granularity();
-      // uint256 formattedAmount = _amount.mul(granularity);
-      // require(_fee <= formattedAmount, "NFTBridge: fee too high");
-      // receivedAmount = formattedAmount - _fee;
-      // ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
-      // if(_fee > 0) {
-      //     ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
-      // }
-      // return receivedAmount;
-  }
-
-  function _claimCrossBackToToken(
-    address _originalTokenAddress,
-    address payable _receiver,
-    uint256 _amount,
-    address payable _relayer,
-    uint256 _fee
-  ) internal returns (uint256 receivedAmount) {
-    uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
-    //As side tokens are ERC777 they will always have 18 decimals
-    uint256 formattedAmount = _amount.div(uint256(10)**(18 - decimals));
-    require(_fee <= formattedAmount, "NFTBridge: fee too high");
-    receivedAmount = formattedAmount - _fee;
-    if (address(wrappedCurrency) == _originalTokenAddress) {
-      wrappedCurrency.withdraw(formattedAmount);
-      _receiver.transfer(receivedAmount);
-      if (_fee > 0) {
-        _relayer.transfer(_fee);
-      }
-    } else {
-      IERC20(_originalTokenAddress).safeTransfer(
-        _receiver,
-        receivedAmount
-      );
-      if (_fee > 0) {
-        IERC20(_originalTokenAddress).safeTransfer(_relayer, _fee);
-      }
-    }
     return receivedAmount;
   }
 
@@ -401,7 +293,7 @@ contract NFTBridge is
     address tokenCreator = getTokenCreator(tokenAddress, tokenId);
 
     address payable sender = _msgSender();
-    // Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
+    // Transfer the tokens on IERC721, they should be already Approved for the bridge Address to use them
     IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
@@ -424,7 +316,7 @@ contract NFTBridge is
     bytes memory userData,
     uint256 tokenId
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
-    knownTokens[tokenAddress] = true;
+    isAddressFromCrossedOriginalToken[tokenAddress] = true;
 
     IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
@@ -497,12 +389,6 @@ contract NFTBridge is
   function setUpgrading(bool _isUpgrading) external onlyOwner {
     isUpgrading = _isUpgrading;
     emit Upgrading(isUpgrading);
-  }
-
-  function setWrappedCurrency(address _wrappedCurrency) external onlyOwner {
-    require(_wrappedCurrency != NULL_ADDRESS, "NFTBridge: wrapp is empty");
-    wrappedCurrency = IWrapped(_wrappedCurrency);
-    emit WrappedCurrencyChanged(_wrappedCurrency);
   }
 
   function hasCrossed(bytes32 transactionHash) public view returns (bool) {
