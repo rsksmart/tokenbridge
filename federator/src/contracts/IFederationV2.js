@@ -41,7 +41,8 @@ module.exports = class IFederationV2 {
             paramsObj.amount,
             paramsObj.blockHash,
             paramsObj.transactionHash,
-            paramsObj.logIndex
+            paramsObj.logIndex,
+            paramsObj.tokenType,
         );
     }
 

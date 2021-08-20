@@ -141,19 +141,19 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex
   ) external override whenNotPaused nonReentrant {
-    require(_msgSender() == federation, "Bridge: Not Federation");
+    require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
       knownTokens[_originalTokenAddress] ||
           sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] != NULL_ADDRESS,
-      "Bridge: Unknown token"
+      "NFTBridge: Unknown token"
     );
-    require(_to != NULL_ADDRESS, "Bridge: Null To");
-    require(_from != NULL_ADDRESS, "Bridge: Null From");
-    require(_blockHash != NULL_HASH, "Bridge: Null BlockHash");
-    require(_transactionHash != NULL_HASH, "Bridge: Null TxHash");
+    require(_to != NULL_ADDRESS, "NFTBridge: Null To");
+    require(_from != NULL_ADDRESS, "NFTBridge: Null From");
+    require(_blockHash != NULL_HASH, "NFTBridge: Null BlockHash");
+    require(_transactionHash != NULL_HASH, "NFTBridge: Null TxHash");
     require(
       transactionDataHashes[_transactionHash] == bytes32(0),
-      "Bridge: Already accepted"
+      "NFTBridge: Already accepted"
     );
 
     bytes32 _transactionDataHash = getTransactionDataHash(
@@ -164,7 +164,7 @@ contract NFTBridge is
       _logIndex
     );
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
-    require(!claimed[_transactionDataHash], "Bridge: Already claimed");
+    require(!claimed[_transactionDataHash], "NFTBridge: Already claimed");
 
     transactionDataHashes[_transactionHash] = _transactionDataHash;
     originalTokenAddresses[_transactionHash] = _originalTokenAddress;
@@ -188,9 +188,9 @@ contract NFTBridge is
     string calldata _baseURI,
     string calldata _contractURI
   ) external onlyOwner {
-    require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null original token address");
+    require(_originalTokenAddress != NULL_ADDRESS, "NFTBridge: Null original token address");
     address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[_originalTokenAddress];
-    require(sideTokenAddress == NULL_ADDRESS, "Bridge: Side token already exists");
+    require(sideTokenAddress == NULL_ADDRESS, "NFTBridge: Side token already exists");
     string memory sideTokenSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
     // Create side token
@@ -214,7 +214,7 @@ contract NFTBridge is
   function claimFallback(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
     require(
       _msgSender() == senderAddresses[_claimData.transactionHash],
-      "Bridge: invalid sender"
+      "NFTBridge: invalid sender"
     );
     receivedAmount = _claim(
       _claimData,
@@ -259,13 +259,13 @@ contract NFTBridge is
     bytes32 _s
   ) external override returns (uint256 receivedAmount) {
     // solhint-disable-next-line not-rely-on-time
-    require(_deadline >= block.timestamp, "Bridge: EXPIRED");
+    require(_deadline >= block.timestamp, "NFTBridge: EXPIRED");
 
     bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
     address recoveredAddress = ecrecover(digest, _v, _r, _s);
     require(
       _claimData.to != address(0) && recoveredAddress == _claimData.to,
-      "Bridge: INVALID_SIGNATURE"
+      "NFTBridge: INVALID_SIGNATURE"
     );
 
     receivedAmount = _claim(_claimData, _claimData.to, _relayer, _fee);
@@ -281,7 +281,7 @@ contract NFTBridge is
     address originalTokenAddress = originalTokenAddresses[
       _claimData.transactionHash
     ];
-    require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
+    require(originalTokenAddress != NULL_ADDRESS, "NFTBridge: Tx not crossed");
 
     bytes32 transactionDataHash = getTransactionDataHash(
       _claimData.to,
@@ -292,9 +292,9 @@ contract NFTBridge is
     );
     require(
       transactionDataHashes[_claimData.transactionHash] == transactionDataHash,
-      "Bridge: Wrong txDataHash"
+      "NFTBridge: Wrong txDataHash"
     );
-    require(!claimed[transactionDataHash], "Bridge: Already claimed");
+    require(!claimed[transactionDataHash], "NFTBridge: Already claimed");
 
     claimed[transactionDataHash] = true;
     if (knownTokens[originalTokenAddress]) {
@@ -341,7 +341,7 @@ contract NFTBridge is
       // address sideToken = mappedTokens[_originalTokenAddress];
       // uint256 granularity = IERC777(sideToken).granularity();
       // uint256 formattedAmount = _amount.mul(granularity);
-      // require(_fee <= formattedAmount, "Bridge: fee too high");
+      // require(_fee <= formattedAmount, "NFTBridge: fee too high");
       // receivedAmount = formattedAmount - _fee;
       // ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
       // if(_fee > 0) {
@@ -360,7 +360,7 @@ contract NFTBridge is
     uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
     //As side tokens are ERC777 they will always have 18 decimals
     uint256 formattedAmount = _amount.div(uint256(10)**(18 - decimals));
-    require(_fee <= formattedAmount, "Bridge: fee too high");
+    require(_fee <= formattedAmount, "NFTBridge: fee too high");
     receivedAmount = formattedAmount - _fee;
     if (address(wrappedCurrency) == _originalTokenAddress) {
       wrappedCurrency.withdraw(formattedAmount);
@@ -470,13 +470,13 @@ contract NFTBridge is
   }
 
   function changeFederation(address payable newFederation) external onlyOwner {
-    require(newFederation != NULL_ADDRESS, "Bridge: Federation is empty");
+    require(newFederation != NULL_ADDRESS, "NFTBridge: Federation is empty");
     federation = newFederation;
     emit FederationChanged(federation);
   }
 
   function changeAllowTokens(address newAllowTokens) external onlyOwner {
-    require(newAllowTokens != NULL_ADDRESS, "Bridge: AllowTokens is empty");
+    require(newAllowTokens != NULL_ADDRESS, "NFTBridge: AllowTokens is empty");
     allowTokens = IAllowTokens(newAllowTokens);
     emit AllowTokensChanged(newAllowTokens);
   }
@@ -488,7 +488,7 @@ contract NFTBridge is
   function changeSideTokenFactory(address newSideNFTTokenFactory) external onlyOwner {
     require(
       newSideNFTTokenFactory != NULL_ADDRESS,
-      "Bridge: empty SideTokenFactory"
+      "NFTBridge: empty SideTokenFactory"
     );
     sideTokenFactory = ISideNFTTokenFactory(newSideNFTTokenFactory);
     emit SideTokenFactoryChanged(newSideNFTTokenFactory);
@@ -500,7 +500,7 @@ contract NFTBridge is
   }
 
   function setWrappedCurrency(address _wrappedCurrency) external onlyOwner {
-    require(_wrappedCurrency != NULL_ADDRESS, "Bridge: wrapp is empty");
+    require(_wrappedCurrency != NULL_ADDRESS, "NFTBridge: wrapp is empty");
     wrappedCurrency = IWrapped(_wrappedCurrency);
     emit WrappedCurrencyChanged(_wrappedCurrency);
   }

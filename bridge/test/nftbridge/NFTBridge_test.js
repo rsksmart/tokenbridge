@@ -63,9 +63,9 @@ contract("Bridge NFT", async function(accounts) {
     });
 
     this.sideTokenFactory = await SideNFTTokenFactory.new();
-    this.bridgeNft = await NftBridge.new();
+    this.NFTBridge = await NftBridge.new();
 
-    await this.bridgeNft.methods[
+    await this.NFTBridge.methods[
       "initialize(address,address,address,address,string)"
     ](
       bridgeManager,
@@ -75,8 +75,8 @@ contract("Bridge NFT", async function(accounts) {
       sideTokenSymbolPrefix
     );
 
-    await this.sideTokenFactory.transferPrimary(this.bridgeNft.address);
-    await this.allowTokens.transferPrimary(this.bridgeNft.address, {
+    await this.sideTokenFactory.transferPrimary(this.NFTBridge.address);
+    await this.allowTokens.transferPrimary(this.NFTBridge.address, {
       from: bridgeOwner,
     });
   });
@@ -97,73 +97,73 @@ contract("Bridge NFT", async function(accounts) {
     });
     utils.checkRcpt(receipt);
   };
-  
+
   describe("Main NFT network", async function() {
     it("should retrieve the version", async function() {
-      const result = await this.bridgeNft.version();
+      const result = await this.NFTBridge.version();
       assert.equal(result, "v1");
     });
 
     describe("owner", async function() {
       it("check manager", async function() {
-        const manager = await this.bridgeNft.owner();
+        const manager = await this.NFTBridge.owner();
         assert.equal(manager, bridgeManager);
       });
 
       it("change manager", async function() {
-        const receipt = await this.bridgeNft.transferOwnership(
+        const receipt = await this.NFTBridge.transferOwnership(
           newBridgeManager,
           { from: bridgeManager }
         );
         utils.checkRcpt(receipt);
-        const manager = await this.bridgeNft.owner();
+        const manager = await this.NFTBridge.owner();
         assert.equal(manager, newBridgeManager);
       });
 
       it("only manager can change manager", async function() {
         await truffleAssert.fails(
-          this.bridgeNft.transferOwnership(newBridgeManager),
+          this.NFTBridge.transferOwnership(newBridgeManager),
           truffleAssert.ErrorType.REVERT,
           "Ownable: caller is not the owner"
         );
-        const manager = await this.bridgeNft.owner();
+        const manager = await this.NFTBridge.owner();
         assert.equal(manager, bridgeManager);
       });
 
       it("check federation", async function() {
-        const federationAddress = await this.bridgeNft.getFederation();
+        const federationAddress = await this.NFTBridge.getFederation();
         assert.equal(federationAddress, federation);
       });
 
       it("change federation", async function() {
-        const receipt = await this.bridgeNft.changeFederation(
+        const receipt = await this.NFTBridge.changeFederation(
           newBridgeManager,
           { from: bridgeManager }
         );
         utils.checkRcpt(receipt);
-        const federationAddress = await this.bridgeNft.getFederation();
+        const federationAddress = await this.NFTBridge.getFederation();
         assert.equal(federationAddress, newBridgeManager);
       });
 
       it("only manager can change the federation", async function() {
         await truffleAssert.fails(
-          this.bridgeNft.changeFederation(newBridgeManager),
+          this.NFTBridge.changeFederation(newBridgeManager),
           truffleAssert.ErrorType.REVERT,
           "Ownable: caller is not the owner"
         );
-        const federationAddress = await this.bridgeNft.getFederation();
+        const federationAddress = await this.NFTBridge.getFederation();
         assert.equal(federationAddress, federation);
       });
 
       it("change federation new fed cant be null", async function() {
         await truffleAssert.fails(
-          this.bridgeNft.changeFederation(utils.NULL_ADDRESS, {
+          this.NFTBridge.changeFederation(utils.NULL_ADDRESS, {
             from: bridgeManager,
           }),
           truffleAssert.ErrorType.REVERT,
           "Bridge: Federation is empty"
         );
-        const federationAddress = await this.bridgeNft.getFederation();
+        const federationAddress = await this.NFTBridge.getFederation();
         assert.equal(federationAddress, federation);
       });
     });
@@ -172,13 +172,13 @@ contract("Bridge NFT", async function(accounts) {
       it("receives ERC721 NFT correctly with token URI", async function() {
         let totalSupply = 0; // is the amount of nft minted
 
-        await mintAndApprove(this.token, this.bridgeNft.address);
+        await mintAndApprove(this.token, this.NFTBridge.address);
         totalSupply++;
 
         let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
         utils.checkRcpt(receipt);
 
-        receipt = await this.bridgeNft.receiveTokensTo(
+        receipt = await this.NFTBridge.receiveTokensTo(
           this.token.address,
           anAccount,
           defaultTokenId,
@@ -205,10 +205,10 @@ contract("Bridge NFT", async function(accounts) {
       it("receives ERC721 NFT correctly with base URI and without token URI set", async function() {
         let totalSupply = 0;
 
-        await mintAndApprove(this.token, this.bridgeNft.address);
+        await mintAndApprove(this.token, this.NFTBridge.address);
         totalSupply++;
 
-        let receipt = await this.bridgeNft.receiveTokensTo(
+        let receipt = await this.NFTBridge.receiveTokensTo(
           this.token.address,
           anAccount,
           defaultTokenId,
@@ -234,10 +234,10 @@ contract("Bridge NFT", async function(accounts) {
         let totalSupply = 0;
 
         await this.token.setBaseURI('');
-        await mintAndApprove(this.token, this.bridgeNft.address);
+        await mintAndApprove(this.token, this.NFTBridge.address);
         totalSupply++;
 
-        let receipt = await this.bridgeNft.receiveTokensTo(
+        let receipt = await this.NFTBridge.receiveTokensTo(
           this.token.address,
           anAccount,
           defaultTokenId,
@@ -263,13 +263,13 @@ contract("Bridge NFT", async function(accounts) {
         let totalSupply = 0;
 
         await this.token.setBaseURI('');
-        await mintAndApprove(this.token, this.bridgeNft.address);
+        await mintAndApprove(this.token, this.NFTBridge.address);
         totalSupply++;
 
         let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
         utils.checkRcpt(receipt);
 
-        receipt = await this.bridgeNft.receiveTokensTo(
+        receipt = await this.NFTBridge.receiveTokensTo(
           this.token.address,
           anAccount,
           defaultTokenId,
@@ -294,17 +294,17 @@ contract("Bridge NFT", async function(accounts) {
       describe("fixed fee", async function() {
         it("should send fee to federator correctly", async function() {
           const fixedFee = new BN("15");
-          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+          let receipt = await this.NFTBridge.setFixedFee(fixedFee, {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
 
-          await mintAndApprove(this.token, this.bridgeNft.address);
+          await mintAndApprove(this.token, this.NFTBridge.address);
 
           const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
           const federatorBalance = await utils.getEtherBalance(federation);
 
-          const tx = await this.bridgeNft.receiveTokensTo(
+          const tx = await this.NFTBridge.receiveTokensTo(
             this.token.address,
             anAccount,
             defaultTokenId,
@@ -336,17 +336,17 @@ contract("Bridge NFT", async function(accounts) {
 
         it("should send fixed fee + 10 to federator correctly and the remaining value sent it back to the sender", async function() {
           const fixedFee = new BN("15");
-          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+          let receipt = await this.NFTBridge.setFixedFee(fixedFee, {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
 
-          await mintAndApprove(this.token, this.bridgeNft.address);
+          await mintAndApprove(this.token, this.NFTBridge.address);
 
           const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
           const federatorBalance = await utils.getEtherBalance(federation);
 
-          const tx = await this.bridgeNft.receiveTokensTo(
+          const tx = await this.NFTBridge.receiveTokensTo(
             this.token.address,
             anAccount,
             defaultTokenId,
@@ -377,15 +377,15 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("should reamin the same balance for the Federator, because the fixed fee is zero", async function() {
-          let receipt = await this.bridgeNft.setFixedFee(new BN(0), {
+          let receipt = await this.NFTBridge.setFixedFee(new BN(0), {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
 
-          await mintAndApprove(this.token, this.bridgeNft.address);
+          await mintAndApprove(this.token, this.NFTBridge.address);
           const federatorBalance = await utils.getEtherBalance(federation);
 
-          const tx = await this.bridgeNft.receiveTokensTo(
+          const tx = await this.NFTBridge.receiveTokensTo(
             this.token.address,
             anAccount,
             defaultTokenId,
@@ -403,16 +403,16 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("should fail because the sender doesn't have balance", async function() {
-          await mintAndApprove(this.token, this.bridgeNft.address);
+          await mintAndApprove(this.token, this.NFTBridge.address);
 
           const fixedFee = await utils.getEtherBalance(tokenOwner);
-          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+          let receipt = await this.NFTBridge.setFixedFee(fixedFee, {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
 
           await truffleAssert.fails(
-            this.bridgeNft.receiveTokensTo(
+            this.NFTBridge.receiveTokensTo(
               this.token.address,
               anAccount,
               defaultTokenId,
@@ -426,16 +426,16 @@ contract("Bridge NFT", async function(accounts) {
         });
 
         it("should fail because the sent value is smaller than fixed fee", async function() {
-          await mintAndApprove(this.token, this.bridgeNft.address);
+          await mintAndApprove(this.token, this.NFTBridge.address);
 
           const fixedFee = new BN(15);
-          let receipt = await this.bridgeNft.setFixedFee(fixedFee, {
+          let receipt = await this.NFTBridge.setFixedFee(fixedFee, {
             from: bridgeManager,
           });
           utils.checkRcpt(receipt);
 
           await truffleAssert.fails(
-            this.bridgeNft.receiveTokensTo(
+            this.NFTBridge.receiveTokensTo(
               this.token.address,
               anAccount,
               defaultTokenId,
@@ -466,7 +466,7 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("creates token correctly and emits expected event when inputs are correct", async function() {
-        let receipt = await this.bridgeNft.createSideNFTToken(
+        let receipt = await this.NFTBridge.createSideNFTToken(
             tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
         );
 
@@ -489,12 +489,12 @@ contract("Bridge NFT", async function(accounts) {
         const newSideNFTTokenBaseURI = await newSideNFTToken.baseURI();
         assert.equal(baseURI, newSideNFTTokenBaseURI);
 
-        let sideTokenAddressMappedByBridge = await this.bridgeNft.sideTokenAddressByOriginalTokenAddress(
+        let sideTokenAddressMappedByBridge = await this.NFTBridge.sideTokenAddressByOriginalTokenAddress(
           tokenAddress
         );
         assert.equal(newSideNFTTokenAddress, sideTokenAddressMappedByBridge);
 
-        let tokenAddressMappedByBridge = await this.bridgeNft.originalTokenAddressBySideTokenAddress(
+        let tokenAddressMappedByBridge = await this.NFTBridge.originalTokenAddressBySideTokenAddress(
           newSideNFTTokenAddress
         );
         assert.equal(tokenAddress, tokenAddressMappedByBridge);
@@ -502,7 +502,7 @@ contract("Bridge NFT", async function(accounts) {
 
       it("fails to create side NFT token if the original token address is a null address", async function() {
         await truffleAssert.fails(
-            this.bridgeNft.createSideNFTToken(
+            this.NFTBridge.createSideNFTToken(
                 utils.NULL_ADDRESS, symbol, name, baseURI, contractURI, {from: bridgeManager}
             ),
             truffleAssert.ErrorType.REVERT,
@@ -511,14 +511,14 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("fails to create side NFT token if side token address already exists", async function() {
-        let receipt = await this.bridgeNft.createSideNFTToken(
+        let receipt = await this.NFTBridge.createSideNFTToken(
           tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
         );
 
         truffleAssert.eventEmitted(receipt, newSideNFTTokenEventType);
 
         await truffleAssert.fails(
-          this.bridgeNft.createSideNFTToken(
+          this.NFTBridge.createSideNFTToken(
             tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
           ),
           truffleAssert.ErrorType.REVERT,
@@ -528,7 +528,7 @@ contract("Bridge NFT", async function(accounts) {
 
       it("fails to create side NFT token if transaction sender is not bridge manager", async function() {
         await truffleAssert.fails(
-          this.bridgeNft.createSideNFTToken(
+          this.NFTBridge.createSideNFTToken(
             tokenAddress, symbol, name, baseURI, contractURI, {from: anAccount}
           ),
           truffleAssert.ErrorType.REVERT,
@@ -554,7 +554,7 @@ contract("Bridge NFT", async function(accounts) {
         baseURI = await this.token.baseURI();
         contractURI = await this.token.contractURI();
         tokenAddress = this.token.address;
-        let receipt = await this.bridgeNft.createSideNFTToken(
+        let receipt = await this.NFTBridge.createSideNFTToken(
             tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
         );
         utils.checkRcpt(receipt);
@@ -565,13 +565,13 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       async function assertAcceptTransferSuccessfulResult(tokenAddress, tokenId, blockHash, transactionHash, logIndex) {
-        const receipt = await this.bridgeNft.acceptTransfer(
+        const receipt = await this.NFTBridge.acceptTransfer(
             tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
             {from: federation}
         );
         utils.checkRcpt(receipt);
 
-        const expectedTransactionDataHash = await this.bridgeNft.getTransactionDataHash(
+        const expectedTransactionDataHash = await this.NFTBridge.getTransactionDataHash(
             anotherAccount, tokenId, blockHash, transactionHash, logIndex
         );
 
@@ -580,13 +580,13 @@ contract("Bridge NFT", async function(accounts) {
       }
 
       async function assertAcceptTransferPublicMembersCorrectness(transactionHash, expectedTransactionDataHash, tokenAddress) {
-        let transactionDataHash = await this.bridgeNft.transactionDataHashes(transactionHash);
+        let transactionDataHash = await this.NFTBridge.transactionDataHashes(transactionHash);
         assert.equal(expectedTransactionDataHash, transactionDataHash);
 
-        let originalTokenAddressForTransactionHash = await this.bridgeNft.originalTokenAddresses(transactionHash);
+        let originalTokenAddressForTransactionHash = await this.NFTBridge.originalTokenAddresses(transactionHash);
         assert.equal(tokenAddress, originalTokenAddressForTransactionHash)
 
-        let senderAddressForTransactionHash = await this.bridgeNft.senderAddresses(transactionHash);
+        let senderAddressForTransactionHash = await this.NFTBridge.senderAddresses(transactionHash);
         assert.equal(anAccount, senderAddressForTransactionHash);
       }
 
@@ -606,73 +606,73 @@ contract("Bridge NFT", async function(accounts) {
 
       it("throws an error when an address other than the federation sends the transaction", async function () {
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: anAccount}
             ),
-            "Bridge: Not Federation"
+            "NFTBridge: Not Federation"
         );
       });
 
       it("throws an error when token is unknown", async function () {
         const unknownTokenAddress = utils.getRandomAddress();
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 unknownTokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Unknown token"
+            "NFTBridge: Unknown token"
         );
       });
 
       it("throws an error when 'to' address is null", async function () {
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, utils.NULL_ADDRESS, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null To"
+            "NFTBridge: Null To"
         );
       });
 
       it("throws an error when 'from' address is null", async function () {
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, utils.NULL_ADDRESS, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null From"
+            "NFTBridge: Null From"
         );
       });
 
       it("throws an error when block hash is null", async function () {
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, utils.NULL_HASH, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null BlockHash"
+            "NFTBridge: Null BlockHash"
         );
       });
 
       it("throws an error when transaction hash is null", async function () {
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, utils.NULL_HASH, logIndex,
                 {from: federation}
             ),
-            "Bridge: Null TxHash"
+            "NFTBridge: Null TxHash"
         );
       });
 
       it("throws an error when transaction was already accepted", async function () {
         await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex);
         await truffleAssert.fails(
-            this.bridgeNft.acceptTransfer(
+            this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
                 {from: federation}
             ),
-            "Bridge: Already accepted"
+            "NFTBridge: Already accepted"
         );
       });
     });
