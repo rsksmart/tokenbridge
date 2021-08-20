@@ -12,11 +12,9 @@
   ],
   "author": "IOVLabs",
   "scripts": {
-    "start": "node ./built/src/main.js",
+    "start": "node ./built/federator/src/main.js",
     "build-start": "npm run build && npm run start",
-    "build": "npm run clean && tsc && npm run copy-config",
-    "copy-config": "cp -r ./config/*.json ./config/*.key ./built/config",
-    "copy-abi": "mkdir ./built/abis && cp -r ../abis/*.json ./built/abis",
+    "build": "npm run clean && tsc",
     "test": "jest --detectOpenHandles test/",
     "integrationTest": "rm -rf ./db/* && node ./integrationTest/integrationTest.js",
     "integrationHeartbeatTest": "rm -rf ./db/* && node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log",
