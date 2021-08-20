@@ -13,6 +13,7 @@
   "author": "IOVLabs",
   "scripts": {
     "start": "node ./built/federator/src/main.js",
+    "start-js": "node ./src/main.js",
     "build-start": "npm run build && npm run start",
     "build": "npm run clean && tsc",
     "test": "jest --detectOpenHandles test/",
