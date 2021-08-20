@@ -1,19 +1,24 @@
 const Federation = artifacts.require('./Federation');
 const AllowTokens = artifacts.require('./AllowTokens');
 const Bridge = artifacts.require('./Bridge');
+const NftBridge = artifacts.require("./NFTBridge");
+const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
 const truffleAssert = require('truffle-assertions');
 const utils = require('./utils');
+const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
 contract('Federation', async function (accounts) {
     const deployer = accounts[0];
     const anAccount = accounts[1];
+    const anotherAccount = accounts[5];
     const federator1 = accounts[2];
     const federator2 = accounts[3];
     const federator3 = accounts[4];
     const bridge = utils.getRandomAddress();
+    const bridgeNFT = utils.getRandomAddress().toLowerCase();
 
     before(async function () {
         await utils.saveState();
@@ -109,6 +114,18 @@ contract('Federation', async function (accounts) {
 
                 truffleAssert.eventEmitted(result, 'BridgeChanged', (ev) => {
                     return ev.bridge === bridge;
+                });
+            });
+
+            it('should set NFT bridge correctly', async function() {
+                let receipt = await this.federators.setNFTBridge(bridgeNFT);
+                utils.checkRcpt(receipt)
+
+                let _bridgeNFT = await this.federators.bridgeNFT();
+                assert.equal(_bridgeNFT.toLowerCase(), bridgeNFT);
+
+                truffleAssert.eventEmitted(receipt, 'NFTBridgeChanged', (ev) => {
+                    return ev.bridgeNFT === _bridgeNFT;
                 });
             });
 
@@ -325,7 +342,7 @@ contract('Federation', async function (accounts) {
             const symbol = 'e';
             const blockHash = utils.getRandomHash();
             const transactionHash = utils.getRandomHash();
-            const logIndex = 1;
+            const logIndex = new BN(1);
             const decimals = 18;
             const typeId = 0;
 
@@ -388,6 +405,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -446,6 +464,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1})
                 );
 
@@ -485,6 +504,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -529,6 +549,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -550,6 +571,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -593,6 +615,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -614,6 +637,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -645,6 +669,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
 
@@ -672,6 +697,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
 
@@ -703,7 +729,9 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    {from: federator1});
+                    utils.tokenType.COIN,
+                    {from: federator1}
+                );
 
                 let transactionId = await this.federators.getTransactionId(
                     originalTokenAddress,
@@ -729,6 +757,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
 
@@ -759,6 +788,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
 
@@ -786,6 +816,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
 
@@ -813,6 +844,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator3}
                 );
 
@@ -834,6 +866,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
 
@@ -861,6 +894,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator2}
                 );
 
@@ -887,6 +921,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator3}
                 );
 
@@ -909,7 +944,7 @@ contract('Federation', async function (accounts) {
 
             it('should fail if not federators member', async function() {
                 await utils.expectThrow(this.federators.voteTransaction(originalTokenAddress,
-                    anAccount, anAccount, amount, blockHash, transactionHash, logIndex));
+                    anAccount, anAccount, amount, blockHash, transactionHash, logIndex, utils.tokenType.COIN));
             });
 
             it('voteTransaction should be successfull if already voted', async function() {
@@ -933,6 +968,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -948,9 +984,173 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    utils.tokenType.COIN,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
+            });
+
+            it('should fail since NFT bridge is not set', async function() {
+              let receipt = await this.federators.voteTransaction(
+                originalTokenAddress,
+                anAccount,
+                anotherAccount,
+                amount,
+                blockHash,
+                transactionHash,
+                logIndex,
+                utils.tokenType.NFT,
+                { from: federator1 }
+              );
+              utils.checkRcpt(receipt);
+
+              await truffleAssert.fails(
+                this.federators.voteTransaction(
+                  originalTokenAddress,
+                  anAccount,
+                  anotherAccount,
+                  amount,
+                  blockHash,
+                  transactionHash,
+                  logIndex,
+                  utils.tokenType.NFT,
+                  { from: federator2 }
+                ),
+                truffleAssert.ErrorType.REVERT,
+                'Federation: Empty NFTBridge'
+              );
+            });
+
+            describe('NFTBridge', async function() {
+              const tokenId = new BN(9);
+              const tokenName = "The Drops";
+              const tokenSymbol = "drop";
+              const tokenBaseURI = "ipfs:/";
+              const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
+
+              beforeEach(async function () {
+                this.NFTBridge = await NftBridge.new();
+                await this.NFTBridge.methods[
+                  "initialize(address,address,address,address,string)"
+                ](
+                  deployer,
+                  this.federators.address,
+                  this.allowTokens.address,
+                  this.sideTokenFactory.address,
+                  symbol
+                );
+
+                this.NFTtoken = await NFTERC721TestToken.new(tokenName, tokenSymbol, {
+                  from: deployer,
+                });
+                this.NFTtoken.setBaseURI(tokenBaseURI);
+                this.NFTtoken.setContractURI(tokenContractURI);
+
+                await this.federators.setNFTBridge(this.NFTBridge.address);
+              });
+
+              it('should vote successfully', async function() {
+                let receipt = await this.NFTtoken.safeMint(deployer, tokenId, {
+                  from: deployer,
+                });
+                utils.checkRcpt(receipt);
+
+                receipt = await this.NFTtoken.approve(this.NFTBridge.address, tokenId, {
+                  from: deployer,
+                });
+                utils.checkRcpt(receipt);
+
+                receipt = await this.NFTBridge.receiveTokensTo(
+                  this.NFTtoken.address,
+                  anotherAccount,
+                  tokenId,
+                  { from: deployer }
+                );
+                utils.checkRcpt(receipt);
+
+                let transactionId = await this.federators.getTransactionId(
+                  this.NFTtoken.address,
+                  anAccount,
+                  anotherAccount,
+                  tokenId,
+                  blockHash,
+                  transactionHash,
+                  logIndex
+                );
+                let transactionCount = await this.federators.getTransactionCount(transactionId);
+                assert.equal(transactionCount, 0);
+
+                receipt = await this.federators.voteTransaction(
+                    this.NFTtoken.address,
+                    anAccount,
+                    anotherAccount,
+                    tokenId,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    utils.tokenType.NFT,
+                    { from: federator1 }
+                );
+                utils.checkRcpt(receipt);
+
+                truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
+                  return ev.federator === federator1
+                    && ev.transactionHash === transactionHash
+                    && ev.transactionId === transactionId
+                    && ev.originalTokenAddress === this.NFTtoken.address
+                    && ev.sender === anAccount
+                    && ev.receiver === anotherAccount
+                    && ev.amount.eq(tokenId)
+                    && ev.blockHash === blockHash
+                    && ev.logIndex.eq(logIndex);
+                });
+
+                let hasVoted = await this.federators.hasVoted(transactionId, { from: federator1 });
+                assert.equal(hasVoted, true);
+
+                receipt = await this.federators.voteTransaction(
+                  this.NFTtoken.address,
+                  anAccount,
+                  anotherAccount,
+                  tokenId,
+                  blockHash,
+                  transactionHash,
+                  logIndex,
+                  utils.tokenType.NFT,
+                  { from: federator2 }
+                );
+                utils.checkRcpt(receipt);
+
+                truffleAssert.eventEmitted(receipt, 'Voted', (ev) => {
+                  return ev.federator === federator2
+                    && ev.transactionHash === transactionHash
+                    && ev.transactionId === transactionId
+                    && ev.originalTokenAddress === this.NFTtoken.address
+                    && ev.sender === anAccount
+                    && ev.receiver === anotherAccount
+                    && ev.amount.eq(tokenId)
+                    && ev.blockHash === blockHash
+                    && ev.logIndex.eq(logIndex);
+                });
+
+                truffleAssert.eventEmitted(receipt, 'Executed', (ev) => {
+                  return ev.federator === federator2
+                    && ev.transactionHash === transactionHash
+                    && ev.transactionId === transactionId
+                    && ev.originalTokenAddress === this.NFTtoken.address
+                    && ev.sender === anAccount
+                    && ev.receiver === anotherAccount
+                    && ev.amount.eq(tokenId)
+                    && ev.blockHash === blockHash
+                    && ev.logIndex.eq(logIndex);
+                });
+
+                hasVoted = await this.federators.hasVoted(transactionId, { from: federator2 });
+                assert.equal(hasVoted, true);
+
+                transactionCount = await this.federators.getTransactionCount(transactionId);
+                assert.equal(transactionCount, 2);
+              });
             });
         });
 
