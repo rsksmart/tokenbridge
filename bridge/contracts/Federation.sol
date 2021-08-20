@@ -7,18 +7,55 @@ pragma abicoder v2;
 import "./zeppelin/upgradable/Initializable.sol";
 import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
+import "./nftbridge/INFTBridge.sol";
 import "./interface/IBridge.sol";
 
 contract Federation is Initializable, UpgradableOwnable {
+    /// @dev Starts at 0 [COIN == 0, NFT == 1]
+    enum TokenType{ COIN, NFT }
+
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
+    INFTBridge public bridgeNFT;
     IBridge public bridge;
     address[] public members;
+
+    /**
+      @notice The minimum amount of votes to approve a transaction
+      @dev It should have more members than the required amount
+     */
     uint public required;
 
+    /**
+      @notice All the addresses that are members of the federation
+      @dev The address should be a member to vote in transactions
+     */
     mapping (address => bool) public isMember;
+
+    /**
+      (bytes32) transactionId = keccak256(
+        abi.encodePacked(
+          originalTokenAddress,
+          sender,
+          receiver,
+          amount,
+          blockHash,
+          transactionHash,
+          logIndex
+        )
+      ) => (
+        (address) members => (bool) voted
+      )
+      @notice Votes by members by the transaction ID
+      @dev usually the members should approve the transaction by 50% + 1
+     */
     mapping (bytes32 => mapping (address => bool)) public votes;
+
+    /**
+      (bytes32) transactionId => (bool) voted
+      @notice Check if that transaction was already processed
+     */
     mapping(bytes32 => bool) public processed;
 
     event Executed(
@@ -36,6 +73,7 @@ contract Federation is Initializable, UpgradableOwnable {
     event MemberRemoval(address indexed member);
     event RequirementChange(uint required);
     event BridgeChanged(address bridge);
+    event NFTBridgeChanged(address bridgeNFT);
     event Voted(
         address indexed federator,
         bytes32 indexed transactionHash,
@@ -96,31 +134,56 @@ contract Federation is Initializable, UpgradableOwnable {
         emit BridgeChanged(_bridge);
     }
 
+    function setNFTBridge(address _bridgeNFT) external onlyOwner {
+      _setNFTBridge(_bridgeNFT);
+    }
+
+    function _setNFTBridge(address _bridgeNFT) internal {
+      require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
+      bridgeNFT = INFTBridge(_bridgeNFT);
+      emit NFTBridgeChanged(_bridgeNFT);
+    }
+
+    function validateTransaction(bytes32 transactionId) internal view returns(bool) {
+      uint transactionCount = getTransactionCount(transactionId);
+      return transactionCount >= required && transactionCount >= members.length / 2 + 1;
+    }
+
+    /**
+      @notice Vote in a transaction, if it has enough votes it accepts the transfer
+      @param originalTokenAddress The address of the token in the origin (main) chain
+      @param sender The address who solicited the cross token
+      @param receiver Who is going to receive the token in the opposite chain
+      @param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+      @param blockHash The block hash in which the transaction with the cross event occurred
+      @param transactionHash The transaction in which the cross event occurred
+      @param logIndex Index of the event in the logs
+      @param tokenType Is the type of bridge to be used
+     */
     function voteTransaction(
-        address originalTokenAddress,
-        address payable sender,
-        address payable receiver,
-        uint256 amount,
-        bytes32 blockHash,
-        bytes32 transactionHash,
-        uint32 logIndex
-    )
-    public onlyMember returns(bool)
-    {
+      address originalTokenAddress,
+      address payable sender,
+      address payable receiver,
+      uint256 value,
+      bytes32 blockHash,
+      bytes32 transactionHash,
+      uint32 logIndex,
+      TokenType tokenType
+    ) public onlyMember {
         bytes32 transactionId = getTransactionId(
             originalTokenAddress,
             sender,
             receiver,
-            amount,
+            value,
             blockHash,
             transactionHash,
             logIndex
         );
         if (processed[transactionId])
-            return true;
+            return;
 
         if (votes[transactionId][_msgSender()])
-            return true;
+            return;
 
         votes[transactionId][_msgSender()] = true;
         emit Voted(
@@ -130,23 +193,24 @@ contract Federation is Initializable, UpgradableOwnable {
             originalTokenAddress,
             sender,
             receiver,
-            amount,
+            value,
             blockHash,
             logIndex
         );
 
-        uint transactionCount = getTransactionCount(transactionId);
-        if (transactionCount >= required && transactionCount >= members.length / 2 + 1) {
+        if (validateTransaction(transactionId)) {
             processed[transactionId] = true;
-            bridge.acceptTransfer(
-                originalTokenAddress,
-                sender,
-                receiver,
-                amount,
-                blockHash,
-                transactionHash,
-                logIndex
+            acceptTransfer(
+              originalTokenAddress,
+              sender,
+              receiver,
+              value,
+              blockHash,
+              transactionHash,
+              logIndex,
+              tokenType
             );
+
             emit Executed(
                 _msgSender(),
                 transactionHash,
@@ -154,15 +218,48 @@ contract Federation is Initializable, UpgradableOwnable {
                 originalTokenAddress,
                 sender,
                 receiver,
-                amount,
+                value,
                 blockHash,
                 logIndex
             );
-            return true;
+            return;
         }
-
-        return true;
     }
+
+  function acceptTransfer(
+    address originalTokenAddress,
+    address payable sender,
+    address payable receiver,
+    uint256 value,
+    bytes32 blockHash,
+    bytes32 transactionHash,
+    uint32 logIndex,
+    TokenType tokenType
+  ) internal {
+    if (tokenType == TokenType.NFT) {
+      require(address(bridgeNFT) != NULL_ADDRESS, "Federation: Empty NFTBridge");
+      bridgeNFT.acceptTransfer(
+        originalTokenAddress,
+        sender,
+        receiver,
+        value,
+        blockHash,
+        transactionHash,
+        logIndex
+      );
+      return;
+    }
+
+    bridge.acceptTransfer(
+      originalTokenAddress,
+      sender,
+      receiver,
+      value,
+      blockHash,
+      transactionHash,
+      logIndex
+    );
+  }
 
     function getTransactionCount(bytes32 transactionId) public view returns(uint) {
         uint count = 0;
@@ -191,19 +288,18 @@ contract Federation is Initializable, UpgradableOwnable {
         bytes32 blockHash,
         bytes32 transactionHash,
         uint32 logIndex
-    ) public pure returns(bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-            originalTokenAddress,
-            sender,
-            receiver,
-            amount,
-            blockHash,
-            transactionHash,
-            logIndex
-            )
-        );
+    ) public pure returns(bytes32) {
+      return keccak256(
+        abi.encodePacked(
+          originalTokenAddress,
+          sender,
+          receiver,
+          amount,
+          blockHash,
+          transactionHash,
+          logIndex
+        )
+      );
     }
 
     function addMember(address _newMember) external onlyOwner
