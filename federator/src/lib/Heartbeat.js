@@ -5,7 +5,7 @@ const CustomError = require('./CustomError');
 const BridgeFactory = require('../contracts/BridgeFactory');
 const FederationFactory = require('../contracts/FederationFactory');
 const utils = require('./utils');
-const scriptVersion = require('../../package.json').version;
+const scriptVersion = process.env.npm_package_version;
 
 module.exports = class Heartbeat {
     constructor(config, logger, Web3 = web3) {
