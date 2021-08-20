@@ -1,19 +1,16 @@
 [
     {
+        "anonymous": false,
         "inputs": [
             {
-                "internalType": "address[]",
-                "name": "_members",
-                "type": "address[]"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_required",
-                "type": "uint256"
+                "indexed": false,
+                "internalType": "address",
+                "name": "bridge",
+                "type": "address"
             }
         ],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+        "name": "BridgeChanged",
+        "type": "event"
     },
     {
         "anonymous": false,
@@ -51,11 +48,29 @@
             {
                 "indexed": false,
                 "internalType": "address",
-                "name": "bridge",
+                "name": "receiver",
                 "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "amount",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "blockHash",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint32",
+                "name": "logIndex",
+                "type": "uint32"
             }
         ],
-        "name": "BridgeChanged",
+        "name": "Executed",
         "type": "event"
     },
     {
@@ -63,12 +78,42 @@
         "inputs": [
             {
                 "indexed": true,
-                "internalType": "bytes32",
-                "name": "transactionId",
-                "type": "bytes32"
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "fedRskBlock",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "fedEthBlock",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "federatorVersion",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "nodeRskInfo",
+                "type": "string"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "nodeEthInfo",
+                "type": "string"
             }
         ],
-        "name": "Executed",
+        "name": "HeartBeat",
         "type": "event"
     },
     {
@@ -148,8 +193,14 @@
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "sender",
+                "name": "federator",
                 "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "transactionHash",
+                "type": "bytes32"
             },
             {
                 "indexed": true,
@@ -166,6 +217,12 @@
             {
                 "indexed": false,
                 "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
                 "name": "receiver",
                 "type": "address"
             },
@@ -177,20 +234,8 @@
             },
             {
                 "indexed": false,
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string"
-            },
-            {
-                "indexed": false,
                 "internalType": "bytes32",
                 "name": "blockHash",
-                "type": "bytes32"
-            },
-            {
-                "indexed": true,
-                "internalType": "bytes32",
-                "name": "transactionHash",
                 "type": "bytes32"
             },
             {
@@ -198,18 +243,6 @@
                 "internalType": "uint32",
                 "name": "logIndex",
                 "type": "uint32"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint8",
-                "name": "decimals",
-                "type": "uint8"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "granularity",
-                "type": "uint256"
             }
         ],
         "name": "Voted",
@@ -240,7 +273,8 @@
             }
         ],
         "stateMutability": "view",
-        "type": "function"
+        "type": "function",
+        "constant": true
     },
     {
         "inputs": [],
@@ -406,6 +440,61 @@
     {
         "inputs": [
             {
+                "internalType": "address[]",
+                "name": "_members",
+                "type": "address[]"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_required",
+                "type": "uint256"
+            },
+            {
+                "internalType": "address",
+                "name": "_bridge",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "version",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "pure",
+        "type": "function",
+        "constant": true
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "address",
                 "name": "_bridge",
                 "type": "address"
@@ -437,7 +526,12 @@
                 "type": "address"
             },
             {
-                "internalType": "address",
+                "internalType": "address payable",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address payable",
                 "name": "receiver",
                 "type": "address"
             },
@@ -445,11 +539,6 @@
                 "internalType": "uint256",
                 "name": "value",
                 "type": "uint256"
-            },
-            {
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string"
             },
             {
                 "internalType": "bytes32",
@@ -546,6 +635,11 @@
             },
             {
                 "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
                 "name": "receiver",
                 "type": "address"
             },
@@ -553,11 +647,6 @@
                 "internalType": "uint256",
                 "name": "amount",
                 "type": "uint256"
-            },
-            {
-                "internalType": "string",
-                "name": "symbol",
-                "type": "string"
             },
             {
                 "internalType": "bytes32",
@@ -573,16 +662,6 @@
                 "internalType": "uint32",
                 "name": "logIndex",
                 "type": "uint32"
-            },
-            {
-                "internalType": "uint8",
-                "name": "decimals",
-                "type": "uint8"
-            },
-            {
-                "internalType": "uint256",
-                "name": "granularity",
-                "type": "uint256"
             }
         ],
         "name": "getTransactionId",
@@ -646,6 +725,39 @@
             }
         ],
         "name": "changeRequirement",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "fedRskBlock",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "fedEthBlock",
+                "type": "uint256"
+            },
+            {
+                "internalType": "string",
+                "name": "federatorVersion",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "nodeRskInfo",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "nodeEthInfo",
+                "type": "string"
+            }
+        ],
+        "name": "emitHeartbeat",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
