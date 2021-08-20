@@ -2,3 +2,4 @@ node_modules
 federator.log
 .DS_Store
 .idea
+federator/built
