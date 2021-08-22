@@ -1,7 +1,7 @@
 {
   "name": "bridge",
   "private": true,
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Token Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
@@ -9,23 +9,19 @@
     "ganache-mirror": "npx ganache-cli -i 5776 -p 8546 -k istanbul -v",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solhint  \"contracts/**/*.sol\"",
-    "compile": "rm -rf ./build && npx truffle compile",
+    "compile": "npx hardhat compile",
     "migrate": "rm -rf ./build && npx truffle migrate --reset",
-    "test": "rm -rf ./build && npx truffle test",
-    "coverage": "npx truffle run coverage",
-    "size": "rm -rf ./build && npm run compile && node calculateSize.js",
-    "prepare": "npx truffle compile && node ./datagen.js",
-    "deployOld": "rm -rf ./build && npx truffle migrate -f 1 --to 19 --network",
-    "upgrade": "rm -rf ./build && npx truffle migrate -f 20 --to 30 --network",
-    "deployIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network rskregtest && npx truffle migrate --reset --network development",
-    "deployLocalIntegrationTest": "rm -rf ./build && npx truffle migrate --reset --network development && rm -rf ./build && npx truffle migrate --reset --network mirrorDevelopment",
-    "deployOldLocalIntegrationTest": "npm run deployOld development && npm run deployOld mirrorDevelopment",
-    "upgradeLocalIntegrationTest": "npm run upgrade development && npm run supgrade mirrorDevelopment"
+    "test": "npx hardhat test",
+    "coverage": "npx hardhat coverage",
+    "size": "npx hardhat size-contracts",
+    "deploy": "npx hardhat deploy --network",
+    "deployIntegrationTest": "npm run delpoy rskregtest && npm run deploy development",
+    "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment"
   },
   "keywords": [
     "rsk",
-    "federated",
     "erc20",
+    "token",
     "bridge",
     "ethereum"
   ],
@@ -34,13 +30,18 @@
     "node": ">=16"
   },
   "dependencies": {
-    "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.1",
-    "@truffle/hdwallet-provider": "^1.4.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
     "chalk": "^4.1.0",
-    "eth-gas-reporter": "^0.2.22",
-    "solhint": "^3.3.6",
+    "hardhat": "^2.4.1",
+    "hardhat-contract-sizer": "^2.0.3",
+    "hardhat-deploy": "^0.8.11",
+    "@thinkanddev/deploy-eip-1820-web3-rsk":  "^1.0.2",
+    "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
+    "hardhat-gas-reporter": "^1.0.4",
     "npm-force-resolutions": "0.0.3",
     "resolve": "^1.13.0",
+    "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.16",
     "table": "^6.0.3",
     "truffle": "^5.3.9",
@@ -48,12 +49,13 @@
     "truffle-plugin-verify": "^0.5.9"
   },
   "devDependencies": {
-    "web3": ">=1.0.0",
     "axios": ">=0.21.1",
     "css-what": ">=5.0.1",
     "elliptic": ">=6.5.4",
     "glob-parent": ">=5.1.2",
+    "hardhat-abi-exporter": "^2.2.1",
     "node-fetch": ">=2.6.1",
+    "web3": ">=1.0.0",
     "y18n": ">=5.0.5"
   },
   "resolutions": {
