@@ -3,7 +3,7 @@ FROM node:16.6.1-alpine3.13
 RUN apk add --no-cache python2 build-base
 
 COPY ./federator /app/federator
-COPY ./abis /app/abis
+COPY ./bridge/abi /app/bridge/abi
 
 RUN chown -R node:node /app
 USER node

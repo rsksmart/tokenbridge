@@ -6,11 +6,11 @@ const log4js = require('log4js');
 // the following file should only be used for integration tests
 const config = require('../config/test.local.config.js');
 const logConfig = require('../config/log-config.json');
-const abiBridge = require('../../abis/Bridge.json');
-const abiMainToken = require('../../abis/ERC677.json');
-const abiSideToken = require('../../abis/SideToken.json');
-const abiAllowTokens = require('../../abis/AllowTokens.json');
-const abiMultiSig = require('../../abis/MultiSigWallet.json');
+const abiBridge = require('../../bridge/abi/Bridge.json');
+const abiMainToken = require('../../bridge/abi/MainToken.json');
+const abiSideToken = require('../../bridge/abi/SideToken.json');
+const abiAllowTokens = require('../../bridge/abi/AllowTokens.json');
+const abiMultiSig = require('../../bridge/abi/MultiSigWallet.json');
 
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');

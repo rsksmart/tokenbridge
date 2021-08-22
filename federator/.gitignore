@@ -2,6 +2,7 @@ config/config.js
 rskregtest.json
 development.json
 development_1.json
+hardhat.json
 mirrorDevelopment.json
 soliditycoverage.json
 test.json
@@ -15,3 +16,6 @@ db/*
 !db/README.md
 heartbeat.log
 federator.log
+.env
+.env.local
+.env.prod
