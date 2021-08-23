@@ -54,6 +54,8 @@
     "elliptic": ">=6.5.4",
     "glob-parent": ">=5.1.2",
     "node-fetch": ">=2.6.1",
+    "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.17",
     "y18n": ">=5.0.5"
   },
   "resolutions": {
