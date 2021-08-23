@@ -5,8 +5,8 @@
   "description": "Token Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
-    "ganache": "npx ganache-cli -i 5777 -k istanbul -v",
-    "ganache-mirror": "npx ganache-cli -i 5776 -p 8546 -k istanbul -v",
+    "ganache": "npx ganache-cli --quiet -i 5777 -k istanbul -v",
+    "ganache-mirror": "npx ganache-cli --quiet -i 5776 -p 8546 -k istanbul -v",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solhint  \"contracts/**/*.sol\"",
     "compile": "rm -rf ./build && npx truffle compile",
