@@ -17,6 +17,7 @@ import "../zeppelin/token/ERC721/IERC721.sol";
 import "../zeppelin/token/ERC721/IERC721Metadata.sol";
 import "../zeppelin/token/ERC721/IERC721Enumerable.sol";
 import "../zeppelin/token/ERC721/IERC721Receiver.sol";
+import "../zeppelin/token/ERC721/ERC721Burnable.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
@@ -311,6 +312,10 @@ contract NFTBridge is
     IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
     string memory tokenURI = metadataIERC.tokenURI(tokenId);
+
+    if (originalTokenAddressBySideTokenAddress[tokenAddress] != NULL_ADDRESS) {
+      ERC721Burnable(tokenAddress).burn(tokenId);
+    }
 
     emit Cross(
       tokenAddress,
