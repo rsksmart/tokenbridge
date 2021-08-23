@@ -9,6 +9,7 @@ log4js.configure(logConfig);
 // Services
 const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
+const FederatorNFT = require('./lib/FederatorNFT');
 const Heartbeat = require('./lib/Heartbeat.js');
 
 const logger = log4js.getLogger('Federators');
@@ -37,6 +38,13 @@ const sideFederator = new Federator({
     sidechain: config.mainchain,
     storagePath: `${config.storagePath}/side-fed`
 }, log4js.getLogger('SIDE-FEDERATOR'));
+const mainFederatorNFT = new FederatorNFT(config, log4js.getLogger('MAIN-FEDERATOR'));
+const sideFederatorNFT = new FederatorNFT({
+    ...config,
+    mainchain: config.sidechain,
+    sidechain: config.mainchain,
+    storagePath: `${config.storagePath}/side-fed`
+}, log4js.getLogger('SIDE-FEDERATOR'));
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
@@ -49,6 +57,8 @@ async function run() {
     try {
         await mainFederator.run();
         await sideFederator.run();
+        await mainFederatorNFT.run();
+        await sideFederatorNFT.run();
         await heartbeat.readLogs();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
