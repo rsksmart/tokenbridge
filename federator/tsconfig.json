@@ -4,13 +4,8 @@
     "allowJs": true,
     "target": "es5",
     "esModuleInterop": true,
-    // "rootDir": "../",
-    // "baseUrl": ".",
-    // "paths": {
-    //   "@abis": ["../../abis"]
-    // }
     "resolveJsonModule": true,
   },
-  // "exclude": ["node_modules"],
+  "exclude": ["node_modules"],
   "include": ["./src/**/*"]
 }
