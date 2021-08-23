@@ -100,7 +100,7 @@ contract('Bridge upgrade test', async (accounts) => {
             });
 
             it('should receive tokens', async () => {
-                const amount = web3.utils.toWei('1000');
+                const amount = web3.utils.toWei('1');
                 await this.token.transfer(anAccount, amount, { from: deployerAddress });
                 await this.token.approve(this.proxy.options.address, amount, { from: anAccount });
 
