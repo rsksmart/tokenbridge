@@ -6,8 +6,9 @@ import "../zeppelin/token/ERC721/ERC721.sol";
 import "../interface/IERC1271.sol";
 import "./ISideNFTToken.sol";
 import "../lib/LibEIP712.sol";
+import "../zeppelin/token/ERC721/ERC721Burnable.sol";
 
-contract SideNFTToken is ISideNFTToken, ERC721 {
+contract SideNFTToken is ISideNFTToken, ERC721, ERC721Burnable {
     using Address for address;
     using SafeMath for uint256;
 
@@ -55,7 +56,7 @@ contract SideNFTToken is ISideNFTToken, ERC721 {
 
     function contractURI() public view returns (string memory) {
         return _contractURI;
-    } // TODO: test
+    }
 
     modifier onlyMinter() {
         require(_msgSender() == minter, "SideToken: Caller is not the minter");
