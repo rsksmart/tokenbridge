@@ -58,6 +58,29 @@ You need to change `"<YOUR NODE HOST AND RPC PORT>"` for the url of your node fo
 `Remember to do it for both networks`.
 Also you need to create a `federators.key` file with the federator private in it.
 
+### Development
+- In your development environment you must have 2 blockchains running (ganache is ok)
+- To start, go to the `bridge` directory and run
+```shell
+$ cd bridge
+$ npm run ganache
+```
+
+- Open another shell and run the other chain
+```shell
+$ npm run ganache-mirror
+```
+
+- Still in the `bridge` directory you will need to deploy the contracts to the chains
+```shell
+$ npm run deployLocalIntegrationTest
+```
+
+- After that got to the `federator` directory then compile and run the federator
+```shell
+$ npm run build-start
+```
+
 ### Latest block
 
 The federator will use the block number in  `./federator/db/latestBlock.txt` for the main chain and `./federator/db/side-fed/latestBlock.txt` for the side chain as starting point. This is important as the federator will increase the number each time it successfully polls for blocks, and indicates the last block run.
