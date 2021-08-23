@@ -1,4 +1,4 @@
 {
-    "filter_paths": "MultiSigWallet.sol,Migrations.sol,contracts/test,contracts/zeppelin,contracts/previous",
+    "filter_paths": "MultiSigWallet.sol,contracts/test,contracts/zeppelin,contracts/previous",
     "detectors_to_exclude": "solc-version,pragma,naming-convention,too-many-digits,assembly-usage"
 }
