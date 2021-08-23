@@ -72,6 +72,8 @@
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "web3": ">=1.0.0",
+    "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.17",
     "y18n": ">=5.0.5"
   },
   "resolutions": {
