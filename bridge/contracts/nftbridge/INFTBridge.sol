@@ -6,7 +6,9 @@ pragma abicoder v2;
 interface INFTBridge {
   struct NFTClaimData {
     address payable to;
+    address from;
     uint256 tokenId;
+    address tokenAddress;
     bytes32 blockHash;
     bytes32 transactionHash;
     uint32 logIndex;
@@ -44,7 +46,9 @@ interface INFTBridge {
 
   function getTransactionDataHash(
     address _to,
-    uint256 _amount,
+    address _from,
+    uint256 _tokenId,
+    address _tokenAddress,
     bytes32 _blockHash,
     bytes32 _transactionHash,
     uint32 _logIndex
