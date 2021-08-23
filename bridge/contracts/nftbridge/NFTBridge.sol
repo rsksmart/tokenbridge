@@ -58,13 +58,8 @@ contract NFTBridge is
   mapping(bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
   IAllowTokens public allowTokens;
   ISideNFTTokenFactory public sideTokenFactory;
-  //Bridge_v1 variables
   bool public isUpgrading;
-  //Bridge_v3 variables
-  bytes32 internal constant ERC_777_INTERFACE = keccak256("ERC777Token");
   mapping(bytes32 => bytes32) public transactionDataHashes; // transactionHash => transactionDataHash
-  mapping(bytes32 => address) public tokenAddressByTransactionHash; // transactionHash => originalTokenAddress
-  mapping(bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
   bytes32 public domainSeparator;
   // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
@@ -90,7 +85,6 @@ contract NFTBridge is
     allowTokens = IAllowTokens(_allowTokens);
     sideTokenFactory = ISideNFTTokenFactory(_sideTokenFactory);
     federation = _federation;
-    //keccak256("ERC777TokensRecipient")
     ERC1820.setInterfaceImplementer(
       address(this),
       0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b,
@@ -148,7 +142,9 @@ contract NFTBridge is
 
     bytes32 _transactionDataHash = getTransactionDataHash(
       _to,
+      _from,
       _tokenId,
+      _tokenAddress,
       _blockHash,
       _transactionHash,
       _logIndex
@@ -157,8 +153,8 @@ contract NFTBridge is
     require(!claimed[_transactionDataHash], "NFTBridge: Already claimed");
 
     transactionDataHashes[_transactionHash] = _transactionDataHash;
-    tokenAddressByTransactionHash[_transactionHash] = _tokenAddress;
-    senderAddresses[_transactionHash] = _from;
+//    tokenAddressByTransactionHash[_transactionHash] = _tokenAddress;
+//    senderAddresses[_transactionHash] = _from;
 
     emit AcceptedNFTCrossTransfer(
       _transactionHash,
@@ -196,10 +192,7 @@ contract NFTBridge is
   }
 
   function claimFallback(NFTClaimData calldata _claimData) external override {
-    require(
-      _msgSender() == senderAddresses[_claimData.transactionHash],
-      "NFTBridge: invalid sender"
-    );
+    require(_msgSender() == _claimData.from, "NFTBridge: invalid sender");
     _claim(_claimData, _msgSender());
   }
 
@@ -229,17 +222,15 @@ contract NFTBridge is
   function _claim(
     NFTClaimData calldata _claimData,
     address payable _receiver
-  ) internal returns (uint256 receivedAmount) {
-    address tokenAddress = tokenAddressByTransactionHash[
-      _claimData.transactionHash
-    ];
-    require(tokenAddress != NULL_ADDRESS, "NFTBridge: Tx not crossed");
-
+  ) internal {
+    address tokenAddress = _claimData.tokenAddress;
     uint256 tokenId = _claimData.tokenId;
 
     bytes32 transactionDataHash = getTransactionDataHash(
       _claimData.to,
+      _claimData.from,
       tokenId,
+      tokenAddress,
       _claimData.blockHash,
       _claimData.transactionHash,
       _claimData.logIndex
@@ -263,13 +254,12 @@ contract NFTBridge is
       _claimData.transactionHash,
       tokenAddress,
       _claimData.to,
-      senderAddresses[_claimData.transactionHash],
+      _claimData.from,
       _claimData.tokenId,
       _claimData.blockHash,
       _claimData.logIndex,
       _receiver
     );
-    return receivedAmount;
   }
 
   function getTokenCreator(address tokenAddress, uint256 tokenId) public view returns (address) {
@@ -294,7 +284,7 @@ contract NFTBridge is
 
     address payable sender = _msgSender();
     // Transfer the tokens on IERC721, they should be already Approved for the bridge Address to use them
-    IERC721(tokenAddress).safeTransferFrom(sender, address(this), tokenId);
+    IERC721(tokenAddress).transferFrom(sender, address(this), tokenId);
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
 
@@ -336,7 +326,9 @@ contract NFTBridge is
 
   function getTransactionDataHash(
     address _to,
+    address _from,
     uint256 _tokenId,
+    address _tokenAddress,
     bytes32 _blockHash,
     bytes32 _transactionHash,
     uint32 _logIndex
@@ -346,7 +338,9 @@ contract NFTBridge is
         _blockHash,
         _transactionHash,
         _to,
+        _from,
         _tokenId,
+        _tokenAddress,
         _logIndex
       )
     );
