@@ -64,7 +64,7 @@ module.exports = {
       chainId: 1,
       blockGasLimit: 6800000,
       gasPrice: 60000000,
-      hardfork: 'berlin', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       tags: ['test', 'local'],
     },
     //Ganache
@@ -74,7 +74,7 @@ module.exports = {
       network_id: '5777',
       gas: 6700000,
       gasPrice: 20000000000,
-      hardfork: 'berlin', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       tags: ['integrationTest', 'local'],
       saveDeployments: false,
     },
@@ -84,7 +84,7 @@ module.exports = {
       network_id: '5776',
       gas: 6700000,
       gasPrice: 20000000000,
-      hardfork: 'berlin', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       tags: ['integrationTest','local'],
       saveDeployments: false,
     },
@@ -94,7 +94,7 @@ module.exports = {
       blockGasLimit: 6800000,
       gasPrice: 60000000, // 0.06 gwei
       chainId: 31,
-      hardfork: 'berlin', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       accounts: {
         mnemonic: MNEMONIC
       },
@@ -106,7 +106,7 @@ module.exports = {
       blockGasLimit: 6800000,
       gasPrice: 60000000, // 0.06 gwei
       chainId: 30,
-      hardfork: 'berlin', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       accounts: {
         mnemonic: MNEMONIC
       },
