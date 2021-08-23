@@ -27,7 +27,7 @@ contract("Bridge NFT", async function(accounts) {
   const defaultTokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
   const acceptedNFTCrossTransferEventType = "AcceptedNFTCrossTransfer";
   const claimedNFTTokenEventType = "ClaimedNFTToken";
-  const transferEventType = "Transfer";
+  const crossEventType = "Cross";
   const bigNumberZero = new BN(0);
   const bigNumberOne = new BN(1);
 
@@ -851,7 +851,15 @@ contract("Bridge NFT", async function(accounts) {
             receipt = await this.sideNFTBridge.receiveTokensTo(
                 sideToken.address, anAccount, tokenId, {from: anotherAccount}
             );
+            const expectedTotalSupplyAfterBurn = 0;
             utils.checkRcpt(receipt);
+            truffleAssert.eventEmitted(receipt, crossEventType, (event) => {
+              return event._tokenAddress === this.token.address &&
+                  event._from === anotherAccount &&
+                  event._to === anAccount &&
+                  event._amount.eq(new BN(expectedTotalSupplyAfterBurn)) &&
+                  event._tokenId.eq(new BN(tokenId))
+            });
             await truffleAssert.fails(
                 sideToken.ownerOf(tokenId),
                 "ERC721: owner query for nonexistent token"
