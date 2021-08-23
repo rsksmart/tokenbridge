@@ -38,8 +38,8 @@ const sideFederator = new Federator({
     sidechain: config.mainchain,
     storagePath: `${config.storagePath}/side-fed`
 }, log4js.getLogger('SIDE-FEDERATOR'));
-const mainFederatorNFT = new FederatorNFT(config, log4js.getLogger('MAIN-FEDERATOR'));
-const sideFederatorNFT = new FederatorNFT({
+const mainFederatorNFT = new FederatorNFT.FederatorNFT(config, log4js.getLogger('MAIN-FEDERATOR'));
+const sideFederatorNFT = new FederatorNFT.FederatorNFT({
     ...config,
     mainchain: config.sidechain,
     sidechain: config.mainchain,
