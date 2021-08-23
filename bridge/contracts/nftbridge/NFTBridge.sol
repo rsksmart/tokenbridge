@@ -313,12 +313,14 @@ contract NFTBridge is
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
     string memory tokenURI = metadataIERC.tokenURI(tokenId);
 
+    address originalTokenAddress = tokenAddress;
     if (originalTokenAddressBySideTokenAddress[tokenAddress] != NULL_ADDRESS) {
+      originalTokenAddress = originalTokenAddressBySideTokenAddress[tokenAddress];
       ERC721Burnable(tokenAddress).burn(tokenId);
     }
 
     emit Cross(
-      tokenAddress,
+      originalTokenAddress,
       _msgSender(),
       to,
       tokenCreator,
