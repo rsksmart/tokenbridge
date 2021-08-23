@@ -588,22 +588,12 @@ contract("Bridge NFT", async function(accounts) {
         utils.checkRcpt(receipt);
 
         const expectedTransactionDataHash = await this.NFTBridge.getTransactionDataHash(
-            anotherAccount, tokenId, blockHash, transactionHash, logIndex
+            anotherAccount, anAccount, tokenId, tokenAddress, blockHash, transactionHash, logIndex
         );
 
-        await assertAcceptTransferPublicMembersCorrectness.call(this, transactionHash, expectedTransactionDataHash, tokenAddress);
-        assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex);
-      }
-
-      async function assertAcceptTransferPublicMembersCorrectness(transactionHash, expectedTransactionDataHash, tokenAddress) {
         let transactionDataHash = await this.NFTBridge.transactionDataHashes(transactionHash);
         assert.equal(expectedTransactionDataHash, transactionDataHash);
-
-        let originalTokenAddressForTransactionHash = await this.NFTBridge.tokenAddressByTransactionHash(transactionHash);
-        assert.equal(tokenAddress, originalTokenAddressForTransactionHash)
-
-        let senderAddressForTransactionHash = await this.NFTBridge.senderAddresses(transactionHash);
-        assert.equal(anAccount, senderAddressForTransactionHash);
+        assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex);
       }
 
       function assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex) {
@@ -717,7 +707,17 @@ contract("Bridge NFT", async function(accounts) {
             tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
         );
         utils.checkRcpt(receipt);
-        sideTokenAddress = receipt.logs[0].args[0];
+        truffleAssert.eventEmitted(
+            receipt,
+            newSideNFTTokenEventType,
+            (event) => {
+              sideTokenAddress = event._newSideNFTTokenAddress;
+              return (
+                  event._originalTokenAddress === tokenAddress &&
+                  event._newSymbol === `${sideTokenSymbolPrefix}${tokenSymbol}`
+              );
+            }
+        );
 
         // Mint token for anAccount (owner of the token).
         receipt = await this.token.safeMint(anAccount, tokenId, {from: tokenOwner});
@@ -770,8 +770,8 @@ contract("Bridge NFT", async function(accounts) {
 
             const receipt = await this.sideNFTBridge.claim(
                 {
-                  to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: transactionHash,
-                  logIndex: logIndex
+                  to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
+                  blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
                 },
                 {from: anotherAccount}
             );
@@ -795,8 +795,8 @@ contract("Bridge NFT", async function(accounts) {
             await truffleAssert.fails(
                 this.sideNFTBridge.claim(
                     {
-                      to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: transactionHash,
-                      logIndex: logIndex
+                      to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
+                      blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
                     },
                     {from: anotherAccount}
                 ),
@@ -808,23 +808,6 @@ contract("Bridge NFT", async function(accounts) {
             await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken)
           });
 
-      it("throws an error when transaction was not crossed", async function () {
-        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
-
-        await truffleAssert.fails(
-            this.sideNFTBridge.claim(
-                {
-                  to: anotherAccount, tokenId: tokenId, blockHash: blockHash, transactionHash: utils.getRandomHash(),
-                  logIndex: logIndex
-                },
-                {from: anotherAccount}
-            ),
-            "Bridge: Tx not crossed"
-        );
-
-        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
-      });
-
       it("throws an error when claim data doesn't match acceptTransfer transaction hash data", async function () {
         await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
 
@@ -832,8 +815,8 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.sideNFTBridge.claim(
                 {
-                  to: anotherAccount, tokenId: unexpectedTokenId, blockHash: blockHash, transactionHash: transactionHash,
-                  logIndex: logIndex
+                  to: anotherAccount, from: anAccount, tokenId: unexpectedTokenId, tokenAddress: tokenAddress,
+                  blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
                 },
                 {from: anotherAccount}
             ),
