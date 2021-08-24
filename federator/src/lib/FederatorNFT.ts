@@ -18,17 +18,20 @@ export class FederatorNFT {
   public sideWeb3: Web3;
   public sideFederationAddress: string = null;
   public transactionSender: TransactionSender;
-  public lastBlockPath: string;
-  public revertedTxnsPath: string;
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
   public nftConfirmationsBlocks: number;
+  private lastBlockPath: string;
+  private revertedTxnsPath: string;
   private federatorContract: import('../contracts/IFederationV2');
 
-  constructor(config: Config, logger: Logger, Web3 = web3, nftConfirmationsBlocks: number = NFT_CONFIRMATION_BLOCKS) {
+  constructor(config: Config, logger: Logger, Web3 = web3) {
     this.config = config;
     this.logger = logger;
-    this.nftConfirmationsBlocks = nftConfirmationsBlocks;
+    this.nftConfirmationsBlocks = config.nftConfirmations;
+    if (!config.nftConfirmations) {
+      this.nftConfirmationsBlocks = NFT_CONFIRMATION_BLOCKS;
+    }
 
     if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       throw new Error(`Invalid host configuration, https or localhost required`);
@@ -37,13 +40,17 @@ export class FederatorNFT {
     this.mainWeb3 = new Web3(config.mainchain.host);
     this.sideWeb3 = new Web3(config.sidechain.host);
 
-    this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
     this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
     this.revertedTxnsPath = `${config.storagePath || __dirname}/revertedTxns.json`;
+    this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
     this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
     this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
   }
 
+  /**
+   * get federator as singleton
+   * @returns Federator Interface
+   */
   async getFederator(): Promise<import('../contracts/IFederationV2')> {
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationContract();
