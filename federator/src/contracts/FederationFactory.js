@@ -1,6 +1,7 @@
 const abiFederationOld = require('../../../bridge/abi/Federation_old.json');
 const abiFederationNew = require('../../../bridge/abi/Federation.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
+const abiNftBridge = require('../../../bridge/abi/Bridge.json'); // change to bridgeNft after deploy
 const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const CustomError = require('../lib/CustomError');
@@ -13,6 +14,12 @@ module.exports = class FederationFactory extends ContractFactory {
         super(config, logger, Web3)
         this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
         this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
+        if (this.config.mainchain.nftBridge) {
+          this.mainChainNftBridgeContract = new this.mainWeb3.eth.Contract(abiNftBridge, this.config.mainchain.nftBridge);
+        }
+        if (this.config.sidechain.nftBridge) {
+          this.sideChainNftBridgeContract = new this.sideWeb3.eth.Contract(abiNftBridge, this.config.sidechain.nftBridge);
+        }
     }
 
     async createInstance(web3, address) {
@@ -20,13 +27,18 @@ module.exports = class FederationFactory extends ContractFactory {
         const version = await this.getVersion(federationContract);
 
         if (version === 'v2') {
-            return new FederationInterfaceV2(this.config, federationContract);
+          return new FederationInterfaceV2(this.config, federationContract);
         } else if (version === 'v1') {
-            federationContract = this.getContractByAbi(abiFederationOld, address, web3);
-            return new FederationInterfaceV1(this.config, federationContract);
+          federationContract = this.getContractByAbi(abiFederationOld, address, web3);
+          return new FederationInterfaceV1(this.config, federationContract);
         } else {
-            throw Error('Unknown Federation contract version');
+          throw Error('Unknown Federation contract version');
         }
+      }
+
+    createFederatorInstance(web3, address) {
+      const federationContract = this.getContractByAbi(abiFederationNew, address, web3);
+      return new FederationInterfaceV2(this.config, federationContract);
     }
 
     async getVersion(federationContract) {
@@ -60,4 +72,22 @@ module.exports = class FederationFactory extends ContractFactory {
             throw new CustomError(`Exception creating Side Federation Contract`, err);
         }
     }
+
+  async getMainFederationNftContract() {
+    try {
+      const federationAddress = await utils.retry3Times(this.mainChainNftBridgeContract.methods.getFederation().call);
+      return this.createFederatorInstance(this.mainWeb3, federationAddress);
+    } catch(err) {
+      throw new CustomError(`Exception creating Main Federation NFT Contract`, err);
+    }
+  }
+
+  async getSideFederationNftContract() {
+    try {
+      const federationAddress = await utils.retry3Times(this.mainChainNftBridgeContract.methods.getFederation().call);
+      return this.createFederatorInstance(this.sideWeb3, federationAddress);
+    } catch(err) {
+      throw new CustomError(`Exception creating Side Federation NFT Contract`, err);
+    }
+  }
 }
