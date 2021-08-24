@@ -15,7 +15,7 @@
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "deploy": "npx hardhat deploy --network",
-    "deployIntegrationTest": "npm run delpoy rskregtest && npm run deploy development",
+    "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
     "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment"
   },
   "keywords": [
@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "axios": ">=0.21.1",
+    "coveralls": "^3.1.1",
     "css-what": ">=5.0.1",
     "elliptic": ">=6.5.4",
     "glob-parent": ">=5.1.2",
