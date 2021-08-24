@@ -16,6 +16,3 @@ db/*
 !db/README.md
 heartbeat.log
 federator.log
-.env
-.env.local
-.env.prod

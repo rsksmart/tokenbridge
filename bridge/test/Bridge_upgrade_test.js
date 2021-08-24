@@ -27,8 +27,8 @@ contract('Bridge upgrade test', async (accounts) => {
 
     before(async function () {
         await utils.saveState();
-        this.utilsContract_old = await UtilsContract_old.new();
-        Bridge_old.link(this.utilsContract_old);
+        const utilsContract_old = await UtilsContract_old.new();
+        Bridge_old.link(utilsContract_old);
     });
 
     after(async function () {
