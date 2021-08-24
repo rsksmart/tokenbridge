@@ -21,8 +21,6 @@ export class FederatorNFT {
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
   public nftConfirmationsBlocks: number;
-  private lastBlockPath: string;
-  private revertedTxnsPath: string;
   private federatorContract: import('../contracts/IFederationV2');
 
   constructor(config: Config, logger: Logger, Web3 = web3) {
@@ -40,11 +38,17 @@ export class FederatorNFT {
     this.mainWeb3 = new Web3(config.mainchain.host);
     this.sideWeb3 = new Web3(config.sidechain.host);
 
-    this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
-    this.revertedTxnsPath = `${config.storagePath || __dirname}/revertedTxns.json`;
     this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
     this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
     this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+  }
+
+  get lastBlockPath(): string {
+    return `${this.config.storagePath || __dirname}/lastBlock.txt`;
+  }
+
+  get revertedTxnsPath(): string {
+    return `${this.config.storagePath || __dirname}/revertedTxns.json`;;
   }
 
   /**
