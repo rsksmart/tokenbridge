@@ -1,7 +1,12 @@
 infura.key
 mnemonic.key
 etherscan.key
-build
+
+#Build
+/out
+/build
+
+#Truffle
 .openzeppelin/.session
 .openzeppelin/dev-*.json
 .openzeppelin/kovan.json
@@ -14,3 +19,40 @@ deployed/development.json
 deployed/development_1.json
 deployed/mirrorDevelopment.json
 deployed/soliditycoverage.json
+
+#Hardhat files
+cache
+artifacts
+
+
+# Coverage directory used by tools like istanbul
+coverage
+*.lcov
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# dotenv environment variables file
+.env
+.env.test
+.env.prod

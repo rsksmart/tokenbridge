@@ -36,7 +36,7 @@ To report a vulnerability, please use the [vulnerability reporting guideline](./
 ### Contracts
 
 The smart contracts used by the bridge and the instructions to deploy them are in the ['bridge folder'](./bridge/README.md).
-The ABI to interact with the contracts are in the ['abis folder'](./abis)
+The ABI to interact with the contracts are in the ['abi folder'](./bridge/abi)
 
 ### Dapp
 
