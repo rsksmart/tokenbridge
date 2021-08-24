@@ -10,4 +10,5 @@ export class Config {
   etherscanApiKey: string; // If using ganache can be any string
   runHeartbeatEvery: number; // In hours
   endpointsPort: number; // Server port
+  nftConfirmations: number; // number of block confirmations for the nft bridge
 }
