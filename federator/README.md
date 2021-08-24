@@ -62,7 +62,6 @@ Also you need to create a `federators.key` file with the federator private in it
 - In your development environment you must have 2 blockchains running (ganache is ok)
 - To start, go to the `bridge` directory and run
 ```shell
-$ cd bridge
 $ npm run ganache
 ```
 
