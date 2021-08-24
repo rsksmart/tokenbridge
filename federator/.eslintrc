@@ -13,6 +13,8 @@
   ],
   "rules": {
     "no-console": 1,       // Means warning
-    "prettier/prettier": 2 // Means error
+    "prettier/prettier": 2, // Means error
+    "@typescript-eslint/explicit-module-boundary-types": "off", // avoid things for any type, it should be removed after migrating to tsnode
+    "@typescript-eslint/no-explicit-any": "off" // avoid things for any type
   }
 }
