@@ -38,8 +38,10 @@ module.exports = {
     path: './abi',
     clear: true,
     flat: true,
-    only: [':AdminUpgradeabilityProxy$',':AllowTokens', ':Bridge', ':Federation', ':IERC20$',
-      ':MainToken$',':ERC777$', ':MultiSigWallet$', ':ProxyAdmin$', ':SideToken']
+    only: [':AllowTokens', ':Bridge', ':Federation', ':IERC20$',
+      ':MainToken$',':ERC777$', ':MultiSigWallet$', ':ProxyAdmin$', ':SideToken',
+      ':TransparentUpgradeableProxy$'
+    ]
   },
   namedAccounts: {
     deployer: {

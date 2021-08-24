@@ -1,10 +1,10 @@
 infura.key
 mnemonic.key
 etherscan.key
+
 #Build
 /out
 /build
-node_modules
 
 #Truffle
 .openzeppelin/.session
