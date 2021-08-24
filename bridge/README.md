@@ -1,5 +1,9 @@
 # Token Bridge Contracts
 
+## Contract coverage
+
+[![Coverage Status](https://coveralls.io/repos/github/rsksmart/tokenbridge/badge.svg)](https://coveralls.io/github/rsksmart/tokenbridge)
+
 ## Install dependencies
 Don't use Node 14 as it has issues with truffle, use node 8, 10 or 12.
 Install node https://nodejs.org/es/

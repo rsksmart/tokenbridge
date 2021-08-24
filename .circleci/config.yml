@@ -26,13 +26,6 @@ jobs:
             cd bridge
             npm ci
       - run:
-          name: bridge coverage
-          command: |
-            cd bridge
-            npm run coverage
-      - coveralls/upload:
-          path_to_lcov: "./bridge/coverage/lcov.info"
-      - run:
           name: install federator dependencies
           command: |
             cd federator
@@ -62,7 +55,9 @@ jobs:
             cd federator
             npm test
       - run:
-          name: bridge unit tests
+          name: bridge unit tests + coverage
           command: |
             cd bridge
-            npm test
+            npm run coverage
+      - coveralls/upload:
+          path_to_lcov: "./bridge/coverage/lcov.info"
