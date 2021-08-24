@@ -31,13 +31,13 @@ if (!config.etherscanApiKey) {
 }
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
-// const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
-// const sideFederator = new Federator({
-//     ...config,
-//     mainchain: config.sidechain,
-//     sidechain: config.mainchain,
-//     storagePath: `${config.storagePath}/side-fed`
-// }, log4js.getLogger('SIDE-FEDERATOR'));
+const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
+const sideFederator = new Federator({
+    ...config,
+    mainchain: config.sidechain,
+    sidechain: config.mainchain,
+    storagePath: `${config.storagePath}/side-fed`
+}, log4js.getLogger('SIDE-FEDERATOR'));
 const mainFederatorNFT = new FederatorNFT.FederatorNFT({
   ...config,
   storagePath: `${config.storagePath}/nft`
@@ -58,10 +58,18 @@ scheduler.start().catch((err) => {
 
 async function run() {
     try {
-        // await mainFederator.run();
-        // await sideFederator.run();
-        await mainFederatorNFT.run();
-        await sideFederatorNFT.run();
+        await mainFederator.run();
+        await sideFederator.run();
+
+        if (config.mainchain.nftBridge !== null) {
+          logger.info('Starting Main Federator NFT Bridge');
+          await mainFederatorNFT.run();
+        }
+        if (config.sidechain.nftBridge !== null) {
+          logger.info('Starting Side Federator NFT Bridge');
+          await sideFederatorNFT.run();
+        }
+
         await heartbeat.readLogs();
     } catch(err) {
         logger.error('Unhandled Error on run()', err);
