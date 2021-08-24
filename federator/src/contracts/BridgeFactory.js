@@ -2,7 +2,7 @@ const abiBridgeOld = require('../../../abis/Bridge_old.json');
 const abiBridgeNew = require('../../../abis/Bridge.json');
 const abiNftBridge = require('../../../abis/Bridge.json');
 const BridgeInterface = require('./IBridge.js');
-const NftBridgeInterface = require('./IBridgeNft');
+// const NftBridgeInterface = require('./IBridgeNft');
 const CustomError = require('../lib/CustomError');
 const utils = require('../lib/utils');
 const ContractFactory = require('./ContractFactory');
@@ -10,10 +10,7 @@ const ContractFactory = require('./ContractFactory');
 module.exports = class BridgeFactory extends ContractFactory {
 
   constructor(config, logger, Web3) {
-    this.config = config;
-    this.logger = logger;
-    this.mainWeb3 = new Web3(config.mainchain.host);
-    this.sideWeb3 = new Web3(config.sidechain.host);
+    super(config, logger, Web3);
   }
 
   async getVersion(bridgeContract) {
@@ -21,10 +18,10 @@ module.exports = class BridgeFactory extends ContractFactory {
   }
 
   async createInstance(web3, address) {
-    let bridgeContract = new web3.eth.Contract(abiBridgeOld, address);
+    let bridgeContract = this.getContractByAbi(abiBridgeOld, address, web3);
     const version = await this.getVersion(bridgeContract);
     if (version === 'v3') {
-      bridgeContract = new web3.eth.Contract(abiBridgeNew, address);
+      bridgeContract = this.getContractByAbi(abiBridgeNew, address, web3);
     } else if (!['v2','v1'].includes(version)) {
       throw Error('Unknown Bridge contract version');
     }
@@ -32,7 +29,7 @@ module.exports = class BridgeFactory extends ContractFactory {
   }
 
   createInstanceNft(web3, address) {
-    const nftBridgeContract = new web3.eth.Contract(abiNftBridge, address);
+    const nftBridgeContract = this.getContractByAbi(abiNftBridge, address, web3);
     return new NftBridgeInterface(nftBridgeContract);
   }
 
@@ -47,7 +44,7 @@ module.exports = class BridgeFactory extends ContractFactory {
     }
   }
 
-  getSideBridgeContract() {
+  async getSideBridgeContract() {
     try {
       return await this.createInstance(
         this.sideWeb3,
@@ -60,10 +57,7 @@ module.exports = class BridgeFactory extends ContractFactory {
 
   getMainNftBridgeContract() {
     try {
-      return await this.createInstanceNft(
-        this.mainWeb3,
-        this.config.mainchain.nftBridge
-      );
+      return this.createInstanceNft(this.mainWeb3, this.config.mainchain.nftBridge);
     } catch(err) {
       throw new CustomError(`Exception creating Main Bridge NFT Contract`, err);
     }
@@ -71,10 +65,7 @@ module.exports = class BridgeFactory extends ContractFactory {
 
   getSideNftBridgeContract() {
     try {
-      return await this.createInstanceNft(
-        this.sideWeb3,
-        this.config.sidechain.nftBridge
-      );
+      return this.createInstanceNft(this.sideWeb3, this.config.sidechain.nftBridge);
     } catch(err) {
       throw new CustomError(`Exception creating Side Bridge NFT Contract`, err);
     }

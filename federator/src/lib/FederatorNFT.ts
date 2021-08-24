@@ -48,7 +48,7 @@ export class FederatorNFT {
   }
 
   get revertedTxnsPath(): string {
-    return `${this.config.storagePath || __dirname}/revertedTxns.json`;;
+    return `${this.config.storagePath || __dirname}/revertedTxns.json`;
   }
 
   /**
@@ -57,7 +57,7 @@ export class FederatorNFT {
    */
   async getFederator(): Promise<import('../contracts/IFederationV2')> {
     if (this.federatorContract == null) {
-      this.federatorContract = await this.federationFactory.getSideFederationContract();
+      this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }
     return this.federatorContract;
   }
@@ -184,7 +184,12 @@ export class FederatorNFT {
 
         const { blockHash, transactionHash, logIndex, blockNumber } = log;
 
-        const { _to: receiver, _from: sender, _amount: amount, _tokenAddress: originalTokenAddress } = log.returnValues;
+        const {
+          _to: receiver,
+          _from: sender,
+          _tokenId: tokenId,
+          _originalTokenAddress: originalTokenAddress,
+        } = log.returnValues;
 
         const mainBridge = await this.bridgeFactory.getMainBridgeContract();
         const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(originalTokenAddress).call);
@@ -207,7 +212,7 @@ export class FederatorNFT {
             originalTokenAddress,
             sender,
             receiver,
-            amount,
+            amount: tokenId,
             blockHash,
             transactionHash,
             logIndex,
@@ -239,7 +244,7 @@ export class FederatorNFT {
           originalTokenAddress,
           sender,
           receiver,
-          amount,
+          tokenId,
           log.blockHash,
           log.transactionHash,
           log.logIndex,
