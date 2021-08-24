@@ -31,19 +31,22 @@ if (!config.etherscanApiKey) {
 }
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
-const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
-const sideFederator = new Federator({
-    ...config,
-    mainchain: config.sidechain,
-    sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/side-fed`
-}, log4js.getLogger('SIDE-FEDERATOR'));
-const mainFederatorNFT = new FederatorNFT.FederatorNFT(config, log4js.getLogger('MAIN-FEDERATOR'));
+// const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
+// const sideFederator = new Federator({
+//     ...config,
+//     mainchain: config.sidechain,
+//     sidechain: config.mainchain,
+//     storagePath: `${config.storagePath}/side-fed`
+// }, log4js.getLogger('SIDE-FEDERATOR'));
+const mainFederatorNFT = new FederatorNFT.FederatorNFT({
+  ...config,
+  storagePath: `${config.storagePath}/nft`
+}, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederatorNFT = new FederatorNFT.FederatorNFT({
     ...config,
     mainchain: config.sidechain,
     sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/side-fed`
+    storagePath: `${config.storagePath}/nft/side-fed`
 }, log4js.getLogger('SIDE-FEDERATOR'));
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
@@ -55,8 +58,8 @@ scheduler.start().catch((err) => {
 
 async function run() {
     try {
-        await mainFederator.run();
-        await sideFederator.run();
+        // await mainFederator.run();
+        // await sideFederator.run();
         await mainFederatorNFT.run();
         await sideFederatorNFT.run();
         await heartbeat.readLogs();
