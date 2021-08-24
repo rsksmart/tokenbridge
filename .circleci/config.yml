@@ -31,7 +31,7 @@ jobs:
             cd bridge
             npm run coverage
       - coveralls/upload:
-          path_to_lcov: "./bridge/coverage"
+          path_to_lcov: "./bridge/coverage/lcov.info"
       - run:
           name: install federator dependencies
           command: |
