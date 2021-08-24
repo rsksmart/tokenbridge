@@ -207,12 +207,12 @@ contract("Bridge NFT", async function(accounts) {
           // console.log(ev);
 
           return (
-            ev._tokenAddress == this.token.address &&
+            ev._originalTokenAddress == this.token.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
-            ev._amount == totalSupply &&
+            ev._totalSupply == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == tokenBaseURI + defaultTokenURI
           );
@@ -235,12 +235,12 @@ contract("Bridge NFT", async function(accounts) {
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
           return (
-            ev._tokenAddress == this.token.address &&
+            ev._originalTokenAddress == this.token.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
-            ev._amount == totalSupply &&
+            ev._totalSupply == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == tokenBaseURI + defaultTokenId
           );
@@ -264,12 +264,12 @@ contract("Bridge NFT", async function(accounts) {
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
           return (
-            ev._tokenAddress == this.token.address &&
+            ev._originalTokenAddress == this.token.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
-            ev._amount == totalSupply &&
+            ev._totalSupply == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == ''
           );
@@ -296,12 +296,12 @@ contract("Bridge NFT", async function(accounts) {
 
         truffleAssert.eventEmitted(receipt, "Cross", (ev) => {
           return (
-            ev._tokenAddress == this.token.address &&
+            ev._originalTokenAddress == this.token.address &&
             ev._from == tokenOwner &&
             ev._to == anAccount &&
             ev._tokenCreator == tokenOwner &&
             ev._userData == null &&
-            ev._amount == totalSupply &&
+            ev._totalSupply == totalSupply &&
             ev._tokenId == defaultTokenId &&
             ev._tokenURI == defaultTokenURI
           );
@@ -854,10 +854,10 @@ contract("Bridge NFT", async function(accounts) {
             const expectedTotalSupplyAfterBurn = 0;
             utils.checkRcpt(receipt);
             truffleAssert.eventEmitted(receipt, crossEventType, (event) => {
-              return event._tokenAddress === this.token.address &&
+              return event._originalTokenAddress === this.token.address &&
                   event._from === anotherAccount &&
                   event._to === anAccount &&
-                  event._amount.eq(new BN(expectedTotalSupplyAfterBurn)) &&
+                  event._totalSupply.eq(new BN(expectedTotalSupplyAfterBurn)) &&
                   event._tokenId.eq(new BN(tokenId))
             });
             await truffleAssert.fails(
