@@ -37,11 +37,18 @@ module.exports = class TransactionSender {
         return this.getEthGasPrice();
     }
 
-    async getGasLimit() {
+    async getGasLimit(rawTx) {
+        const estimatedGas = await this.client.eth.estimateGas({
+            gasPrice: rawTx.gasPrice,
+            value: rawTx.value,
+            to: rawTx.to,
+            data: rawTx.data,
+            from: rawTx.from
+        });
         // Gas estimation does not work correctly on RSK and after the London harfork, neither is working on Ethereum
         // example https://etherscan.io/tx/0xd30d6cf428606e2ef3667427b9b6baecb2f4c9cbb44a0c82c735a238ec8f72fb
         // To fix it, we decided to use a hardcoded gas estimation
-        return ESTIMATED_GAS;
+        return +estimatedGas < ESTIMATED_GAS ? ESTIMATED_GAS : +estimatedGas;
     }
 
     async getEthGasPrice() {
@@ -115,7 +122,7 @@ module.exports = class TransactionSender {
             r: 0,
             s: 0
         }
-        rawTx.gas = this.numberToHexString(await this.getGasLimit());
+        rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
 
         if(this.debuggingMode) {
             rawTx.gas = this.numberToHexString(100);

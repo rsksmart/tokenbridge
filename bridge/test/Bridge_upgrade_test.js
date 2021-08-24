@@ -27,6 +27,8 @@ contract('Bridge upgrade test', async (accounts) => {
 
     before(async function () {
         await utils.saveState();
+        const utilsContract_old = await UtilsContract_old.new();
+        Bridge_old.link(utilsContract_old);
     });
 
     after(async function () {
@@ -36,8 +38,6 @@ contract('Bridge upgrade test', async (accounts) => {
     beforeEach(async () => {
         this.proxyAdmin = await ProxyAdmin.new();
         this.allowTokens_old = await AllowTokens_old.new(managerAddress);
-        this.utilsContract_old = await UtilsContract_old.deployed();
-        Bridge_old.link({ "Utils_old": this.utilsContract_old.address });
         await this.allowTokens_old.disableAllowedTokensValidation({from: managerAddress});
         this.sideTokenFactory_old = await SideTokenFactory_old.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000'), { from: deployerAddress });
@@ -100,7 +100,7 @@ contract('Bridge upgrade test', async (accounts) => {
             });
 
             it('should receive tokens', async () => {
-                const amount = web3.utils.toWei('1000');
+                const amount = web3.utils.toWei('1');
                 await this.token.transfer(anAccount, amount, { from: deployerAddress });
                 await this.token.approve(this.proxy.options.address, amount, { from: anAccount });
 
@@ -304,7 +304,7 @@ contract('Bridge upgrade test', async (accounts) => {
                                 logIndex: logIndex
                             }
                         ).send({ from: federationAddress, gas: 200_000 });
-    
+
                         const hasBeenClaimed = await this.proxy.methods.hasBeenClaimed(txHash).call();
                         assert.equal(hasBeenClaimed, true);
 

@@ -2,7 +2,7 @@
 # MainNet Addresses and Links
 
 ## List of Abis
-[Abis used](../abis)
+[Abis used](../bridge/abi)
 
 ## List of Addresses
 ### On RSk
