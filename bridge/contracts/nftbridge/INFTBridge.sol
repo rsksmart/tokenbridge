@@ -54,14 +54,13 @@ interface INFTBridge {
     uint32 _logIndex
   ) external returns (bytes32);
 
-  // uint256 _amount is the totalSupply of an NFT token like 20 collectibles in the [The Drops](https://opensea.io/collection/the-drops-v2)
   event Cross(
-    address indexed _tokenAddress,
+    address indexed _originalTokenAddress,
     address indexed _from,
     address indexed _to,
     address _tokenCreator,
     bytes _userData,
-    uint256 _amount,
+    uint256 _totalSupply,
     uint256 _tokenId,
     string _tokenURI
   );
