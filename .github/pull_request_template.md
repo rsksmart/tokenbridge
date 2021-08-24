@@ -46,3 +46,8 @@ __Expected Result__
 - [] Lint is clean `npm run lint`
 - [] Test is passing `npm run test`
 - [] Contracts are compiling `npm run compile`
+
+#### Federator Directory `cd federator`
+- [] Lint is clean `npm run lint`
+- [] Test is passing `npm run test`
+- [] Typescript is compiling `npm run build`
