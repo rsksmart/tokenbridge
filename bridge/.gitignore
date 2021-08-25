@@ -51,8 +51,3 @@ pids
 *.pid
 *.seed
 *.pid.lock
-
-# dotenv environment variables file
-.env
-.env.test
-.env.prod
