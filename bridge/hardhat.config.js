@@ -51,6 +51,8 @@ module.exports = {
       ':ProxyAdmin$',
       ':SideToken',
       ':TransparentUpgradeableProxy$',
+      ':NFTBridge$',
+      ':SideNFTToken'
     ],
   },
   namedAccounts: getNamedAccounts(),
