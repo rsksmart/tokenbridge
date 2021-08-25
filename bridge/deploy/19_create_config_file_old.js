@@ -2,7 +2,7 @@ const hardhatConfig = require('../hardhat.config');
 const fs = require('fs');
 
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig} = await getNamedAccounts()
 
     if (network.name === 'soliditycoverage' || network.name === 'hardhat') {
         return;
@@ -15,7 +15,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const config = {
         bridge: BridgeProxy.address.toLowerCase(),
         federation: Federation_old.address.toLowerCase(),
-        multiSig: MultiSigWallet.address.toLowerCase(),
+        multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
         allowTokens: AllowTokens_old.address.toLowerCase()
     };
     if (!network.live) {
@@ -23,8 +23,8 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         config.testToken = MainToken.address.toLowerCase();
         const allowTokens = new web3.eth.Contract(AllowTokens_old.abi, AllowTokens_old.address);
         const data = allowTokens.methods.addAllowedToken(MainToken.address).encodeABI();
-        const multiSig = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
-        await multiSig.methods.submitTransaction(AllowTokens_old.address, 0, data).send({ from: deployer });
+        const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSig ?? MultiSigWallet.address);
+        await multiSigContract.methods.submitTransaction(AllowTokens_old.address, 0, data).send({ from: deployer });
 
         // Uncomment below lines to use multiple federators
         // await multiSig.confirmTransaction(0, { from: accounts[1] });

@@ -1370,8 +1370,8 @@ contract('Bridge', async function (accounts) {
 
                 it('should have DOMAIN_SEPARATOR', async function() {
                     // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
-                    const chainId = '1';
-                    
+                    const chainId = await web3.eth.getChainId();
+
                     const expectedTypeHash = keccak256(
                         web3.eth.abi.encodeParameters(
                             ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
