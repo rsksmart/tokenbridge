@@ -3,7 +3,7 @@ const hardhatConfig = require('../hardhat.config');
 const toWei = web3.utils.toWei;
 
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts();
+    const {deployer, multiSig} = await getNamedAccounts();
     const {log} = deployments;
 
     if (network.name === 'soliditycoverage' || network.name === 'hardhat') {
@@ -17,14 +17,14 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const config = {
         bridge: BridgeProxy.address.toLowerCase(),
         federation: Federation_old.address.toLowerCase(),
-        multiSig: MultiSigWallet.address.toLowerCase(),
+        multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
         allowTokens: AllowTokensProxy.address.toLowerCase()
     };
 
     if (!network.live) {
         const AllowTokens = await deployments.get('AllowTokens');
         const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
-        const multiSig = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
+        const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSig ?? MultiSigWallet.address);
 
         const MainToken = await deployments.get('MainToken');
         config.testToken = MainToken.address.toLowerCase();
@@ -38,16 +38,16 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
                 largeAmount:toWei('3')
             }
         ).encodeABI();
-        await multiSig.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
+        await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
         log(`MultiSig submitTransaction addTokenType in the AllowTokens`);
 
         const typeId = 0;
         data = allowTokens.methods.setToken(MainToken.address, typeId).encodeABI();
-        await multiSig.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
+        await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
         log(`MultiSig submitTransaction setToken MainToken in the AllowTokens`);
         // Uncomment below lines to use multiple federators
-        // await MultiSigWallet.confirmTransaction(0, { from: accounts[1] });
-        // await MultiSigWallet.confirmTransaction(0, { from: accounts[2] });
+        // await multiSigContract.confirmTransaction(0).send({ from: accounts[1] });
+        // await multiSigContract.confirmTransaction(0).send({ from: accounts[2] });
     }
     const host = hardhatConfig.networks[network.name]?.url
     if (host) {

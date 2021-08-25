@@ -1,5 +1,5 @@
 module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig} = await getNamedAccounts()
     const {log, execute} = deployments
 
     const BridgeProxy = await deployments.get('BridgeProxy');
@@ -9,7 +9,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     );
 
     const MultiSigWallet = await deployments.get('MultiSigWallet');
-    await execute('Federation_old', {from: deployer}, 'transferOwnership', MultiSigWallet.address);
+    await execute('Federation_old', {from: deployer}, 'transferOwnership', multiSig ?? MultiSigWallet.address);
     log(
       `Federation_old Transfered Ownership to MultiSig`
     );

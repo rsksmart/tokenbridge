@@ -1,5 +1,5 @@
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig, proxyAdmin} = await getNamedAccounts()
     const {deploy, log} = deployments
 
     const deployResult = await deploy('Federation', {
@@ -38,7 +38,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         federationsMembers,
         required,
         BridgeProxy.address,
-        MultiSigWallet.address
+        multiSig ?? MultiSigWallet.address
     );
     methodCall.call({ from: deployer });
 
@@ -46,7 +46,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         from: deployer,
         args: [
             Federation.address,
-            ProxyAdmin.address,
+            proxyAdmin ?? ProxyAdmin.address,
             methodCall.encodeABI()
         ],
         log: true,

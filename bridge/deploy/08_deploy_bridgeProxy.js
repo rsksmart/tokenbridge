@@ -1,5 +1,5 @@
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig, proxyAdmin} = await getNamedAccounts()
     const {deploy, log} = deployments
 
     let symbol = 'e';
@@ -15,7 +15,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const Bridge_old = await deployments.get('Bridge_old');
     const bridge = new web3.eth.Contract(Bridge_old.abi, Bridge_old.address);
     const methodCall = bridge.methods.initialize(
-        MultiSigWallet.address,
+        multiSig ?? MultiSigWallet.address,
         Federation_old.address,
         AllowTokens_old.address,
         SideTokenFactory_old.address,
@@ -27,7 +27,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         from: deployer,
         args: [
             Bridge_old.address,
-            ProxyAdmin.address,
+            proxyAdmin ?? ProxyAdmin.address,
             methodCall.encodeABI()
         ],
         log: true,

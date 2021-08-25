@@ -1,11 +1,11 @@
 module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig} = await getNamedAccounts()
     const {deploy, log} = deployments
     const MultiSigWallet = await deployments.get('MultiSigWallet');
 
     const deployResult = await deploy('AllowTokens_old', {
       from: deployer,
-      args: [MultiSigWallet.address],
+      args: [multiSig ?? MultiSigWallet.address],
       log: true,
     });
 
