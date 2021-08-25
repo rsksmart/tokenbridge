@@ -40,7 +40,7 @@ module.exports = {
     flat: true,
     only: [':AllowTokens', ':Bridge', ':Federation', ':IERC20$',
       ':MainToken$',':ERC777$', ':MultiSigWallet$', ':ProxyAdmin$', ':SideToken',
-      ':TransparentUpgradeableProxy$'
+      ':TransparentUpgradeableProxy$', ':NFTBridge$', ':SideNFTToken'
     ]
   },
   namedAccounts: {

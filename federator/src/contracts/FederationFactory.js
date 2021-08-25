@@ -1,7 +1,7 @@
 const abiFederationOld = require('../../../bridge/abi/Federation_old.json');
 const abiFederationNew = require('../../../bridge/abi/Federation.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
-const abiNftBridge = require('../../../bridge/abi/Bridge.json'); // change to bridgeNft after deploy
+const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const CustomError = require('../lib/CustomError');

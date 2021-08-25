@@ -5,11 +5,11 @@ export class IBridgeNft {
     this.nftBridgeContract = nftBridgeContract;
   }
 
-  getFederation(): any {
-    return this.nftBridgeContract.methods.getFederation();
+  getFederation(): Promise<string> {
+    return this.nftBridgeContract.methods.getFederation().call();
   }
 
-  getPastEvents(eventName: string, options: any): any {
+  getPastEvents(eventName: string, options: any): Promise<any> {
     return this.nftBridgeContract.getPastEvents(eventName, options);
   }
 
@@ -17,11 +17,11 @@ export class IBridgeNft {
     return this.nftBridgeContract.options.address;
   }
 
-  getProcessed(transactionHash: string): any {
+  getProcessed(transactionHash: string): Promise<boolean> {
     return this.nftBridgeContract.methods.processed(transactionHash).call();
   }
 
-  getVersion(): string {
-    return this.nftBridgeContract.methods.version();
+  getVersion(): Promise<string> {
+    return this.nftBridgeContract.methods.version().call();
   }
 }
