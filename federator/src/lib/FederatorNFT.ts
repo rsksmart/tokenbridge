@@ -26,11 +26,7 @@ export class FederatorNFT {
   constructor(config: Config, logger: Logger, Web3 = web3) {
     this.config = config;
     this.logger = logger;
-    this.nftConfirmationsBlocks = config.nftConfirmations;
-    if (!config.nftConfirmations) {
-      this.nftConfirmationsBlocks = NFT_CONFIRMATION_BLOCKS;
-    }
-
+    this.nftConfirmationsBlocks = config.nftConfirmations ?? NFT_CONFIRMATION_BLOCKS;
     if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       throw new Error(`Invalid host configuration, https or localhost required`);
     }
