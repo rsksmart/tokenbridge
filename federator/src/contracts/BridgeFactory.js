@@ -1,6 +1,6 @@
 const abiBridgeOld = require('../../../abis/Bridge_old.json');
 const abiBridgeNew = require('../../../abis/Bridge.json');
-const abiNftBridge = require('../../../abis/Bridge.json');
+const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const BridgeInterface = require('./IBridge.js');
 // const NftBridgeInterface = require('./IBridgeNft');
 const CustomError = require('../lib/CustomError');
