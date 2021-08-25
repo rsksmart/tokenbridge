@@ -58,12 +58,17 @@ module.exports = {
       30: '0x967f8799af07df1534d48a95a5c9febe92c53ae0',
       31: '0x09b6ca5e4496238a1f176aea6bb607db96c2286e',
       42: '0xd0A1E359811322d97991E03f863a0C30C2cF029C',
+    },
+    proxyAdmin: {
+      1: '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6',
+      30: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
+      31: '0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab',
+      42: '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6',
     }
   },
   networks: {
     hardhat: {
       live: false,
-      chainId: 1,
       blockGasLimit: 6800000,
       gasPrice: 60000000,
       hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
@@ -90,6 +95,7 @@ module.exports = {
       tags: ['integrationTest','local'],
       saveDeployments: false,
     },
+    // RSK
     rsktestnet: {
       live: true,
       url: 'https://public-node.testnet.rsk.co',

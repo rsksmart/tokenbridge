@@ -3,7 +3,7 @@ const toWei = web3.utils.toWei;
 const deployHelper = require("../deployed/deployHelper");
 
 module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-    const {deployer} = await getNamedAccounts()
+    const {deployer, multiSig, proxyAdmin} = await getNamedAccounts()
     const {deploy, log} = deployments
 
     const deployResult = await deploy('AllowTokens', {
@@ -45,7 +45,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
         from: deployer,
         args: [
             AllowTokens.address,
-            ProxyAdmin.address,
+            proxyAdmin ?? ProxyAdmin.address,
             methodCall.encodeABI()
         ],
         log: true,
@@ -76,7 +76,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
 
     const MultiSigWallet = await deployments.get('MultiSigWallet');
     //Set multisig as the owner
-    await allowTokens.methods.transferOwnership(MultiSigWallet.address).send({ from: deployer });
+    await allowTokens.methods.transferOwnership(multiSig ?? MultiSigWallet.address).send({ from: deployer });
     log(
         `AllowTokens Transfered Ownership to MultiSigWallet`
       );
