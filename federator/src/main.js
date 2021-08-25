@@ -61,14 +61,15 @@ async function run() {
         await mainFederator.run();
         await sideFederator.run();
 
-        if (config.mainchain.nftBridge !== null) {
-          logger.info('Starting Main Federator NFT Bridge');
-          await mainFederatorNFT.run();
+        if (config.mainchain.nftBridge == null) {
+          throw new CustomError('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
         }
-        if (config.sidechain.nftBridge !== null) {
-          logger.info('Starting Side Federator NFT Bridge');
-          await sideFederatorNFT.run();
+        await mainFederatorNFT.run();
+
+        if (config.sidechain.nftBridge == null) {
+          throw new CustomError('Side Federator NFT Bridge empty at config.sidechain.nftBridge');
         }
+        await sideFederatorNFT.run();
 
         await heartbeat.readLogs();
     } catch(err) {
