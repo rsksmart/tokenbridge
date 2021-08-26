@@ -40,33 +40,18 @@ module.exports = {
     path: './abi',
     clear: true,
     flat: true,
-    only: [':AllowTokens', ':Bridge', ':Federation', ':IERC20$',
-      ':MainToken$',':ERC777$', ':MultiSigWallet$', ':ProxyAdmin$', ':SideToken',
-      ':TransparentUpgradeableProxy$', ':NFTBridge$', ':SideNFTToken'
-    ]
-  },
-  namedAccounts: {
-    deployer: {
-      default: 0,
-    },
-    multiSig: {
-      1: '0x040007b1804ad78a97f541bebed377dcb60e4138',
-      30: '0x040007b1804ad78a97f541bebed377dcb60e4138',
-      31: '0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a',
-      42: '0x040007b1804ad78a97f541bebed377dcb60e4138',
-    },
-    wrappedCurrency: {
-      1: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
-      30: '0x967f8799af07df1534d48a95a5c9febe92c53ae0',
-      31: '0x09b6ca5e4496238a1f176aea6bb607db96c2286e',
-      42: '0xd0A1E359811322d97991E03f863a0C30C2cF029C',
-    },
-    proxyAdmin: {
-      1: '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6',
-      30: '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d',
-      31: '0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab',
-      42: '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6',
-    }
+    only: [
+      ':AllowTokens',
+      ':Bridge',
+      ':Federation',
+      ':IERC20$',
+      ':MainToken$',
+      ':ERC777$',
+      ':MultiSigWallet$',
+      ':ProxyAdmin$',
+      ':SideToken',
+      ':TransparentUpgradeableProxy$',
+    ],
   },
   namedAccounts: getNamedAccounts(),
   networks: {
