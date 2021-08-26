@@ -1,17 +1,14 @@
-const { deploy1820 } = require('@thinkanddev/deploy-eip-1820-web3-rsk')
+const { deploy1820 } = require("@thinkanddev/deploy-eip-1820-web3-rsk");
 
-module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig} = await getNamedAccounts()
-  const {deploy, log} = deployments
+module.exports = async function({ getNamedAccounts, deployments, network }) { // HardhatRuntimeEnvironment
+  const { deployer, multiSig } = await getNamedAccounts();
+  const { deploy, log } = deployments;
 
   if (!multiSig) {
-    const deployResult = await deploy('MultiSigWallet', {
+    const deployResult = await deploy("MultiSigWallet", {
       from: deployer,
-      args: [
-        [deployer],
-        1
-      ],
-      log: true,
+      args: [[deployer], 1],
+      log: true
     });
 
     if (deployResult.newlyDeployed) {
@@ -23,6 +20,6 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   if (!network.live) {
     await deploy1820(web3);
   }
-}
-module.exports.id = 'deploy_multiSigWallet'; // id required to prevent reexecution
-module.exports.tags = ['MultiSigWallet'];
+};
+module.exports.id = "deploy_multiSigWallet"; // id required to prevent reexecution
+module.exports.tags = ["MultiSigWallet"];
