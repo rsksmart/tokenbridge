@@ -32,8 +32,6 @@
   "dependencies": {
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
-    "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
     "@truffle/compile-common": "^0.7.15",
     "@truffle/hdwallet-provider": "^1.4.0",
     "chalk": "^4.1.0",
@@ -69,9 +67,6 @@
     "web3": ">=1.0.0",
 =======
 >>>>>>> 3d87dd0 (update cross event var names)
-    "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.17",
-    "web3": ">=1.0.0",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "web3": ">=1.0.0",
