@@ -712,7 +712,7 @@
         "type": "uint32"
       },
       {
-        "internalType": "enum Federation.TokenType",
+        "internalType": "enum IFederation.TokenType",
         "name": "tokenType",
         "type": "uint8"
       }
