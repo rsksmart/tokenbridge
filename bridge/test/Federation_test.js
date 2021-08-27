@@ -92,7 +92,7 @@ contract('Federation', async function (accounts) {
 
             it('should have correct version', async function () {
                 let version = await this.federators.version();
-                assert.equal(version, 'v2');
+                assert.equal(version, 'v3');
             });
 
             it('isMember should work correctly', async function() {

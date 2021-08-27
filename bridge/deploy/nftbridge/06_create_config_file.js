@@ -20,7 +20,8 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
       nftBridge: NftBridgeProxy.address.toLowerCase(),
       federation: Federation_old.address.toLowerCase(),
       multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
-      allowTokens: AllowTokensProxy.address.toLowerCase()
+      allowTokens: AllowTokensProxy.address.toLowerCase(),
+      nftConfirmations: 5
     };
 
   if (!network.live) {
