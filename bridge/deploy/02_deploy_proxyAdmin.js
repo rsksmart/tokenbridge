@@ -1,11 +1,11 @@
-module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-    const {deployer, multiSig, proxyAdmin} = await getNamedAccounts()
-    const {deploy, log, execute} = deployments
+module.exports = async function({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
+  const {deployer, multiSig, proxyAdmin} = await getNamedAccounts();
+  const {deploy, log, execute} = deployments;
 
   if (!proxyAdmin) {
     const deployResult = await deploy('ProxyAdmin', {
       from: deployer,
-      log: true,
+      log: true
     });
 
     if (deployResult.newlyDeployed) {
@@ -14,9 +14,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
       );
       const MultiSigWallet = await deployments.get('MultiSigWallet');
       await execute('ProxyAdmin', {from: deployer}, 'transferOwnership', multiSig ?? MultiSigWallet.address);
-      log(
-        `Transfered Ownership to MultiSig`
-      );
+      log(`Transfered Ownership to MultiSig`);
     }
   }
 };
