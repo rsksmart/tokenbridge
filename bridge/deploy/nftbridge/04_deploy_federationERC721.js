@@ -37,5 +37,5 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   log(`MultiSig submitTransaction set the NFT Bridge in the Federator`);
 };
 module.exports.id = 'deploy_nft_federation'; // id required to prevent reexecution
-module.exports.tags = ['FederationV1', 'nft', '3.0.0'];
+module.exports.tags = ['FederationV3', 'nft', '3.0.0'];
 module.exports.dependencies = ['Federation', 'ProxyAdmin', 'NftBridgeProxy', 'FederationProxy', 'MultiSigWallet'];
