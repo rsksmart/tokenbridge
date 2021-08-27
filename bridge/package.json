@@ -32,8 +32,6 @@
   "dependencies": {
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
-    "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
-    "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
     "@truffle/compile-common": "^0.7.15",
     "@truffle/hdwallet-provider": "^1.4.0",
     "chalk": "^4.1.0",
@@ -70,5 +68,14 @@
     "y18n": ">=5.0.5",
     "node-fetch": ">=2.6.1",
     "axios": ">=0.21.1"
+  },
+  "prettier": {
+    "parser": "json5",
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "semi": true
   }
 }
