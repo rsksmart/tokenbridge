@@ -70,5 +70,14 @@
     "y18n": ">=5.0.5",
     "node-fetch": ">=2.6.1",
     "axios": ">=0.21.1"
+  },
+  "prettier": {
+    "parser": "json5",
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "semi": true
   }
 }
