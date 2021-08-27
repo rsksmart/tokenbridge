@@ -19,7 +19,6 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
 
   const proxyAdminContract = new web3.eth.Contract(proxyAdminDeployment.abi, proxyAdminDeployment.address);
   const methodCallUpdagradeFederationDeployment = proxyAdminContract.methods.upgrade(federationProxyDeployment.address, federationDeployment.address);
-  // do a call first to see if it's successful
   await methodCallUpdagradeFederationDeployment.call({ from: multiSig ?? multiSigWalletDeployment.address });
 
   const multiSigContract = new web3.eth.Contract(multiSigWalletDeployment.abi, multiSig ?? multiSigWalletDeployment.address);
@@ -38,5 +37,5 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   log(`MultiSig submitTransaction set the NFT Bridge in the Federator`);
 };
 module.exports.id = 'deploy_nft_federation'; // id required to prevent reexecution
-module.exports.tags = ['FederationV1', 'nft', '1.0.0'];
+module.exports.tags = ['FederationV1', 'nft', '3.0.0'];
 module.exports.dependencies = ['Federation', 'ProxyAdmin', 'NftBridgeProxy', 'FederationProxy', 'MultiSigWallet'];
