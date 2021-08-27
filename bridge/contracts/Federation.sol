@@ -55,7 +55,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
      */
     mapping(bytes32 => bool) public processed;
 
-    /** Federator v2 variables */
+    /** Federator v3 variables */
     INFTBridge public bridgeNFT;
 
     modifier onlyMember() {
@@ -89,7 +89,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
       @return version in v{Number}
      */
     function version() external pure override returns (string memory) {
-        return "v2";
+      return "v3";
     }
 
     /**
@@ -264,7 +264,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 
     /**
       @notice Gets the hash of transaction from the following parameters encoded and keccaked
-      @dev Its encode and keccak256 the parameters received in the same order
+      @dev It encodes and applies keccak256 to the parameters received in the same order
       @param originalTokenAddress The address of the token in the origin (main) chain
       @param sender The address who solicited the cross token
       @param receiver Who is going to receive the token in the opposite chain
@@ -296,11 +296,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
       );
     }
 
-    /**
-      @notice Add a new member to the federation
-      @dev only the contract owner could add new members
-      @param _newMember address of the new member
-     */
     function addMember(address _newMember) external onlyOwner override
     {
         require(_newMember != NULL_ADDRESS, "Federation: Empty member");
@@ -312,11 +307,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         emit MemberAddition(_newMember);
     }
 
-    /**
-      @notice Remove a member of the federation
-      @dev only the contract owner could remove members
-      @param _oldMember address of the member to be removed from federation
-     */
     function removeMember(address _oldMember) external onlyOwner override
     {
         require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
@@ -344,7 +334,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
     }
 
     /**
-      @notice Return all the current members of the federation
+      @notice Changes the number of required members to vote and approve an transaction
       @dev Emits the RequirementChange event
       @param _required the number of minimum members to approve an transaction, it has to be bigger than 1
      */
@@ -355,7 +345,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
     }
 
     /**
-      @notice It emmits an HeartBeat like an healthy check
+      @notice It emits an HeartBeat like an health check
       @dev Emits HeartBeat event
      */
     function emitHeartbeat(

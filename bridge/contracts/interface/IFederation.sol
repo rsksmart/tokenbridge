@@ -3,7 +3,6 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 interface IFederation {
-  /// @dev Starts at 0 [COIN == 0, NFT == 1]
   enum TokenType{ COIN, NFT }
 
   /**
@@ -14,14 +13,12 @@ interface IFederation {
 
   /**
     @notice Sets a new bridge contract
-    @dev Emits BridgeChanged event
     @param _bridge the new bridge contract address that should implement the IBridge interface
   */
   function setBridge(address _bridge) external;
 
   /**
     @notice Sets a new NFT bridge contract
-    @dev Emits NFTBridgeChanged event
     @param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
   */
   function setNFTBridge(address _bridgeNFT) external;
@@ -50,14 +47,12 @@ interface IFederation {
 
   /**
     @notice Add a new member to the federation
-    @dev only the contract owner could add new members
     @param _newMember address of the new member
   */
   function addMember(address _newMember) external;
 
   /**
     @notice Remove a member of the federation
-    @dev only the contract owner could remove members
     @param _oldMember address of the member to be removed from federation
   */
   function removeMember(address _oldMember) external;
@@ -65,19 +60,17 @@ interface IFederation {
   /**
     @notice Return all the current members of the federation
     @return Current members
-    */
+  */
   function getMembers() external view returns (address[] memory);
 
   /**
-    @notice Return all the current members of the federation
-    @dev Emits the RequirementChange event
+    @notice Changes the number of required members to vote and approve an transaction
     @param _required the number of minimum members to approve an transaction, it has to be bigger than 1
-    */
+  */
   function changeRequirement(uint _required) external;
 
   /**
     @notice It emmits an HeartBeat like an healthy check
-    @dev Emits HeartBeat event
   */
   function emitHeartbeat(
     uint256 fedRskBlock,
