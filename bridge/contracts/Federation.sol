@@ -9,15 +9,12 @@ import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
 import "./nftbridge/INFTBridge.sol";
 import "./interface/IBridge.sol";
+import "./interface/IFederation.sol";
 
-contract Federation is Initializable, UpgradableOwnable {
-    /// @dev Starts at 0 [COIN == 0, NFT == 1]
-    enum TokenType{ COIN, NFT }
-
+contract Federation is Initializable, UpgradableOwnable, IFederation {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    INFTBridge public bridgeNFT;
     IBridge public bridge;
     address[] public members;
 
@@ -58,41 +55,8 @@ contract Federation is Initializable, UpgradableOwnable {
      */
     mapping(bytes32 => bool) public processed;
 
-    event Executed(
-        address indexed federator,
-        bytes32 indexed transactionHash,
-        bytes32 indexed transactionId,
-        address originalTokenAddress,
-        address sender,
-        address receiver,
-        uint256 amount,
-        bytes32 blockHash,
-        uint32 logIndex
-    );
-    event MemberAddition(address indexed member);
-    event MemberRemoval(address indexed member);
-    event RequirementChange(uint required);
-    event BridgeChanged(address bridge);
-    event NFTBridgeChanged(address bridgeNFT);
-    event Voted(
-        address indexed federator,
-        bytes32 indexed transactionHash,
-        bytes32 indexed transactionId,
-        address originalTokenAddress,
-        address sender,
-        address receiver,
-        uint256 amount,
-        bytes32 blockHash,
-        uint32 logIndex
-    );
-    event HeartBeat(
-        address indexed sender,
-        uint256 fedRskBlock,
-        uint256 fedEthBlock,
-        string federatorVersion,
-        string nodeRskInfo,
-        string nodeEthInfo
-    );
+    /** Federator v3 variables */
+    INFTBridge public bridgeNFT;
 
     modifier onlyMember() {
         require(isMember[_msgSender()], "Federation: Not Federator");
@@ -120,11 +84,20 @@ contract Federation is Initializable, UpgradableOwnable {
         _setBridge(_bridge);
     }
 
-    function version() external pure returns (string memory) {
-        return "v2";
+    /**
+      @notice Current version of the contract
+      @return version in v{Number}
+     */
+    function version() external pure override returns (string memory) {
+      return "v3";
     }
 
-    function setBridge(address _bridge) external onlyOwner {
+    /**
+      @notice Sets a new bridge contract
+      @dev Emits BridgeChanged event
+      @param _bridge the new bridge contract address that should implement the IBridge interface
+     */
+    function setBridge(address _bridge) external onlyOwner override {
         _setBridge(_bridge);
     }
 
@@ -134,7 +107,12 @@ contract Federation is Initializable, UpgradableOwnable {
         emit BridgeChanged(_bridge);
     }
 
-    function setNFTBridge(address _bridgeNFT) external onlyOwner {
+    /**
+      @notice Sets a new NFT bridge contract
+      @dev Emits NFTBridgeChanged event
+      @param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
+     */
+    function setNFTBridge(address _bridgeNFT) external onlyOwner override {
       _setNFTBridge(_bridgeNFT);
     }
 
@@ -169,7 +147,7 @@ contract Federation is Initializable, UpgradableOwnable {
       bytes32 transactionHash,
       uint32 logIndex,
       TokenType tokenType
-    ) public onlyMember {
+    ) external onlyMember override {
         bytes32 transactionId = getTransactionId(
             originalTokenAddress,
             sender,
@@ -261,14 +239,18 @@ contract Federation is Initializable, UpgradableOwnable {
     );
   }
 
-    function getTransactionCount(bytes32 transactionId) public view returns(uint) {
-        uint count = 0;
-        for (uint i = 0; i < members.length; i++) {
-            if (votes[transactionId][members[i]])
-                count += 1;
-        }
-        return count;
+  /**
+    @notice Get the amount of approved votes for that transactionId
+    @param transactionId The transaction hashed from getTransactionId function
+   */
+  function getTransactionCount(bytes32 transactionId) public view returns(uint) {
+    uint count = 0;
+    for (uint i = 0; i < members.length; i++) {
+      if (votes[transactionId][members[i]])
+        count += 1;
     }
+    return count;
+  }
 
     function hasVoted(bytes32 transactionId) external view returns(bool)
     {
@@ -280,6 +262,18 @@ contract Federation is Initializable, UpgradableOwnable {
         return processed[transactionId];
     }
 
+    /**
+      @notice Gets the hash of transaction from the following parameters encoded and keccaked
+      @dev It encodes and applies keccak256 to the parameters received in the same order
+      @param originalTokenAddress The address of the token in the origin (main) chain
+      @param sender The address who solicited the cross token
+      @param receiver Who is going to receive the token in the opposite chain
+      @param amount Could be the amount or the tokenId
+      @param blockHash The block hash in which the transaction with the cross event occurred
+      @param transactionHash The transaction in which the cross event occurred
+      @param logIndex Index of the event in the logs
+      @return The hash generated by the parameters.
+    */
     function getTransactionId(
         address originalTokenAddress,
         address sender,
@@ -302,7 +296,7 @@ contract Federation is Initializable, UpgradableOwnable {
       );
     }
 
-    function addMember(address _newMember) external onlyOwner
+    function addMember(address _newMember) external onlyOwner override
     {
         require(_newMember != NULL_ADDRESS, "Federation: Empty member");
         require(!isMember[_newMember], "Federation: Member already exists");
@@ -313,7 +307,7 @@ contract Federation is Initializable, UpgradableOwnable {
         emit MemberAddition(_newMember);
     }
 
-    function removeMember(address _oldMember) external onlyOwner
+    function removeMember(address _oldMember) external onlyOwner override
     {
         require(_oldMember != NULL_ADDRESS, "Federation: Empty member");
         require(isMember[_oldMember], "Federation: Member doesn't exists");
@@ -331,32 +325,43 @@ contract Federation is Initializable, UpgradableOwnable {
         emit MemberRemoval(_oldMember);
     }
 
-    function getMembers() external view returns (address[] memory)
-    {
-        return members;
+    /**
+      @notice Return all the current members of the federation
+      @return Current members
+     */
+    function getMembers() external view override returns (address[] memory) {
+      return members;
     }
 
-    function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required)
-    {
-        require(_required >= 2, "Federation: Requires at least 2");
-        required = _required;
-        emit RequirementChange(_required);
+    /**
+      @notice Changes the number of required members to vote and approve an transaction
+      @dev Emits the RequirementChange event
+      @param _required the number of minimum members to approve an transaction, it has to be bigger than 1
+     */
+    function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required) override {
+      require(_required >= 2, "Federation: Requires at least 2");
+      required = _required;
+      emit RequirementChange(_required);
     }
 
+    /**
+      @notice It emits an HeartBeat like an health check
+      @dev Emits HeartBeat event
+     */
     function emitHeartbeat(
-        uint256 fedRskBlock,
-        uint256 fedEthBlock,
-        string calldata federatorVersion,
-        string calldata nodeRskInfo,
-        string calldata nodeEthInfo
-    ) external onlyMember {
-        emit HeartBeat(
-            _msgSender(),
-            fedRskBlock,
-            fedEthBlock,
-            federatorVersion,
-            nodeRskInfo,
-            nodeEthInfo
-        );
+      uint256 fedRskBlock,
+      uint256 fedEthBlock,
+      string calldata federatorVersion,
+      string calldata nodeRskInfo,
+      string calldata nodeEthInfo
+    ) external onlyMember override {
+      emit HeartBeat(
+        _msgSender(),
+        fedRskBlock,
+        fedEthBlock,
+        federatorVersion,
+        nodeRskInfo,
+        nodeEthInfo
+      );
     }
 }
