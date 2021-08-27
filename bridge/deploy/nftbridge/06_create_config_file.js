@@ -11,14 +11,14 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     }
     const BridgeProxy = await deployments.get('BridgeProxy');
     const NftBridgeProxy = await deployments.get('NftBridgeProxy');
-    const Federation_old = await deployments.get('Federation_old');
+    const FederationProxy = await deployments.get('FederationProxy');
     const MultiSigWallet = await deployments.get('MultiSigWallet');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
     const config = {
       bridge: BridgeProxy.address.toLowerCase(),
       nftBridge: NftBridgeProxy.address.toLowerCase(),
-      federation: Federation_old.address.toLowerCase(),
+      federation: FederationProxy.address.toLowerCase(),
       multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
       allowTokens: AllowTokensProxy.address.toLowerCase(),
       nftConfirmations: 5
