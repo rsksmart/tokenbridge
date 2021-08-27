@@ -51,8 +51,8 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     // Uncomment below lines to use multiple federators
     // await multiSigContract.confirmTransaction(0).send({ from: accounts[1] });
     // await multiSigContract.confirmTransaction(0).send({ from: accounts[2] });
-
-
+    const NFTERC721TestToken = await deployments.get('NFTERC721TestToken');
+    config.testTokenNft = NFTERC721TestToken.address.toLowerCase();
   }
   const host = hardhatConfig.networks[network.name]?.url
   if (host) {
