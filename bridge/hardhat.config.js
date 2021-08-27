@@ -52,7 +52,8 @@ module.exports = {
       ':SideToken',
       ':TransparentUpgradeableProxy$',
       ':NFTBridge$',
-      ':SideNFTToken'
+      ':SideNFTToken',
+      ':NFTERC721TestToken'
     ],
   },
   namedAccounts: getNamedAccounts(),
