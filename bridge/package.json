@@ -36,7 +36,7 @@
     "hardhat": "^2.4.1",
     "hardhat-contract-sizer": "^2.0.3",
     "hardhat-deploy": "^0.8.11",
-    "@thinkanddev/deploy-eip-1820-web3-rsk":  "^1.0.2",
+    "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
     "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
     "hardhat-gas-reporter": "^1.0.4",
     "npm-force-resolutions": "0.0.3",
@@ -56,6 +56,8 @@
     "glob-parent": ">=5.1.2",
     "hardhat-abi-exporter": "^2.2.1",
     "node-fetch": ">=2.6.1",
+    "prettier": "^2.3.2",
+    "prettier-plugin-solidity": "^1.0.0-beta.17",
     "web3": ">=1.0.0",
     "y18n": ">=5.0.5"
   },
@@ -66,5 +68,14 @@
     "y18n": ">=5.0.5",
     "node-fetch": ">=2.6.1",
     "axios": ">=0.21.1"
+  },
+  "prettier": {
+    "parser": "json5",
+    "printWidth": 120,
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "semi": true
   }
 }
