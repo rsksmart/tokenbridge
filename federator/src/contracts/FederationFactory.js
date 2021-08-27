@@ -26,7 +26,7 @@ module.exports = class FederationFactory extends ContractFactory {
         let federationContract = this.getContractByAbi(abiFederationNew, address, web3);
         const version = await this.getVersion(federationContract);
 
-        if (version === 'v2') {
+        if (version === 'v2' || version === 'v3') {
           return new FederationInterfaceV2(this.config, federationContract);
         } else if (version === 'v1') {
           federationContract = this.getContractByAbi(abiFederationOld, address, web3);
