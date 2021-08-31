@@ -360,7 +360,7 @@
     "name": "allowTokens",
     "outputs": [
       {
-        "internalType": "contract AllowTokens_old",
+        "internalType": "contract AllowTokensV1",
         "name": "",
         "type": "address"
       }
