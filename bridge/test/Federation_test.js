@@ -1,4 +1,4 @@
-const Federation = artifacts.require('./Federation');
+const Federation = artifacts.require('Federation');
 const AllowTokens = artifacts.require('./AllowTokens');
 const Bridge = artifacts.require('./Bridge');
 const NftBridge = artifacts.require("./NFTBridge");
@@ -18,7 +18,7 @@ contract('Federation', async function (accounts) {
     const federator2 = accounts[3];
     const federator3 = accounts[4];
     const bridge = utils.getRandomAddress();
-    const bridgeNFT = utils.getRandomAddress().toLowerCase();
+    const bridgeNFT = utils.getRandomAddress();
 
     before(async function () {
         await utils.saveState();
@@ -34,23 +34,23 @@ contract('Federation', async function (accounts) {
 
     describe('Initialization', async function() {
         it('should use initialize', async function () {
-            await this.federators.initialize([federator1, federator2], 1, bridge, deployer);
+            await this.federators.initialize([federator1, federator2], 1, bridge, deployer, bridgeNFT);
         });
 
         it('should fail if required is not the same as memebers length', async function () {
-        await utils.expectThrow(this.federators.initialize([federator1, federator2], 3, bridge, deployer));
+        await utils.expectThrow(this.federators.initialize([federator1, federator2], 3, bridge, deployer, bridgeNFT));
         });
 
         it('should fail if repeated memebers', async function () {
-            await utils.expectThrow(this.federators.initialize([federator1, federator1], 2, bridge, deployer));
+            await utils.expectThrow(this.federators.initialize([federator1, federator1], 2, bridge, deployer, bridgeNFT));
         });
 
         it('should fail if null memeber', async function () {
-            await utils.expectThrow(this.federators.initialize([federator1, utils.NULL_ADDRESS], 2, bridge, deployer));
+            await utils.expectThrow(this.federators.initialize([federator1, utils.NULL_ADDRESS], 2, bridge, deployer, bridgeNFT));
         });
 
         it('should fail if null bridge', async function () {
-            await utils.expectThrow(this.federators.initialize([federator1], 1, utils.NULL_ADDRESS, deployer));
+            await utils.expectThrow(this.federators.initialize([federator1], 1, utils.NULL_ADDRESS, deployer, bridgeNFT));
         });
 
         it('should fail if bigger max memeber length', async function () {
@@ -66,7 +66,7 @@ contract('Federation', async function (accounts) {
             for(let i = 0; i < 50; i++) {
                 members[i]=utils.getRandomAddress();
             }
-            await this.federators.initialize(members, 2, bridge, deployer);
+            await this.federators.initialize(members, 2, bridge, deployer, bridgeNFT);
             let resultMembers = await this.federators.getMembers();
             assert.equal(resultMembers.length, 50);
         });
@@ -76,7 +76,7 @@ contract('Federation', async function (accounts) {
 
         beforeEach(async function () {
             this.members  = [federator1, federator2];
-            await this.federators.initialize(this.members, 1, bridge, deployer);
+            await this.federators.initialize(this.members, 1, bridge, deployer, bridgeNFT);
         });
 
         describe('Members', async function () {
@@ -122,7 +122,7 @@ contract('Federation', async function (accounts) {
                 utils.checkRcpt(receipt)
 
                 let _bridgeNFT = await this.federators.bridgeNFT();
-                assert.equal(_bridgeNFT.toLowerCase(), bridgeNFT);
+                assert.equal(_bridgeNFT.toLowerCase(), bridgeNFT.toLowerCase());
 
                 truffleAssert.eventEmitted(receipt, 'NFTBridgeChanged', (ev) => {
                     return ev.bridgeNFT === _bridgeNFT;
@@ -990,7 +990,7 @@ contract('Federation', async function (accounts) {
                 utils.checkRcpt(receipt);
             });
 
-            it('should fail since NFT bridge is not set', async function() {
+            it('should fail since NFT bridge address is random', async function() {
               let receipt = await this.federators.voteTransaction(
                 originalTokenAddress,
                 anAccount,
@@ -1016,8 +1016,8 @@ contract('Federation', async function (accounts) {
                   utils.tokenType.NFT,
                   { from: federator2 }
                 ),
-                truffleAssert.ErrorType.REVERT,
-                'Federation: Empty NFTBridge'
+                'reverted',
+                'function call to a non-contract account'
               );
             });
 

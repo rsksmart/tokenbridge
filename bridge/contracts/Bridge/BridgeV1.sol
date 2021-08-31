@@ -30,7 +30,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
 
     address constant private NULL_ADDRESS = address(0);
     bytes32 constant private NULL_HASH = bytes32(0);
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry constant private ERC_1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address private federation;
     uint256 private feePercentage;
@@ -46,7 +46,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
-    uint256 constant public feePercentageDivider = 10000; // Percentage with up to 2 decimals
+    uint256 constant public FEE_PERCENTAGE_DIVIDER = 10000; // Percentage with up to 2 decimals
     bool private alreadyRun;
 
     event FederationChanged(address _newFederation);
@@ -66,7 +66,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
         _changeSideTokenFactory(_sideTokenFactory);
         _changeFederation(_federation);
         //keccak256("ERC777TokensRecipient")
-        erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
+        ERC_1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
     function version() external pure override returns (string memory) {
@@ -177,7 +177,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
-        uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
+        uint256 fee = amount.mul(feePercentage).div(FEE_PERCENTAGE_DIVIDER);
         uint256 amountMinusFees = amount.sub(fee);
         if (isASideToken) {
             uint256 modulo = amountMinusFees.mod(IERC777(tokenToUse).granularity());
@@ -219,9 +219,9 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
 
     function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > lastDay + 24 hours) {
+        if (block.timestamp > lastDay + 24 hours) { // solhint-disable-line not-rely-on-time
             // solium-disable-next-line security/no-block-members
-            lastDay = block.timestamp;
+            lastDay = block.timestamp; // solhint-disable-line not-rely-on-time
             spentToday = 0;
         }
         require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Bigger than limit");
@@ -255,7 +255,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
     }
 
     function setFeePercentage(uint amount) external onlyOwner whenNotPaused {
-        require(amount < (feePercentageDivider/10), "Bridge: bigger than 10%");
+        require(amount < (FEE_PERCENTAGE_DIVIDER/10), "Bridge: bigger than 10%");
         feePercentage = amount;
         emit FeePercentageChanged(feePercentage);
     }
@@ -267,7 +267,7 @@ contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausa
     function calcMaxWithdraw() override external view returns (uint) {
         uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > lastDay + 24 hours)
+        if (block.timestamp > lastDay + 24 hours) // solhint-disable-line not-rely-on-time
             spent = 0;
         return allowTokens.calcMaxWithdraw(spent);
     }

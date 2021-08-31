@@ -5,19 +5,6 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "recipient",
-        "type": "address"
-      }
-    ],
-    "name": "PrimaryTransferred",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "address",
         "name": "sideToken",
         "type": "address"
       },
@@ -28,7 +15,20 @@
         "type": "string"
       }
     ],
-    "name": "createdSideToken",
+    "name": "CreatedSideToken",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "recipient",
+        "type": "address"
+      }
+    ],
+    "name": "PrimaryTransferred",
     "type": "event"
   },
   {
