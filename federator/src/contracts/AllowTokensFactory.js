@@ -1,5 +1,5 @@
-const abiAllowTokensOld = require('../../../bridge/abi/AllowTokens_old.json');
-const abiAllowTokensNew = require('../../../bridge/abi/AllowTokens.json');
+const abiAllowTokensV1 = require('../../../bridge/abi/AllowTokensV1.json');
+const abiAllowTokens = require('../../../bridge/abi/AllowTokens.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
 const IAllowTokensV1 = require('./IAllowTokensV1');
 const IAllowTokensV0 = require('./IAllowTokensV0');
@@ -23,13 +23,13 @@ module.exports = class AllowTokensFactory extends ContractFactory {
     }
 
     async createInstance(web3, address) {
-        let allowTokensContract = this.getContractByAbi(abiAllowTokensNew, address, web3);
+        let allowTokensContract = this.getContractByAbi(abiAllowTokens, address, web3);
         const version = await this.getVersion(allowTokensContract);
         const chainId = await utils.retry3Times(web3.eth.net.getId);
         if (version === 'v1') {
             return new IAllowTokensV1(allowTokensContract, chainId);
         } else if (version === 'v0') {
-            allowTokensContract = this.getContractByAbi(abiAllowTokensOld, address, web3);
+            allowTokensContract = this.getContractByAbi(abiAllowTokensV1, address, web3);
             return new IAllowTokensV0(allowTokensContract, chainId);
         } else {
             throw Error('Unknown AllowTokens contract version');

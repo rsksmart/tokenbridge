@@ -3,13 +3,13 @@
 pragma solidity ^0.7.0;
 pragma abicoder v2;
 
-import "./zeppelin/math/SafeMath.sol";
+import "../zeppelin/math/SafeMath.sol";
 // Upgradables
-import "./zeppelin/upgradable/Initializable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableSecondary.sol";
+import "../zeppelin/upgradable/Initializable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableSecondary.sol";
 
-import "./interface/IAllowTokens.sol";
+import "../interface/IAllowTokens.sol";
 
 contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
     using SafeMath for uint256;
