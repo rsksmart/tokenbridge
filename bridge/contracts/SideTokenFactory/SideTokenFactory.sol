@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import "../zeppelin/ownership/Secondary.sol";
 import "../interface/ISideTokenFactory.sol";
-import "../SideToken.sol";
+import "../SideToken/SideToken.sol";
 
 contract SideTokenFactory is ISideTokenFactory, Secondary {
 
