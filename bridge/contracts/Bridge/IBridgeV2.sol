@@ -2,7 +2,7 @@
 
 pragma solidity ^0.7.0;
 
-interface IBridgeV1 {function version() external pure returns (string memory);
+interface IBridgeV2 {function version() external pure returns (string memory);
 
     function getFeePercentage() external view returns(uint);
 
