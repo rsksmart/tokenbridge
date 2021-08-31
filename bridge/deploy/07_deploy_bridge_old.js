@@ -3,7 +3,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const {deploy, log} = deployments
     const UtilsV1 = await deployments.get('UtilsV1');
 
-    const deployResult = await deploy('Bridge_old', {
+    const deployResult = await deploy('BridgeV1', {
         from: deployer,
         libraries: {
             UtilsV1: UtilsV1.address
@@ -13,10 +13,10 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
 
     if (deployResult.newlyDeployed) {
         log(
-        `Contract Bridge_old deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
+        `Contract BridgeV1 deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
         );
     }
 };
-module.exports.id = 'deploy_bridge_old'; // id required to prevent reexecution
-module.exports.tags = ['Bridge_old', 'old'];
+module.exports.id = 'deploy_bridge_v1'; // id required to prevent reexecution
+module.exports.tags = ['BridgeV1', 'old'];
 module.exports.dependencies = ['MultiSigWallet', 'UtilsV1'];
