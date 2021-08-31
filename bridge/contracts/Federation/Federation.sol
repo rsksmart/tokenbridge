@@ -69,7 +69,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         _;
     }
 
-    function initialize(address[] memory _members, uint _required, address _bridge, address owner) public
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner, address _bridgeNFT) public
     validRequirement(_members.length, _required) initializer {
         UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
@@ -82,6 +82,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         required = _required;
         emit RequirementChange(required);
         _setBridge(_bridge);
+        _setNFTBridge(_bridgeNFT);
     }
 
     /**
