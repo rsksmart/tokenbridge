@@ -17,13 +17,13 @@ import "../zeppelin/token/ERC777/IERC777.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
-import "./IBridge_old.sol";
+import "./IBridgeV1.sol";
 import "../interface/ISideToken.sol";
 import "../interface/ISideTokenFactory.sol";
 import "../AllowTokens/AllowTokensV1.sol";
 import "../Utils/UtilsV1.sol";
 
-contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract BridgeV1 is Initializable, IBridgeV1, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
@@ -165,7 +165,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused whenNotUpgrading override(IBridge_old, IERC777Recipient) {
+    ) external whenNotPaused whenNotUpgrading override(IBridgeV1, IERC777Recipient) {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to address");

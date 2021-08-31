@@ -1,5 +1,5 @@
-const abiBridgeOld = require('../../../abis/Bridge_old.json');
-const abiBridgeNew = require('../../../abis/Bridge.json');
+const abiBridgeV1 = require('../../../bridge/abi/BridgeV1.json');
+const abiBridgeNew = require('../../../bridge/abi/Bridge.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const BridgeInterface = require('./IBridge.js');
 const NftBridgeInterface = require('./IBridgeNft');
@@ -18,7 +18,7 @@ module.exports = class BridgeFactory extends ContractFactory {
   }
 
   async createInstance(web3, address) {
-    let bridgeContract = this.getContractByAbi(abiBridgeOld, address, web3);
+    let bridgeContract = this.getContractByAbi(abiBridgeV1, address, web3);
     const version = await this.getVersion(bridgeContract);
     if (version === 'v3') {
       bridgeContract = this.getContractByAbi(abiBridgeNew, address, web3);
