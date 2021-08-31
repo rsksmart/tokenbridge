@@ -4,12 +4,12 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 // Upgradables
-import "./zeppelin/upgradable/Initializable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "./nftbridge/INFTBridge.sol";
-import "./interface/IBridge.sol";
-import "./interface/IFederation.sol";
+import "../nftbridge/INFTBridge.sol";
+import "../interface/IBridge.sol";
+import "../interface/IFederation.sol";
 
 contract Federation is Initializable, UpgradableOwnable, IFederation {
     uint constant public MAX_MEMBER_COUNT = 50;
