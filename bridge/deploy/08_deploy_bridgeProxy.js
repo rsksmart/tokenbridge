@@ -12,7 +12,7 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
     const ProxyAdmin = await deployments.get('ProxyAdmin');
     const FederationV1 = await deployments.get('FederationV1');
     const AllowTokensV1 = await deployments.get('AllowTokensV1');
-    const SideTokenFactory_old = await deployments.get('SideTokenFactory_old');
+    const SideTokenFactoryV1 = await deployments.get('SideTokenFactoryV1');
 
     const Bridge_old = await deployments.get('Bridge_old');
     const bridge = new web3.eth.Contract(Bridge_old.abi, Bridge_old.address);
@@ -20,7 +20,7 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
       multiSig ?? MultiSigWallet.address,
       FederationV1.address,
       AllowTokensV1.address,
-      SideTokenFactory_old.address,
+      SideTokenFactoryV1.address,
       symbol
     );
     await methodCall.call({from: deployer});
@@ -37,4 +37,4 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
 };
 module.exports.id = 'deploy_bridgeProxy'; // id required to prevent reexecution
 module.exports.tags = ['BridgeProxy', 'old'];
-module.exports.dependencies = ['Bridge_old', 'MultiSigWallet', 'ProxyAdmin', 'FederationV1', 'AllowTokensV1', 'SideTokenFactory_old'];
+module.exports.dependencies = ['Bridge_old', 'MultiSigWallet', 'ProxyAdmin', 'FederationV1', 'AllowTokensV1', 'SideTokenFactoryV1'];
