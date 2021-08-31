@@ -7,7 +7,7 @@ const ProxyAdmin = artifacts.require('ProxyAdmin');
 const UtilsContract_old = artifacts.require('Utils_old');
 
 //Normal Contracts
-const SideTokenFactory_old = artifacts.require('./SideTokenFactory_old');
+const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
 const AllowTokensV1 = artifacts.require('./AllowTokensV1');
@@ -38,7 +38,7 @@ contract('Bridge upgrade test', async (accounts) => {
         this.proxyAdmin = await ProxyAdmin.new();
         this.allowTokensV1 = await AllowTokensV1.new(managerAddress);
         await this.allowTokensV1.disableAllowedTokensValidation({from: managerAddress});
-        this.sideTokenFactory_old = await SideTokenFactory_old.new();
+        this.sideTokenFactoryV1 = await SideTokenFactoryV1.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000'), { from: deployerAddress });
         this.amount = web3.utils.toWei('1000');
     });
@@ -63,7 +63,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
         it('should initialize it', async () => {
             const bridgeLogic = await Bridge_old.new()
-            const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactory_old.address, 'r').encodeABI();
+            const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactoryV1.address, 'r').encodeABI();
             const bridgeProxy = await BridgeProxy.new(bridgeLogic.address, this.proxyAdmin.address, initData);
             const proxy = new web3.eth.Contract(Bridge_old.abi, bridgeProxy.address);
 
@@ -72,7 +72,7 @@ contract('Bridge upgrade test', async (accounts) => {
             result = await proxy.methods.allowTokens().call();
             assert.equal(result, this.allowTokensV1.address);
             result = await proxy.methods.sideTokenFactory().call();
-            assert.equal(result,  this.sideTokenFactory_old.address);
+            assert.equal(result,  this.sideTokenFactoryV1.address);
             result = await proxy.methods.symbolPrefix().call();
             assert.equal(result,  'r');
             result = await proxy.methods.getFederation().call();
@@ -82,7 +82,7 @@ contract('Bridge upgrade test', async (accounts) => {
         describe('initialized', async () => {
             beforeEach(async() => {
                 const bridgeLogic = await Bridge_old.new()
-                const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactory_old.address, 'r').encodeABI();
+                const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactoryV1.address, 'r').encodeABI();
                 this.bridgeProxy = await BridgeProxy.new(bridgeLogic.address, this.proxyAdmin.address, initData);
                 this.proxy = new web3.eth.Contract(Bridge_old.abi, this.bridgeProxy.address);
                 const result = await this.proxy.methods.symbolPrefix().call();
@@ -131,7 +131,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 result = await newProxy.methods.allowTokens().call();
                 assert.equal(result, this.allowTokensV1.address);
                 result = await newProxy.methods.sideTokenFactory().call();
-                assert.equal(result,  this.sideTokenFactory_old.address);
+                assert.equal(result,  this.sideTokenFactoryV1.address);
                 result = await newProxy.methods.getFederation().call();
                 assert.equal(result,  federationAddress);
             });
