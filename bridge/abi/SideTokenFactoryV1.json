@@ -47,7 +47,7 @@
     "name": "createSideToken",
     "outputs": [
       {
-        "internalType": "contract SideToken_old",
+        "internalType": "contract SideTokenV1",
         "name": "",
         "type": "address"
       }
