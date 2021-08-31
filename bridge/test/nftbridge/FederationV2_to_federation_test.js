@@ -12,7 +12,7 @@ contract('Federation', async function (accounts) {
 
   describe('Upgrate from FederationV2 to Federation', async function () {
 
-    it.only('should mantain the members from the Federator v2', async function () {
+    it('should mantain the members from the Federator v2', async function () {
       this.members  = [federator1, federator2];
       const federationV2 = await FederationV2.new();
       const proxyAdmin = await ProxyAdmin.new();
