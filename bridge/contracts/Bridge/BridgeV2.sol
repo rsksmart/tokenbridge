@@ -17,20 +17,20 @@ import "../zeppelin/token/ERC777/IERC777.sol";
 import "../zeppelin/utils/Address.sol";
 import "../zeppelin/math/SafeMath.sol";
 
-import "./IBridge_old.sol";
+import "./IBridgeV2.sol";
 import "../interface/ISideToken.sol";
 import "../interface/ISideTokenFactory.sol";
-import "./AllowTokens_old.sol";
-import "./Utils_old.sol";
+import "../AllowTokens/AllowTokensV1.sol";
+import "../Utils/UtilsV1.sol";
 
-contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
+contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
     using Address for address;
 
     address constant private NULL_ADDRESS = address(0);
     bytes32 constant private NULL_HASH = bytes32(0);
-    IERC1820Registry constant private erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry constant private ERC_1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
 
     address private federation;
     uint256 private feePercentage;
@@ -42,11 +42,11 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) public processed; // ProcessedHash => true
-    AllowTokens_old public allowTokens;
+    AllowTokensV1 public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
-    uint256 constant public feePercentageDivider = 10000; // Percentage with up to 2 decimals
+    uint256 constant public FEE_PERCENTAGE_DIVIDER = 10000; // Percentage with up to 2 decimals
     bool private alreadyRun;
 
     event FederationChanged(address _newFederation);
@@ -62,11 +62,11 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokens_old(_allowTokens);
+        allowTokens = AllowTokensV1(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
         _changeFederation(_federation);
         //keccak256("ERC777TokensRecipient")
-        erc1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
+        ERC_1820.setInterfaceImplementer(address(this), 0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b, address(this));
     }
 
     function version() external pure override returns (string memory) {
@@ -101,7 +101,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         require(blockHash != NULL_HASH, "Bridge: BlockHash is null");
         require(transactionHash != NULL_HASH, "Bridge: Transaction is null");
         require(decimals <= 18, "Bridge: Decimals bigger 18");
-        require(Utils_old.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
+        require(UtilsV1.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
 
         _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
@@ -122,7 +122,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         string memory symbol
     ) private {
 
-        (uint256 calculatedGranularity,uint256 formattedAmount) = Utils_old.calculateGranularityAndAmount(decimals, granularity, amount);
+        (uint256 calculatedGranularity,uint256 formattedAmount) = UtilsV1.calculateGranularityAndAmount(decimals, granularity, amount);
         address sideToken = mappedTokens[tokenAddress];
         if (sideToken == NULL_ADDRESS) {
             sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
@@ -136,7 +136,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount) private {
         require(decimals == 18, "Bridge: Invalid decimals cross back");
         //As side tokens are ERC777 we need to convert granularity to decimals
-        (uint8 calculatedDecimals, uint256 formattedAmount) = Utils_old.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
+        (uint8 calculatedDecimals, uint256 formattedAmount) = UtilsV1.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
         IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
         emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
     }
@@ -165,7 +165,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         uint amount,
         bytes calldata userData,
         bytes calldata
-    ) external whenNotPaused whenNotUpgrading override(IBridge_old, IERC777Recipient) {
+    ) external whenNotPaused whenNotUpgrading override(IBridgeV2, IERC777Recipient) {
         //Hook from ERC777address
         if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
         require(to == address(this), "Bridge: Not to address");
@@ -177,7 +177,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     function crossTokens(address tokenToUse, address from, uint256 amount, bytes memory userData) private {
         bool isASideToken = originalTokens[tokenToUse] != NULL_ADDRESS;
         //Send the payment to the MultiSig of the Federation
-        uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
+        uint256 fee = amount.mul(feePercentage).div(FEE_PERCENTAGE_DIVIDER);
         uint256 amountMinusFees = amount.sub(fee);
         if (isASideToken) {
             uint256 modulo = amountMinusFees.mod(IERC777(tokenToUse).granularity());
@@ -196,7 +196,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         } else {
             //Main Token Crossing
             knownTokens[tokenToUse] = true;
-            (uint8 decimals, uint256 granularity, string memory symbol) = Utils_old.getTokenInfo(tokenToUse);
+            (uint8 decimals, uint256 granularity, string memory symbol) = UtilsV1.getTokenInfo(tokenToUse);
             uint formattedAmount = amount;
             if(decimals != 18) {
                 formattedAmount = amount.mul(uint256(10)**(18-decimals));
@@ -219,9 +219,9 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
 
     function verifyWithAllowTokens(address tokenToUse, uint256 amount, bool isASideToken) private  {
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > lastDay + 24 hours) {
+        if (block.timestamp > lastDay + 24 hours) { // solhint-disable-line not-rely-on-time
             // solium-disable-next-line security/no-block-members
-            lastDay = block.timestamp;
+            lastDay = block.timestamp; // solhint-disable-line not-rely-on-time
             spentToday = 0;
         }
         require(allowTokens.isValidTokenTransfer(tokenToUse, amount, spentToday, isASideToken), "Bridge: Bigger than limit");
@@ -255,7 +255,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     }
 
     function setFeePercentage(uint amount) external onlyOwner whenNotPaused {
-        require(amount < (feePercentageDivider/10), "Bridge: bigger than 10%");
+        require(amount < (FEE_PERCENTAGE_DIVIDER/10), "Bridge: bigger than 10%");
         feePercentage = amount;
         emit FeePercentageChanged(feePercentage);
     }
@@ -267,7 +267,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     function calcMaxWithdraw() override external view returns (uint) {
         uint spent = spentToday;
         // solium-disable-next-line security/no-block-members
-        if (block.timestamp > lastDay + 24 hours)
+        if (block.timestamp > lastDay + 24 hours) // solhint-disable-line not-rely-on-time
             spent = 0;
         return allowTokens.calcMaxWithdraw(spent);
     }

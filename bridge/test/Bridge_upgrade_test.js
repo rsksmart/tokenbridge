@@ -1,16 +1,16 @@
 //Upgradable Contracts
-const Bridge_old = artifacts.require('Bridge_old');
+const BridgeV2 = artifacts.require('BridgeV2');
 const Bridge = artifacts.require('Bridge');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
-const UtilsContract_old = artifacts.require('Utils_old');
+const UtilsContractV1 = artifacts.require('UtilsV1');
 
 //Normal Contracts
-const SideTokenFactory_old = artifacts.require('./SideTokenFactory_old');
+const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
-const AllowTokens_old = artifacts.require('./AllowTokens_old');
+const AllowTokensV1 = artifacts.require('./AllowTokensV1');
 const AllowTokens = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
@@ -26,8 +26,8 @@ contract('Bridge upgrade test', async (accounts) => {
 
     before(async function () {
         await utils.saveState();
-        const utilsContract_old = await UtilsContract_old.new();
-        Bridge_old.link(utilsContract_old);
+        const utilsContract_old = await UtilsContractV1.new();
+        BridgeV2.link(utilsContract_old);
     });
 
     after(async function () {
@@ -36,18 +36,18 @@ contract('Bridge upgrade test', async (accounts) => {
 
     beforeEach(async () => {
         this.proxyAdmin = await ProxyAdmin.new();
-        this.allowTokens_old = await AllowTokens_old.new(managerAddress);
-        await this.allowTokens_old.disableAllowedTokensValidation({from: managerAddress});
-        this.sideTokenFactory_old = await SideTokenFactory_old.new();
+        this.allowTokensV1 = await AllowTokensV1.new(managerAddress);
+        await this.allowTokensV1.disableAllowedTokensValidation({from: managerAddress});
+        this.sideTokenFactoryV1 = await SideTokenFactoryV1.new();
         this.token = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000'), { from: deployerAddress });
         this.amount = web3.utils.toWei('1000');
     });
 
     describe('freshly created', async () => {
         it('should create a proxy', async () => {
-            const bridgeLogic = await Bridge_old.new()
+            const bridgeLogic = await BridgeV2.new()
             const bridgeProxy = await BridgeProxy.new(bridgeLogic.address, this.proxyAdmin.address, '0x');
-            const proxy = new web3.eth.Contract(Bridge_old.abi, bridgeProxy.address);
+            const proxy = new web3.eth.Contract(BridgeV2.abi, bridgeProxy.address);
             let result = await proxy.methods.version().call();
             assert.equal(result, 'v2');
 
@@ -62,17 +62,17 @@ contract('Bridge upgrade test', async (accounts) => {
         });
 
         it('should initialize it', async () => {
-            const bridgeLogic = await Bridge_old.new()
-            const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokens_old.address, this.sideTokenFactory_old.address, 'r').encodeABI();
+            const bridgeLogic = await BridgeV2.new()
+            const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactoryV1.address, 'r').encodeABI();
             const bridgeProxy = await BridgeProxy.new(bridgeLogic.address, this.proxyAdmin.address, initData);
-            const proxy = new web3.eth.Contract(Bridge_old.abi, bridgeProxy.address);
+            const proxy = new web3.eth.Contract(BridgeV2.abi, bridgeProxy.address);
 
             result = await proxy.methods.owner().call();
             assert.equal(result,  managerAddress);
             result = await proxy.methods.allowTokens().call();
-            assert.equal(result, this.allowTokens_old.address);
+            assert.equal(result, this.allowTokensV1.address);
             result = await proxy.methods.sideTokenFactory().call();
-            assert.equal(result,  this.sideTokenFactory_old.address);
+            assert.equal(result,  this.sideTokenFactoryV1.address);
             result = await proxy.methods.symbolPrefix().call();
             assert.equal(result,  'r');
             result = await proxy.methods.getFederation().call();
@@ -81,10 +81,10 @@ contract('Bridge upgrade test', async (accounts) => {
 
         describe('initialized', async () => {
             beforeEach(async() => {
-                const bridgeLogic = await Bridge_old.new()
-                const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokens_old.address, this.sideTokenFactory_old.address, 'r').encodeABI();
+                const bridgeLogic = await BridgeV2.new()
+                const initData = bridgeLogic.contract.methods.initialize(managerAddress, federationAddress, this.allowTokensV1.address, this.sideTokenFactoryV1.address, 'r').encodeABI();
                 this.bridgeProxy = await BridgeProxy.new(bridgeLogic.address, this.proxyAdmin.address, initData);
-                this.proxy = new web3.eth.Contract(Bridge_old.abi, this.bridgeProxy.address);
+                this.proxy = new web3.eth.Contract(BridgeV2.abi, this.bridgeProxy.address);
                 const result = await this.proxy.methods.symbolPrefix().call();
                 assert.equal(result,  'r');
             });
@@ -129,9 +129,9 @@ contract('Bridge upgrade test', async (accounts) => {
                 result = await newProxy.methods.owner().call();
                 assert.equal(result,  managerAddress);
                 result = await newProxy.methods.allowTokens().call();
-                assert.equal(result, this.allowTokens_old.address);
+                assert.equal(result, this.allowTokensV1.address);
                 result = await newProxy.methods.sideTokenFactory().call();
-                assert.equal(result,  this.sideTokenFactory_old.address);
+                assert.equal(result,  this.sideTokenFactoryV1.address);
                 result = await newProxy.methods.getFederation().call();
                 assert.equal(result,  federationAddress);
             });

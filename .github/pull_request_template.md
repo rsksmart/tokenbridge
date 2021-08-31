@@ -10,7 +10,7 @@ The pull request should be described here
 ### How to Test
 
 - Run both `ganache-cli`
-- Enter into the bridge directory and run the truffle test in the file `nftbridge/NFTBridge_test.js`
+- Enter into the bridge directory and run all the tests
 
 #### Case 1
 
@@ -29,14 +29,14 @@ $~ npm run ganache
 $~ npm run ganache-mirror
 ```
 
-4. Run the test file that calls `receiveTokensTo`
+4. Run all the tests
 ```shell
-$~ truffle test test/nftbridge/NFTBridge_test.js
+$~ npm run test
 ```
 
 __Expected Result__
 - It should pass the test
-![image](https://i.imgur.com/5YWl9X4.png)
+![image](https://user-images.githubusercontent.com/17556614/131563928-05d6cb84-caf0-4ee0-8458-3464257e7f6c.png)
 
 #### Case N...
 

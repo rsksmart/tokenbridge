@@ -10,24 +10,24 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
 
     const MultiSigWallet = await deployments.get('MultiSigWallet');
     const ProxyAdmin = await deployments.get('ProxyAdmin');
-    const Federation_old = await deployments.get('Federation_old');
-    const AllowTokens_old = await deployments.get('AllowTokens_old');
-    const SideTokenFactory_old = await deployments.get('SideTokenFactory_old');
+    const FederationV1 = await deployments.get('FederationV1');
+    const AllowTokensV1 = await deployments.get('AllowTokensV1');
+    const SideTokenFactoryV1 = await deployments.get('SideTokenFactoryV1');
 
-    const Bridge_old = await deployments.get('Bridge_old');
-    const bridge = new web3.eth.Contract(Bridge_old.abi, Bridge_old.address);
+    const BridgeV2 = await deployments.get('BridgeV2');
+    const bridge = new web3.eth.Contract(BridgeV2.abi, BridgeV2.address);
     const methodCall = bridge.methods.initialize(
       multiSig ?? MultiSigWallet.address,
-      Federation_old.address,
-      AllowTokens_old.address,
-      SideTokenFactory_old.address,
+      FederationV1.address,
+      AllowTokensV1.address,
+      SideTokenFactoryV1.address,
       symbol
     );
     await methodCall.call({from: deployer});
 
     const deployProxyResult = await deploy('BridgeProxy', {
       from: deployer,
-      args: [Bridge_old.address, proxyAdmin ?? ProxyAdmin.address, methodCall.encodeABI()],
+      args: [BridgeV2.address, proxyAdmin ?? ProxyAdmin.address, methodCall.encodeABI()],
       log: true
     });
     if (deployProxyResult.newlyDeployed) {
@@ -37,4 +37,4 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
 };
 module.exports.id = 'deploy_bridgeProxy'; // id required to prevent reexecution
 module.exports.tags = ['BridgeProxy', 'old'];
-module.exports.dependencies = ['Bridge_old', 'MultiSigWallet', 'ProxyAdmin', 'Federation_old', 'AllowTokens_old', 'SideTokenFactory_old'];
+module.exports.dependencies = ['BridgeV2', 'MultiSigWallet', 'ProxyAdmin', 'FederationV1', 'AllowTokensV1', 'SideTokenFactoryV1'];

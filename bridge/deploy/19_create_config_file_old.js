@@ -8,23 +8,23 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         return;
     }
     const BridgeProxy = await deployments.get('BridgeProxy');
-    const Federation_old = await deployments.get('Federation_old');
+    const FederationV1 = await deployments.get('FederationV1');
     const MultiSigWallet = await deployments.get('MultiSigWallet');
-    const AllowTokens_old = await deployments.get('AllowTokens_old');
+    const AllowTokensV1 = await deployments.get('AllowTokensV1');
 
     const config = {
         bridge: BridgeProxy.address.toLowerCase(),
-        federation: Federation_old.address.toLowerCase(),
+        federation: FederationV1.address.toLowerCase(),
         multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
-        allowTokens: AllowTokens_old.address.toLowerCase()
+        allowTokens: AllowTokensV1.address.toLowerCase()
     };
     if (!network.live) {
         const MainToken = await deployments.get('MainToken');
         config.testToken = MainToken.address.toLowerCase();
-        const allowTokens = new web3.eth.Contract(AllowTokens_old.abi, AllowTokens_old.address);
+        const allowTokens = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensV1.address);
         const data = allowTokens.methods.addAllowedToken(MainToken.address).encodeABI();
         const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSig ?? MultiSigWallet.address);
-        await multiSigContract.methods.submitTransaction(AllowTokens_old.address, 0, data).send({ from: deployer });
+        await multiSigContract.methods.submitTransaction(AllowTokensV1.address, 0, data).send({ from: deployer });
 
         // Uncomment below lines to use multiple federators
         // await multiSig.confirmTransaction(0, { from: accounts[1] });
@@ -43,4 +43,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
 };
 module.exports.id = 'create_config_file_old'; // id required to prevent reexecution
 module.exports.tags = ['CreateConfigFile_old', 'old'];
-module.exports.dependencies = ['BridgeProxy', 'Federation_old', 'MultiSigWallet', 'AllowTokens_old'];
+module.exports.dependencies = ['BridgeProxy', 'FederationV1', 'MultiSigWallet', 'AllowTokensV1'];

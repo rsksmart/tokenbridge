@@ -6,10 +6,10 @@ import "../zeppelin/math/SafeMath.sol";
 import "../zeppelin/introspection/IERC1820Registry.sol";
 import "../zeppelin/token/ERC777/IERC777.sol";
 
-library Utils_old {
+library UtilsV1 {
     using SafeMath for uint256;
 
-    IERC1820Registry constant private _erc1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
+    IERC1820Registry constant private ERC_1820 = IERC1820Registry(0x1820a4B7618BdE71Dce8cdc73aAB6C95905faD24);
     // keccak256("ERC777Token")
     bytes32 constant private TOKENS_ERC777_HASH = 0xac7fbab5f54a3ca8194167523c6753bfeb96a445279294b6125b68cce2177054;
 
@@ -47,7 +47,7 @@ library Utils_old {
     function getGranularity(address tokenToUse) public view returns (uint256 granularity) {
         granularity = 1;
         //support granularity if ERC777
-        address implementer = _erc1820.getInterfaceImplementer(tokenToUse, TOKENS_ERC777_HASH);
+        address implementer = ERC_1820.getInterfaceImplementer(tokenToUse, TOKENS_ERC777_HASH);
         if (implementer != address(0)) {
             granularity = IERC777(implementer).granularity();
             //Verify granularity is power of 10 to keep it compatible with ERC20 decimals
@@ -118,7 +118,7 @@ library Utils_old {
         uint8 tokenDecimals = getDecimals(tokenAddress);
         //As side tokens are ERC777 we need to convert granularity to decimals
         calculatedDecimals = granularityToDecimals(granularity);
-        require(tokenDecimals == calculatedDecimals, "Utils: Token decimals differ from decimals obtained from granularity");
+        require(tokenDecimals == calculatedDecimals, "Utils: Token decimals differ from decimals - granularity");
         formattedAmount = amount.div(granularity);
     }
 
