@@ -3,17 +3,17 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     const {log, execute} = deployments
 
     const BridgeProxy = await deployments.get('BridgeProxy');
-    await execute('Federation_old', {from: deployer}, 'setBridge', BridgeProxy.address);
+    await execute('FederationV1', {from: deployer}, 'setBridge', BridgeProxy.address);
     log(
-      `Federation_old set Bridge to BridgeProxy`
+      `FederationV1 set Bridge to BridgeProxy`
     );
 
     const MultiSigWallet = await deployments.get('MultiSigWallet');
-    await execute('Federation_old', {from: deployer}, 'transferOwnership', multiSig ?? MultiSigWallet.address);
+    await execute('FederationV1', {from: deployer}, 'transferOwnership', multiSig ?? MultiSigWallet.address);
     log(
-      `Federation_old Transfered Ownership to MultiSig`
+      `FederationV1 Transfered Ownership to MultiSig`
     );
 };
-module.exports.id = 'transfer_federation_old'; // id required to prevent reexecution
-module.exports.tags = ['TransferFederation_old', 'old'];
-module.exports.dependencies = ['Federation_old', 'BridgeProxy', 'MultiSigWallet'];
+module.exports.id = 'transfer_federation_v1'; // id required to prevent reexecution
+module.exports.tags = ['TransferFederationV1', 'old'];
+module.exports.dependencies = ['FederationV1', 'BridgeProxy', 'MultiSigWallet'];

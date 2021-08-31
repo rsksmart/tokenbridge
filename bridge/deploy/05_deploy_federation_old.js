@@ -2,7 +2,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     const {deployer} = await getNamedAccounts()
     const {deploy, log} = deployments
 
-    const deployResult = await deploy('Federation_old', {
+    const deployResult = await deploy('FederationV1', {
       from: deployer,
       args: [
         [deployer],
@@ -13,9 +13,9 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
 
     if (deployResult.newlyDeployed) {
       log(
-        `Contract Federation_old deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
+        `Contract FederationV1 deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
       );
     }
 };
-module.exports.id = 'deploy_federation_old'; // id required to prevent reexecution
-module.exports.tags = ['Federation_old', 'old'];
+module.exports.id = 'deploy_federation_v1'; // id required to prevent reexecution
+module.exports.tags = ['FederationV1', 'old'];

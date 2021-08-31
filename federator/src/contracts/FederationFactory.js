@@ -1,9 +1,11 @@
-const abiFederationOld = require('../../../bridge/abi/Federation_old.json');
-const abiFederationNew = require('../../../bridge/abi/Federation.json');
+const abiFederationV1 = require('../../../bridge/abi/FederationV1.json');
+const abiFederationV2 = require('../../../bridge/abi/FederationV2.json');
+const abiFederationV3 = require('../../../bridge/abi/Federation.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
+const FederationInterfaceV3 = require('./IFederationV3');
 const CustomError = require('../lib/CustomError');
 const utils = require('../lib/utils');
 const ContractFactory = require('./ContractFactory');
@@ -23,13 +25,16 @@ module.exports = class FederationFactory extends ContractFactory {
     }
 
     async createInstance(web3, address) {
-        let federationContract = this.getContractByAbi(abiFederationNew, address, web3);
+        let federationContract = this.getContractByAbi(abiFederationV3, address, web3);
         const version = await this.getVersion(federationContract);
 
-        if (version === 'v2' || version === 'v3') {
+        if (version === 'v3') {
+          return new FederationInterfaceV3.IFederationV3(this.config, federationContract);
+        } else if (version === 'v2') {
+          federationContract = this.getContractByAbi(abiFederationV2, address, web3);
           return new FederationInterfaceV2(this.config, federationContract);
         } else if (version === 'v1') {
-          federationContract = this.getContractByAbi(abiFederationOld, address, web3);
+          federationContract = this.getContractByAbi(abiFederationV1, address, web3);
           return new FederationInterfaceV1(this.config, federationContract);
         } else {
           throw Error('Unknown Federation contract version');
@@ -37,7 +42,7 @@ module.exports = class FederationFactory extends ContractFactory {
       }
 
     createFederatorInstance(web3, address) {
-      const federationContract = this.getContractByAbi(abiFederationNew, address, web3);
+      const federationContract = this.getContractByAbi(abiFederationV2, address, web3);
       return new FederationInterfaceV2(this.config, federationContract);
     }
 

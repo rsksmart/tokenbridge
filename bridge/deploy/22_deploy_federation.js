@@ -2,18 +2,18 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   const {deployer, multiSig, proxyAdmin, bridgeProxy, federatorProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  const deployResult = await deploy('Federation', {
+  const deployResult = await deploy('FederationV2', {
     from: deployer,
     log: true
   });
 
   if (deployResult.newlyDeployed) {
     log(
-      `Contract Federation deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
+      `Contract Federation deployedV2 at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
     );
   }
 
-  const Federation = await deployments.get('Federation');
+  const FederationV2 = await deployments.get('FederationV2');
   let proxyAdminAddress = proxyAdmin ?? (await deployments.get('ProxyAdmin')).address;
   const multiSigAddress = multiSig ?? (await deployments.get('MultiSigWallet')).address;
   const bridgeProxyAddress = bridgeProxy ?? (await deployments.get('BridgeProxy')).address
@@ -33,7 +33,7 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
     ];
     required = 2;
   }
-  const federationLogic = new web3.eth.Contract(Federation.abi, Federation.address);
+  const federationLogic = new web3.eth.Contract(FederationV2.abi, FederationV2.address);
   const methodCall = federationLogic.methods.initialize(
     federationsMembers,
     required,
@@ -46,7 +46,7 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
     const deployProxyResult = await deploy('FederationProxy', {
       from: deployer,
       args: [
-        Federation.address,
+        FederationV2.address,
         proxyAdminAddress,
         methodCall.encodeABI()
       ],
@@ -59,6 +59,6 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
     }
   }
 };
-module.exports.id = 'deploy_federation'; // id required to prevent reexecution
-module.exports.tags = ['Federation', 'new'];
+module.exports.id = 'deploy_federation_v2'; // id required to prevent reexecution
+module.exports.tags = ['FederationV2', 'new'];
 module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin'];
