@@ -9,7 +9,7 @@
     "ganache-mirror": "npx ganache-cli --quiet -i 5776 -p 8546 -k istanbul -v",
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solhint  \"contracts/**/*.sol\"",
-    "compile": "npx hardhat compile",
+    "compile": "npx hardhat compile --show-stack-traces",
     "migrate": "rm -rf ./build && npx truffle migrate --reset",
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
