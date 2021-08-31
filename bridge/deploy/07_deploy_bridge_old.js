@@ -1,12 +1,12 @@
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
     const {deployer} = await getNamedAccounts()
     const {deploy, log} = deployments
-    const Utils_old = await deployments.get('Utils_old');
+    const UtilsV1 = await deployments.get('UtilsV1');
 
     const deployResult = await deploy('Bridge_old', {
         from: deployer,
         libraries: {
-            Utils_old: Utils_old.address
+            UtilsV1: UtilsV1.address
         },
         log: true,
     });
@@ -19,4 +19,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
 };
 module.exports.id = 'deploy_bridge_old'; // id required to prevent reexecution
 module.exports.tags = ['Bridge_old', 'old'];
-module.exports.dependencies = ['MultiSigWallet', 'Utils_old'];
+module.exports.dependencies = ['MultiSigWallet', 'UtilsV1'];
