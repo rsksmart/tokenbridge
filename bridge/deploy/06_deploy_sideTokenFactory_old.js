@@ -2,16 +2,16 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     const {deployer} = await getNamedAccounts()
     const {deploy, log} = deployments
 
-    const deployResult = await deploy('SideTokenFactory_old', {
+    const deployResult = await deploy('SideTokenFactoryV1', {
       from: deployer,
       log: true,
     });
 
     if (deployResult.newlyDeployed) {
       log(
-        `Contract SideTokenFactory_old deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
+        `Contract SideTokenFactoryV1 deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
       );
     }
 };
-module.exports.id = 'deploy_sideTokenFactory_old'; // id required to prevent reexecution
-module.exports.tags = ['SideTokenFactory_old', 'old'];
+module.exports.id = 'deploy_sideTokenFactory_v1'; // id required to prevent reexecution
+module.exports.tags = ['SideTokenFactoryV1', 'old'];

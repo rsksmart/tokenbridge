@@ -4,12 +4,12 @@ pragma solidity ^0.7.0;
 pragma abicoder v2;
 
 // Upgradables
-import "./zeppelin/upgradable/Initializable.sol";
-import "./zeppelin/upgradable/ownership/UpgradableOwnable.sol";
+import "../zeppelin/upgradable/Initializable.sol";
+import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "./nftbridge/INFTBridge.sol";
-import "./interface/IBridge.sol";
-import "./interface/IFederation.sol";
+import "../nftbridge/INFTBridge.sol";
+import "../interface/IBridge.sol";
+import "../interface/IFederation.sol";
 
 contract Federation is Initializable, UpgradableOwnable, IFederation {
     uint constant public MAX_MEMBER_COUNT = 50;
@@ -69,7 +69,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         _;
     }
 
-    function initialize(address[] memory _members, uint _required, address _bridge, address owner) public
+    function initialize(address[] memory _members, uint _required, address _bridge, address owner, address _bridgeNFT) public
     validRequirement(_members.length, _required) initializer {
         UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
@@ -82,6 +82,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         required = _required;
         emit RequirementChange(required);
         _setBridge(_bridge);
+        _setNFTBridge(_bridgeNFT);
     }
 
     /**

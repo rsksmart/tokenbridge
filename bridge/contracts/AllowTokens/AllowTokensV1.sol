@@ -5,7 +5,7 @@ pragma solidity ^0.7.0;
 import "../zeppelin/math/SafeMath.sol";
 import "../zeppelin/ownership/Ownable.sol";
 
-contract AllowTokens_old is Ownable {
+contract AllowTokensV1 is Ownable {
     using SafeMath for uint256;
 
     address constant private NULL_ADDRESS = address(0);
@@ -84,19 +84,19 @@ contract AllowTokens_old is Ownable {
     }
 
     function setMaxTokensAllowed(uint256 maxTokens) external onlyOwner {
-        require(maxTokens >= minTokensAllowed, "AllowTokens: Max Tokens should be equal or bigger than Min Tokens");
+        require(maxTokens >= minTokensAllowed, "AllowTokens: Max Tokens should be equal or bigger than Min Token");
         maxTokensAllowed = maxTokens;
         emit MaxTokensAllowedChanged(maxTokensAllowed);
     }
 
     function setMinTokensAllowed(uint256 minTokens) external onlyOwner {
-        require(maxTokensAllowed >= minTokens, "AllowTokens: Min Tokens should be equal or smaller than Max Tokens");
+        require(maxTokensAllowed >= minTokens, "AllowTokens: minTokens should be equal or smaller than maxTokens");
         minTokensAllowed = minTokens;
         emit MinTokensAllowedChanged(minTokensAllowed);
     }
 
     function changeDailyLimit(uint256 _dailyLimit) external onlyOwner {
-        require(_dailyLimit >= maxTokensAllowed, "AllowTokens: Daily Limit should be equal or bigger than Max Tokens");
+        require(_dailyLimit >= maxTokensAllowed, "AllowTokens: dailyLimit should be equal or bigger than maxTokens");
         dailyLimit = _dailyLimit;
         emit DailyLimitChanged(_dailyLimit);
     }
