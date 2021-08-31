@@ -203,7 +203,7 @@
     "name": "bridge",
     "outputs": [
       {
-        "internalType": "contract IBridge_old",
+        "internalType": "contract IBridgeV1",
         "name": "",
         "type": "address"
       }
