@@ -4,7 +4,7 @@ const Bridge = artifacts.require('Bridge');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
-const UtilsContract_old = artifacts.require('Utils_old');
+const UtilsContractV1 = artifacts.require('UtilsV1');
 
 //Normal Contracts
 const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
@@ -26,7 +26,7 @@ contract('Bridge upgrade test', async (accounts) => {
 
     before(async function () {
         await utils.saveState();
-        const utilsContract_old = await UtilsContract_old.new();
+        const utilsContract_old = await UtilsContractV1.new();
         Bridge_old.link(utilsContract_old);
     });
 
