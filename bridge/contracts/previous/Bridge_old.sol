@@ -21,7 +21,7 @@ import "./IBridge_old.sol";
 import "../interface/ISideToken.sol";
 import "../interface/ISideTokenFactory.sol";
 import "../AllowTokens/AllowTokensV1.sol";
-import "./Utils_old.sol";
+import "../Utils/UtilsV1.sol";
 
 contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;
@@ -101,7 +101,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         require(blockHash != NULL_HASH, "Bridge: BlockHash is null");
         require(transactionHash != NULL_HASH, "Bridge: Transaction is null");
         require(decimals <= 18, "Bridge: Decimals bigger 18");
-        require(Utils_old.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
+        require(UtilsV1.granularityToDecimals(granularity) <= 18, "Bridge: invalid granularity");
 
         _processTransaction(blockHash, transactionHash, receiver, amount, logIndex);
 
@@ -122,7 +122,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         string memory symbol
     ) private {
 
-        (uint256 calculatedGranularity,uint256 formattedAmount) = Utils_old.calculateGranularityAndAmount(decimals, granularity, amount);
+        (uint256 calculatedGranularity,uint256 formattedAmount) = UtilsV1.calculateGranularityAndAmount(decimals, granularity, amount);
         address sideToken = mappedTokens[tokenAddress];
         if (sideToken == NULL_ADDRESS) {
             sideToken = _createSideToken(tokenAddress, symbol, calculatedGranularity);
@@ -136,7 +136,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
     function _acceptCrossBackToToken(address receiver, address tokenAddress, uint8 decimals, uint256 granularity, uint256 amount) private {
         require(decimals == 18, "Bridge: Invalid decimals cross back");
         //As side tokens are ERC777 we need to convert granularity to decimals
-        (uint8 calculatedDecimals, uint256 formattedAmount) = Utils_old.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
+        (uint8 calculatedDecimals, uint256 formattedAmount) = UtilsV1.calculateDecimalsAndAmount(tokenAddress, granularity, amount);
         IERC20(tokenAddress).safeTransfer(receiver, formattedAmount);
         emit AcceptedCrossTransfer(tokenAddress, receiver, amount, decimals, granularity, formattedAmount, calculatedDecimals, 1);
     }
@@ -196,7 +196,7 @@ contract Bridge_old is Initializable, IBridge_old, IERC777Recipient, UpgradableP
         } else {
             //Main Token Crossing
             knownTokens[tokenToUse] = true;
-            (uint8 decimals, uint256 granularity, string memory symbol) = Utils_old.getTokenInfo(tokenToUse);
+            (uint8 decimals, uint256 granularity, string memory symbol) = UtilsV1.getTokenInfo(tokenToUse);
             uint formattedAmount = amount;
             if(decimals != 18) {
                 formattedAmount = amount.mul(uint256(10)**(18-decimals));
