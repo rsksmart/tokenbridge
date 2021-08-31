@@ -467,6 +467,11 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_bridgeNFT",
+        "type": "address"
       }
     ],
     "name": "initialize",
