@@ -3,9 +3,10 @@ const toWei = web3.utils.toWei;
 const deployHelper = require('../deployed/deployHelper');
 
 module.exports = async function({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, proxyAdmin, allowTokensProxy} = await getNamedAccounts();
+  const {deployer, multiSig, proxyAdmin, allowTokensProxy, bridgeProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
+  if (allowTokensProxy) return
   const deployResult = await deploy('AllowTokens', {
     from: deployer,
     log: true
@@ -33,7 +34,7 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   const allowTokensLogic = new web3.eth.Contract(AllowTokens.abi, AllowTokens.address);
   const methodCall = allowTokensLogic.methods.initialize(
     deployer,
-    BridgeProxy.address,
+    bridgeProxy ?? BridgeProxy.address,
     deployedJson.smallAmountConfirmations,
     deployedJson.mediumAmountConfirmations,
     deployedJson.largeAmountConfirmations,
@@ -41,23 +42,22 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   );
   methodCall.call({from: deployer});
 
-  if (!allowTokensProxy) {
-    const deployResultProxy = await deploy('AllowTokensProxy', {
-      from: deployer,
-      args: [
-        AllowTokens.address,
-        proxyAdmin ?? ProxyAdmin.address,
-        methodCall.encodeABI()
-      ],
-      log: true
-    });
+  const deployResultProxy = await deploy('AllowTokensProxy', {
+    from: deployer,
+    args: [
+      AllowTokens.address,
+      proxyAdmin ?? ProxyAdmin.address,
+      methodCall.encodeABI()
+    ],
+    log: true
+  });
 
-    if (deployResultProxy.newlyDeployed) {
-      log(
-        `Contract AllowTokensProxy deployed at ${deployResultProxy.address} using ${deployResultProxy.receipt.gasUsed.toString()} gas`
-      );
-    }
+  if (deployResultProxy.newlyDeployed) {
+    log(
+      `Contract AllowTokensProxy deployed at ${deployResultProxy.address} using ${deployResultProxy.receipt.gasUsed.toString()} gas`
+    );
   }
+
 
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
