@@ -1,43 +1,23 @@
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer, multiSig, wrappedCurrency} = await getNamedAccounts()
-    const {deploy, log} = deployments
+    const {deployer, multiSig, wrappedCurrency, bridgeProxy} = await getNamedAccounts()
+    const {log} = deployments
 
-    const deployResult = await deploy('Bridge', {
-        from: deployer,
-        log: true,
-    });
-    if (deployResult.newlyDeployed) {
-        log(
-            `Contract Bridge deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
-        );
-    }
+    if (bridgeProxy) return
 
+    const Bridge = await deployments.get('Bridge');
     const BridgeProxy = await deployments.get('BridgeProxy');
     // We need the multisig to update the contract
     const MultiSigWallet = await deployments.get('MultiSigWallet');
-    // We deploy the contract manually and point the proxy to the new logic
-    const ProxyAdmin = await deployments.get('ProxyAdmin');
     const Bridge = await deployments.get('Bridge');
 
-    const proxyAdmin = new web3.eth.Contract(ProxyAdmin.abi, ProxyAdmin.address);
-    let methodCall = proxyAdmin.methods.upgrade(BridgeProxy.address, Bridge.address);
-    // do a call first to see if it's successful
-    await methodCall.call({ from: multiSig ?? MultiSigWallet.address });
 
-    const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSig ?? MultiSigWallet.address);
-    await multiSigContract.methods.submitTransaction(
-        ProxyAdmin.address,
-        0,
-        methodCall.encodeABI(),
-    ).send({ from: deployer });
-    log(`MultiSig submitTransaction upgrade BridgeProxy contract in ProxyAdmin`);
-
-    const bridge = new web3.eth.Contract(Bridge.abi, BridgeProxy.address);
+    const multiSigAddress = multiSig ?? MultiSigWallet.address
+    const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxy ?? BridgeProxy.address);
     if (!network.live) {
         const WRBTC = await deployments.get('WRBTC');
         log(`Get deployed WRBTC at ${WRBTC.address}`);
         methodCall = bridge.methods.setWrappedCurrency(WRBTC.address);
-        await methodCall.call({ from: multiSig ?? MultiSigWallet.address })
+        await methodCall.call({ from: multiSigAddress })
         await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
         log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
 
@@ -45,17 +25,17 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         const AllowTokensProxy = await deployments.get('AllowTokensProxy');
         const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
         methodCall = allowTokens.methods.setToken(WRBTC.address, '0');
-        await methodCall.call({ from:multiSig ??  MultiSigWallet.address })
+        await methodCall.call({ from: multiSigAddress })
         await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
         log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
     } else {
         methodCall = bridge.methods.setWrappedCurrency(wrappedCurrency);
-        await methodCall.call({ from: multiSig ?? MultiSigWallet.address });
+        await methodCall.call({ from: multiSigAddress });
         await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
         log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
     }
     methodCall = bridge.methods.initDomainSeparator();
-    await methodCall.call({ from: multiSig ?? MultiSigWallet.address });
+    await methodCall.call({ from: multiSigAddress });
     await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction init Domain Separator in the Bridge`);
 
