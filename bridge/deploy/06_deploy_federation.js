@@ -2,6 +2,8 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   const {deployer, multiSig, proxyAdmin, bridgeProxy, federatorProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
+  if (federatorProxy) return
+
   const deployResult = await deploy('FederationV2', {
     from: deployer,
     log: true
@@ -42,21 +44,19 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   );
   methodCall.call({from: deployer});
 
-  if (!federatorProxy) {
-    const deployProxyResult = await deploy('FederationProxy', {
-      from: deployer,
-      args: [
-        FederationV2.address,
-        proxyAdminAddress,
-        methodCall.encodeABI()
-      ],
-      log: true
-    });
-    if (deployProxyResult.newlyDeployed) {
-      log(
-        `Contract BridgeProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`
-      );
-    }
+  const deployProxyResult = await deploy('FederationProxy', {
+    from: deployer,
+    args: [
+      FederationV2.address,
+      proxyAdminAddress,
+      methodCall.encodeABI()
+    ],
+    log: true
+  });
+  if (deployProxyResult.newlyDeployed) {
+    log(
+      `Contract BridgeProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`
+    );
   }
 };
 module.exports.id = 'deploy_federation_v2'; // id required to prevent reexecution
