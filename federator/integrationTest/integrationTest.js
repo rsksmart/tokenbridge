@@ -12,10 +12,6 @@ const abiSideToken = require('../../bridge/abi/SideToken.json');
 const abiAllowTokens = require('../../bridge/abi/AllowTokens.json');
 const abiMultiSig = require('../../bridge/abi/MultiSigWallet.json');
 
-const abiNFTBridge = require('../../bridge/abi/NFTBridge.json');
-const abiNFTERC721TestToken = require('../../bridge/abi/NFTERC721TestToken.json');
-const abiSideNFTToken = require('../../bridge/abi/SideNFTToken.json');
-
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');
 const Federator = require('../src/lib/Federator.js');
@@ -49,6 +45,7 @@ const SIDE_TOKEN_NAME = 'MAIN';
 const MAIN_CHAIN_LOGGER_NAME = 'MAIN';
 const SIDE_CHAIN_LOGGER_NAME = 'SIDE';
 const SIDE_TOKEN_TYPE_ID = 0;
+const SIDE_TOKEN_DECIMALS = 18;
 
 run({ mainchainFederators, sidechainFederators, config, sideConfig });
 
@@ -106,53 +103,31 @@ async function transfer(originFederators, destinationFederators, config, originL
     try {
         const mainChainWeb3 = new Web3(config.mainchain.host);
         const sideChainWeb3 = new Web3(config.sidechain.host);
-        let data = '';
-        let multiSigData = '';
-        let txDataHash = '';
-        let receipt = '';
-        let methodCall = '';
-
         // Increase time in one day to reset all the Daily limits from AllowTokens
         await utils.increaseTimestamp(mainChainWeb3, ONE_DAY_IN_SECONDS+1);
         await utils.increaseTimestamp(sideChainWeb3, ONE_DAY_IN_SECONDS+1);
-
         const originTokenContract = new mainChainWeb3.eth.Contract(abiMainToken, config.mainchain.testToken);
         const transactionSender = new TransactionSender(mainChainWeb3, logger, config);
         const destinationTransactionSender = new TransactionSender(sideChainWeb3, logger, config);
-
         const originBridgeAddress = config.mainchain.bridge;
         const amount = mainChainWeb3.utils.toWei('10');
         const originAddress = originTokenContract.options.address;
         const cowAddress = (await mainChainWeb3.eth.getAccounts())[0];
         const allowTokensContract = new mainChainWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
-
-        logger.debug('Get the destination token address');
         const sideMultiSigContract = new mainChainWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
         const sideAllowTokensAddress = config.sidechain.allowTokens;
         const destinationBridgeAddress = config.sidechain.bridge;
         logger.debug(`${destinationLoggerName} bridge address`, destinationBridgeAddress);
         const destinationBridgeContract = new sideChainWeb3.eth.Contract(abiBridge, destinationBridgeAddress);
 
-        let destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
-        let SIDE_TOKEN_DECIMALS = 18;
-        if(destinationTokenAddress == utils.zeroAddress) {
-            logger.info('Side Token does not exist yet, creating it');
-            data = destinationBridgeContract.methods.createSideToken(
-                SIDE_TOKEN_TYPE_ID, //typeId
-                originAddress, //originalTokenAddress
-                SIDE_TOKEN_DECIMALS,
-                SIDE_TOKEN_SYMBOL,
-                SIDE_TOKEN_NAME,
-            ).encodeABI();
-            multiSigData = sideMultiSigContract.methods.submitTransaction(destinationBridgeAddress, 0, data).encodeABI();
-            await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '', true);
-            destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
-            if(destinationTokenAddress == utils.zeroAddress) {
-                logger.error('Failed to create side token');
-                process.exit();
-            }
-        }
-        logger.info(`${destinationLoggerName} token address`, destinationTokenAddress);
+        let data = '';
+        let txDataHash = '';
+        let receipt = '';
+        let methodCall = '';
+
+        logger.debug('Get the destination token address');
+        const destinationTokenAddress = await getDestinationTokenAddress(destinationBridgeContract, originAddress,
+          sideMultiSigContract, destinationTransactionSender, config, destinationLoggerName);
 
         logger.info('------------- SENDING THE TOKENS -----------------');
         logger.debug('Getting address from pk');
@@ -208,28 +183,18 @@ async function transfer(originFederators, destinationFederators, config, originL
         logger.info('------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
 
         txDataHash = await destinationBridgeContract.methods.transactionsDataHashes(receipt.transactionHash).call();
-        if(txDataHash == utils.zeroHash) {
+        if(txDataHash === utils.zeroHash) {
             logger.error('Token was not voted by federators');
             process.exit();
         }
 
-        logger.debug('Check balance on the other side');
-        methodCall = destinationBridgeContract.methods.claim(
-            {
-                to: userAddress,
-                amount: amount,
-                blockHash: receipt.blockHash,
-                transactionHash: receipt.transactionHash,
-                logIndex: receipt.logs[3].logIndex
-            }
-        );
-        await methodCall.call({from: userAddress});
-        await destinationTransactionSender.sendTransaction(destinationBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
-        logger.debug('Bridge receivedTokens completed');
+        await claimTokensFromDestinationBridge(destinationBridgeContract, userAddress, amount, receipt,
+          destinationTransactionSender, destinationBridgeAddress, userPrivateKey);
 
+        logger.debug('Check balance on the other side');
         let destinationTokenContract = new sideChainWeb3.eth.Contract(abiSideToken, destinationTokenAddress);
         let balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
-        if (balance.toString() == '0' ) {
+        if (balance.toString() === '0' ) {
             logger.error('Token was not claimed');
             process.exit();
         }
@@ -247,25 +212,24 @@ async function transfer(originFederators, destinationFederators, config, originL
         logger.debug(`bridge balance:${bridgeBalanceBefore}, receiver balance:${receiverBalanceBefore}, sender balance:${senderBalanceBefore} `);
         await destinationTransactionSender.sendTransaction(userAddress, "", 6000000, config.privateKey, true);
 
-        logger.debug('Aproving token transfer on destination');
+        logger.debug('Approving token transfer on destination');
         data = destinationTokenContract.methods.approve(destinationBridgeAddress, amount).encodeABI();
         await destinationTransactionSender.sendTransaction(destinationTokenAddress, data, 0, userPrivateKey, true);
         logger.debug('Token transfer approved');
         let allowed = await destinationTokenContract.methods.allowance(userAddress, destinationBridgeAddress).call();
         logger.debug('Allowed to transfer ', allowed);
-
         logger.debug('Set side token limit');
 
         if (federatorKeys.length === 1) {
-            multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
+            const multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
             await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '', true);
         } else {
-            multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
+            const multiSigData = sideMultiSigContract.methods.submitTransaction(sideAllowTokensAddress, 0, data).encodeABI();
             await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, federatorKeys[0], true);
 
             let nextTransactionCount = await sideMultiSigContract.methods.getTransactionCount(true, false).call();
             for (let i = 1; i < federatorKeys.length; i++) {
-                multiSigData = sideMultiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                const multiSigData = sideMultiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
                 await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, federatorKeys[i], true);
             }
         }
@@ -355,39 +319,21 @@ async function transfer(originFederators, destinationFederators, config, originL
         data = allowTokensContract.methods.setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID).encodeABI();
 
         if (federatorKeys.length === 1) {
-            multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
             await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, '', true);
         } else {
-            multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
+            const multiSigData = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data).encodeABI();
             await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[0], true);
 
             let nextTransactionCount = await multiSigContract.methods.getTransactionCount(true, false).call();
             for (let i = 1; i < federatorKeys.length; i++) {
-                multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
+                const multiSigData = multiSigContract.methods.confirmTransaction(nextTransactionCount).encodeABI();
                 await transactionSender.sendTransaction(config.mainchain.multiSig, multiSigData, 0, federatorKeys[i], true);
             }
         }
 
-        let destinationAnotherTokenAddress = await destinationBridgeContract.methods.mappedTokens(anotherTokenAddress).call();
-        if(destinationAnotherTokenAddress == utils.zeroAddress) {
-            logger.info('Side Token does not exist yet, creating it');
-            data = destinationBridgeContract.methods.createSideToken(
-                SIDE_TOKEN_TYPE_ID, //typeId
-                anotherTokenAddress, //originalTokenAddress
-                SIDE_TOKEN_DECIMALS, //decimals
-                SIDE_TOKEN_SYMBOL, //symbol
-                SIDE_TOKEN_NAME, //name
-            ).encodeABI();
-            multiSigData = sideMultiSigContract.methods.submitTransaction(destinationBridgeAddress, 0, data).encodeABI();
-            await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '', true);
-            destinationAnotherTokenAddress = await destinationBridgeContract.methods.mappedTokens(anotherTokenAddress).call();
-            if(destinationAnotherTokenAddress == utils.zeroAddress) {
-                logger.error('Failed to create side token');
-                process.exit();
-            }
-
-        }
-        logger.info(`${destinationLoggerName} token address`, destinationAnotherTokenAddress);
+        let destinationAnotherTokenAddress = await getDestinationTokenAddress(destinationBridgeContract,
+          anotherTokenAddress, sideMultiSigContract, destinationTransactionSender, config, destinationLoggerName);
 
         methodCall = anotherTokenContract.methods.send(originBridgeAddress, amount, '0x');
         await methodCall.call({from:userAddress});
@@ -402,26 +348,16 @@ async function transfer(originFederators, destinationFederators, config, originL
         }, Promise.resolve());
 
         logger.info('------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------');
-        logger.debug('Check balance on the other side');
-        methodCall = destinationBridgeContract.methods.claim(
-            {
-                to: userAddress,
-                amount: amount,
-                blockHash: receipt.blockHash,
-                transactionHash: receipt.transactionHash,
-                logIndex: receipt.logs[3].logIndex
-            }
-        );
-        await methodCall.call({from: userAddress});
-        await destinationTransactionSender.sendTransaction(destinationBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
-        logger.debug('Destination Bridge claim completed');
+
+        await claimTokensFromDestinationBridge(destinationBridgeContract, userAddress, amount, receipt,
+          destinationTransactionSender, destinationBridgeAddress, userPrivateKey);
 
         destinationTokenContract = new sideChainWeb3.eth.Contract(abiSideToken, destinationAnotherTokenAddress);
 
         logger.debug('Check balance on the other side');
         balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
         logger.info(`${destinationLoggerName} token balance`, balance);
-        if (balance.toString() == '0' ) {
+        if (balance.toString() === '0' ) {
             logger.error('Token was not claimed');
             process.exit();
         }
@@ -444,7 +380,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         }, Promise.resolve());
 
         txDataHash = await bridgeContract.methods.transactionsDataHashes(receipt.transactionHash).call();
-        if(txDataHash == utils.zeroHash) {
+        if(txDataHash === utils.zeroHash) {
             logger.error('Token was not voted by federators');
             process.exit();
         }
@@ -508,7 +444,7 @@ async function transfer(originFederators, destinationFederators, config, originL
 
         destinationAnotherTokenAddress = await destinationBridgeContract.methods.mappedTokens(anotherTokenAddress).call();
         logger.info(`${destinationLoggerName} token address`, destinationAnotherTokenAddress);
-        if(destinationAnotherTokenAddress == utils.zeroAddress) {
+        if(destinationAnotherTokenAddress === utils.zeroAddress) {
             logger.error('Token was not voted by federators');
             process.exit();
         }
@@ -646,28 +582,74 @@ async function transfer(originFederators, destinationFederators, config, originL
         userBalanceAnotherToken = await anotherTokenContract.methods.balanceOf(userAddress).call();
         logger.debug('ORIGIN user balance after crossing:', userBalanceAnotherToken);
 
-        // Reset confirmations for future runs
-        await allowTokensContract.methods.setConfirmations(
-            '0',
-            '0',
-            '0'
-        ).call({ from: config.mainchain.multiSig })
-        data = allowTokensContract.methods.setConfirmations(
-            '0',
-            '0',
-            '0'
-        ).encodeABI();
-
-        methodCall = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data)
-        await methodCall.call({ from: cowAddress });
-        await methodCall.send({ from: cowAddress, gas: 500000 });
-        await utils.evm_mine(1, mainChainWeb3);
-        confirmations = await allowTokensContract.methods.getConfirmations().call();
-        logger.debug(`reset confirmations: ${confirmations.smallAmount}, ${confirmations.mediumAmount}, ${confirmations.largeAmount}`);
-
+        await resetConfirmationsForFutureRuns(allowTokensContract, config, data, methodCall, multiSigContract, allowTokensAddress, cowAddress, mainChainWeb3, confirmations);
 
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
         process.exit();
     }
+}
+
+async function getDestinationTokenAddress(destinationBridgeContract, originAddress, sideMultiSigContract,
+                                          destinationTransactionSender, config, destinationLoggerName) {
+  let destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
+  if (destinationTokenAddress === utils.zeroAddress) {
+    logger.info('Side Token does not exist yet, creating it');
+    const data = destinationBridgeContract.methods.createSideToken(
+      SIDE_TOKEN_TYPE_ID,
+      originAddress,
+      SIDE_TOKEN_DECIMALS,
+      SIDE_TOKEN_SYMBOL,
+      SIDE_TOKEN_NAME
+    ).encodeABI();
+    const multiSigData = sideMultiSigContract.methods.submitTransaction(
+      destinationBridgeContract.options.address, 0, data
+    ).encodeABI();
+    await destinationTransactionSender.sendTransaction(config.sidechain.multiSig, multiSigData, 0, '', true);
+    destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
+    if (destinationTokenAddress === utils.zeroAddress) {
+      logger.error('Failed to create side token');
+      process.exit();
+    }
+  }
+  logger.info(`${destinationLoggerName} token address`, destinationTokenAddress);
+  return destinationTokenAddress;
+}
+
+async function claimTokensFromDestinationBridge(destinationBridgeContract, userAddress, amount, receipt,
+                                                destinationTransactionSender, destinationBridgeAddress, userPrivateKey) {
+  let methodCall = destinationBridgeContract.methods.claim(
+    {
+      to: userAddress,
+      amount: amount,
+      blockHash: receipt.blockHash,
+      transactionHash: receipt.transactionHash,
+      logIndex: receipt.logs[3].logIndex
+    }
+  );
+  await methodCall.call({from: userAddress});
+  await destinationTransactionSender.sendTransaction(destinationBridgeAddress, methodCall.encodeABI(), 0, userPrivateKey, true);
+  logger.debug('Destination Bridge claim completed');
+  return methodCall;
+}
+
+async function resetConfirmationsForFutureRuns(allowTokensContract, config, data, methodCall, multiSigContract, allowTokensAddress, cowAddress, mainChainWeb3, confirmations) {
+    await allowTokensContract.methods.setConfirmations(
+      '0',
+      '0',
+      '0'
+    ).call({from: config.mainchain.multiSig});
+    data = allowTokensContract.methods.setConfirmations(
+      '0',
+      '0',
+      '0'
+    ).encodeABI();
+
+    methodCall = multiSigContract.methods.submitTransaction(allowTokensAddress, 0, data);
+    await methodCall.call({from: cowAddress});
+    await methodCall.send({from: cowAddress, gas: 500000});
+    await utils.evm_mine(1, mainChainWeb3);
+    confirmations = await allowTokensContract.methods.getConfirmations().call();
+    logger.debug(`reset confirmations: ${confirmations.smallAmount}, ${confirmations.mediumAmount}, ${confirmations.largeAmount}`);
+    return {data, methodCall, confirmations};
 }
