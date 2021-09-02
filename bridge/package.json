@@ -14,7 +14,7 @@
     "test": "npx hardhat test",
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
-    "deploy": "npx hardhat deploy --network",
+    "deploy": "npx hardhat deploy --show-stack-traces --network",
     "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
     "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment"
   },
