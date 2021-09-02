@@ -74,7 +74,7 @@ module.exports = {
       gasPrice: 20000000000,
       hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       tags: ['integrationTest', 'local'],
-      saveDeployments: false,
+      saveDeployments: true,
     },
     mirrorDevelopment: {
       live: false,
