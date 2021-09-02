@@ -4,19 +4,18 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   const {deployer, multiSig} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (!multiSig) {
-    const deployResult = await deploy('MultiSigWallet', {
-      from: deployer,
-      args: [[deployer], 1],
-      log: true
-    });
+  if (multiSig) return;
 
-    if (deployResult.newlyDeployed) {
-      log(
-        `Contract MultiSigWallet deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
-      );
-    }
+  const deployResult = await deploy('MultiSigWallet', {
+    from: deployer,
+    args: [[deployer], 1],
+    log: true
+  });
+
+  if (deployResult.newlyDeployed) {
+    log(`Contract MultiSigWallet deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
   }
+
   if (!network.live) {
     await deploy1820(web3);
   }

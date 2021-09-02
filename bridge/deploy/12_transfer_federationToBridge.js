@@ -12,6 +12,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     const bridgeProxyAddress = bridgeProxy ?? BridgeProxy.address
     const federationProxyAddress = federationAddressProxy ?? FederationProxy.address
     const multiSigAddress =  multiSig ?? MultiSigWallet.address
+
     const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
     const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
 
@@ -20,6 +21,6 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
     await multiSigContract.methods.submitTransaction(bridgeProxyAddress, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction Change Federation in the Bridge`);
 };
-module.exports.id = 'transfer_federation'; // id required to prevent reexecution
-module.exports.tags = ['TransferFederation', 'new'];
-//module.exports.dependencies = ['Federation', 'Bridge', 'BridgeProxy', 'MultiSigWallet'];
+module.exports.id = 'transfer_federation_to_bridge'; // id required to prevent reexecution
+module.exports.tags = ['TransferFederationToBridge', 'new'];
+module.exports.dependencies = ['Bridge', 'BridgeProxy', 'FederationProxy', 'MultiSigWallet'];
