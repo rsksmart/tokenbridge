@@ -13,15 +13,15 @@ export class IFederationV3 {
     return 'v3';
   }
 
-  isMember(address: string): Promise<boolean> {
-    return this.federationContract.methods.isMember(address);
+  isMember(address: string): Promise<any> {
+    return this.federationContract.methods.isMember(address).call();
   }
 
-  setNFTBridge(address: string): Promise<any> {
-    return this.federationContract.methods.setNFTBridge(address);
+  setNFTBridge(address: string, from: string): Promise<any> {
+    return this.federationContract.methods.setNFTBridge(address).call({ from });
   }
 
-  getTransactionId(paramsObj): Promise<string> {
+  getTransactionId(paramsObj): Promise<any> {
     return this.federationContract.methods.getTransactionId(
       paramsObj.originalTokenAddress,
       paramsObj.sender,
@@ -34,32 +34,34 @@ export class IFederationV3 {
   }
 
   transactionWasProcessed(txId: string): Promise<boolean> {
-    return this.federationContract.methods.transactionWasProcessed(txId);
+    return this.federationContract.methods.transactionWasProcessed(txId).call();
   }
 
-  hasVoted(txId: string): Promise<boolean> {
-    return this.federationContract.methods.hasVoted(txId);
+  hasVoted(txId: string, from: string): Promise<boolean> {
+    return this.federationContract.methods.hasVoted(txId).call({ from });
   }
 
-  voteTransaction(paramsObj: any): Promise<any> {
-    return this.federationContract.methods.voteTransaction(
-      paramsObj.originalTokenAddress,
-      paramsObj.sender,
-      paramsObj.receiver,
-      paramsObj.amount,
-      paramsObj.blockHash,
-      paramsObj.transactionHash,
-      paramsObj.logIndex,
-      paramsObj.tokenType,
-    );
+  getVoteTransactionABI(paramsObj: any): Promise<any> {
+    return this.federationContract.methods
+      .voteTransaction(
+        paramsObj.originalTokenAddress,
+        paramsObj.sender,
+        paramsObj.receiver,
+        paramsObj.amount,
+        paramsObj.blockHash,
+        paramsObj.transactionHash,
+        paramsObj.logIndex,
+        paramsObj.tokenType,
+      )
+      .encodeABI();
   }
 
   getAddress(): string {
     return this.federationContract.options.address;
   }
 
-  getPastEvents(eventName: string, options: any): Promise<any> {
-    return this.federationContract.getPastEvents(eventName, options);
+  getPastEvents(eventName: string, options: any, from: string): Promise<any> {
+    return this.federationContract.getPastEvents(eventName, options).call({ from });
   }
 
   async emitHeartbeat(txSender, fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {

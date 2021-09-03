@@ -42,8 +42,8 @@ module.exports = class FederationFactory extends ContractFactory {
       }
 
     createFederatorInstance(web3, address) {
-      const federationContract = this.getContractByAbi(abiFederationV2, address, web3);
-      return new FederationInterfaceV2(this.config, federationContract);
+      const federationContract = this.getContractByAbi(abiFederationV3, address, web3);
+      return new FederationInterfaceV3.IFederationV3(this.config, federationContract);
     }
 
     async getVersion(federationContract) {
