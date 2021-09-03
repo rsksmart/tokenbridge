@@ -373,7 +373,7 @@
     "name": "allowTokens",
     "outputs": [
       {
-        "internalType": "contract AllowTokensV1",
+        "internalType": "contract AllowTokensV0",
         "name": "",
         "type": "address"
       }

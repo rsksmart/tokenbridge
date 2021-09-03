@@ -1,4 +1,4 @@
-const abiAllowTokensV1 = require('../../../bridge/abi/AllowTokensV1.json');
+const abiAllowTokensV0 = require('../../../bridge/abi/AllowTokensV0.json');
 const abiAllowTokens = require('../../../bridge/abi/AllowTokens.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
 const IAllowTokensV1 = require('./IAllowTokensV1');
@@ -29,7 +29,7 @@ module.exports = class AllowTokensFactory extends ContractFactory {
         if (version === 'v1') {
             return new IAllowTokensV1(allowTokensContract, chainId);
         } else if (version === 'v0') {
-            allowTokensContract = this.getContractByAbi(abiAllowTokensV1, address, web3);
+            allowTokensContract = this.getContractByAbi(abiAllowTokensV0, address, web3);
             return new IAllowTokensV0(allowTokensContract, chainId);
         } else {
             throw Error('Unknown AllowTokens contract version');
