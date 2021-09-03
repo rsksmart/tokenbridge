@@ -23,7 +23,7 @@ deployed/soliditycoverage.json
 #Hardhat files
 cache
 artifacts
-
+deployments/development
 
 # Coverage directory used by tools like istanbul
 coverage
