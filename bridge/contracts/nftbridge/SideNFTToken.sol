@@ -103,6 +103,7 @@ contract SideNFTToken is ISideNFTToken, ERC721, ERC721Burnable {
             address recoveredAddress = ecrecover(digest, v, r, s);
             require(recoveredAddress != address(0), "Invalid signature");
             require(recoveredAddress == owner, "Unauthorized");
+            // Approval(recoveredAddress, owner, tokenId);
         }
 
         approve(spender, tokenId);
