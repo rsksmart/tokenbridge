@@ -21,7 +21,7 @@ export class FederatorNFT {
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
   public nftConfirmationsBlocks: number;
-  private federatorContract: import('../contracts/IFederationV2');
+  private federatorContract: import('../contracts/IFederationV3').IFederationV3;
 
   constructor(config: Config, logger: Logger, Web3 = web3) {
     this.config = config;
@@ -51,7 +51,7 @@ export class FederatorNFT {
    * get federator as singleton
    * @returns Federator Interface
    */
-  async getFederator(): Promise<import('../contracts/IFederationV2')> {
+  async getFederator(): Promise<import('../contracts/IFederationV3').IFederationV3> {
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }
@@ -172,7 +172,7 @@ export class FederatorNFT {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const fedContract = await this.getFederator();
 
-      const isMember = await utils.retry3Times(fedContract.isMember(from).call);
+      const isMember = await utils.retry3Times(fedContract.isMember(from));
       if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
 
       for (const log of logs) {
@@ -212,11 +212,11 @@ export class FederatorNFT {
             blockHash,
             transactionHash,
             logIndex,
-          }).call,
+          }),
         );
         this.logger.info('get transaction id:', transactionId);
 
-        const wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
+        const wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId));
         if (wasProcessed) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress} was already processed`,
@@ -224,7 +224,7 @@ export class FederatorNFT {
           continue;
         }
 
-        const hasVoted = await fedContract.hasVoted(transactionId).call({ from });
+        const hasVoted = await fedContract.hasVoted(transactionId, from);
         if (!hasVoted) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress}  has already been voted by us`,
@@ -271,18 +271,16 @@ export class FederatorNFT {
       );
 
       const fedContract = await this.getFederator();
-      const voteTransactionTxData = await fedContract
-        .voteTransaction({
-          originalTokenAddress,
-          sender,
-          receiver,
-          amount: tokenId,
-          blockHash,
-          transactionHash,
-          logIndex,
-          tokenType: utils.tokenType.NFT,
-        })
-        .encodeABI();
+      const voteTransactionTxData = await fedContract.getVoteTransactionABI({
+        originalTokenAddress,
+        sender,
+        receiver,
+        amount: tokenId,
+        blockHash,
+        transactionHash,
+        logIndex,
+        tokenType: utils.tokenType.NFT,
+      });
 
       return await this.handleRevertedTxns(
         originalTokenAddress,

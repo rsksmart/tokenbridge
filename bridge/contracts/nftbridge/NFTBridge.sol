@@ -102,7 +102,7 @@ contract NFTBridge is
     bytes32 _blockHash,
     bytes32 _transactionHash,
     uint32 _logIndex
-  ) external override whenNotPaused nonReentrant {
+  ) external whenNotPaused nonReentrant override {
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
       isAddressFromCrossedOriginalToken[_tokenAddress] ||
