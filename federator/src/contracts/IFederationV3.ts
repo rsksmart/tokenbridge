@@ -22,15 +22,17 @@ export class IFederationV3 {
   }
 
   getTransactionId(paramsObj): Promise<any> {
-    return this.federationContract.methods.getTransactionId(
-      paramsObj.originalTokenAddress,
-      paramsObj.sender,
-      paramsObj.receiver,
-      paramsObj.amount,
-      paramsObj.blockHash,
-      paramsObj.transactionHash,
-      paramsObj.logIndex,
-    );
+    return this.federationContract.methods
+      .getTransactionId(
+        paramsObj.originalTokenAddress,
+        paramsObj.sender,
+        paramsObj.receiver,
+        paramsObj.amount,
+        paramsObj.blockHash,
+        paramsObj.transactionHash,
+        paramsObj.logIndex,
+      )
+      .call();
   }
 
   transactionWasProcessed(txId: string): Promise<boolean> {

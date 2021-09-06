@@ -237,7 +237,7 @@ async function transferNFT(originFederators, destinationFederators, config, orig
 
     logger.debug('Get the destination token address');
     // TODO: maybe move constants to top of class.
-    const tokenId = 12;
+    const tokenId = 18;
     const tokenSymbol = 'drop';
     const tokenName = 'The Drops';
     const tokenBaseURI = 'ipfs:/';
