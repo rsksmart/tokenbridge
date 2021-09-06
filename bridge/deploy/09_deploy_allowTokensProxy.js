@@ -13,7 +13,7 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   const BridgeProxy = await deployments.get('BridgeProxy');
 
   const deployedJson = deployHelper.getDeployed(network.name);
-  const typesInfo = network.name === 'rskmainnet' || network.name === 'ethmainnet'
+  const typesInfo = network.name.includes('mainnet')
     ? tokensTypesMainnet()
     : tokensTypesTestnet();
 

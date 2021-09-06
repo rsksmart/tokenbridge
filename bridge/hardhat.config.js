@@ -17,6 +17,8 @@ const RSK_MAIN_NET_CHAIN_ID = 30;
 const RSK_TEST_NET_CHAIN_ID = 31;
 const ETHEREUM_KOVAN_CHAIN_ID = 42;
 const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
+const BSC_TEST_NET_CHAIN_ID = 97;
+const BSC_MAIN_NET_CHAIN_ID = 56;
 
 /**
  * @type import('hardhat/config').HardhatUserConfig
@@ -92,7 +94,7 @@ module.exports = {
       url: 'https://public-node.testnet.rsk.co',
       blockGasLimit: 6800000,
       gasPrice: 60000000, // 0.06 gwei
-      chainId: 31,
+      chainId: RSK_TEST_NET_CHAIN_ID,
       hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       accounts: {
         mnemonic: MNEMONIC,
@@ -104,7 +106,7 @@ module.exports = {
       url: 'https://public-node.rsk.co',
       blockGasLimit: 6800000,
       gasPrice: 60000000, // 0.06 gwei
-      chainId: 30,
+      chainId: RSK_MAIN_NET_CHAIN_ID,
       hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       accounts: {
         mnemonic: MNEMONIC,
@@ -115,7 +117,7 @@ module.exports = {
     kovan: {
       live: true,
       url: 'wss://kovan.infura.io/ws/v3/' + INFURA_API_KEY,
-      network_id: 42,
+      network_id: ETHEREUM_KOVAN_CHAIN_ID,
       gas: 6700000,
       gasPrice: 10000000000,
       websockets: true,
@@ -127,10 +129,30 @@ module.exports = {
     ethmainnet: {
       live: true,
       url: 'wss://mainnet.infura.io/ws/v3/' + INFURA_API_KEY,
-      network_id: 1,
+      network_id: ETHEREUM_MAIN_NET_CHAIN_ID,
       gas: 6700000,
       gasPrice: 250000000000,
       websockets: true,
+      accounts: {
+        mnemonic: MNEMONIC,
+      },
+      tags: ['prod'],
+    },
+    bsctestnet: {
+      live: true,
+      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+      network_id: BSC_TEST_NET_CHAIN_ID,
+      gas: 6700000,
+      accounts: {
+        mnemonic: MNEMONIC,
+      },
+      tags: ['staging'],
+    },
+    bscmainnet: {
+      live: true,
+      url: 'https://bsc-dataseed.binance.org/',
+      network_id: BSC_MAIN_NET_CHAIN_ID,
+      gas: 6700000,
       accounts: {
         mnemonic: MNEMONIC,
       },
@@ -168,6 +190,8 @@ function getWrappedCurrencyAddressesByChainId() {
   wrappedCurrencyAddressesByChainId[RSK_MAIN_NET_CHAIN_ID] = '0x967f8799af07df1534d48a95a5c9febe92c53ae0';
   wrappedCurrencyAddressesByChainId[RSK_TEST_NET_CHAIN_ID] = '0x09b6ca5e4496238a1f176aea6bb607db96c2286e';
   wrappedCurrencyAddressesByChainId[ETHEREUM_KOVAN_CHAIN_ID] = '0xd0A1E359811322d97991E03f863a0C30C2cF029C';
+  wrappedCurrencyAddressesByChainId[BSC_TEST_NET_CHAIN_ID] = '0xae13d989dac2f0debff460ac112a837c89baa7cd';
+  wrappedCurrencyAddressesByChainId[BSC_MAIN_NET_CHAIN_ID] = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
   return wrappedCurrencyAddressesByChainId;
 }
 
