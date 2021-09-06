@@ -320,19 +320,6 @@
     "type": "event"
   },
   {
-    "inputs": [],
-    "name": "CLAIM_TYPEHASH",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -425,6 +412,19 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "c__0xeff85f01",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0xeff85f01",
+    "outputs": [],
+    "stateMutability": "pure",
     "type": "function"
   },
   {
@@ -620,19 +620,6 @@
   },
   {
     "inputs": [],
-    "name": "domainSeparator",
-    "outputs": [
-      {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "getFederation",
     "outputs": [
       {
@@ -769,13 +756,6 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "initDomainSeparator",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [
       {
         "internalType": "address",
@@ -887,25 +867,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "nonces",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
