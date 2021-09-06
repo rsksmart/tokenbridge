@@ -30,7 +30,7 @@ module.exports = class BridgeFactory extends ContractFactory {
 
   createInstanceNft(web3, address) {
     const nftBridgeContract = this.getContractByAbi(abiNftBridge, address, web3);
-    return new NftBridgeInterface(nftBridgeContract);
+    return new NftBridgeInterface.IBridgeNft(nftBridgeContract);
   }
 
   async getMainBridgeContract() {
