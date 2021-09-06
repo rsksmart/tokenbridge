@@ -21,6 +21,9 @@ module.exports.tags = ['AllowTokensProxyTransferSetTokens', 'new'];
 module.exports.dependencies = ['MultiSigWallet', 'AllowTokens', 'AllowTokensProxy'];
 
 async function setTokens(network, allowTokens, deployer) {
+  if (network.name === 'bsctestnet') {
+    await setTokensBscTestnet(allowTokens, deployer);
+  }
   if (network.name === 'rsktestnet') {
     await setTokensRskTestnet(allowTokens, deployer);
   }
@@ -69,6 +72,18 @@ async function setTokensKovan(allowTokens, deployer) {
     {token: '0x69f6d4d4813f8e2e618dae7572e04b6d5329e207', typeId: '5'}, //eRIF
     {token: '0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa', typeId: '4'}, //eDOC
     {token: '0xB3c9ec8833bfA0d382a183EcED27aBc079520928', typeId: '0'} //eBPro
+  ]).send({from: deployer});
+}
+
+async function setTokensBscTestnet(allowTokens, deployer) {
+  await allowTokens.methods.setMultipleTokens([
+    {token: '0x6ce8da28e2f864420840cf74474eff5fd80e65b8', typeId: '0'}, //BTC
+    {token: '0x8babbb98678facc7342735486c851abd7a0d17ca', typeId: '1'}, //ETH
+    {token: '0xae13d989dac2f0debff460ac112a837c89baa7cd', typeId: '2'}, //BNB
+    {token: '0x5d47b6e7edfc82e2ecd481b3db70d0f6600fdef8', typeId: '4'}, //USDC
+    {token: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', typeId: '4'}, //USDT
+    {token: '0x110887fc420292dce51c08504cee377872d0db66', typeId: '4'}, //BUSD
+    {token: '0x13878644c0f2c9c5c8a85da43ebc3bb74bbc05a9', typeId: '4'}, //DAI
   ]).send({from: deployer});
 }
 
