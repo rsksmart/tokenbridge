@@ -292,6 +292,19 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "c__0xd01e106d",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0xd01e106d",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "token",
         "type": "address"
