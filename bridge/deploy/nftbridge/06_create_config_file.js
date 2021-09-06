@@ -24,6 +24,8 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
       nftConfirmations: 5
     };
 
+  log(`New federation address: ${config.federation}`);
+
   if (!network.live) {
     const AllowTokens = await deployments.get('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
