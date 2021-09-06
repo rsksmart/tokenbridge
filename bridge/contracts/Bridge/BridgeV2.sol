@@ -20,7 +20,7 @@ import "../zeppelin/math/SafeMath.sol";
 import "./IBridgeV2.sol";
 import "../interface/ISideToken.sol";
 import "../interface/ISideTokenFactory.sol";
-import "../AllowTokens/AllowTokensV1.sol";
+import "../AllowTokens/AllowTokensV0.sol";
 import "../Utils/UtilsV1.sol";
 
 contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
@@ -42,7 +42,7 @@ contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausa
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping(bytes32 => bool) public processed; // ProcessedHash => true
-    AllowTokensV1 public allowTokens;
+    AllowTokensV0 public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
@@ -62,7 +62,7 @@ contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausa
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = AllowTokensV1(_allowTokens);
+        allowTokens = AllowTokensV0(_allowTokens);
         _changeSideTokenFactory(_sideTokenFactory);
         _changeFederation(_federation);
         //keccak256("ERC777TokensRecipient")
