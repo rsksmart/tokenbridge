@@ -443,19 +443,6 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "c__0xcfc02cec",
-        "type": "bytes32"
-      }
-    ],
-    "name": "c_0xcfc02cec",
-    "outputs": [],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "newAllowTokens",
         "type": "address"

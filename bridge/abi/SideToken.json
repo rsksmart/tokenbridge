@@ -373,19 +373,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "c__0x7ead3fff",
-        "type": "bytes32"
-      }
-    ],
-    "name": "c_0x7ead3fff",
-    "outputs": [],
-    "stateMutability": "pure",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "decimals",
     "outputs": [
