@@ -249,7 +249,7 @@ contract NFTBridge is
       // Send the payment to the MultiSig of the Federation
       federation.transfer(fixedFee);
       if (msg.value > fixedFee) { // refund of unused value
-        sender.transfer(msg.value - fixedFee);
+        sender.transfer(msg.value.sub(fixedFee));
       }
     }
   }

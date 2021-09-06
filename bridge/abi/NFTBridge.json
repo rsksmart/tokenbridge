@@ -417,6 +417,19 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "c__0xeff85f01",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0xeff85f01",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "newAllowTokens",
         "type": "address"
