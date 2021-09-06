@@ -46,6 +46,19 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "c__0x09875908",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0x09875908",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "string",
         "name": "name",
         "type": "string"

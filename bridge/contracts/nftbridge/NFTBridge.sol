@@ -50,8 +50,6 @@ contract NFTBridge is
   address payable internal federation;
   uint256 internal fixedFee;
   string public symbolPrefix;
-  uint256 internal _deprecatedLastDay;
-  uint256 internal _deprecatedSpentToday;
 
   mapping(address => address) public sideTokenAddressByOriginalTokenAddress;
   mapping(address => address) public originalTokenAddressBySideTokenAddress;
@@ -61,12 +59,6 @@ contract NFTBridge is
   ISideNFTTokenFactory public sideTokenFactory;
   bool public isUpgrading;
   mapping(bytes32 => bytes32) public transactionDataHashes; // transactionHash => transactionDataHash
-
-  bytes32 public domainSeparator;
-  // keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
-  bytes32 public constant CLAIM_TYPEHASH =
-      0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
-  mapping(address => uint256) public nonces;
 
   event AllowTokensChanged(address _newAllowTokens);
   event FederationChanged(address _newFederation);
@@ -91,25 +83,10 @@ contract NFTBridge is
       0xb281fc8c12954d22544db45de3159a39272895b169a852b314f9cc762e44c53b,
       address(this)
     );
-    initDomainSeparator();
   }
 
   function version() external pure override returns (string memory) {
     return "v1";
-  }
-
-  function initDomainSeparator() public {
-    uint256 chainId;
-    // solium-disable-next-line security/no-inline-assembly
-    assembly {
-      chainId := chainid()
-    }
-    domainSeparator = LibEIP712.hashEIP712Domain(
-      "RSK Token Bridge",
-      "1",
-      chainId,
-      address(this)
-    );
   }
 
   modifier whenNotUpgrading() {
@@ -195,29 +172,6 @@ contract NFTBridge is
   function claimFallback(NFTClaimData calldata _claimData) external override {
     require(_msgSender() == _claimData.from, "NFTBridge: invalid sender");
     _claim(_claimData, _msgSender());
-  }
-
-  function getDigest(
-    NFTClaimData memory _claimData,
-    address payable _relayer,
-    uint256 _fee,
-    uint256 _deadline
-  ) internal returns (bytes32) {
-    return LibEIP712.hashEIP712Message(
-      domainSeparator,
-      keccak256(
-        abi.encode(
-          CLAIM_TYPEHASH,
-          _claimData.to,
-          _claimData.tokenId,
-          _claimData.transactionHash,
-          _relayer,
-          _fee,
-          nonces[_claimData.to]++,
-          _deadline
-        )
-      )
-    );
   }
 
   function _claim(
