@@ -41,11 +41,6 @@ module.exports = class FederationFactory extends ContractFactory {
         }
       }
 
-    createFederatorInstance(web3, address) {
-      const federationContract = this.getContractByAbi(abiFederationV3, address, web3);
-      return new FederationInterfaceV3.IFederationV3(this.config, federationContract);
-    }
-
     async getVersion(federationContract) {
         try {
             return await utils.retry3Times(federationContract.methods.version().call);
@@ -89,10 +84,15 @@ module.exports = class FederationFactory extends ContractFactory {
 
   async getSideFederationNftContract() {
     try {
-      const federationAddress = await utils.retry3Times(this.mainChainNftBridgeContract.methods.getFederation().call);
+      const federationAddress = await utils.retry3Times(this.sideChainNftBridgeContract.methods.getFederation().call);
       return this.createFederatorInstance(this.sideWeb3, federationAddress);
     } catch(err) {
       throw new CustomError(`Exception creating Side Federation NFT Contract`, err);
     }
   }
+
+    createFederatorInstance(web3, address) {
+        const federationContract = this.getContractByAbi(abiFederationV3, address, web3);
+        return new FederationInterfaceV3.IFederationV3(this.config, federationContract);
+    }
 }
