@@ -121,6 +121,40 @@ contract("Bridge NFT", async function(accounts) {
       assert.equal(result, "v1");
     });
 
+    it("should change the Allow Tokens", async function() {
+      const newAllowTokens = await AllowTokens.new();
+      const receipt = await this.NFTBridge.changeAllowTokens(newAllowTokens.address, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "AllowTokensChanged", (ev) => {
+        return (
+          ev._newAllowTokens == newAllowTokens.address
+        );
+      });
+    });
+
+    it("should set the NFT bridge as upgrade", async function() {
+      const receipt = await this.NFTBridge.setUpgrading(true, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "Upgrading", (ev) => {
+        return (
+          ev._isUpgrading
+        );
+      });
+    });
+
+    it("should change the Side Token Factory", async function() {
+      const newSideTokenFactory = await SideNFTTokenFactory.new();
+      const receipt = await this.NFTBridge.changeSideTokenFactory(newSideTokenFactory.address, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "SideTokenFactoryChanged", (ev) => {
+        return (
+          ev._newSideNFTTokenFactory == newSideTokenFactory.address
+        );
+      });
+    });
+
+    it("should get the received selector", async function() {
+      const receipt = await this.NFTBridge.onERC721Received(bridgeOwner, tokenOwner, defaultTokenId, 0);
+      utils.checkRcpt(receipt);
+    });
+
     describe("owner", async function() {
       it("check manager", async function() {
         const manager = await this.NFTBridge.owner();
@@ -316,6 +350,11 @@ contract("Bridge NFT", async function(accounts) {
           });
           utils.checkRcpt(receipt);
 
+          const setFixedFee = await this.NFTBridge.getFixedFee();
+          assert(
+            fixedFee.eq(setFixedFee),
+            "It should have the same fixed fee"
+          );
           await mintAndApprove(this.token, this.NFTBridge.address);
 
           const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
@@ -766,6 +805,30 @@ contract("Bridge NFT", async function(accounts) {
             await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
             await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken)
           });
+
+      it("should claim with the fallback function", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+        const receipt = await this.sideNFTBridge.claimFallback(
+          {
+            to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
+            blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+          },
+          {from: anAccount}
+        );
+
+        truffleAssert.eventEmitted(receipt, claimedNFTTokenEventType, (event) => {
+          return (
+            event._transactionHash === transactionHash &&
+            event._originalTokenAddress === tokenAddress &&
+            event._to === anotherAccount &&
+            event._sender === anAccount &&
+            event._tokenId.eq(new BN(tokenId)) &&
+            event._blockHash === blockHash &&
+            event._logIndex.eq(new BN(logIndex)) &&
+            event._receiver === anAccount
+          );
+        });
+      });
 
       async function assertTokenIsLockedInBridge(bridgeAddress, receiverAddress, token) {
         let bridgeBalance = await token.balanceOf(bridgeAddress);
