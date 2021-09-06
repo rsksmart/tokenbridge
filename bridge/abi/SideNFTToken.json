@@ -169,6 +169,19 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "c__0x55bc0c6e",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0x55bc0c6e",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "contractURI",
     "outputs": [

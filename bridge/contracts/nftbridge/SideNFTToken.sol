@@ -2,15 +2,11 @@
 
 pragma solidity ^0.7.0;
 
-import "../zeppelin/token/ERC721/ERC721.sol";
-import "../interface/IERC1271.sol";
 import "./ISideNFTToken.sol";
-import "../lib/LibEIP712.sol";
+import "../zeppelin/token/ERC721/ERC721.sol";
 import "../zeppelin/token/ERC721/ERC721Burnable.sol";
 
 contract SideNFTToken is ISideNFTToken, ERC721, ERC721Burnable {
-  using Address for address;
-  using SafeMath for uint256;
   address public minter;
   string private _contractURI;
 

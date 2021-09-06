@@ -122,13 +122,13 @@ contract("Bridge NFT", async function(accounts) {
       assert.equal(result, "v1");
     });
 
-    it("should call the token creator", async function () {
+    it("should return expected creator when calling getTokenCreator", async function () {
       const testTokenCreator = await TestTokenCreator.new({ from: anAccount });
       const tokenCreator = await this.NFTBridge.getTokenCreator(testTokenCreator.address, defaultTokenId);
       assert.equal(tokenCreator, anAccount);
     });
 
-    it("should change the Allow Tokens", async function() {
+    it("should change the allow tokens as expected when calling changeAllowTokens", async function() {
       const newAllowTokens = await AllowTokens.new();
       const receipt = await this.NFTBridge.changeAllowTokens(newAllowTokens.address, { from: bridgeManager });
       truffleAssert.eventEmitted(receipt, "AllowTokensChanged", (ev) => {
@@ -138,7 +138,7 @@ contract("Bridge NFT", async function(accounts) {
       });
     });
 
-    it("should set the NFT bridge as upgrade", async function() {
+    it("should emit 'Upgrading' event when calling setUpgrading", async function() {
       const receipt = await this.NFTBridge.setUpgrading(true, { from: bridgeManager });
       truffleAssert.eventEmitted(receipt, "Upgrading", (ev) => {
         return (
@@ -147,7 +147,7 @@ contract("Bridge NFT", async function(accounts) {
       });
     });
 
-    it("should change the Side Token Factory", async function() {
+    it("should emit 'SideTokenFactoryChanged' event when calling changeSideTokenFactory", async function() {
       const newSideTokenFactory = await SideNFTTokenFactory.new();
       const receipt = await this.NFTBridge.changeSideTokenFactory(newSideTokenFactory.address, { from: bridgeManager });
       truffleAssert.eventEmitted(receipt, "SideTokenFactoryChanged", (ev) => {
@@ -357,9 +357,9 @@ contract("Bridge NFT", async function(accounts) {
           });
           utils.checkRcpt(receipt);
 
-          const setFixedFee = await this.NFTBridge.getFixedFee();
+          const currentFixedFee = await this.NFTBridge.getFixedFee();
           assert(
-            fixedFee.eq(setFixedFee),
+            fixedFee.eq(currentFixedFee),
             "It should have the same fixed fee"
           );
           await mintAndApprove(this.token, this.NFTBridge.address);
@@ -837,13 +837,8 @@ contract("Bridge NFT", async function(accounts) {
         });
       });
 
-      it("should check if it was claimed without claiming", async function () {
-        const transactionDataHash = await this.NFTBridge.getTransactionDataHash(anotherAccount, anAccount, tokenId, tokenAddress, blockHash, transactionHash, logIndex);
-        const result = await this.NFTBridge.hasBeenClaimed(transactionDataHash);
-        assert(!result, "The token should not been claimed yet");
-      });
 
-      it("should check if it was claimed successfully", async function () {
+      it("should check if it was claimed successfully when calling hasBeenClaimed", async function () {
         await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
         await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
             tokenAddress, blockHash, transactionHash, logIndex);
@@ -851,7 +846,7 @@ contract("Bridge NFT", async function(accounts) {
         assert(result, "The token should have been claimed");
       });
 
-      it("should check if it has crossed", async function () {
+      it("should check if it has crossed when calling hasCrossed", async function () {
         await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
         await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
             tokenAddress, blockHash, transactionHash, logIndex);
