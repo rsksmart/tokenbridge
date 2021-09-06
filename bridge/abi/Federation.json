@@ -303,6 +303,19 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "c__0x530d1821",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0x530d1821",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_required",
         "type": "uint256"
