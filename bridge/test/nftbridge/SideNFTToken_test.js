@@ -1,8 +1,6 @@
 const SideToken = artifacts.require("./SideNFTToken");
 const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
-const keccak256 = web3.utils.keccak256;
-const ethUtil = require('ethereumjs-util');
 
 contract("SideNFTToken", async function(accounts) {
   const tokenCreator = accounts[0];
