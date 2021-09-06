@@ -72,6 +72,19 @@
   {
     "inputs": [
       {
+        "internalType": "bytes32",
+        "name": "c__0x6b02a5fc",
+        "type": "bytes32"
+      }
+    ],
+    "name": "c_0x6b02a5fc",
+    "outputs": [],
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "newAdmin",
         "type": "address"

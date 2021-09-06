@@ -3,5 +3,5 @@
 pragma solidity ^0.7.0;
 
 interface ISideNFTToken {
-    function mint(address account, uint256 tokenId) external;
+  function mint(address account, uint256 tokenId) external;
 }
