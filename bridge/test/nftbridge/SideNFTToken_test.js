@@ -34,7 +34,23 @@ contract("SideNFTToken", async function(accounts) {
         "SideToken: Empty Minter"
       );
     });
-  });
 
-  // TODO: add tests associated to permit (SideToken_test.js for reference).
+    describe("methods", async function() {
+
+      beforeEach(async function() {
+        this.token = await SideToken.new(
+          tokenName,
+          tokenSymbol,
+          tokenCreator,
+          tokenBaseURI,
+          tokenContractURI
+        );
+      });
+
+      it("should check the contract URI", async function() {
+        const currentContractURI = await this.token.contractURI();
+        assert.equal(currentContractURI, tokenContractURI);
+      });
+    });
+  });
 });
