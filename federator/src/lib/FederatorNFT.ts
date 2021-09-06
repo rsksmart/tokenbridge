@@ -241,7 +241,7 @@ export class FederatorNFT {
         }
 
         const hasVoted: boolean = await fedContract.hasVoted(transactionId, from);
-        if (!hasVoted) {
+        if (hasVoted) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress}  has already been voted by us`,
           );
