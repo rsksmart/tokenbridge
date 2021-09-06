@@ -10,7 +10,11 @@ import BridgeFactory from '../contracts/BridgeFactory';
 import FederationFactory from '../contracts/FederationFactory';
 import utils from './utils';
 
-const NFT_CONFIRMATION_BLOCKS = 5;
+const RSK_TEST_NET_CHAIN_ID = 31;
+const ETH_KOVAN_CHAIN_ID = 42;
+const ETH_MAIN_NET_CHAIN_ID = 1;
+const RSK_MAIN_NET_CHAIN_ID = 30;
+
 export class FederatorNFT {
   public logger: Logger;
   public config: Config;
@@ -20,13 +24,11 @@ export class FederatorNFT {
   public transactionSender: TransactionSender;
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
-  public nftConfirmationsBlocks: number;
   private federatorContract: import('../contracts/IFederationV3').IFederationV3;
 
   constructor(config: Config, logger: Logger, Web3 = web3) {
     this.config = config;
     this.logger = logger;
-    this.nftConfirmationsBlocks = config.nftConfirmations ?? NFT_CONFIRMATION_BLOCKS;
     if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       throw new Error(`Invalid host configuration, https or localhost required`);
     }
@@ -37,6 +39,25 @@ export class FederatorNFT {
     this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
     this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
     this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+  }
+
+  private async getNftConfirmationsForCurrentChainId(): Promise<number> {
+    const chainId = await this.mainWeb3.eth.net.getId();
+    let confirmations = 0;
+    if (chainId == RSK_TEST_NET_CHAIN_ID) {
+      confirmations = 2;
+    }
+    if (chainId == ETH_KOVAN_CHAIN_ID) {
+      confirmations = 10;
+    }
+    if (chainId == ETH_MAIN_NET_CHAIN_ID) {
+      confirmations = 240;
+    }
+    if (chainId == RSK_MAIN_NET_CHAIN_ID) {
+      confirmations = 120;
+    }
+    // TODO: remove nftConfirmations from config everywhere.
+    return confirmations;
   }
 
   get lastBlockPath(): string {
@@ -88,7 +109,7 @@ export class FederatorNFT {
         }
 
         this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
-        const toBlock = currentBlock - this.nftConfirmationsBlocks;
+        const toBlock = currentBlock - (await this.getNftConfirmationsForCurrentChainId());
 
         this.logger.info('Running to Block', toBlock);
 
@@ -141,7 +162,7 @@ export class FederatorNFT {
   async getLogsAndProcess(fromBlock: number, toBlock: number, currentBlock: number): Promise<void> {
     if (fromBlock >= toBlock) return;
 
-    const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+    const mainBridge = await this.bridgeFactory.getMainNftBridgeContract();
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
@@ -171,8 +192,11 @@ export class FederatorNFT {
     try {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const fedContract = await this.getFederator();
-
-      const isMember = await utils.retry3Times(fedContract.isMember(from));
+      this.logger.info('########## IS MEMBER START ##########');
+      this.logger.info(`#### Fed contract: ${fedContract.getAddress()} ####`);
+      this.logger.info(`#### From: ${from} ####`);
+      const isMember = await fedContract.isMember(from);
+      this.logger.info('########## IS MEMBER END ##########');
       if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
 
       for (const log of logs) {
@@ -187,7 +211,7 @@ export class FederatorNFT {
           _originalTokenAddress: originalTokenAddress,
         } = log.returnValues;
 
-        const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+        const mainBridge = await this.bridgeFactory.getMainNftBridgeContract();
         const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(originalTokenAddress).call);
         if (sideTokenAddress == utils.zeroAddress) {
           throw new Error(
@@ -196,9 +220,10 @@ export class FederatorNFT {
         }
 
         const blocksConfirmed = currentBlock - blockNumber;
-        if (blocksConfirmed < this.nftConfirmationsBlocks) {
+        const nftConfirmationsForCurrentChainId = await this.getNftConfirmationsForCurrentChainId();
+        if (blocksConfirmed < nftConfirmationsForCurrentChainId) {
           this.logger.debug(
-            `[NFT] Tx: originalTokenAddress:${originalTokenAddress} won't be proccessed yet ${blocksConfirmed} < ${this.nftConfirmationsBlocks}`,
+            `[NFT] Tx: originalTokenAddress:${originalTokenAddress} won't be proccessed yet ${blocksConfirmed} < ${nftConfirmationsForCurrentChainId}`,
           );
           continue;
         }

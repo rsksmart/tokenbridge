@@ -24,4 +24,8 @@ export class IBridgeNft {
   getVersion(): Promise<string> {
     return this.nftBridgeContract.methods.version().call();
   }
+
+  getMappedToken(originalTokenAddress) {
+    return this.nftBridgeContract.methods.sideTokenAddressByOriginalTokenAddress(originalTokenAddress);
+  }
 }
