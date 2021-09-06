@@ -4,8 +4,8 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
 
   if (bridgeProxy) return;
 
-  let symbol = 'e';
-  if(network.name == 'rskregtest' || network.name == 'rsktestnet' || network.name == 'rskmainnet')
+  let symbol = 'b';
+  if (network.name == 'rskregtest' || network.name == 'rsktestnet' || network.name == 'rskmainnet')
     symbol = 'r'
 
   const MultiSigWallet = await deployments.get('MultiSigWallet');
