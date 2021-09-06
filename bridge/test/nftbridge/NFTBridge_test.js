@@ -1,5 +1,6 @@
 const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
 const NftBridge = artifacts.require("./NFTBridge");
+const TestTokenCreator = artifacts.require("./TestTokenCreator");
 const AllowTokens = artifacts.require("./AllowTokens");
 const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
 const IERC721 = artifacts.require("./IERC721");
@@ -119,6 +120,46 @@ contract("Bridge NFT", async function(accounts) {
     it("should retrieve the version", async function() {
       const result = await this.NFTBridge.version();
       assert.equal(result, "v1");
+    });
+
+    it("should return expected creator when calling getTokenCreator", async function () {
+      const testTokenCreator = await TestTokenCreator.new({ from: anAccount });
+      const tokenCreator = await this.NFTBridge.getTokenCreator(testTokenCreator.address, defaultTokenId);
+      assert.equal(tokenCreator, anAccount);
+    });
+
+    it("should change the allow tokens as expected when calling changeAllowTokens", async function() {
+      const newAllowTokens = await AllowTokens.new();
+      const receipt = await this.NFTBridge.changeAllowTokens(newAllowTokens.address, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "AllowTokensChanged", (ev) => {
+        return (
+          ev._newAllowTokens == newAllowTokens.address
+        );
+      });
+    });
+
+    it("should emit 'Upgrading' event when calling setUpgrading", async function() {
+      const receipt = await this.NFTBridge.setUpgrading(true, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "Upgrading", (ev) => {
+        return (
+          ev._isUpgrading
+        );
+      });
+    });
+
+    it("should emit 'SideTokenFactoryChanged' event when calling changeSideTokenFactory", async function() {
+      const newSideTokenFactory = await SideNFTTokenFactory.new();
+      const receipt = await this.NFTBridge.changeSideTokenFactory(newSideTokenFactory.address, { from: bridgeManager });
+      truffleAssert.eventEmitted(receipt, "SideTokenFactoryChanged", (ev) => {
+        return (
+          ev._newSideNFTTokenFactory == newSideTokenFactory.address
+        );
+      });
+    });
+
+    it("should get the received selector", async function() {
+      const receipt = await this.NFTBridge.onERC721Received(bridgeOwner, tokenOwner, defaultTokenId, 0);
+      utils.checkRcpt(receipt);
     });
 
     describe("owner", async function() {
@@ -316,6 +357,11 @@ contract("Bridge NFT", async function(accounts) {
           });
           utils.checkRcpt(receipt);
 
+          const currentFixedFee = await this.NFTBridge.getFixedFee();
+          assert(
+            fixedFee.eq(currentFixedFee),
+            "It should have the same fixed fee"
+          );
           await mintAndApprove(this.token, this.NFTBridge.address);
 
           const tokenOwnerBalance = await utils.getEtherBalance(tokenOwner);
@@ -766,6 +812,47 @@ contract("Bridge NFT", async function(accounts) {
             await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
             await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken)
           });
+
+      it("should claim with the fallback function", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+        const receipt = await this.sideNFTBridge.claimFallback(
+          {
+            to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
+            blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+          },
+          {from: anAccount}
+        );
+
+        truffleAssert.eventEmitted(receipt, claimedNFTTokenEventType, (event) => {
+          return (
+            event._transactionHash === transactionHash &&
+            event._originalTokenAddress === tokenAddress &&
+            event._to === anotherAccount &&
+            event._sender === anAccount &&
+            event._tokenId.eq(new BN(tokenId)) &&
+            event._blockHash === blockHash &&
+            event._logIndex.eq(new BN(logIndex)) &&
+            event._receiver === anAccount
+          );
+        });
+      });
+
+
+      it("should check if it was claimed successfully when calling hasBeenClaimed", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+        await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
+            tokenAddress, blockHash, transactionHash, logIndex);
+        const result = await this.sideNFTBridge.hasBeenClaimed(transactionHash);
+        assert(result, "The token should have been claimed");
+      });
+
+      it("should check if it has crossed when calling hasCrossed", async function () {
+        await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
+        await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
+            tokenAddress, blockHash, transactionHash, logIndex);
+        const result = await this.sideNFTBridge.hasCrossed(transactionHash);
+        assert(result, "The token should have been crossed");
+      });
 
       async function assertTokenIsLockedInBridge(bridgeAddress, receiverAddress, token) {
         let bridgeBalance = await token.balanceOf(bridgeAddress);
