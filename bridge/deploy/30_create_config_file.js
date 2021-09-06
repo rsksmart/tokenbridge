@@ -10,13 +10,13 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
         return;
     }
     const BridgeProxy = await deployments.get('BridgeProxy');
-    const FederationV2 = federatorProxy ?? await deployments.get('FederationProxy');
+    const FederationProxy = federatorProxy ?? await deployments.get('FederationProxy');
     const MultiSigWallet = await deployments.get('MultiSigWallet');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
     const config = {
         bridge: BridgeProxy.address.toLowerCase(),
-        federation: FederationV2.address.toLowerCase(),
+        federation: FederationProxy.address.toLowerCase(),
         multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
         allowTokens: AllowTokensProxy.address.toLowerCase()
     };
@@ -61,4 +61,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
 };
 module.exports.id = 'create_config_file'; // id required to prevent reexecution
 module.exports.tags = ['CreateConfigFile', 'new'];
-module.exports.dependencies = ['BridgeProxy', 'FederationV2', 'MultiSigWallet', 'AllowTokens'];
+module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokens'];
