@@ -213,7 +213,21 @@ async function transferNFT(originFederators, destinationFederators, config, orig
     const allowTokensContract = new mainChainWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
     const sideMultiSigContract = new mainChainWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
     // TODO: update the allow tokens logic when it's actually used in the bridge (other than for member variable setting).
+
+    // const abiBridge = require('../../bridge/abi/Bridge.json');
+    // const originBridgeContract = new mainChainWeb3.eth.Contract(abiBridge, "0xac4f53c87808f74f98f240867d51ab501c74375a");
     const originNftBridgeContract = new mainChainWeb3.eth.Contract(abiNFTBridge, originNftBridgeAddress);
+
+    // const bridgeFederation = await originBridgeContract.methods.getFederation().call();
+    const nftBridgeFederation = await originNftBridgeContract.methods.getFederation().call();
+    logger.info(`Federation from NFT bridge: ${nftBridgeFederation}`);
+
+    // const abiFederation = require('../../bridge/abi/Federation.json');
+    // const federationContract = new mainChainWeb3.eth.Contract(abiFederation, bridgeFederation);
+    //
+    // let isBridgeMember = await federationContract.methods.isMember(bridgeFederation).call();
+    // let isNftBridgeMember = await federationContract.methods.isMember(nftBidgeFederation).call();
+
     const destinationNftBridgeContract = new sideChainWeb3.eth.Contract(abiNFTBridge, destinationNftBridgeAddress);
 
     let data = '';
@@ -223,7 +237,7 @@ async function transferNFT(originFederators, destinationFederators, config, orig
 
     logger.debug('Get the destination token address');
     // TODO: maybe move constants to top of class.
-    const tokenId = 1;
+    const tokenId = 12;
     const tokenSymbol = 'drop';
     const tokenName = 'The Drops';
     const tokenBaseURI = 'ipfs:/';
@@ -260,7 +274,6 @@ async function transferNFT(originFederators, destinationFederators, config, orig
       const data = methodCall.encodeABI();
       await transactionSender.sendTransaction(originTokenContract.options.address, data, 0, userPrivateKey, true);
     }
-
 
     let receiveTokensToTxReceipt;
     // TODO: receiveTokensTo on bridge
