@@ -25,6 +25,9 @@ cache
 artifacts
 deployments/development
 
+# Waffle
+waffle_flatten
+
 # Coverage directory used by tools like istanbul
 coverage
 *.lcov
