@@ -1,14 +1,16 @@
+const address = require('../hardhat/helper/address');
 
-module.exports = async function({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, proxyAdmin, bridgeProxy, federatorProxy} = await getNamedAccounts();
+module.exports = async function(hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
+  const {deployer, federatorProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
   if (federatorProxy) return;
 
   const FederationV2 = await deployments.get('FederationV2');
-  const proxyAdminAddress = proxyAdmin ?? (await deployments.get('ProxyAdmin')).address;
-  const multiSigAddress = multiSig ?? (await deployments.get('MultiSigWallet')).address;
-  const bridgeProxyAddress = bridgeProxy ?? (await deployments.get('BridgeProxy')).address;
+  const proxyAdminAddress = await address.getProxyAdminAddress(hre);
+  const multiSigAddress = await address.getMultiSigAddress(hre);
+  const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
   const federationConf = getFederationConf(deployer, network);
 
   const federationLogic = new web3.eth.Contract(FederationV2.abi, FederationV2.address);
@@ -31,9 +33,7 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
     log: true
   });
   if (deployProxyResult.newlyDeployed) {
-    log(
-      `Contract FederationProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`
-    );
+    log(`Contract FederationProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
   }
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
