@@ -66,5 +66,5 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   fs.writeFileSync(`../federator/config/${network.name}.json`, JSON.stringify(config, null, 4));
 };
 module.exports.id = 'create_config_file_v3'; // id required to prevent reexecution
-module.exports.tags = ['CreateConfigFileV3', 'new', 'nft'];
+module.exports.tags = ['CreateConfigFileV3', '3.0.0', 'nft'];
 module.exports.dependencies = ['NftBridgeProxy', 'BridgeProxy', 'FederationV3', 'MultiSigWallet', 'AllowTokens'];
