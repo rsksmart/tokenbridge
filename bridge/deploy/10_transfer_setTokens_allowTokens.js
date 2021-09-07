@@ -1,3 +1,5 @@
+const chains = require("../hardhat/helper/chains");
+
 module.exports = async function({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
   const {deployer, multiSig, allowTokensProxy} = await getNamedAccounts();
   const {log} = deployments;
@@ -21,20 +23,28 @@ module.exports.tags = ['AllowTokensProxyTransferSetTokens', 'new'];
 module.exports.dependencies = ['MultiSigWallet', 'AllowTokens', 'AllowTokensProxy'];
 
 async function setTokens(network, allowTokens, deployer) {
-  if (network.name === 'bsctestnet') {
-    await setTokensBscTestnet(allowTokens, deployer);
-  }
-  if (network.name === 'rsktestnet') {
-    await setTokensRskTestnet(allowTokens, deployer);
-  }
-  if (network.name === 'kovan') {
-    await setTokensKovan(allowTokens, deployer);
-  }
-  if (network.name === 'rskmainnet') {
-    await setTokensRskMainnet(allowTokens, deployer);
-  }
-  if (network.name === 'ethmainnet') {
-    await setTokensEthereum(allowTokens, deployer);
+  const chainID = network.config.network_id;
+
+  switch (chainID) {
+    case chains.BSC_TEST_NET_CHAIN_ID:
+      await setTokensBscTestnet(allowTokens, deployer);
+      break;
+
+    case chains.RSK_TEST_NET_CHAIN_ID:
+      await setTokensRskTestnet(allowTokens, deployer);
+      break;
+
+    case chains.KOVAN_TEST_NET_CHAIN_ID:
+      await setTokensKovan(allowTokens, deployer);
+      break;
+
+    case chains.RSK_MAIN_NET_CHAIN_ID:
+      await setTokensRskMainnet(allowTokens, deployer);
+      break;
+
+    case chains.ETHEREUM_MAIN_NET_CHAIN_ID:
+      await setTokensEthereum(allowTokens, deployer);
+      break;
   }
 }
 

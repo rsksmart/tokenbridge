@@ -1,13 +1,12 @@
+const chains = require('../hardhat/helper/chains');
+
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
   const {deployer, multiSig, proxyAdmin, bridgeProxy, sideTokenFactory} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
   if (bridgeProxy) return;
 
-  let symbol = 'b';
-  if (network.name == 'rskregtest' || network.name == 'rsktestnet' || network.name == 'rskmainnet')
-    symbol = 'r'
-
+  const prefixSymbol = chains.tokenSymbol(network);
   const MultiSigWallet = await deployments.get('MultiSigWallet');
   const ProxyAdmin = await deployments.get('ProxyAdmin');
   const Bridge = await deployments.get('Bridge');
@@ -19,7 +18,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     deployer,
     deployer,
     sideTokenFactory ?? SideTokenFactory.address,
-    symbol
+    prefixSymbol
   );
   await methodCall.call({ from: deployer })
 
