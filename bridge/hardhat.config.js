@@ -6,6 +6,7 @@ require('hardhat-deploy');
 require('hardhat-abi-exporter');
 require('hardhat-contract-sizer');
 require('@thinkanddev/hardhat-erc1820-rsk');
+require("@nomiclabs/hardhat-etherscan");
 
 const fs = require('fs');
 const chains = require('./hardhat/helper/chains');
@@ -53,6 +54,9 @@ module.exports = {
     ],
   },
   namedAccounts: getNamedAccounts(),
+  // etherscan: {
+  //   apiKey: "anyapi"
+  // },
   networks: {
     hardhat: {
       live: false,
