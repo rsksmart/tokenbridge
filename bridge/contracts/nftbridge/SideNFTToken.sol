@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
+pragma abicoder v2;
 
 import "./ISideNFTToken.sol";
 import "../zeppelin/token/ERC721/ERC721.sol";
