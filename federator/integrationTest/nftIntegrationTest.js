@@ -116,7 +116,10 @@ async function transferNFT(originFederators, destinationFederators, config, orig
         const destinationNftBridgeContract = new sideChainWeb3.eth.Contract(abiNFTBridge, destinationNftBridgeAddress);
 
         logger.debug('Get the destination token address');
-        const tokenId = 1;
+
+        let tokenSupply = await originTokenContract.methods.totalSupply().call();
+        const tokenId = parseInt(tokenSupply);
+
         const tokenSymbol = 'drop';
         const tokenName = 'The Drops';
         const tokenBaseURI = 'ipfs:/';
@@ -212,7 +215,9 @@ async function transferNFT(originFederators, destinationFederators, config, orig
 
         expectedTokenAmount = 0;
         await assertNFTTokenBalanceForUserIsExpected(originTokenContract, userAddress, expectedTokenAmount);
-        // TODO: assert that address on other side has correct balance
+
+        expectedTokenAmount = 1;
+        await assertNFTTokenBalanceForUserIsExpected(sideTokenContract, userAddress, expectedTokenAmount);
     } catch (err) {
         logger.error('Unhandled error:', err.stack);
         process.exit();
