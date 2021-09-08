@@ -13,9 +13,8 @@ then
     apt-get install jq -Y
 fi
 
-
 print_usage() {
-  printf "Usage: bash verify.sh --n bsctestnet"
+  printf "Usage: bash verify.sh --n {networkName}"
 }
 
 while getopts 'n:v' flag; do
@@ -43,6 +42,8 @@ verifyContractFlag() {
   ARGUMENTS_PATH=arguments.js
   CONTRACT_ADDRESS_STR=$(echo ${CONTRACT_ADDRESS:1:-1})
 
+  echo "module.exports = $CONTRACT_ARGUMENTS;" > $ARGUMENTS_PATH
+
   npx hardhat --network $network_flag verify \
     --contract $CONTRACT_FLAG \
     --constructor-args $ARGUMENTS_PATH \
@@ -51,5 +52,7 @@ verifyContractFlag() {
   rm $ARGUMENTS_PATH
 }
 
-pwd
-verifyContractFlag "./deployments/$network_flag/AllowTokensProxy.json"
+for file in ./deployments/$network_flag/*.json
+do
+  verifyContractFlag $file
+done
