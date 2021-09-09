@@ -9,8 +9,13 @@ import CustomError from './CustomError';
 import BridgeFactory from '../contracts/BridgeFactory';
 import FederationFactory from '../contracts/FederationFactory';
 import utils from './utils';
+import { IFederationV3 } from '../contracts/IFederationV3';
 
-const NFT_CONFIRMATION_BLOCKS = 5;
+const RSK_TEST_NET_CHAIN_ID = 31;
+const ETH_KOVAN_CHAIN_ID = 42;
+const ETH_MAIN_NET_CHAIN_ID = 1;
+const RSK_MAIN_NET_CHAIN_ID = 30;
+
 export class FederatorNFT {
   public logger: Logger;
   public config: Config;
@@ -20,13 +25,11 @@ export class FederatorNFT {
   public transactionSender: TransactionSender;
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
-  public nftConfirmationsBlocks: number;
-  private federatorContract: import('../contracts/IFederationV2');
+  private federatorContract: import('../contracts/IFederationV3').IFederationV3;
 
   constructor(config: Config, logger: Logger, Web3 = web3) {
     this.config = config;
     this.logger = logger;
-    this.nftConfirmationsBlocks = config.nftConfirmations ?? NFT_CONFIRMATION_BLOCKS;
     if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       throw new Error(`Invalid host configuration, https or localhost required`);
     }
@@ -37,6 +40,25 @@ export class FederatorNFT {
     this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
     this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
     this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+  }
+
+  private async getNftConfirmationsForCurrentChainId(): Promise<number> {
+    const chainId = await this.mainWeb3.eth.net.getId();
+    let confirmations = 0;
+    if (chainId == RSK_TEST_NET_CHAIN_ID) {
+      confirmations = 2;
+    }
+    if (chainId == ETH_KOVAN_CHAIN_ID) {
+      confirmations = 10;
+    }
+    if (chainId == ETH_MAIN_NET_CHAIN_ID) {
+      confirmations = 240;
+    }
+    if (chainId == RSK_MAIN_NET_CHAIN_ID) {
+      confirmations = 120;
+    }
+    // TODO: remove nftConfirmations from config everywhere.
+    return confirmations;
   }
 
   get lastBlockPath(): string {
@@ -51,7 +73,7 @@ export class FederatorNFT {
    * get federator as singleton
    * @returns Federator Interface
    */
-  async getFederator(): Promise<import('../contracts/IFederationV2')> {
+  async getFederator(): Promise<import('../contracts/IFederationV3').IFederationV3> {
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }
@@ -88,7 +110,7 @@ export class FederatorNFT {
         }
 
         this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
-        const toBlock = currentBlock - this.nftConfirmationsBlocks;
+        const toBlock = currentBlock - (await this.getNftConfirmationsForCurrentChainId());
 
         this.logger.info('Running to Block', toBlock);
 
@@ -141,7 +163,7 @@ export class FederatorNFT {
   async getLogsAndProcess(fromBlock: number, toBlock: number, currentBlock: number): Promise<void> {
     if (fromBlock >= toBlock) return;
 
-    const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+    const mainBridge = await this.bridgeFactory.getMainNftBridgeContract();
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
@@ -170,10 +192,11 @@ export class FederatorNFT {
   async _processLogs(logs: any, currentBlock: number): Promise<boolean> {
     try {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
-      const fedContract = await this.getFederator();
-
-      const isMember = await utils.retry3Times(fedContract.isMember(from).call);
-      if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
+      const fedContract: IFederationV3 = await this.getFederator();
+      const isMember: boolean = await this.retryNTimes(fedContract.isMember(from));
+      if (!isMember) {
+        throw new Error(`This Federator addr:${from} is not part of the federation`);
+      }
 
       for (const log of logs) {
         this.logger.info('Processing event log:', log);
@@ -187,23 +210,16 @@ export class FederatorNFT {
           _originalTokenAddress: originalTokenAddress,
         } = log.returnValues;
 
-        const mainBridge = await this.bridgeFactory.getMainBridgeContract();
-        const sideTokenAddress = await utils.retry3Times(mainBridge.getMappedToken(originalTokenAddress).call);
-        if (sideTokenAddress == utils.zeroAddress) {
-          throw new Error(
-            `Side token is zero Address Tx:${transactionHash} originalTokenAddress:${originalTokenAddress}`,
-          );
-        }
-
         const blocksConfirmed = currentBlock - blockNumber;
-        if (blocksConfirmed < this.nftConfirmationsBlocks) {
+        const nftConfirmationsForCurrentChainId = await this.getNftConfirmationsForCurrentChainId();
+        if (blocksConfirmed < nftConfirmationsForCurrentChainId) {
           this.logger.debug(
-            `[NFT] Tx: originalTokenAddress:${originalTokenAddress} won't be proccessed yet ${blocksConfirmed} < ${this.nftConfirmationsBlocks}`,
+            `[NFT] Tx: originalTokenAddress:${originalTokenAddress} won't be proccessed yet ${blocksConfirmed} < ${nftConfirmationsForCurrentChainId}`,
           );
           continue;
         }
 
-        const transactionId = await utils.retry3Times(
+        const transactionId = await this.retryNTimes(
           fedContract.getTransactionId({
             originalTokenAddress,
             sender,
@@ -212,11 +228,11 @@ export class FederatorNFT {
             blockHash,
             transactionHash,
             logIndex,
-          }).call,
+          }),
         );
         this.logger.info('get transaction id:', transactionId);
 
-        const wasProcessed = await utils.retry3Times(fedContract.transactionWasProcessed(transactionId).call);
+        const wasProcessed: boolean = await this.retryNTimes(fedContract.transactionWasProcessed(transactionId));
         if (wasProcessed) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress} was already processed`,
@@ -224,8 +240,8 @@ export class FederatorNFT {
           continue;
         }
 
-        const hasVoted = await fedContract.hasVoted(transactionId).call({ from });
-        if (!hasVoted) {
+        const hasVoted: boolean = await fedContract.hasVoted(transactionId, from);
+        if (hasVoted) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress}  has already been voted by us`,
           );
@@ -271,18 +287,16 @@ export class FederatorNFT {
       );
 
       const fedContract = await this.getFederator();
-      const voteTransactionTxData = await fedContract
-        .voteTransaction({
-          originalTokenAddress,
-          sender,
-          receiver,
-          amount: tokenId,
-          blockHash,
-          transactionHash,
-          logIndex,
-          tokenType: utils.tokenType.NFT,
-        })
-        .encodeABI();
+      const voteTransactionTxData = await fedContract.getVoteTransactionABI({
+        originalTokenAddress,
+        sender,
+        receiver,
+        amount: tokenId,
+        blockHash,
+        transactionHash,
+        logIndex,
+        tokenType: utils.tokenType.NFT,
+      });
 
       return await this.handleRevertedTxns(
         originalTokenAddress,
@@ -364,5 +378,32 @@ export class FederatorNFT {
     if (value) {
       fs.writeFileSync(path, value.toString());
     }
+  }
+
+  // TODO: move to typescript utils.
+  async retryNTimes<T>(toTry: Promise<T>, times = 5, intervalInMs = 1000) {
+    if (times < 1) {
+      throw new Error(`Bad argument: 'times' must be greater than 0, but ${times} was received.`);
+    }
+    let attemptCount = 0;
+    while (attemptCount < times) {
+      try {
+        attemptCount++;
+        const result = toTry.then(function (a) {
+          return a;
+        });
+        return result;
+      } catch (error) {
+        if (attemptCount >= times) {
+          throw error;
+        }
+      }
+      await this.sleep(intervalInMs);
+    }
+    throw new Error(`Failed to obtain result after ${times} retries`);
+  }
+
+  sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
