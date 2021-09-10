@@ -169,7 +169,9 @@ module.exports = class Federator {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
       });
-      if (!logs) throw new Error("Failed to obtain the logs");
+      if (!logs) {
+        throw new Error("Failed to obtain the logs");
+      }
 
       this.logger.info(`Found ${logs.length} logs`);
       await this._processLogs(
@@ -196,10 +198,11 @@ module.exports = class Federator {
         await this.allowTokensFactory.getMainAllowTokensContract();
 
       const isMember = await utilsTs.retryNTimes(fedContract.isMember(from));
-      if (!isMember)
+      if (!isMember) {
         throw new Error(
           `This Federator addr:${from} is not part of the federation`
         );
+      }
 
       const { mediumAmountConfirmations, largeAmountConfirmations } =
         confirmations;
@@ -275,7 +278,7 @@ module.exports = class Federator {
           }
         }
 
-        let transactionId = await utilsTs.retryNTimes(
+        const transactionId = await utilsTs.retryNTimes(
           fedContract.getTransactionId({
             originalTokenAddress: tokenAddress,
             sender: crossFrom,
@@ -355,7 +358,7 @@ module.exports = class Federator {
         `Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`
       );
 
-      let txData = await fedContract.getVoteTransactionABI({
+      const txData = await fedContract.getVoteTransactionABI({
         originalTokenAddress: tokenAddress,
         sender,
         receiver,
