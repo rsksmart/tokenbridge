@@ -9,7 +9,7 @@ import CustomError from './CustomError';
 import BridgeFactory from '../contracts/BridgeFactory';
 import FederationFactory from '../contracts/FederationFactory';
 import utils from './utils';
-import * as utilsTs from './utilsTs';
+import * as typescriptUtils from './typescriptUtils';
 import { IFederationV3 } from '../contracts/IFederationV3';
 
 const RSK_TEST_NET_CHAIN_ID = 31;
@@ -194,7 +194,7 @@ export class FederatorNFT {
     try {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const fedContract: IFederationV3 = await this.getFederator();
-      const isMember: boolean = await utilsTs.retryNTimes(fedContract.isMember(from));
+      const isMember: boolean = await typescriptUtils.retryNTimes(fedContract.isMember(from));
       if (!isMember) {
         throw new Error(`This Federator addr:${from} is not part of the federation`);
       }
@@ -220,7 +220,7 @@ export class FederatorNFT {
           continue;
         }
 
-        const transactionId = await utilsTs.retryNTimes(
+        const transactionId = await typescriptUtils.retryNTimes(
           fedContract.getTransactionId({
             originalTokenAddress,
             sender,
@@ -233,7 +233,9 @@ export class FederatorNFT {
         );
         this.logger.info('get transaction id:', transactionId);
 
-        const wasProcessed: boolean = await utilsTs.retryNTimes(fedContract.transactionWasProcessed(transactionId));
+        const wasProcessed: boolean = await typescriptUtils.retryNTimes(
+          fedContract.transactionWasProcessed(transactionId),
+        );
         if (wasProcessed) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress} was already processed`,
