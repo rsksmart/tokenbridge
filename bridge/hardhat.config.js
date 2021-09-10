@@ -201,7 +201,7 @@ function getMultiSigAddressesByChainId() {
   multiSigAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
   multiSigAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a';
   multiSigAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
-  return chains.multiSigAddressesByChainId;
+  return multiSigAddressesByChainId;
 }
 
 function getWrappedCurrencyAddressesByChainId() {
@@ -221,7 +221,7 @@ function getProxyAdminAddressesByChainId() {
   proxyAdminAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
   proxyAdminAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab';
   proxyAdminAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6';
-  return chains.proxyAdminAddressesByChainId;
+  return proxyAdminAddressesByChainId;
 }
 
 function getAllowTokensProxyAddressesByChainId() {
@@ -230,7 +230,7 @@ function getAllowTokensProxyAddressesByChainId() {
   allowTokensProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0xcb789036894a83a008a2aa5b3c2dde41d0605a9a';
   allowTokensProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a';
   allowTokensProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x92bf86334583909b60f9b798a9dd7debd899fec4';
-  return chains.allowTokensProxyAddressesByChainId;
+  return allowTokensProxyAddressesByChainId;
 }
 
 function getBridgeProxyAddressesByChainId() {
@@ -239,7 +239,7 @@ function getBridgeProxyAddressesByChainId() {
   bridgeProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x9d11937e2179dc5270aa86a3f8143232d6da0e69';
   bridgeProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x684a8a976635fb7ad74a0134ace990a6a0fcce84';
   bridgeProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
-  return chains.bridgeProxyAddressesByChainId;
+  return bridgeProxyAddressesByChainId;
 }
 
 function getFederatorProxyAddressesByChainId() {
@@ -248,5 +248,5 @@ function getFederatorProxyAddressesByChainId() {
   federatorProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x7ecfda6072942577d36f939ad528b366b020004b';
   federatorProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
   federatorProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
-  return chains.federatorProxyAddressesByChainId;
+  return federatorProxyAddressesByChainId;
 }
