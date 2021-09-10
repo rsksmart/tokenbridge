@@ -1,0 +1,9 @@
+{
+  "bridge": "0x4ec10A50801f89266F0F1FA7fd3fa320106bBF63",
+  "federation": "0xe450bBE6C28cCd253a56ac24c55E44015e576783",
+  "multiSig": "0x152e364ae8e7e855396ae3aae88a46fd91aa85fb",
+  "allowTokens": "0xd5343aafd8bfe2960d4E832201CB69CD04E531d5",
+  "testToken": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e",
+  "host": "https://public-node.testnet.rsk.co",
+  "fromBlock": 2109700
+}
