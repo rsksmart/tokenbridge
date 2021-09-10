@@ -188,7 +188,7 @@ module.exports = class Heartbeat {
         try {
             const fedContract = await this.federationFactory.getMainFederationContract();
             const from = await this.transactionSender.getAddress(this.config.privateKey);
-            const isMember = await fedContract.isMember(from).call();
+            const isMember = await fedContract.isMember(from);
             if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
 
             this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
