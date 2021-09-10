@@ -38,10 +38,17 @@ async function getAllowTokensProxyAddress(hre) {
   return allowTokensProxy ?? (await deployments.get('AllowTokensProxy')).address;
 }
 
+async function getSideTokenFactoryAddress(hre) {
+  const {deployments} = hre;
+  const {sideTokenFactory} = await getNamedAccountsInstance(hre);
+  return sideTokenFactory ?? (await deployments.get('SideTokenFactory')).address;
+}
+
 module.exports = {
   getProxyAdminAddress: getProxyAdminAddress,
   getMultiSigAddress: getMultiSigAddress,
   getBridgeProxyAddress: getBridgeProxyAddress,
   getFederatorProxyAddress: getFederatorProxyAddress,
   getAllowTokensProxyAddress: getAllowTokensProxyAddress,
+  getSideTokenFactoryAddress: getSideTokenFactoryAddress,
 };

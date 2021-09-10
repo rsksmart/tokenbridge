@@ -54,9 +54,9 @@ module.exports = {
     ],
   },
   namedAccounts: getNamedAccounts(),
-  // etherscan: {
-  //   apiKey: "anyapi"
-  // },
+  etherscan: {
+    apiKey: "YOUR_ETHERSCAN_API_KEY_HERE"
+  },
   networks: {
     hardhat: {
       live: false,
@@ -125,7 +125,7 @@ module.exports = {
       gasPrice: 60000000, // 0.06 gwei
       network_id: chains.RSK_MAIN_NET_CHAIN_ID,
       token_symbol: 'r',
-      hardfork: 'istanbulchainId.', // London hardfork is incompatible with RSK gasPrice
+      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
       accounts: {
         mnemonic: MNEMONIC,
       },
@@ -134,12 +134,11 @@ module.exports = {
     //Ethereum
     kovan: {
       live: true,
-      url: 'wss://kovan.infura.io/ws/v3/' + INFURA_API_KEY,
+      url: 'https://kovan.infura.io/ws/v3/' + INFURA_API_KEY,
       network_id: chains.KOVAN_TEST_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
       gasPrice: 10000000000,
-      websockets: true,
       accounts: {
         mnemonic: MNEMONIC,
       },
@@ -147,12 +146,11 @@ module.exports = {
     },
     ethmainnet: {
       live: true,
-      url: 'wss://mainnet.infura.io/ws/v3/' + INFURA_API_KEY,
+      url: 'https://mainnet.infura.io/ws/v3/' + INFURA_API_KEY,
       network_id: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
       gasPrice: 250000000000,
-      websockets: true,
       accounts: {
         mnemonic: MNEMONIC,
       },
