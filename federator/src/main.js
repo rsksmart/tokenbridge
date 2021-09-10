@@ -25,10 +25,10 @@ if(!config.mainchain || !config.sidechain) {
     process.exit();
 }
 
-if (!config.etherscanApiKey) {
-    logger.error('Etherscan API configuration is required');
-    process.exit();
-}
+// if (!config.etherscanApiKey) {
+//     logger.error('Etherscan API configuration is required');
+//     process.exit();
+// }
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));

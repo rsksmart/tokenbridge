@@ -1,10 +1,10 @@
 {
-    "bridge": "0x7aec56b782c593b312a8c33eefd8e50eef975980",
-    "nftBridge": "0x65b7af91d525f80dc48d2131ebb7a59a5c33250b",
-    "federation": "0xb3d06103af1a68026615e673d46047fab77db0fa",
-    "multiSig": "0xe3848f411587c2c8658a0d6f649e7f1e403873a6",
-    "allowTokens": "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
-    "nftConfirmations": 5,
-    "host": "https://data-seed-prebsc-1-s1.binance.org:8545/",
-    "fromBlock": 12139647
+  "bridge": "0x7aec56b782c593b312a8c33eefd8e50eef975980",
+  "nftBridge": "0x65b7af91d525f80dc48d2131ebb7a59a5c33250b",
+  "federation": "0xb3d06103af1a68026615e673d46047fab77db0fa",
+  "multiSig": "0xe3848f411587c2c8658a0d6f649e7f1e403873a6",
+  "allowTokens": "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
+  "nftConfirmations": 5,
+  "host": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  "fromBlock": 12139647
 }
