@@ -6,7 +6,7 @@ const BridgeFactory = require("../contracts/BridgeFactory");
 const FederationFactory = require("../contracts/FederationFactory");
 const AllowTokensFactory = require("../contracts/AllowTokensFactory");
 const utils = require("./utils");
-const utilsTs = require("./utilsTs");
+const typescriptUtils = require("./typescriptUtils");
 module.exports = class Federator {
   constructor(config, logger, Web3 = web3) {
     this.config = config;
@@ -197,7 +197,7 @@ module.exports = class Federator {
       const allowTokens =
         await this.allowTokensFactory.getMainAllowTokensContract();
 
-      const isMember = await utilsTs.retryNTimes(fedContract.isMember(from));
+      const isMember = await typescriptUtils.retryNTimes(fedContract.isMember(from));
       if (!isMember) {
         throw new Error(
           `This Federator addr:${from} is not part of the federation`
@@ -278,7 +278,7 @@ module.exports = class Federator {
           }
         }
 
-        const transactionId = await utilsTs.retryNTimes(
+        const transactionId = await typescriptUtils.retryNTimes(
           fedContract.getTransactionId({
             originalTokenAddress: tokenAddress,
             sender: crossFrom,
@@ -295,7 +295,7 @@ module.exports = class Federator {
         );
         this.logger.info("get transaction id:", transactionId);
 
-        const wasProcessed = await utilsTs.retryNTimes(
+        const wasProcessed = await typescriptUtils.retryNTimes(
           fedContract.transactionWasProcessed(transactionId)
         );
         if (!wasProcessed) {
