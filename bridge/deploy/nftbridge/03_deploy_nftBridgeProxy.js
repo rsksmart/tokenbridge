@@ -1,30 +1,29 @@
 const nftBridgeProxyName = 'NftBridgeProxy';
 const sideNFTTokenFactoryName = 'SideNFTTokenFactory';
 const utils = require('../../test/utils');
+const chains = require('../../hardhat/helper/chains');
+const address = require('../../hardhat/helper/address');
 
-module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, proxyAdmin, federatorProxy} = await getNamedAccounts()
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
+  const {deployer} = await getNamedAccounts();
   const {deploy, log, execute} = deployments
 
-  let symbolPrefix = 'e';
-  if (network.name === 'rskregtest' || network.name === 'rsktestnet' || network.name === 'rskmainnet') {
-    symbolPrefix = 'r'
-  }
+  const prefixSymbol = chains.tokenSymbol(network);
 
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
-  const ProxyAdmin = await deployments.get('ProxyAdmin');
-  const FederationProxy = await deployments.get('FederationProxy')
+  const multiSigAddress = await address.getMultiSigAddress(hre);
+  const proxyAdminAddress = await address.getProxyAdminAddress(hre);
+  const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
   const SideNFTTokenFactory = await deployments.get(sideNFTTokenFactoryName);
 
   const NFTBridge = await deployments.get('NFTBridge');
   const nftBridge = new web3.eth.Contract(NFTBridge.abi, NFTBridge.address);
-  let multiSigAddress = multiSig ?? MultiSigWallet.address;
   const methodCall = nftBridge.methods.initialize(
     multiSigAddress,
-    federatorProxy ?? FederationProxy.address,
+    federatorProxyAddress,
     utils.NULL_ADDRESS,
     SideNFTTokenFactory.address,
-    symbolPrefix
+    prefixSymbol
   );
   await methodCall.call({ from: deployer }) // call to check if anything is broken
 
@@ -33,7 +32,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     contract: 'TransparentUpgradeableProxy',
     args: [
       NFTBridge.address,
-      proxyAdmin ?? ProxyAdmin.address,
+      proxyAdminAddress,
       methodCall.encodeABI()
     ],
     log: true,
