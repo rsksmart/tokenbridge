@@ -1,9 +1,7 @@
-const abiFederationV1 = require('../../../bridge/abi/FederationV1.json');
 const abiFederationV2 = require('../../../bridge/abi/FederationV2.json');
 const abiFederationV3 = require('../../../bridge/abi/Federation.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
-const FederationInterfaceV1 = require('./IFederationV1.js');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const FederationInterfaceV3 = require('./IFederationV3');
 const CustomError = require('../lib/CustomError');
@@ -33,9 +31,6 @@ module.exports = class FederationFactory extends ContractFactory {
         } else if (version === 'v2') {
           federationContract = this.getContractByAbi(abiFederationV2, address, web3);
           return new FederationInterfaceV2(this.config, federationContract);
-        } else if (version === 'v1') {
-          federationContract = this.getContractByAbi(abiFederationV1, address, web3);
-          return new FederationInterfaceV1(this.config, federationContract);
         } else {
           throw Error('Unknown Federation contract version');
         }

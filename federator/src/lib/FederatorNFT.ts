@@ -9,6 +9,7 @@ import CustomError from './CustomError';
 import BridgeFactory from '../contracts/BridgeFactory';
 import FederationFactory from '../contracts/FederationFactory';
 import utils from './utils';
+import * as utilsTs from './utilsTs';
 import { IFederationV3 } from '../contracts/IFederationV3';
 
 const RSK_TEST_NET_CHAIN_ID = 31;
@@ -193,7 +194,7 @@ export class FederatorNFT {
     try {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const fedContract: IFederationV3 = await this.getFederator();
-      const isMember: boolean = await this.retryNTimes(fedContract.isMember(from));
+      const isMember: boolean = await utilsTs.retryNTimes(fedContract.isMember(from));
       if (!isMember) {
         throw new Error(`This Federator addr:${from} is not part of the federation`);
       }
@@ -219,7 +220,7 @@ export class FederatorNFT {
           continue;
         }
 
-        const transactionId = await this.retryNTimes(
+        const transactionId = await utilsTs.retryNTimes(
           fedContract.getTransactionId({
             originalTokenAddress,
             sender,
@@ -232,7 +233,7 @@ export class FederatorNFT {
         );
         this.logger.info('get transaction id:', transactionId);
 
-        const wasProcessed: boolean = await this.retryNTimes(fedContract.transactionWasProcessed(transactionId));
+        const wasProcessed: boolean = await utilsTs.retryNTimes(fedContract.transactionWasProcessed(transactionId));
         if (wasProcessed) {
           this.logger.debug(
             `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress} was already processed`,
@@ -378,32 +379,5 @@ export class FederatorNFT {
     if (value) {
       fs.writeFileSync(path, value.toString());
     }
-  }
-
-  // TODO: move to typescript utils.
-  async retryNTimes<T>(toTry: Promise<T>, times = 5, intervalInMs = 1000) {
-    if (times < 1) {
-      throw new Error(`Bad argument: 'times' must be greater than 0, but ${times} was received.`);
-    }
-    let attemptCount = 0;
-    while (attemptCount < times) {
-      try {
-        attemptCount++;
-        const result = toTry.then(function (a) {
-          return a;
-        });
-        return result;
-      } catch (error) {
-        if (attemptCount >= times) {
-          throw error;
-        }
-      }
-      await this.sleep(intervalInMs);
-    }
-    throw new Error(`Failed to obtain result after ${times} retries`);
-  }
-
-  sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
