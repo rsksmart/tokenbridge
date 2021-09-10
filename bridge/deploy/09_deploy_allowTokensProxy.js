@@ -6,13 +6,15 @@ const address = require('../hardhat/helper/address');
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments} = hre;
-  const {deployer, proxyAdmin, allowTokensProxy} = await getNamedAccounts();
+  const {deployer, allowTokensProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (allowTokensProxy) return;
+  if (allowTokensProxy) {
+    return;
+  }
 
   const AllowTokens = await deployments.get('AllowTokens');
-  const ProxyAdmin = await deployments.get('ProxyAdmin');
+  const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
 
   const deployedJson = deployHelper.getDeployed(network.name);
@@ -34,7 +36,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     contract: 'TransparentUpgradeableProxy',
     args: [
       AllowTokens.address,
-      proxyAdmin ?? ProxyAdmin.address,
+      proxyAdminAddress,
       methodCall.encodeABI()
     ],
     log: true
