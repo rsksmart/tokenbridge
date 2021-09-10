@@ -2,15 +2,17 @@
 
 network_flag='bsctestnet'
 
-### npx hardhat --network bsctestnet verify --constructor-args ./hardhat/etherscan/arguments.js
-# --contract contracts/zeppelin/upgradable/proxy/TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy
-# 0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944
-
-# is goind to install jq
 if ! command -v jq &> /dev/null
 then
-    echo "jq could not be found, it will install"
+  if cat /etc/*release | grep ^NAME | grep Ubuntu
+  then
+    # is going to install jq
+    echo "jq could not be found, it will try to install"
     apt-get install jq -Y
+  else
+    echo "Is not ubuntu environment, so it's not going to work without jq"
+    exit 1
+  fi
 fi
 
 print_usage() {
@@ -56,3 +58,5 @@ for file in ./deployments/$network_flag/*.json
 do
   verifyContractFlag $file
 done
+
+exit 0

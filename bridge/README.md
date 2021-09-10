@@ -81,6 +81,16 @@ If veryfing the contracts on Rsk Testnet or Mainnet first create the flattened f
 https://www.npmjs.com/package/truffle-flattener
 and then verify it on the explorer
 
+#### Using HardHat
 
+After the deployments usign hardhat deploy, you will be able to verify all the deployed contracts using an script
+```shell
+$~ verify-script -n <networkName>
+```
+> The network name is defined at `hardhat.config.js`
 
+## Contracts
 
+- All the contracts to be deployed from now on should use the [abidecoder v2](https://docs.soliditylang.org/en/v0.8.0/080-breaking-changes.html)
+- So, at the `.sol` contracts add the `pragma abicoder v2;` at the top, right after the pragma solidity version, like this:
+![image](https://user-images.githubusercontent.com/17556614/132871251-29416b98-a6f4-4384-b70a-956e9d1bdf29.png)

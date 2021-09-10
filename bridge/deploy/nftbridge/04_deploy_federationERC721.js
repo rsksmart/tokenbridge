@@ -1,6 +1,9 @@
-module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig} = await getNamedAccounts()
-  const {deploy, log} = deployments
+const address = require('../../hardhat/helper/address');
+
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments} = hre;
+  const {deployer} = await getNamedAccounts();
+  const {deploy, log} = deployments;
 
   const deployResult = await deploy('Federation', {
     from: deployer,
@@ -16,12 +19,13 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   const nftBridgeProxyDeployment = await deployments.get('NftBridgeProxy');
   const federationProxyDeployment = await deployments.get('FederationProxy');
   const multiSigWalletDeployment = await deployments.get('MultiSigWallet');
+  const multiSigAddress = await address.getMultiSigAddress(hre);
 
   const proxyAdminContract = new web3.eth.Contract(proxyAdminDeployment.abi, proxyAdminDeployment.address);
   const methodCallUpdagradeFederationDeployment = proxyAdminContract.methods.upgrade(federationProxyDeployment.address, federationDeployment.address);
-  await methodCallUpdagradeFederationDeployment.call({ from: multiSig ?? multiSigWalletDeployment.address });
+  await methodCallUpdagradeFederationDeployment.call({ from: multiSigAddress });
 
-  const multiSigContract = new web3.eth.Contract(multiSigWalletDeployment.abi, multiSig ?? multiSigWalletDeployment.address);
+  const multiSigContract = new web3.eth.Contract(multiSigWalletDeployment.abi, multiSigAddress);
   await multiSigContract.methods.submitTransaction(
     proxyAdminDeployment.address,
     0,
@@ -31,7 +35,7 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
 
   const federation = new web3.eth.Contract(federationDeployment.abi, federationProxyDeployment.address);
   const methodCallSetNftBridge = federation.methods.setNFTBridge(nftBridgeProxyDeployment.address);
-  await methodCallSetNftBridge.call({ from: multiSig ?? multiSigWalletDeployment.address });
+  await methodCallSetNftBridge.call({ from: multiSigAddress });
   await multiSigContract.methods.submitTransaction(federationProxyDeployment.address, 0, methodCallSetNftBridge.encodeABI())
     .send({ from: deployer });
   log(`MultiSig submitTransaction set the NFT Bridge in the Federator`);
