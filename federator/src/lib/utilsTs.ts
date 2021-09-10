@@ -10,10 +10,7 @@ export const retryNTimes = async (toTry: Promise<any>, times = 5, intervalInMs =
   while (attemptCount < times) {
     try {
       attemptCount++;
-      const result = toTry.then(function (a) {
-        return a;
-      });
-      return result;
+      return await toTry;
     } catch (error) {
       if (attemptCount >= times) {
         throw error;
