@@ -230,7 +230,7 @@ function getAllowTokensProxyAddressesByChainId() {
   let allowTokensProxyAddressesByChainId = {};
   allowTokensProxyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0xa3fc98e0a7a979677bc14d541be770b2cb0a15f3';
   allowTokensProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0xcb789036894a83a008a2aa5b3c2dde41d0605a9a';
-  // allowTokensProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a';
+  allowTokensProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a';
   allowTokensProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x92bf86334583909b60f9b798a9dd7debd899fec4';
   return chains.allowTokensProxyAddressesByChainId;
 }
@@ -239,7 +239,7 @@ function getBridgeProxyAddressesByChainId() {
   let bridgeProxyAddressesByChainId = {};
   bridgeProxyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
   bridgeProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x9d11937e2179dc5270aa86a3f8143232d6da0e69';
-  // bridgeProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x684a8a976635fb7ad74a0134ace990a6a0fcce84';
+  bridgeProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x684a8a976635fb7ad74a0134ace990a6a0fcce84';
   bridgeProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
   return chains.bridgeProxyAddressesByChainId;
 }
@@ -248,7 +248,7 @@ function getFederatorProxyAddressesByChainId() {
   let federatorProxyAddressesByChainId = {};
   federatorProxyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0x5e29c223d99648c88610519f96e85e627b3abe17';
   federatorProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x7ecfda6072942577d36f939ad528b366b020004b';
-  // federatorProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
+  federatorProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
   federatorProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
   return chains.federatorProxyAddressesByChainId;
 }

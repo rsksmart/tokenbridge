@@ -5,7 +5,9 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, federatorProxy} = await getNamedAccounts();
   const {log} = deployments;
 
-  if (federatorProxy) return;
+  if (federatorProxy) {
+    return;
+  }
 
   const Bridge = await deployments.get('Bridge');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
