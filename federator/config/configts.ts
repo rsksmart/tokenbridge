@@ -11,4 +11,5 @@ export class Config {
   runHeartbeatEvery: number; // In hours
   endpointsPort: number; // Server port
   nftConfirmations: number; // number of block confirmations for the nft bridge
+  useNft: boolean;
 }
