@@ -1,25 +1,28 @@
-module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, proxyAdmin, bridgeProxy, sideTokenFactory} = await getNamedAccounts();
+const chains = require('../hardhat/helper/chains');
+const address = require('../hardhat/helper/address');
+
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
+  const {deployer, bridgeProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (bridgeProxy) return;
+  if (bridgeProxy) {
+    return;
+  }
 
-  let symbol = 'e';
-  if(network.name == 'rskregtest' || network.name == 'rsktestnet' || network.name == 'rskmainnet')
-    symbol = 'r'
-
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
-  const ProxyAdmin = await deployments.get('ProxyAdmin');
+  const prefixSymbol = chains.tokenSymbol(network);
   const Bridge = await deployments.get('Bridge');
-  const SideTokenFactory = await deployments.get('SideTokenFactory');
+  const multiSigAddress = await address.getMultiSigAddress(hre);
+  const proxyAdminAddress = await address.getProxyAdminAddress(hre);
+  const sideTokenFactoryAddress = await address.getSideTokenFactoryAddress(hre);
 
   const bridge = new web3.eth.Contract(Bridge.abi, Bridge.address);
   const methodCall = bridge.methods.initialize(
-    multiSig ?? MultiSigWallet.address,
+    multiSigAddress,
     deployer,
     deployer,
-    sideTokenFactory ?? SideTokenFactory.address,
-    symbol
+    sideTokenFactoryAddress,
+    prefixSymbol
   );
   await methodCall.call({ from: deployer })
 
@@ -27,7 +30,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     from: deployer,
     args: [
       Bridge.address,
-      proxyAdmin ?? ProxyAdmin.address,
+      proxyAdminAddress,
       methodCall.encodeABI()
     ],
     log: true,

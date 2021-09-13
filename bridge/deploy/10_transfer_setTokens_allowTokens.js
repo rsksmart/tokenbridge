@@ -1,19 +1,25 @@
-module.exports = async function({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, allowTokensProxy} = await getNamedAccounts();
+const chains = require("../hardhat/helper/chains");
+const address = require('../hardhat/helper/address');
+
+module.exports = async function(hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
+  const {deployer, allowTokensProxy} = await getNamedAccounts();
   const {log} = deployments;
 
-  if (allowTokensProxy) return;
+  if (allowTokensProxy) {
+    return;
+  }
 
   const AllowTokens = await deployments.get('AllowTokens');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
+  const multiSigAddress = await address.getMultiSigAddress(hre);
 
   await setTokens(network, allowTokens, deployer);
   log(`AllowTokens Setted Tokens`);
 
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
-  //Set multisig as the owner
-  await allowTokens.methods.transferOwnership(multiSig ?? MultiSigWallet.address).send({from: deployer});
+  // Set multisig as the owner
+  await allowTokens.methods.transferOwnership(multiSigAddress).send({from: deployer});
   log(`AllowTokens Transfered Ownership to MultiSigWallet`);
 };
 module.exports.id = 'transfer_set_tokens_allow_tokens'; // id required to prevent reexecution
@@ -21,17 +27,28 @@ module.exports.tags = ['AllowTokensProxyTransferSetTokens', 'new'];
 module.exports.dependencies = ['MultiSigWallet', 'AllowTokens', 'AllowTokensProxy'];
 
 async function setTokens(network, allowTokens, deployer) {
-  if (network.name === 'rsktestnet') {
-    await setTokensRskTestnet(allowTokens, deployer);
-  }
-  if (network.name === 'kovan') {
-    await setTokensKovan(allowTokens, deployer);
-  }
-  if (network.name === 'rskmainnet') {
-    await setTokensRskMainnet(allowTokens, deployer);
-  }
-  if (network.name === 'ethmainnet') {
-    await setTokensEthereum(allowTokens, deployer);
+  const chainID = network.config.network_id;
+
+  switch (chainID) {
+    case chains.BSC_TEST_NET_CHAIN_ID:
+      await setTokensBscTestnet(allowTokens, deployer);
+      break;
+
+    case chains.RSK_TEST_NET_CHAIN_ID:
+      await setTokensRskTestnet(allowTokens, deployer);
+      break;
+
+    case chains.KOVAN_TEST_NET_CHAIN_ID:
+      await setTokensKovan(allowTokens, deployer);
+      break;
+
+    case chains.RSK_MAIN_NET_CHAIN_ID:
+      await setTokensRskMainnet(allowTokens, deployer);
+      break;
+
+    case chains.ETHEREUM_MAIN_NET_CHAIN_ID:
+      await setTokensEthereum(allowTokens, deployer);
+      break;
   }
 }
 
@@ -69,6 +86,18 @@ async function setTokensKovan(allowTokens, deployer) {
     {token: '0x69f6d4d4813f8e2e618dae7572e04b6d5329e207', typeId: '5'}, //eRIF
     {token: '0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa', typeId: '4'}, //eDOC
     {token: '0xB3c9ec8833bfA0d382a183EcED27aBc079520928', typeId: '0'} //eBPro
+  ]).send({from: deployer});
+}
+
+async function setTokensBscTestnet(allowTokens, deployer) {
+  await allowTokens.methods.setMultipleTokens([
+    {token: '0x6ce8da28e2f864420840cf74474eff5fd80e65b8', typeId: '0'}, //BTC
+    {token: '0x8babbb98678facc7342735486c851abd7a0d17ca', typeId: '1'}, //ETH
+    {token: '0xae13d989dac2f0debff460ac112a837c89baa7cd', typeId: '2'}, //BNB
+    {token: '0x5d47b6e7edfc82e2ecd481b3db70d0f6600fdef8', typeId: '4'}, //USDC
+    {token: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', typeId: '4'}, //USDT
+    {token: '0x110887fc420292dce51c08504cee377872d0db66', typeId: '4'}, //BUSD
+    {token: '0x13878644c0f2c9c5c8a85da43ebc3bb74bbc05a9', typeId: '4'}, //DAI
   ]).send({from: deployer});
 }
 

@@ -1,19 +1,21 @@
-module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-  const {deployer, multiSig, allowTokensProxy, bridgeProxy} = await getNamedAccounts()
+const address = require('../hardhat/helper/address');
+
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments} = hre;
+  const {deployer, allowTokensProxy} = await getNamedAccounts()
   const {log} = deployments
 
   if (allowTokensProxy) return
 
   const Bridge = await deployments.get('Bridge');
-  const BridgeProxy = await deployments.get('BridgeProxy');
-  const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 
-  const multiSigAddress =  multiSig ?? MultiSigWallet.address;
-  const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
-  const allowTokensAddress = allowTokensProxy ?? AllowTokensProxy.address
-  const bridgeProxyAddress = bridgeProxy ?? BridgeProxy.address
+  const multiSigAddress =  await address.getMultiSigAddress(hre);
+  const allowTokensAddress = await address.getAllowTokensProxyAddress(hre);
+  const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
+
   const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
+  const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
   const methodCall = bridge.methods.changeAllowTokens(allowTokensAddress);
   await methodCall.call({ from: multiSigAddress });

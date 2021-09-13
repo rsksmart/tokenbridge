@@ -1,25 +1,28 @@
-module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-    const {deployer, multiSig, federationAddressProxy, bridgeProxy} = await getNamedAccounts()
-    const {log} = deployments
+const address = require('../hardhat/helper/address');
 
-    if (federationAddressProxy) return
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments} = hre;
+  const {deployer, federatorProxy} = await getNamedAccounts();
+  const {log} = deployments;
 
-    const Bridge = await deployments.get('Bridge');
-    const BridgeProxy = await deployments.get('BridgeProxy');
-    const FederationProxy = await deployments.get('FederationProxy');
-    const MultiSigWallet = await deployments.get('MultiSigWallet');
+  if (federatorProxy) {
+    return;
+  }
 
-    const bridgeProxyAddress = bridgeProxy ?? BridgeProxy.address
-    const federationProxyAddress = federationAddressProxy ?? FederationProxy.address
-    const multiSigAddress =  multiSig ?? MultiSigWallet.address
+  const Bridge = await deployments.get('Bridge');
+  const MultiSigWallet = await deployments.get('MultiSigWallet');
 
-    const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
-    const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
+  const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
+  const federationProxyAddress = await address.getFederatorProxyAddress(hre);
+  const multiSigAddress =  await address.getMultiSigAddress(hre);
 
-    const methodCall = bridge.methods.changeFederation(federationProxyAddress);
-    await methodCall.call({ from: multiSigAddress });
-    await multiSigContract.methods.submitTransaction(bridgeProxyAddress, 0, methodCall.encodeABI()).send({ from: deployer });
-    log(`MultiSig submitTransaction Change Federation in the Bridge`);
+  const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
+  const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
+
+  const methodCall = bridge.methods.changeFederation(federationProxyAddress);
+  await methodCall.call({ from: multiSigAddress });
+  await multiSigContract.methods.submitTransaction(bridgeProxyAddress, 0, methodCall.encodeABI()).send({ from: deployer });
+  log(`MultiSig submitTransaction Change Federation in the Bridge`);
 };
 module.exports.id = 'transfer_federation_to_bridge'; // id required to prevent reexecution
 module.exports.tags = ['TransferFederationToBridge', 'new'];
