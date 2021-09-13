@@ -1,35 +1,38 @@
 const fs = require('fs');
-const hardhatConfig = require('../../hardhat.config');
 const toWei = web3.utils.toWei;
+const hardhatConfig = require('../../hardhat.config');
+const address = require('../../hardhat/helper/address');
 
-module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
-    const {deployer, multiSig} = await getNamedAccounts();
-    const {log} = deployments;
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
+  const {deployer} = await getNamedAccounts();
+  const {log} = deployments;
 
-    if (network.name === 'soliditycoverage' || network.name === 'hardhat') {
-      return;
-    }
-    const BridgeProxy = await deployments.get('BridgeProxy');
-    const NftBridgeProxy = await deployments.get('NftBridgeProxy');
-    const FederationProxy = await deployments.get('FederationProxy');
-    const MultiSigWallet = await deployments.get('MultiSigWallet');
-    const AllowTokensProxy = await deployments.get('AllowTokensProxy');
+  if (network.name === 'soliditycoverage' || network.name === 'hardhat') {
+    return;
+  }
+  const BridgeProxy = await deployments.get('BridgeProxy');
+  const NftBridgeProxy = await deployments.get('NftBridgeProxy');
+  const FederationProxy = await deployments.get('FederationProxy');
+  const MultiSigWallet = await deployments.get('MultiSigWallet');
+  const AllowTokensProxy = await deployments.get('AllowTokensProxy');
+  const multiSigAddress = await address.getMultiSigAddress(hre);
 
-    const config = {
-      bridge: BridgeProxy.address.toLowerCase(),
-      nftBridge: NftBridgeProxy.address.toLowerCase(),
-      federation: FederationProxy.address.toLowerCase(),
-      multiSig: multiSig ?? MultiSigWallet.address.toLowerCase(),
-      allowTokens: AllowTokensProxy.address.toLowerCase(),
-      nftConfirmations: 5
-    };
+  const config = {
+    bridge: BridgeProxy.address.toLowerCase(),
+    nftBridge: NftBridgeProxy.address.toLowerCase(),
+    federation: FederationProxy.address.toLowerCase(),
+    multiSig: multiSigAddress.toLowerCase(),
+    allowTokens: AllowTokensProxy.address.toLowerCase(),
+    nftConfirmations: 5
+  };
 
   log(`New federation address: ${config.federation}`);
 
   if (!network.live) {
     const AllowTokens = await deployments.get('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
-    const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSig ?? MultiSigWallet.address);
+    const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
     const MainToken = await deployments.get('MainToken');
     config.testToken = MainToken.address.toLowerCase();
@@ -66,5 +69,5 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   fs.writeFileSync(`../federator/config/${network.name}.json`, JSON.stringify(config, null, 4));
 };
 module.exports.id = 'create_config_file_v3'; // id required to prevent reexecution
-module.exports.tags = ['CreateConfigFileV3', 'new', 'nft'];
+module.exports.tags = ['CreateConfigFileV3', '3.0.0', 'nft'];
 module.exports.dependencies = ['NftBridgeProxy', 'BridgeProxy', 'FederationV3', 'MultiSigWallet', 'AllowTokens'];

@@ -1,26 +1,29 @@
 // We are actually gonna use the latest Bridge but truffle only knows the address of the proxy
 const toWei = web3.utils.toWei;
 const deployHelper = require('../deployed/deployHelper');
+const chains = require('../hardhat/helper/chains');
+const address = require('../hardhat/helper/address');
 
-module.exports = async function({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
-  const {deployer, proxyAdmin, allowTokensProxy, bridgeProxy} = await getNamedAccounts();
+module.exports = async function(hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments} = hre;
+  const {deployer, allowTokensProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (allowTokensProxy) return;
+  if (allowTokensProxy) {
+    return;
+  }
 
   const AllowTokens = await deployments.get('AllowTokens');
-  const ProxyAdmin = await deployments.get('ProxyAdmin');
-  const BridgeProxy = await deployments.get('BridgeProxy');
+  const proxyAdminAddress = await address.getProxyAdminAddress(hre);
+  const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
 
   const deployedJson = deployHelper.getDeployed(network.name);
-  const typesInfo = network.name === 'rskmainnet' || network.name === 'ethmainnet'
-    ? tokensTypesMainnet()
-    : tokensTypesTestnet();
+  const typesInfo = chains.isMainet(network) ? tokensTypesMainnet() : tokensTypesTestnet();
 
   const allowTokensLogic = new web3.eth.Contract(AllowTokens.abi, AllowTokens.address);
   const methodCall = allowTokensLogic.methods.initialize(
     deployer,
-    bridgeProxy ?? BridgeProxy.address,
+    bridgeProxyAddress,
     deployedJson.smallAmountConfirmations ?? '0',
     deployedJson.mediumAmountConfirmations ?? '0',
     deployedJson.largeAmountConfirmations ?? '0',
@@ -33,7 +36,7 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
     contract: 'TransparentUpgradeableProxy',
     args: [
       AllowTokens.address,
-      proxyAdmin ?? ProxyAdmin.address,
+      proxyAdminAddress,
       methodCall.encodeABI()
     ],
     log: true

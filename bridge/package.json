@@ -17,7 +17,8 @@
     "deploy": "npx hardhat deploy --show-stack-traces --network",
     "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
     "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment",
-    "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest"
+    "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest",
+    "verifyDeployments": "bash hardhat/script/verify.sh"
   },
   "keywords": [
     "rsk",
@@ -52,10 +53,12 @@
     "truffle-plugin-verify": "^0.5.9"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "axios": ">=0.21.1",
     "coveralls": "^3.1.1",
     "css-what": ">=5.0.1",
     "elliptic": ">=6.5.4",
+    "ethereum-waffle": "^3.4.0",
     "glob-parent": ">=5.1.2",
     "hardhat-abi-exporter": "^2.2.1",
     "node-fetch": ">=2.6.1",
