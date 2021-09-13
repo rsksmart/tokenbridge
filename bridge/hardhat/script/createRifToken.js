@@ -12,8 +12,8 @@ async function main() {
     {
       name: 'RifToken',
       symbol: 'tRIF',
-      typeId: 1,
-      originalTokenAddress: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5',
+      typeId: 5,
+      originalTokenAddress: '0x19F64674D8A5B4E652319F5e239eFd3bc969A1fE',
     }
   ];
 
