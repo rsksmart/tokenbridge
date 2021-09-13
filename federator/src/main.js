@@ -61,23 +61,28 @@ async function run() {
     await mainFederator.run();
     await sideFederator.run();
 
-    if (config.useNft) {
-      if (config.mainchain.nftBridge == null) {
-        throw new CustomError('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
-      }
-      await mainFederatorNFT.run();
-
-      if (config.sidechain.nftBridge == null) {
-        throw new CustomError('Side Federator NFT Bridge empty at config.sidechain.nftBridge');
-      }
-      await sideFederatorNFT.run();
-    }
+    await runNftFederator();
 
     await heartbeat.readLogs();
   } catch(err) {
     logger.error('Unhandled Error on run()', err);
     process.exit();
   }
+}
+
+async function runNftFederator() {
+  if (!config.useNft) {
+    return;
+  }
+  if (config.mainchain.nftBridge == null) {
+    throw new CustomError('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
+  }
+  await mainFederatorNFT.run();
+
+  if (config.sidechain.nftBridge == null) {
+    throw new CustomError('Side Federator NFT Bridge empty at config.sidechain.nftBridge');
+  }
+  await sideFederatorNFT.run();
 }
 
 async function scheduleHeartbeatProcesses() {
