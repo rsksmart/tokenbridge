@@ -62,21 +62,20 @@ export class IFederationV3 {
     return this.federationContract.options.address;
   }
 
-  getPastEvents(eventName: string, options: any, from: string): Promise<any> {
-    return this.federationContract.getPastEvents(eventName, options).call({ from });
+  getPastEvents(eventName: string, options: any): Promise<[any]> {
+    return this.federationContract.getPastEvents(eventName, options);
   }
 
-  async emitHeartbeat(txSender, fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo) {
+  async emitHeartbeat(txSender, fedRskBlock, fedEthBlock, fedVersion, nodeRskInfo, nodeEthInfo) {
     const emitHeartbeat = await this.federationContract.methods.emitHeartbeat(
       fedRskBlock,
       fedEthBlock,
-      fedVSN,
+      fedVersion,
       nodeRskInfo,
       nodeEthInfo,
     );
 
     const txData = emitHeartbeat.encodeABI();
-
     await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
   }
 }
