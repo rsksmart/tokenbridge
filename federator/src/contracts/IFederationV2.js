@@ -40,8 +40,7 @@ module.exports = class IFederationV2 {
       paramsObj.amount,
       paramsObj.blockHash,
       paramsObj.transactionHash,
-      paramsObj.logIndex,
-      paramsObj.tokenType,
+      paramsObj.logIndex
     ).encodeABI();
   }
 
@@ -49,11 +48,11 @@ module.exports = class IFederationV2 {
     return this.federationContract.options.address;
   }
 
-  getPastEvents(eventName, options, from) {
+  getPastEvents(eventName, options) {
     return this.federationContract.getPastEvents(
       eventName,
       options
-    ).call({ from });
+    );
   }
 
   async emitHeartbeat(

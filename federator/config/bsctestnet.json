@@ -6,5 +6,5 @@
   "allowTokens": "0x8c1901c031cdf42a846c0c422a3b5a2c943f4944",
   "nftConfirmations": 5,
   "host": "https://data-seed-prebsc-1-s1.binance.org:8545/",
-  "fromBlock": 12139647
+  "fromBlock": 12129647
 }
