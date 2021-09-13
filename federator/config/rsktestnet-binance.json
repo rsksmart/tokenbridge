@@ -4,6 +4,6 @@
   "multiSig": "0x152e364ae8e7e855396ae3aae88a46fd91aa85fb",
   "allowTokens": "0xd5343aafd8bfe2960d4E832201CB69CD04E531d5",
   "testToken": "0x09b6ca5e4496238a1f176aea6bb607db96c2286e",
-  "host": "xxxx",
+  "host": "<Your private node url and port>",
   "fromBlock": 2109700
 }
