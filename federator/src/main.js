@@ -21,92 +21,98 @@ const StatusServer = require('./lib/Endpoints.js');
 StatusServer.init(logger);
 
 if(!config.mainchain || !config.sidechain) {
-    logger.error('Mainchain and Sidechain configuration are required');
-    process.exit();
+  logger.error('Mainchain and Sidechain configuration are required');
+  process.exit();
 }
 
 if (!config.etherscanApiKey) {
-    logger.error('Etherscan API configuration is required');
-    process.exit();
+  logger.error('Etherscan API configuration is required');
+  process.exit();
 }
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederator = new Federator({
-    ...config,
-    mainchain: config.sidechain,
-    sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/side-fed`
+  ...config,
+  mainchain: config.sidechain,
+  sidechain: config.mainchain,
+  storagePath: `${config.storagePath}/side-fed`
 }, log4js.getLogger('SIDE-FEDERATOR'));
 const mainFederatorNFT = new FederatorNFT.FederatorNFT({
   ...config,
   storagePath: `${config.storagePath}/nft`
 }, log4js.getLogger('MAIN-FEDERATOR'));
 const sideFederatorNFT = new FederatorNFT.FederatorNFT({
-    ...config,
-    mainchain: config.sidechain,
-    sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/nft/side-fed`
+  ...config,
+  mainchain: config.sidechain,
+  sidechain: config.mainchain,
+  storagePath: `${config.storagePath}/nft/side-fed`
 }, log4js.getLogger('SIDE-FEDERATOR'));
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
 
 scheduler.start().catch((err) => {
-    logger.error('Unhandled Error on start()', err);
+  logger.error('Unhandled Error on start()', err);
 });
 
 async function run() {
-    try {
-        await mainFederator.run();
-        await sideFederator.run();
+  try {
+    await mainFederator.run();
+    await sideFederator.run();
 
-        if (config.mainchain.nftBridge == null) {
-          throw new CustomError('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
-        }
-        await mainFederatorNFT.run();
+    await runNftFederator();
 
-        if (config.sidechain.nftBridge == null) {
-          throw new CustomError('Side Federator NFT Bridge empty at config.sidechain.nftBridge');
-        }
-        await sideFederatorNFT.run();
-
-        await heartbeat.readLogs();
-    } catch(err) {
-        logger.error('Unhandled Error on run()', err);
-        process.exit();
-    }
+    await heartbeat.readLogs();
+  } catch(err) {
+    logger.error('Unhandled Error on run()', err);
+    process.exit();
+  }
 }
 
+async function runNftFederator() {
+  if (!config.useNft) {
+    return;
+  }
+  if (config.mainchain.nftBridge == null) {
+    throw new CustomError('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
+  }
+  await mainFederatorNFT.run();
+
+  if (config.sidechain.nftBridge == null) {
+    throw new CustomError('Side Federator NFT Bridge empty at config.sidechain.nftBridge');
+  }
+  await sideFederatorNFT.run();
+}
 
 async function scheduleHeartbeatProcesses() {
-    const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval({
-      host: config.mainchain.host,
-      runHeartbeatEvery: config.runHeartbeatEvery
-    });
+  const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval({
+    host: config.mainchain.host,
+    runHeartbeatEvery: config.runHeartbeatEvery
+  });
 
-    const heartBeatScheduler = new Scheduler(
-        heartBeatPollingInterval, logger, {
-            run: async function() {
-                try {
-                    await heartbeat.run();
-                } catch(err) {
-                    logger.error('Unhandled Error on runHeartbeat()', err);
-                    process.exit();
-                }
-            }
+  const heartBeatScheduler = new Scheduler(
+    heartBeatPollingInterval, logger, {
+      run: async function() {
+        try {
+            await heartbeat.run();
+        } catch(err) {
+            logger.error('Unhandled Error on runHeartbeat()', err);
+            process.exit();
         }
-    );
+      }
+    }
+  );
 
-    heartBeatScheduler.start().catch((err) => {
-        logger.error('Unhandled Error on start()', err);
-    });
+  heartBeatScheduler.start().catch((err) => {
+    logger.error('Unhandled Error on start()', err);
+  });
 }
 
 scheduleHeartbeatProcesses();
 
 async function exitHandler() {
-    process.exit();
+  process.exit();
 }
 
 // catches ctrl+c event
