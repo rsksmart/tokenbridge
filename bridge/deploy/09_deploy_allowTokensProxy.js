@@ -18,7 +18,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
 
   const deployedJson = deployHelper.getDeployed(network.name);
-  const typesInfo = chains.isMainet(network) ? tokensTypesMainnet() : tokensTypesTestnet();
+  const typesInfo = chains.isMainnet(network) ? tokensTypesMainnet() : tokensTypesTestnet();
 
   const allowTokensLogic = new web3.eth.Contract(AllowTokens.abi, AllowTokens.address);
   const methodCall = allowTokensLogic.methods.initialize(
