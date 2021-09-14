@@ -1,0 +1,1094 @@
+{
+  "address": "0xdc8E3000ED0aCAC926A37ead0f0B0F675182AC3b",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "bridge",
+          "type": "address"
+        }
+      ],
+      "name": "BridgeChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "federator",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "transactionHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "originalTokenAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "blockHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "logIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "Executed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fedRskBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "fedEthBlock",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "federatorVersion",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "nodeRskInfo",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "nodeEthInfo",
+          "type": "string"
+        }
+      ],
+      "name": "HeartBeat",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "member",
+          "type": "address"
+        }
+      ],
+      "name": "MemberAddition",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "member",
+          "type": "address"
+        }
+      ],
+      "name": "MemberRemoval",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "bridgeNFT",
+          "type": "address"
+        }
+      ],
+      "name": "NFTBridgeChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previousOwner",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "OwnershipTransferred",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "required",
+          "type": "uint256"
+        }
+      ],
+      "name": "RequirementChange",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "federator",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "transactionHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "originalTokenAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "blockHash",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint32",
+          "name": "logIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "Voted",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_MEMBER_COUNT",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_newMember",
+          "type": "address"
+        }
+      ],
+      "name": "addMember",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "bridge",
+      "outputs": [
+        {
+          "internalType": "contract IBridge",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "bridgeNFT",
+      "outputs": [
+        {
+          "internalType": "contract INFTBridge",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_required",
+          "type": "uint256"
+        }
+      ],
+      "name": "changeRequirement",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "fedRskBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "fedEthBlock",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "federatorVersion",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "nodeRskInfo",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "nodeEthInfo",
+          "type": "string"
+        }
+      ],
+      "name": "emitHeartbeat",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getMembers",
+      "outputs": [
+        {
+          "internalType": "address[]",
+          "name": "",
+          "type": "address[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getTransactionCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "originalTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blockHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "transactionHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "logIndex",
+          "type": "uint32"
+        }
+      ],
+      "name": "getTransactionId",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "hasVoted",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address[]",
+          "name": "_members",
+          "type": "address[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_required",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_bridge",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "owner",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_bridgeNFT",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        }
+      ],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isMember",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isOwner",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "members",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "processed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_oldMember",
+          "type": "address"
+        }
+      ],
+      "name": "removeMember",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "renounceOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "required",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_bridge",
+          "type": "address"
+        }
+      ],
+      "name": "setBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "_bridgeNFT",
+          "type": "address"
+        }
+      ],
+      "name": "setNFTBridge",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "transactionWasProcessed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "version",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "",
+          "type": "string"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "originalTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "internalType": "address payable",
+          "name": "receiver",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "blockHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "bytes32",
+          "name": "transactionHash",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "uint32",
+          "name": "logIndex",
+          "type": "uint32"
+        },
+        {
+          "internalType": "enum IFederation.TokenType",
+          "name": "tokenType",
+          "type": "uint8"
+        }
+      ],
+      "name": "voteTransaction",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "votes",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "transactionHash": "0x493fb51022e5f353fd75de3e7cd5393d274011cd7a5f7843a5e47170a3ec3687",
+  "receipt": {
+    "to": null,
+    "from": "0x2b3058eAb56FB80b53f3137422189E940EeFe31b",
+    "contractAddress": "0xdc8E3000ED0aCAC926A37ead0f0B0F675182AC3b",
+    "transactionIndex": 2,
+    "gasUsed": "1700428",
+    "logsBloom": "0x00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "blockHash": "0xebc2fd40d364b3616e9b02286807ca2f6e71179901f6c0d8077ccdf181f85dce",
+    "transactionHash": "0x493fb51022e5f353fd75de3e7cd5393d274011cd7a5f7843a5e47170a3ec3687",
+    "logs": [],
+    "blockNumber": 9269458,
+    "cumulativeGasUsed": "2341463",
+    "status": 1,
+    "byzantium": true
+  },
+  "args": [],
+  "solcInputHash": "f57b3a626f709a0447a665aac92698b7",
+  "metadata": "{\"compiler\":{\"version\":\"0.7.6+commit.7338295f\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"bridge\",\"type\":\"address\"}],\"name\":\"BridgeChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"federator\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"transactionHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"transactionId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"originalTokenAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"receiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"blockHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"logIndex\",\"type\":\"uint32\"}],\"name\":\"Executed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"fedRskBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"fedEthBlock\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"federatorVersion\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"nodeRskInfo\",\"type\":\"string\"},{\"indexed\":false,\"internalType\":\"string\",\"name\":\"nodeEthInfo\",\"type\":\"string\"}],\"name\":\"HeartBeat\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"member\",\"type\":\"address\"}],\"name\":\"MemberAddition\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"member\",\"type\":\"address\"}],\"name\":\"MemberRemoval\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"bridgeNFT\",\"type\":\"address\"}],\"name\":\"NFTBridgeChanged\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"previousOwner\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"OwnershipTransferred\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"required\",\"type\":\"uint256\"}],\"name\":\"RequirementChange\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"address\",\"name\":\"federator\",\"type\":\"address\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"transactionHash\",\"type\":\"bytes32\"},{\"indexed\":true,\"internalType\":\"bytes32\",\"name\":\"transactionId\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"originalTokenAddress\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"receiver\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"bytes32\",\"name\":\"blockHash\",\"type\":\"bytes32\"},{\"indexed\":false,\"internalType\":\"uint32\",\"name\":\"logIndex\",\"type\":\"uint32\"}],\"name\":\"Voted\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"MAX_MEMBER_COUNT\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_newMember\",\"type\":\"address\"}],\"name\":\"addMember\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"bridge\",\"outputs\":[{\"internalType\":\"contract IBridge\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"bridgeNFT\",\"outputs\":[{\"internalType\":\"contract INFTBridge\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"_required\",\"type\":\"uint256\"}],\"name\":\"changeRequirement\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"fedRskBlock\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"fedEthBlock\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"federatorVersion\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"nodeRskInfo\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"nodeEthInfo\",\"type\":\"string\"}],\"name\":\"emitHeartbeat\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getMembers\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"\",\"type\":\"address[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"transactionId\",\"type\":\"bytes32\"}],\"name\":\"getTransactionCount\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"originalTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"receiver\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"blockHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"transactionHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint32\",\"name\":\"logIndex\",\"type\":\"uint32\"}],\"name\":\"getTransactionId\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"transactionId\",\"type\":\"bytes32\"}],\"name\":\"hasVoted\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"_members\",\"type\":\"address[]\"},{\"internalType\":\"uint256\",\"name\":\"_required\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"_bridge\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"owner\",\"type\":\"address\"},{\"internalType\":\"address\",\"name\":\"_bridgeNFT\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"sender\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"isMember\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isOwner\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"members\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"processed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_oldMember\",\"type\":\"address\"}],\"name\":\"removeMember\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"renounceOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"required\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_bridge\",\"type\":\"address\"}],\"name\":\"setBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"_bridgeNFT\",\"type\":\"address\"}],\"name\":\"setNFTBridge\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"transactionId\",\"type\":\"bytes32\"}],\"name\":\"transactionWasProcessed\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"newOwner\",\"type\":\"address\"}],\"name\":\"transferOwnership\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"version\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"pure\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"originalTokenAddress\",\"type\":\"address\"},{\"internalType\":\"address payable\",\"name\":\"sender\",\"type\":\"address\"},{\"internalType\":\"address payable\",\"name\":\"receiver\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"bytes32\",\"name\":\"blockHash\",\"type\":\"bytes32\"},{\"internalType\":\"bytes32\",\"name\":\"transactionHash\",\"type\":\"bytes32\"},{\"internalType\":\"uint32\",\"name\":\"logIndex\",\"type\":\"uint32\"},{\"internalType\":\"enum IFederation.TokenType\",\"name\":\"tokenType\",\"type\":\"uint8\"}],\"name\":\"voteTransaction\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"votes\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{\"addMember(address)\":{\"params\":{\"_newMember\":\"address of the new member\"}},\"changeRequirement(uint256)\":{\"details\":\"Emits the RequirementChange event\",\"params\":{\"_required\":\"the number of minimum members to approve an transaction, it has to be bigger than 1\"}},\"emitHeartbeat(uint256,uint256,string,string,string)\":{\"details\":\"Emits HeartBeat event\"},\"getMembers()\":{\"returns\":{\"_0\":\"Current members\"}},\"getTransactionCount(bytes32)\":{\"params\":{\"transactionId\":\"The transaction hashed from getTransactionId function\"}},\"getTransactionId(address,address,address,uint256,bytes32,bytes32,uint32)\":{\"details\":\"It encodes and applies keccak256 to the parameters received in the same order\",\"params\":{\"amount\":\"Could be the amount or the tokenId\",\"blockHash\":\"The block hash in which the transaction with the cross event occurred\",\"logIndex\":\"Index of the event in the logs\",\"originalTokenAddress\":\"The address of the token in the origin (main) chain\",\"receiver\":\"Who is going to receive the token in the opposite chain\",\"sender\":\"The address who solicited the cross token\",\"transactionHash\":\"The transaction in which the cross event occurred\"},\"returns\":{\"_0\":\"The hash generated by the parameters.\"}},\"initialize(address)\":{\"details\":\"Initializes the contract setting the deployer as the initial owner.\"},\"isOwner()\":{\"details\":\"Returns true if the caller is the current owner.\"},\"owner()\":{\"details\":\"Returns the address of the current owner.\"},\"removeMember(address)\":{\"params\":{\"_oldMember\":\"address of the member to be removed from federation\"}},\"renounceOwnership()\":{\"details\":\"Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. > Note: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner.\"},\"setBridge(address)\":{\"details\":\"Emits BridgeChanged event\",\"params\":{\"_bridge\":\"the new bridge contract address that should implement the IBridge interface\"}},\"setNFTBridge(address)\":{\"details\":\"Emits NFTBridgeChanged event\",\"params\":{\"_bridgeNFT\":\"the new NFT bridge contract address that should implement the INFTBridge interface\"}},\"transferOwnership(address)\":{\"details\":\"Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner.\"},\"version()\":{\"returns\":{\"_0\":\"version in v{Number}\"}},\"voteTransaction(address,address,address,uint256,bytes32,bytes32,uint32,uint8)\":{\"params\":{\"blockHash\":\"The block hash in which the transaction with the cross event occurred\",\"logIndex\":\"Index of the event in the logs\",\"originalTokenAddress\":\"The address of the token in the origin (main) chain\",\"receiver\":\"Who is going to receive the token in the opposite chain\",\"sender\":\"The address who solicited the cross token\",\"tokenType\":\"Is the type of bridge to be used\",\"transactionHash\":\"The transaction in which the cross event occurred\",\"value\":\"Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT\"}}},\"stateVariables\":{\"isMember\":{\"details\":\"The address should be a member to vote in transactions\"},\"required\":{\"details\":\"It should have more members than the required amount\"},\"votes\":{\"details\":\"usually the members should approve the transaction by 50% + 1\"}},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{\"addMember(address)\":{\"notice\":\"Add a new member to the federation\"},\"bridgeNFT()\":{\"notice\":\"Federator v3 variables \"},\"changeRequirement(uint256)\":{\"notice\":\"Changes the number of required members to vote and approve an transaction\"},\"emitHeartbeat(uint256,uint256,string,string,string)\":{\"notice\":\"It emits an HeartBeat like an health check\"},\"getMembers()\":{\"notice\":\"Return all the current members of the federation\"},\"getTransactionCount(bytes32)\":{\"notice\":\"Get the amount of approved votes for that transactionId\"},\"getTransactionId(address,address,address,uint256,bytes32,bytes32,uint32)\":{\"notice\":\"Gets the hash of transaction from the following parameters encoded and keccaked\"},\"isMember(address)\":{\"notice\":\"All the addresses that are members of the federation\"},\"processed(bytes32)\":{\"notice\":\"(bytes32) transactionId => (bool) votedCheck if that transaction was already processed\"},\"removeMember(address)\":{\"notice\":\"Remove a member of the federation\"},\"required()\":{\"notice\":\"The minimum amount of votes to approve a transaction\"},\"setBridge(address)\":{\"notice\":\"Sets a new bridge contract\"},\"setNFTBridge(address)\":{\"notice\":\"Sets a new NFT bridge contract\"},\"version()\":{\"notice\":\"Current version of the contract\"},\"voteTransaction(address,address,address,uint256,bytes32,bytes32,uint32,uint8)\":{\"notice\":\"Vote in a transaction, if it has enough votes it accepts the transfer\"},\"votes(bytes32,address)\":{\"notice\":\"(bytes32) transactionId = keccak256( abi.encodePacked( originalTokenAddress, sender, receiver, amount, blockHash, transactionHash, logIndex ) ) => ( (address) members => (bool) voted )Votes by members by the transaction ID\"}},\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/Federation/Federation.sol\":\"Federation\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\",\"useLiteralContent\":true},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"contracts/Federation/Federation.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\n// Upgradables\\r\\nimport \\\"../zeppelin/upgradable/Initializable.sol\\\";\\r\\nimport \\\"../zeppelin/upgradable/ownership/UpgradableOwnable.sol\\\";\\r\\n\\r\\nimport \\\"../nftbridge/INFTBridge.sol\\\";\\r\\nimport \\\"../interface/IBridge.sol\\\";\\r\\nimport \\\"../interface/IFederation.sol\\\";\\r\\n\\r\\ncontract Federation is Initializable, UpgradableOwnable, IFederation {\\r\\n    uint constant public MAX_MEMBER_COUNT = 50;\\r\\n    address constant private NULL_ADDRESS = address(0);\\r\\n\\r\\n    IBridge public bridge;\\r\\n    address[] public members;\\r\\n\\r\\n    /**\\r\\n      @notice The minimum amount of votes to approve a transaction\\r\\n      @dev It should have more members than the required amount\\r\\n     */\\r\\n    uint public required;\\r\\n\\r\\n    /**\\r\\n      @notice All the addresses that are members of the federation\\r\\n      @dev The address should be a member to vote in transactions\\r\\n     */\\r\\n    mapping (address => bool) public isMember;\\r\\n\\r\\n    /**\\r\\n      (bytes32) transactionId = keccak256(\\r\\n        abi.encodePacked(\\r\\n          originalTokenAddress,\\r\\n          sender,\\r\\n          receiver,\\r\\n          amount,\\r\\n          blockHash,\\r\\n          transactionHash,\\r\\n          logIndex\\r\\n        )\\r\\n      ) => (\\r\\n        (address) members => (bool) voted\\r\\n      )\\r\\n      @notice Votes by members by the transaction ID\\r\\n      @dev usually the members should approve the transaction by 50% + 1\\r\\n     */\\r\\n    mapping (bytes32 => mapping (address => bool)) public votes;\\r\\n\\r\\n    /**\\r\\n      (bytes32) transactionId => (bool) voted\\r\\n      @notice Check if that transaction was already processed\\r\\n     */\\r\\n    mapping(bytes32 => bool) public processed;\\r\\n\\r\\n    /** Federator v3 variables */\\r\\n    INFTBridge public bridgeNFT;\\r\\n\\r\\n    modifier onlyMember() {\\r\\n        require(isMember[_msgSender()], \\\"Federation: Not Federator\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    modifier validRequirement(uint membersCount, uint _required) {\\r\\n        // solium-disable-next-line max-len\\r\\n        require(_required <= membersCount && _required != 0 && membersCount != 0, \\\"Federation: Invalid requirements\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    function initialize(address[] memory _members, uint _required, address _bridge, address owner, address _bridgeNFT) public\\r\\n    validRequirement(_members.length, _required) initializer {\\r\\n        UpgradableOwnable.initialize(owner);\\r\\n        require(_members.length <= MAX_MEMBER_COUNT, \\\"Federation: Too many members\\\");\\r\\n        members = _members;\\r\\n        for (uint i = 0; i < _members.length; i++) {\\r\\n            require(!isMember[_members[i]] && _members[i] != NULL_ADDRESS, \\\"Federation: Invalid members\\\");\\r\\n            isMember[_members[i]] = true;\\r\\n            emit MemberAddition(_members[i]);\\r\\n        }\\r\\n        required = _required;\\r\\n        emit RequirementChange(required);\\r\\n        _setBridge(_bridge);\\r\\n        _setNFTBridge(_bridgeNFT);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Current version of the contract\\r\\n      @return version in v{Number}\\r\\n     */\\r\\n    function version() external pure override returns (string memory) {\\r\\n      return \\\"v3\\\";\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Sets a new bridge contract\\r\\n      @dev Emits BridgeChanged event\\r\\n      @param _bridge the new bridge contract address that should implement the IBridge interface\\r\\n     */\\r\\n    function setBridge(address _bridge) external onlyOwner override {\\r\\n        _setBridge(_bridge);\\r\\n    }\\r\\n\\r\\n    function _setBridge(address _bridge) internal {\\r\\n        require(_bridge != NULL_ADDRESS, \\\"Federation: Empty bridge\\\");\\r\\n        bridge = IBridge(_bridge);\\r\\n        emit BridgeChanged(_bridge);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Sets a new NFT bridge contract\\r\\n      @dev Emits NFTBridgeChanged event\\r\\n      @param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface\\r\\n     */\\r\\n    function setNFTBridge(address _bridgeNFT) external onlyOwner override {\\r\\n      _setNFTBridge(_bridgeNFT);\\r\\n    }\\r\\n\\r\\n    function _setNFTBridge(address _bridgeNFT) internal {\\r\\n      require(_bridgeNFT != NULL_ADDRESS, \\\"Federation: Empty NFT bridge\\\");\\r\\n      bridgeNFT = INFTBridge(_bridgeNFT);\\r\\n      emit NFTBridgeChanged(_bridgeNFT);\\r\\n    }\\r\\n\\r\\n    function validateTransaction(bytes32 transactionId) internal view returns(bool) {\\r\\n      uint transactionCount = getTransactionCount(transactionId);\\r\\n      return transactionCount >= required && transactionCount >= members.length / 2 + 1;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Vote in a transaction, if it has enough votes it accepts the transfer\\r\\n      @param originalTokenAddress The address of the token in the origin (main) chain\\r\\n      @param sender The address who solicited the cross token\\r\\n      @param receiver Who is going to receive the token in the opposite chain\\r\\n      @param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT\\r\\n      @param blockHash The block hash in which the transaction with the cross event occurred\\r\\n      @param transactionHash The transaction in which the cross event occurred\\r\\n      @param logIndex Index of the event in the logs\\r\\n      @param tokenType Is the type of bridge to be used\\r\\n     */\\r\\n    function voteTransaction(\\r\\n      address originalTokenAddress,\\r\\n      address payable sender,\\r\\n      address payable receiver,\\r\\n      uint256 value,\\r\\n      bytes32 blockHash,\\r\\n      bytes32 transactionHash,\\r\\n      uint32 logIndex,\\r\\n      TokenType tokenType\\r\\n    ) external onlyMember override {\\r\\n        bytes32 transactionId = getTransactionId(\\r\\n            originalTokenAddress,\\r\\n            sender,\\r\\n            receiver,\\r\\n            value,\\r\\n            blockHash,\\r\\n            transactionHash,\\r\\n            logIndex\\r\\n        );\\r\\n        if (processed[transactionId])\\r\\n            return;\\r\\n\\r\\n        if (votes[transactionId][_msgSender()])\\r\\n            return;\\r\\n\\r\\n        votes[transactionId][_msgSender()] = true;\\r\\n        emit Voted(\\r\\n            _msgSender(),\\r\\n            transactionHash,\\r\\n            transactionId,\\r\\n            originalTokenAddress,\\r\\n            sender,\\r\\n            receiver,\\r\\n            value,\\r\\n            blockHash,\\r\\n            logIndex\\r\\n        );\\r\\n\\r\\n        if (validateTransaction(transactionId)) {\\r\\n            processed[transactionId] = true;\\r\\n            acceptTransfer(\\r\\n              originalTokenAddress,\\r\\n              sender,\\r\\n              receiver,\\r\\n              value,\\r\\n              blockHash,\\r\\n              transactionHash,\\r\\n              logIndex,\\r\\n              tokenType\\r\\n            );\\r\\n\\r\\n            emit Executed(\\r\\n                _msgSender(),\\r\\n                transactionHash,\\r\\n                transactionId,\\r\\n                originalTokenAddress,\\r\\n                sender,\\r\\n                receiver,\\r\\n                value,\\r\\n                blockHash,\\r\\n                logIndex\\r\\n            );\\r\\n            return;\\r\\n        }\\r\\n    }\\r\\n\\r\\n  function acceptTransfer(\\r\\n    address originalTokenAddress,\\r\\n    address payable sender,\\r\\n    address payable receiver,\\r\\n    uint256 value,\\r\\n    bytes32 blockHash,\\r\\n    bytes32 transactionHash,\\r\\n    uint32 logIndex,\\r\\n    TokenType tokenType\\r\\n  ) internal {\\r\\n    if (tokenType == TokenType.NFT) {\\r\\n      require(address(bridgeNFT) != NULL_ADDRESS, \\\"Federation: Empty NFTBridge\\\");\\r\\n      bridgeNFT.acceptTransfer(\\r\\n        originalTokenAddress,\\r\\n        sender,\\r\\n        receiver,\\r\\n        value,\\r\\n        blockHash,\\r\\n        transactionHash,\\r\\n        logIndex\\r\\n      );\\r\\n      return;\\r\\n    }\\r\\n\\r\\n    bridge.acceptTransfer(\\r\\n      originalTokenAddress,\\r\\n      sender,\\r\\n      receiver,\\r\\n      value,\\r\\n      blockHash,\\r\\n      transactionHash,\\r\\n      logIndex\\r\\n    );\\r\\n  }\\r\\n\\r\\n  /**\\r\\n    @notice Get the amount of approved votes for that transactionId\\r\\n    @param transactionId The transaction hashed from getTransactionId function\\r\\n   */\\r\\n  function getTransactionCount(bytes32 transactionId) public view returns(uint) {\\r\\n    uint count = 0;\\r\\n    for (uint i = 0; i < members.length; i++) {\\r\\n      if (votes[transactionId][members[i]])\\r\\n        count += 1;\\r\\n    }\\r\\n    return count;\\r\\n  }\\r\\n\\r\\n    function hasVoted(bytes32 transactionId) external view returns(bool)\\r\\n    {\\r\\n        return votes[transactionId][_msgSender()];\\r\\n    }\\r\\n\\r\\n    function transactionWasProcessed(bytes32 transactionId) external view returns(bool)\\r\\n    {\\r\\n        return processed[transactionId];\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Gets the hash of transaction from the following parameters encoded and keccaked\\r\\n      @dev It encodes and applies keccak256 to the parameters received in the same order\\r\\n      @param originalTokenAddress The address of the token in the origin (main) chain\\r\\n      @param sender The address who solicited the cross token\\r\\n      @param receiver Who is going to receive the token in the opposite chain\\r\\n      @param amount Could be the amount or the tokenId\\r\\n      @param blockHash The block hash in which the transaction with the cross event occurred\\r\\n      @param transactionHash The transaction in which the cross event occurred\\r\\n      @param logIndex Index of the event in the logs\\r\\n      @return The hash generated by the parameters.\\r\\n    */\\r\\n    function getTransactionId(\\r\\n        address originalTokenAddress,\\r\\n        address sender,\\r\\n        address receiver,\\r\\n        uint256 amount,\\r\\n        bytes32 blockHash,\\r\\n        bytes32 transactionHash,\\r\\n        uint32 logIndex\\r\\n    ) public pure returns(bytes32) {\\r\\n      return keccak256(\\r\\n        abi.encodePacked(\\r\\n          originalTokenAddress,\\r\\n          sender,\\r\\n          receiver,\\r\\n          amount,\\r\\n          blockHash,\\r\\n          transactionHash,\\r\\n          logIndex\\r\\n        )\\r\\n      );\\r\\n    }\\r\\n\\r\\n    function addMember(address _newMember) external onlyOwner override\\r\\n    {\\r\\n        require(_newMember != NULL_ADDRESS, \\\"Federation: Empty member\\\");\\r\\n        require(!isMember[_newMember], \\\"Federation: Member already exists\\\");\\r\\n        require(members.length < MAX_MEMBER_COUNT, \\\"Federation: Max members reached\\\");\\r\\n\\r\\n        isMember[_newMember] = true;\\r\\n        members.push(_newMember);\\r\\n        emit MemberAddition(_newMember);\\r\\n    }\\r\\n\\r\\n    function removeMember(address _oldMember) external onlyOwner override\\r\\n    {\\r\\n        require(_oldMember != NULL_ADDRESS, \\\"Federation: Empty member\\\");\\r\\n        require(isMember[_oldMember], \\\"Federation: Member doesn't exists\\\");\\r\\n        require(members.length > 1, \\\"Federation: Can't remove all the members\\\");\\r\\n        require(members.length - 1 >= required, \\\"Federation: Can't have less than required members\\\");\\r\\n\\r\\n        isMember[_oldMember] = false;\\r\\n        for (uint i = 0; i < members.length - 1; i++) {\\r\\n            if (members[i] == _oldMember) {\\r\\n                members[i] = members[members.length - 1];\\r\\n                break;\\r\\n            }\\r\\n        }\\r\\n        members.pop(); // remove an element from the end of the array.\\r\\n        emit MemberRemoval(_oldMember);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Return all the current members of the federation\\r\\n      @return Current members\\r\\n     */\\r\\n    function getMembers() external view override returns (address[] memory) {\\r\\n      return members;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice Changes the number of required members to vote and approve an transaction\\r\\n      @dev Emits the RequirementChange event\\r\\n      @param _required the number of minimum members to approve an transaction, it has to be bigger than 1\\r\\n     */\\r\\n    function changeRequirement(uint _required) external onlyOwner validRequirement(members.length, _required) override {\\r\\n      require(_required >= 2, \\\"Federation: Requires at least 2\\\");\\r\\n      required = _required;\\r\\n      emit RequirementChange(_required);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n      @notice It emits an HeartBeat like an health check\\r\\n      @dev Emits HeartBeat event\\r\\n     */\\r\\n    function emitHeartbeat(\\r\\n      uint256 fedRskBlock,\\r\\n      uint256 fedEthBlock,\\r\\n      string calldata federatorVersion,\\r\\n      string calldata nodeRskInfo,\\r\\n      string calldata nodeEthInfo\\r\\n    ) external onlyMember override {\\r\\n      emit HeartBeat(\\r\\n        _msgSender(),\\r\\n        fedRskBlock,\\r\\n        fedEthBlock,\\r\\n        federatorVersion,\\r\\n        nodeRskInfo,\\r\\n        nodeEthInfo\\r\\n      );\\r\\n    }\\r\\n}\\r\\n\",\"keccak256\":\"0xa0a2e0f2ad71ae15c4301dbccbd3a100904df70e291ddbde1f0bad759635e164\",\"license\":\"MIT\"},\"contracts/interface/IBridge.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\ninterface IBridge {\\r\\n\\r\\n    struct ClaimData {\\r\\n        address payable to;\\r\\n        uint256 amount;\\r\\n        bytes32 blockHash;\\r\\n        bytes32 transactionHash;\\r\\n        uint32 logIndex;\\r\\n    }\\r\\n\\r\\n    function version() external pure returns (string memory);\\r\\n\\r\\n    function getFeePercentage() external view returns(uint);\\r\\n\\r\\n    /**\\r\\n     * ERC-20 tokens approve and transferFrom pattern\\r\\n     * See https://eips.ethereum.org/EIPS/eip-20#transferfrom\\r\\n     */\\r\\n    function receiveTokensTo(address tokenToUse, address to, uint256 amount) external;\\r\\n\\r\\n    /**\\r\\n     * Use network currency and cross it.\\r\\n     */\\r\\n    function depositTo(address to) external payable;\\r\\n\\r\\n    /**\\r\\n     * ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction\\r\\n     * See https://eips.ethereum.org/EIPS/eip-777#motivation for details\\r\\n     */\\r\\n    function tokensReceived (\\r\\n        address operator,\\r\\n        address from,\\r\\n        address to,\\r\\n        uint amount,\\r\\n        bytes calldata userData,\\r\\n        bytes calldata operatorData\\r\\n    ) external;\\r\\n\\r\\n    /**\\r\\n     * Accepts the transaction from the other chain that was voted and sent by the Federation contract\\r\\n     */\\r\\n    function acceptTransfer(\\r\\n        address _originalTokenAddress,\\r\\n        address payable _from,\\r\\n        address payable _to,\\r\\n        uint256 _amount,\\r\\n        bytes32 _blockHash,\\r\\n        bytes32 _transactionHash,\\r\\n        uint32 _logIndex\\r\\n    ) external;\\r\\n\\r\\n    /**\\r\\n     * Claims the crossed transaction using the hash, this sends the funds to the address indicated in\\r\\n     */\\r\\n    function claim(ClaimData calldata _claimData) external returns (uint256 receivedAmount);\\r\\n\\r\\n    function claimFallback(ClaimData calldata _claimData) external returns (uint256 receivedAmount);\\r\\n\\r\\n    function claimGasless(\\r\\n        ClaimData calldata _claimData,\\r\\n        address payable _relayer,\\r\\n        uint256 _fee,\\r\\n        uint256 _deadline,\\r\\n        uint8 _v,\\r\\n        bytes32 _r,\\r\\n        bytes32 _s\\r\\n    ) external returns (uint256 receivedAmount);\\r\\n\\r\\n    function getTransactionDataHash(\\r\\n        address _to,\\r\\n        uint256 _amount,\\r\\n        bytes32 _blockHash,\\r\\n        bytes32 _transactionHash,\\r\\n        uint32 _logIndex\\r\\n    ) external returns(bytes32);\\r\\n\\r\\n    event Cross(\\r\\n        address indexed _tokenAddress,\\r\\n        address indexed _from,\\r\\n        address indexed _to,\\r\\n        uint256 _amount,\\r\\n        bytes _userData\\r\\n    );\\r\\n    event NewSideToken(\\r\\n        address indexed _newSideTokenAddress,\\r\\n        address indexed _originalTokenAddress,\\r\\n        string _newSymbol,\\r\\n        uint256 _granularity\\r\\n    );\\r\\n    event AcceptedCrossTransfer(\\r\\n        bytes32 indexed _transactionHash,\\r\\n        address indexed _originalTokenAddress,\\r\\n        address indexed _to,\\r\\n        address  _from,\\r\\n        uint256 _amount,\\r\\n        bytes32 _blockHash,\\r\\n        uint256 _logIndex\\r\\n    );\\r\\n    event FeePercentageChanged(uint256 _amount);\\r\\n    event Claimed(\\r\\n        bytes32 indexed _transactionHash,\\r\\n        address indexed _originalTokenAddress,\\r\\n        address indexed _to,\\r\\n        address _sender,\\r\\n        uint256 _amount,\\r\\n        bytes32 _blockHash,\\r\\n        uint256 _logIndex,\\r\\n        address _reciever,\\r\\n        address _relayer,\\r\\n        uint256 _fee\\r\\n    );\\r\\n}\",\"keccak256\":\"0x9e48ff075a1e3fd0533feec4b93f397a4678b5d267cbae021ea0faf8cc91a383\",\"license\":\"MIT\"},\"contracts/interface/IFederation.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\ninterface IFederation {\\r\\n  enum TokenType{ COIN, NFT }\\r\\n\\r\\n  /**\\r\\n    @notice Current version of the contract\\r\\n    @return version in v{Number}\\r\\n    */\\r\\n  function version() external pure returns (string memory);\\r\\n\\r\\n  /**\\r\\n    @notice Sets a new bridge contract\\r\\n    @param _bridge the new bridge contract address that should implement the IBridge interface\\r\\n  */\\r\\n  function setBridge(address _bridge) external;\\r\\n\\r\\n  /**\\r\\n    @notice Sets a new NFT bridge contract\\r\\n    @param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface\\r\\n  */\\r\\n  function setNFTBridge(address _bridgeNFT) external;\\r\\n\\r\\n  /**\\r\\n    @notice Vote in a transaction, if it has enough votes it accepts the transfer\\r\\n    @param originalTokenAddress The address of the token in the origin (main) chain\\r\\n    @param sender The address who solicited the cross token\\r\\n    @param receiver Who is going to receive the token in the opposite chain\\r\\n    @param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT\\r\\n    @param blockHash The block hash in which the transaction with the cross event occurred\\r\\n    @param transactionHash The transaction in which the cross event occurred\\r\\n    @param logIndex Index of the event in the logs\\r\\n    @param tokenType Is the type of bridge to be used\\r\\n  */\\r\\n  function voteTransaction(\\r\\n    address originalTokenAddress,\\r\\n    address payable sender,\\r\\n    address payable receiver,\\r\\n    uint256 value,\\r\\n    bytes32 blockHash,\\r\\n    bytes32 transactionHash,\\r\\n    uint32 logIndex,\\r\\n    TokenType tokenType\\r\\n  ) external;\\r\\n\\r\\n  /**\\r\\n    @notice Add a new member to the federation\\r\\n    @param _newMember address of the new member\\r\\n  */\\r\\n  function addMember(address _newMember) external;\\r\\n\\r\\n  /**\\r\\n    @notice Remove a member of the federation\\r\\n    @param _oldMember address of the member to be removed from federation\\r\\n  */\\r\\n  function removeMember(address _oldMember) external;\\r\\n\\r\\n  /**\\r\\n    @notice Return all the current members of the federation\\r\\n    @return Current members\\r\\n  */\\r\\n  function getMembers() external view returns (address[] memory);\\r\\n\\r\\n  /**\\r\\n    @notice Changes the number of required members to vote and approve an transaction\\r\\n    @param _required the number of minimum members to approve an transaction, it has to be bigger than 1\\r\\n  */\\r\\n  function changeRequirement(uint _required) external;\\r\\n\\r\\n  /**\\r\\n    @notice It emmits an HeartBeat like an healthy check\\r\\n  */\\r\\n  function emitHeartbeat(\\r\\n    uint256 fedRskBlock,\\r\\n    uint256 fedEthBlock,\\r\\n    string calldata federatorVersion,\\r\\n    string calldata nodeRskInfo,\\r\\n    string calldata nodeEthInfo\\r\\n  ) external;\\r\\n\\r\\n  event Executed(\\r\\n    address indexed federator,\\r\\n    bytes32 indexed transactionHash,\\r\\n    bytes32 indexed transactionId,\\r\\n    address originalTokenAddress,\\r\\n    address sender,\\r\\n    address receiver,\\r\\n    uint256 amount,\\r\\n    bytes32 blockHash,\\r\\n    uint32 logIndex\\r\\n  );\\r\\n  event MemberAddition(address indexed member);\\r\\n  event MemberRemoval(address indexed member);\\r\\n  event RequirementChange(uint required);\\r\\n  event BridgeChanged(address bridge);\\r\\n  event NFTBridgeChanged(address bridgeNFT);\\r\\n  event Voted(\\r\\n    address indexed federator,\\r\\n    bytes32 indexed transactionHash,\\r\\n    bytes32 indexed transactionId,\\r\\n    address originalTokenAddress,\\r\\n    address sender,\\r\\n    address receiver,\\r\\n    uint256 amount,\\r\\n    bytes32 blockHash,\\r\\n    uint32 logIndex\\r\\n  );\\r\\n  event HeartBeat(\\r\\n    address indexed sender,\\r\\n    uint256 fedRskBlock,\\r\\n    uint256 fedEthBlock,\\r\\n    string federatorVersion,\\r\\n    string nodeRskInfo,\\r\\n    string nodeEthInfo\\r\\n  );\\r\\n\\r\\n}\\r\\n\",\"keccak256\":\"0x209134d6fd63a3f442a9cf086716baf7ac8639650c295e308a73a351ba077a21\",\"license\":\"MIT\"},\"contracts/nftbridge/INFTBridge.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\ninterface INFTBridge {\\r\\n  struct NFTClaimData {\\r\\n    address payable to;\\r\\n    address from;\\r\\n    uint256 tokenId;\\r\\n    address tokenAddress;\\r\\n    bytes32 blockHash;\\r\\n    bytes32 transactionHash;\\r\\n    uint32 logIndex;\\r\\n  }\\r\\n\\r\\n  function version() external pure returns (string memory);\\r\\n\\r\\n  function getFixedFee() external view returns (uint256);\\r\\n\\r\\n  function receiveTokensTo(\\r\\n    address tokenAddress,\\r\\n    address to,\\r\\n    uint256 tokenId\\r\\n  ) external payable;\\r\\n\\r\\n  /**\\r\\n    * Accepts the transaction from the other chain that was voted and sent by the Federation contract\\r\\n    */\\r\\n  function acceptTransfer(\\r\\n    address _originalTokenAddress,\\r\\n    address payable _from,\\r\\n    address payable _to,\\r\\n    uint256 _tokenId,\\r\\n    bytes32 _blockHash,\\r\\n    bytes32 _transactionHash,\\r\\n    uint32 _logIndex\\r\\n  ) external;\\r\\n\\r\\n  /**\\r\\n    * Claims the crossed transaction using the hash, this sends the token to the address specified in the claim data\\r\\n    */\\r\\n  function claim(NFTClaimData calldata _claimData) external;\\r\\n\\r\\n  function claimFallback(NFTClaimData calldata _claimData) external;\\r\\n\\r\\n  function getTransactionDataHash(\\r\\n    address _to,\\r\\n    address _from,\\r\\n    uint256 _tokenId,\\r\\n    address _tokenAddress,\\r\\n    bytes32 _blockHash,\\r\\n    bytes32 _transactionHash,\\r\\n    uint32 _logIndex\\r\\n  ) external returns (bytes32);\\r\\n\\r\\n  event Cross(\\r\\n    address indexed _originalTokenAddress,\\r\\n    address indexed _from,\\r\\n    address indexed _to,\\r\\n    address _tokenCreator,\\r\\n    bytes _userData,\\r\\n    uint256 _totalSupply,\\r\\n    uint256 _tokenId,\\r\\n    string _tokenURI\\r\\n  );\\r\\n  event NewSideNFTToken(\\r\\n    address indexed _newSideNFTTokenAddress,\\r\\n    address indexed _originalTokenAddress,\\r\\n    string _newSymbol\\r\\n  );\\r\\n  event AcceptedNFTCrossTransfer(\\r\\n    bytes32 indexed _transactionHash,\\r\\n    address indexed _originalTokenAddress,\\r\\n    address indexed _to,\\r\\n    address _from,\\r\\n    uint256 _tokenId,\\r\\n    bytes32 _blockHash,\\r\\n    uint256 _logIndex\\r\\n  );\\r\\n  event FixedFeeNFTChanged(uint256 _amount);\\r\\n  event ClaimedNFTToken(\\r\\n    bytes32 indexed _transactionHash,\\r\\n    address indexed _originalTokenAddress,\\r\\n    address indexed _to,\\r\\n    address _sender,\\r\\n    uint256 _tokenId,\\r\\n    bytes32 _blockHash,\\r\\n    uint256 _logIndex,\\r\\n    address _receiver\\r\\n  );\\r\\n}\\r\\n\",\"keccak256\":\"0x2ae628c2bf573e402f83c817bb3bcf80a9f38aa82e328141f4cd9da1deadc88d\",\"license\":\"MIT\"},\"contracts/zeppelin/GSN/Context.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\n/*\\r\\n * @dev Provides information about the current execution context, including the\\r\\n * sender of the transaction and its data. While these are generally available\\r\\n * via msg.sender and msg.data, they should not be accessed in such a direct\\r\\n * manner, since when dealing with GSN meta-transactions the account sending and\\r\\n * paying for execution may not be the actual sender (as far as an application\\r\\n * is concerned).\\r\\n *\\r\\n * This contract is only required for intermediate, library-like contracts.\\r\\n */\\r\\nabstract contract  Context {\\r\\n\\r\\n    function _msgSender() internal view returns (address payable) {\\r\\n        return msg.sender;\\r\\n    }\\r\\n\\r\\n    function _msgData() internal view returns (bytes memory) {\\r\\n        this; // silence state mutability warning without generating bytecode - see https://github.com/ethereum/solidity/issues/2691\\r\\n        return msg.data;\\r\\n    }\\r\\n}\\r\\n\",\"keccak256\":\"0xff38f9ba6027ec9133e123cb63f4c77fb89b2569cd3a1825c7f693f496c67a78\",\"license\":\"MIT\"},\"contracts/zeppelin/upgradable/Initializable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\n/**\\r\\n * @title Initializable\\r\\n *\\r\\n * @dev Helper contract to support initializer functions. To use it, replace\\r\\n * the constructor with a function that has the `initializer` modifier.\\r\\n * WARNING: Unlike constructors, initializer functions must be manually\\r\\n * invoked. This applies both to deploying an Initializable contract, as well\\r\\n * as extending an Initializable contract via inheritance.\\r\\n * WARNING: When used with inheritance, manual care must be taken to not invoke\\r\\n * a parent initializer twice, or ensure that all initializers are idempotent,\\r\\n * because this is not dealt with automatically as with constructors.\\r\\n */\\r\\ncontract Initializable {\\r\\n\\r\\n  /**\\r\\n   * @dev Indicates that the contract has been initialized.\\r\\n   */\\r\\n  bool private initialized;\\r\\n\\r\\n  /**\\r\\n   * @dev Indicates that the contract is in the process of being initialized.\\r\\n   */\\r\\n  bool private initializing;\\r\\n\\r\\n  /**\\r\\n   * @dev Modifier to use in the initializer function of a contract.\\r\\n   */\\r\\n  modifier initializer() {\\r\\n    require(initializing || !initialized, \\\"Contract instance is already initialized\\\");\\r\\n\\r\\n    bool isTopLevelCall = !initializing;\\r\\n    if (isTopLevelCall) {\\r\\n      initializing = true;\\r\\n      initialized = true;\\r\\n    }\\r\\n\\r\\n    _;\\r\\n\\r\\n    if (isTopLevelCall) {\\r\\n      initializing = false;\\r\\n    }\\r\\n  }\\r\\n\\r\\n  // Reserved storage space to allow for layout changes in the future.\\r\\n  uint256[50] private ______gap;\\r\\n}\",\"keccak256\":\"0xc1f4d917648f0e17ba6a023a168173ad6163f3120e24d1c97ae294430e42eaf3\",\"license\":\"MIT\"},\"contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol\":{\"content\":\"// SPDX-License-Identifier: MIT\\r\\n\\r\\npragma solidity ^0.7.0;\\r\\npragma abicoder v2;\\r\\n\\r\\nimport \\\"../Initializable.sol\\\";\\r\\n\\r\\nimport \\\"../../GSN/Context.sol\\\";\\r\\n\\r\\n/**\\r\\n * @dev Contract module which provides a basic access control mechanism, where\\r\\n * there is an account (an owner) that can be granted exclusive access to\\r\\n * specific functions.\\r\\n *\\r\\n * This module is used through inheritance. It will make available the modifier\\r\\n * `onlyOwner`, which can be aplied to your functions to restrict their use to\\r\\n * the owner.\\r\\n */\\r\\ncontract UpgradableOwnable is Initializable, Context {\\r\\n    address private _owner;\\r\\n\\r\\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\\r\\n\\r\\n    /**\\r\\n     * @dev Initializes the contract setting the deployer as the initial owner.\\r\\n     */\\r\\n    function initialize(address sender) public initializer {\\r\\n        _owner = sender;\\r\\n        emit OwnershipTransferred(address(0), _owner);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Returns the address of the current owner.\\r\\n     */\\r\\n    function owner() public view returns (address) {\\r\\n        return _owner;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Throws if called by any account other than the owner.\\r\\n     */\\r\\n    modifier onlyOwner() {\\r\\n        require(isOwner(), \\\"Ownable: caller is not the owner\\\");\\r\\n        _;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Returns true if the caller is the current owner.\\r\\n     */\\r\\n    function isOwner() public view returns (bool) {\\r\\n        return _msgSender() == _owner;\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Leaves the contract without owner. It will not be possible to call\\r\\n     * `onlyOwner` functions anymore. Can only be called by the current owner.\\r\\n     *\\r\\n     * > Note: Renouncing ownership will leave the contract without an owner,\\r\\n     * thereby removing any functionality that is only available to the owner.\\r\\n     */\\r\\n    function renounceOwnership() public onlyOwner {\\r\\n        emit OwnershipTransferred(_owner, address(0));\\r\\n        _owner = address(0);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\r\\n     * Can only be called by the current owner.\\r\\n     */\\r\\n    function transferOwnership(address newOwner) public onlyOwner {\\r\\n        _transferOwnership(newOwner);\\r\\n    }\\r\\n\\r\\n    /**\\r\\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\\r\\n     */\\r\\n    function _transferOwnership(address newOwner) internal {\\r\\n        require(newOwner != address(0), \\\"Ownable: new owner is zero address\\\");\\r\\n        emit OwnershipTransferred(_owner, newOwner);\\r\\n        _owner = newOwner;\\r\\n    }\\r\\n\\r\\n}\\r\\n\",\"keccak256\":\"0xea920007e371a3300245b5885f72cecc472c4780818365f0025fae65a767273d\",\"license\":\"MIT\"}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50611dcb806100206000396000f3fe608060405234801561001057600080fd5b50600436106101a95760003560e01c8063a481d59b116100f9578063ca6d56dc11610097578063ef1093a711610071578063ef1093a714610357578063f2fde38b1461035f578063f697aa2414610372578063fa6297ba14610385576101a9565b8063ca6d56dc14610334578063dc8452cd14610347578063e78cea921461034f576101a9565b8063b9a3b9dc116100d3578063b9a3b9dc146102e8578063ba51a6df146102fb578063c1f0808a1461030e578063c4d66de814610321576101a9565b8063a481d59b146102af578063a8e12e4c146102c2578063a93585f0146102d5576101a9565b80638da5cb5b116101665780639386775a116101405780639386775a146102615780639eab525314610274578063a1fb4acb14610289578063a230c5241461029c576101a9565b80638da5cb5b1461023e5780638dd14802146102465780638f32d59b14610259576101a9565b80630b1ca49a146101ae5780631b4613cb146101c357806354fd4d50146101ec5780635daf08ca14610201578063681fc92114610221578063715018a614610236575b600080fd5b6101c16101bc366004611456565b610398565b005b6101d66101d1366004611667565b6105a6565b6040516101e391906118c4565b60405180910390f35b6101f46105e2565b6040516101e391906118d8565b61021461020f366004611667565b6105fe565b6040516101e391906117df565b610229610628565b6040516101e391906118cf565b6101c161062d565b61021461069b565b6101c1610254366004611456565b6106aa565b6101d66106da565b6101d661026f36600461167f565b610700565b61027c610720565b6040516101e39190611877565b610229610297366004611667565b610782565b6101d66102aa366004611456565b6107f3565b6101c16102bd366004611456565b610808565b6101c16102d0366004611576565b610835565b6101d66102e3366004611667565b610aad565b6101c16102f63660046116ae565b610ac2565b6101c1610309366004611667565b610b67565b6101d661031c366004611667565b610c28565b6101c161032f366004611456565b610c3d565b6101c1610342366004611456565b610d02565b610229610e33565b610214610e39565b610214610e48565b6101c161036d366004611456565b610e57565b6101c1610380366004611472565b610e84565b610229610393366004611500565b61106a565b6103a06106da565b6103c55760405162461bcd60e51b81526004016103bc90611b8e565b60405180910390fd5b6001600160a01b0381166103eb5760405162461bcd60e51b81526004016103bc90611bfa565b6001600160a01b03811660009081526037602052604090205460ff166104235760405162461bcd60e51b81526004016103bc906119ce565b6035546001106104455760405162461bcd60e51b81526004016103bc90611c68565b60365460355460001901101561046d5760405162461bcd60e51b81526004016103bc90611b3d565b6001600160a01b0381166000908152603760205260408120805460ff191690555b6035546000190181101561054157816001600160a01b0316603582815481106104b357fe5b6000918252602090912001546001600160a01b03161415610539576035805460001981019081106104e057fe5b600091825260209091200154603580546001600160a01b03909216918390811061050657fe5b9060005260206000200160006101000a8154816001600160a01b0302191690836001600160a01b03160217905550610541565b60010161048e565b50603580548061054d57fe5b600082815260208120820160001990810180546001600160a01b03191690559091019091556040516001600160a01b038316917f270bfc616dd36d5cb6b35aac93e6ef22b089c34e6f6ad6f0892797424840897b91a250565b6000818152603860205260408120816105bd6110ac565b6001600160a01b0316815260208101919091526040016000205460ff1690505b919050565b604080518082019091526002815261763360f01b602082015290565b6035818154811061060e57600080fd5b6000918252602090912001546001600160a01b0316905081565b603281565b6106356106da565b6106515760405162461bcd60e51b81526004016103bc90611b8e565b6033546040516000916001600160a01b0316907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908390a3603380546001600160a01b0319169055565b6033546001600160a01b031690565b6106b26106da565b6106ce5760405162461bcd60e51b81526004016103bc90611b8e565b6106d7816110b0565b50565b6033546000906001600160a01b03166106f16110ac565b6001600160a01b031614905090565b603860209081526000928352604080842090915290825290205460ff1681565b6060603580548060200260200160405190810160405280929190818152602001828054801561077857602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161075a575b5050505050905090565b600080805b6035548110156107ec57600084815260386020526040812060358054919291849081106107b057fe5b60009182526020808320909101546001600160a01b0316835282019290925260400190205460ff16156107e4576001820191505b600101610787565b5092915050565b60376020526000908152604090205460ff1681565b6108106106da565b61082c5760405162461bcd60e51b81526004016103bc90611b8e565b6106d78161112c565b84518481811115801561084757508015155b801561085257508115155b61086e5760405162461bcd60e51b81526004016103bc9061192b565b600054610100900460ff1680610887575060005460ff16155b6108a35760405162461bcd60e51b81526004016103bc90611a0f565b600054610100900460ff161580156108ce576000805460ff1961ff0019909116610100171660011790555b6108d785610c3d565b6032885111156108f95760405162461bcd60e51b81526004016103bc90611997565b875161090c9060359060208b0190611376565b5060005b8851811015610a4157603760008a838151811061092957fe5b6020908102919091018101516001600160a01b031682528101919091526040016000205460ff16158015610983575060006001600160a01b031689828151811061096f57fe5b60200260200101516001600160a01b031614155b61099f5760405162461bcd60e51b81526004016103bc90611a57565b6001603760008b84815181106109b157fe5b60200260200101516001600160a01b03166001600160a01b0316815260200190815260200160002060006101000a81548160ff0219169083151502179055508881815181106109fc57fe5b60200260200101516001600160a01b03167f72114e270de66b9d2710ecf140403e5e99b1574767d6a8197bdc8d807a46e7c760405160405180910390a2600101610910565b5060368790556040517fa3f1ee9126a074d9326c682f561767f710e927faa811f7a99829d49dc421797a90610a779089906118cf565b60405180910390a1610a88866110b0565b610a918461112c565b8015610aa3576000805461ff00191690555b5050505050505050565b60009081526039602052604090205460ff1690565b60376000610ace6110ac565b6001600160a01b0316815260208101919091526040016000205460ff16610b075760405162461bcd60e51b81526004016103bc90611cf2565b610b0f6110ac565b6001600160a01b03167fbb00e6cbdccbb5b7549e189335249187223d88583604555326aa1d7ccbcad4428989898989898989604051610b55989796959493929190611d29565b60405180910390a25050505050505050565b610b6f6106da565b610b8b5760405162461bcd60e51b81526004016103bc90611b8e565b60355481818111801590610b9e57508015155b8015610ba957508115155b610bc55760405162461bcd60e51b81526004016103bc9061192b565b6002831015610be65760405162461bcd60e51b81526004016103bc90611bc3565b60368390556040517fa3f1ee9126a074d9326c682f561767f710e927faa811f7a99829d49dc421797a90610c1b9085906118cf565b60405180910390a1505050565b60396020526000908152604090205460ff1681565b600054610100900460ff1680610c56575060005460ff16155b610c725760405162461bcd60e51b81526004016103bc90611a0f565b600054610100900460ff16158015610c9d576000805460ff1961ff0019909116610100171660011790555b603380546001600160a01b0319166001600160a01b0384811691909117918290556040519116906000907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908290a38015610cfe576000805461ff00191690555b5050565b610d0a6106da565b610d265760405162461bcd60e51b81526004016103bc90611b8e565b6001600160a01b038116610d4c5760405162461bcd60e51b81526004016103bc90611bfa565b6001600160a01b03811660009081526037602052604090205460ff1615610d855760405162461bcd60e51b81526004016103bc90611a8e565b603554603211610da75760405162461bcd60e51b81526004016103bc90611960565b6001600160a01b038116600081815260376020526040808220805460ff1916600190811790915560358054918201815583527fcfa4bec1d3298408bb5afcfcd9c430549c5b31f8aa5c5848151c0a55f473c34d0180546001600160a01b03191684179055517f72114e270de66b9d2710ecf140403e5e99b1574767d6a8197bdc8d807a46e7c79190a250565b60365481565b6034546001600160a01b031681565b603a546001600160a01b031681565b610e5f6106da565b610e7b5760405162461bcd60e51b81526004016103bc90611b8e565b6106d78161119d565b60376000610e906110ac565b6001600160a01b0316815260208101919091526040016000205460ff16610ec95760405162461bcd60e51b81526004016103bc90611cf2565b6000610eda8989898989898961106a565b60008181526039602052604090205490915060ff1615610efa5750610aa3565b600081815260386020526040812090610f116110ac565b6001600160a01b0316815260208101919091526040016000205460ff1615610f395750610aa3565b6000818152603860205260408120600191610f526110ac565b6001600160a01b031681526020810191909152604001600020805460ff19169115159190911790558084610f846110ac565b6001600160a01b03167fd22894491aaa5bb67855bcff4b9730bdf7768be1e25f66ced9a7d7ad623bf2918c8c8c8c8c8b604051610fc696959493929190611839565b60405180910390a4610fd78161121f565b1561105f576000818152603960205260409020805460ff19166001179055611005898989898989898961124f565b808461100f6110ac565b6001600160a01b03167fe21e4d3d66ef78424137270e65cfafe938736bb770702ab4fd630383e7820b738c8c8c8c8c8b60405161105196959493929190611839565b60405180910390a450610aa3565b505050505050505050565b6000878787878787876040516020016110899796959493929190611781565b604051602081830303815290604052805190602001209050979650505050505050565b3390565b6001600160a01b0381166110d65760405162461bcd60e51b81526004016103bc90611acf565b603480546001600160a01b0319166001600160a01b0383161790556040517f9775531310b2880b61484ed85cbb0b491c8fde3a07f289c63b92551782794497906111219083906117df565b60405180910390a150565b6001600160a01b0381166111525760405162461bcd60e51b81526004016103bc90611b06565b603a80546001600160a01b0319166001600160a01b0383161790556040517f41d363b5ede55d38b1fa8f7ba6188f9c20e353bc71e4a93de8938a20b27b6bc2906111219083906117df565b6001600160a01b0381166111c35760405162461bcd60e51b81526004016103bc90611cb0565b6033546040516001600160a01b038084169216907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a3603380546001600160a01b0319166001600160a01b0392909216919091179055565b60008061122b83610782565b905060365481101580156112485750603554600290046001018110155b9392505050565b600181600181111561125d57fe5b14156112fe57603a546001600160a01b031661128b5760405162461bcd60e51b81526004016103bc90611c31565b603a54604051636a86319160e01b81526001600160a01b0390911690636a863191906112c7908b908b908b908b908b908b908b906004016117f3565b600060405180830381600087803b1580156112e157600080fd5b505af11580156112f5573d6000803e3d6000fd5b50505050610aa3565b603454604051636a86319160e01b81526001600160a01b0390911690636a8631919061133a908b908b908b908b908b908b908b906004016117f3565b600060405180830381600087803b15801561135457600080fd5b505af1158015611368573d6000803e3d6000fd5b505050505050505050505050565b8280548282559060005260206000209081019282156113cb579160200282015b828111156113cb57825182546001600160a01b0319166001600160a01b03909116178255602090920191600190910190611396565b506113d79291506113db565b5090565b5b808211156113d757600081556001016113dc565b80356105dd81611d80565b60008083601f84011261140c578182fd5b50813567ffffffffffffffff811115611423578182fd5b60208301915083602082850101111561143b57600080fd5b9250929050565b803563ffffffff811681146105dd57600080fd5b600060208284031215611467578081fd5b813561124881611d80565b600080600080600080600080610100898b03121561148e578384fd5b883561149981611d80565b975060208901356114a981611d80565b965060408901356114b981611d80565b9550606089013594506080890135935060a089013592506114dc60c08a01611442565b915060e0890135600281106114ef578182fd5b809150509295985092959890939650565b600080600080600080600060e0888a03121561151a578283fd5b873561152581611d80565b9650602088013561153581611d80565b9550604088013561154581611d80565b9450606088013593506080880135925060a0880135915061156860c08901611442565b905092959891949750929550565b600080600080600060a0868803121561158d578081fd5b853567ffffffffffffffff808211156115a4578283fd5b818801915088601f8301126115b7578283fd5b81356020828211156115c557fe5b808202604051828282010181811086821117156115de57fe5b604052838152828101945085830182870184018e10156115fc578788fd5b8796505b8487101561162557611611816113f0565b865260019690960195948301948301611600565b50995050890135965061163f9250506040880190506113f0565b925061164d606087016113f0565b915061165b608087016113f0565b90509295509295909350565b600060208284031215611678578081fd5b5035919050565b60008060408385031215611691578182fd5b8235915060208301356116a381611d80565b809150509250929050565b60008060008060008060008060a0898b0312156116c9578384fd5b8835975060208901359650604089013567ffffffffffffffff808211156116ee578586fd5b6116fa8c838d016113fb565b909850965060608b0135915080821115611712578586fd5b61171e8c838d016113fb565b909650945060808b0135915080821115611736578384fd5b506117438b828c016113fb565b999c989b5096995094979396929594505050565b60008284528282602086013780602084860101526020601f19601f85011685010190509392505050565b606097881b6bffffffffffffffffffffffff19908116825296881b871660148201529490961b9094166028840152603c830191909152605c820152607c81019190915260e09190911b6001600160e01b031916609c82015260a00190565b6001600160a01b0391909116815260200190565b6001600160a01b03978816815295871660208701529390951660408501526060840191909152608083015260a082019290925263ffffffff90911660c082015260e00190565b6001600160a01b03968716815294861660208601529290941660408401526060830152608082019290925263ffffffff90911660a082015260c00190565b6020808252825182820181905260009190848201906040850190845b818110156118b85783516001600160a01b031683529284019291840191600101611893565b50909695505050505050565b901515815260200190565b90815260200190565b6000602080835283518082850152825b81811015611904578581018301518582016040015282016118e8565b818111156119155783604083870101525b50601f01601f1916929092016040019392505050565b6020808252818101527f46656465726174696f6e3a20496e76616c696420726571756972656d656e7473604082015260600190565b6020808252601f908201527f46656465726174696f6e3a204d6178206d656d62657273207265616368656400604082015260600190565b6020808252601c908201527f46656465726174696f6e3a20546f6f206d616e79206d656d6265727300000000604082015260600190565b60208082526021908201527f46656465726174696f6e3a204d656d62657220646f65736e27742065786973746040820152607360f81b606082015260800190565b60208082526028908201527f436f6e747261637420696e7374616e636520697320616c726561647920696e696040820152671d1a585b1a5e995960c21b606082015260800190565b6020808252601b908201527f46656465726174696f6e3a20496e76616c6964206d656d626572730000000000604082015260600190565b60208082526021908201527f46656465726174696f6e3a204d656d62657220616c72656164792065786973746040820152607360f81b606082015260800190565b60208082526018908201527f46656465726174696f6e3a20456d707479206272696467650000000000000000604082015260600190565b6020808252601c908201527f46656465726174696f6e3a20456d707479204e46542062726964676500000000604082015260600190565b60208082526031908201527f46656465726174696f6e3a2043616e27742068617665206c657373207468616e604082015270207265717569726564206d656d6265727360781b606082015260800190565b6020808252818101527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604082015260600190565b6020808252601f908201527f46656465726174696f6e3a205265717569726573206174206c65617374203200604082015260600190565b60208082526018908201527f46656465726174696f6e3a20456d707479206d656d6265720000000000000000604082015260600190565b6020808252601b908201527f46656465726174696f6e3a20456d707479204e46544272696467650000000000604082015260600190565b60208082526028908201527f46656465726174696f6e3a2043616e27742072656d6f766520616c6c20746865604082015267206d656d6265727360c01b606082015260800190565b60208082526022908201527f4f776e61626c653a206e6577206f776e6572206973207a65726f206164647265604082015261737360f01b606082015260800190565b60208082526019908201527f46656465726174696f6e3a204e6f7420466564657261746f7200000000000000604082015260600190565b600089825288602083015260a06040830152611d4960a08301888a611757565b8281036060840152611d5c818789611757565b90508281036080840152611d71818587611757565b9b9a5050505050505050505050565b6001600160a01b03811681146106d757600080fdfea26469706673582212208aa1d2dd4590c44473c5e505bfb4d78ecb4c655a2f568f5eef1510b1514c437e64736f6c63430007060033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106101a95760003560e01c8063a481d59b116100f9578063ca6d56dc11610097578063ef1093a711610071578063ef1093a714610357578063f2fde38b1461035f578063f697aa2414610372578063fa6297ba14610385576101a9565b8063ca6d56dc14610334578063dc8452cd14610347578063e78cea921461034f576101a9565b8063b9a3b9dc116100d3578063b9a3b9dc146102e8578063ba51a6df146102fb578063c1f0808a1461030e578063c4d66de814610321576101a9565b8063a481d59b146102af578063a8e12e4c146102c2578063a93585f0146102d5576101a9565b80638da5cb5b116101665780639386775a116101405780639386775a146102615780639eab525314610274578063a1fb4acb14610289578063a230c5241461029c576101a9565b80638da5cb5b1461023e5780638dd14802146102465780638f32d59b14610259576101a9565b80630b1ca49a146101ae5780631b4613cb146101c357806354fd4d50146101ec5780635daf08ca14610201578063681fc92114610221578063715018a614610236575b600080fd5b6101c16101bc366004611456565b610398565b005b6101d66101d1366004611667565b6105a6565b6040516101e391906118c4565b60405180910390f35b6101f46105e2565b6040516101e391906118d8565b61021461020f366004611667565b6105fe565b6040516101e391906117df565b610229610628565b6040516101e391906118cf565b6101c161062d565b61021461069b565b6101c1610254366004611456565b6106aa565b6101d66106da565b6101d661026f36600461167f565b610700565b61027c610720565b6040516101e39190611877565b610229610297366004611667565b610782565b6101d66102aa366004611456565b6107f3565b6101c16102bd366004611456565b610808565b6101c16102d0366004611576565b610835565b6101d66102e3366004611667565b610aad565b6101c16102f63660046116ae565b610ac2565b6101c1610309366004611667565b610b67565b6101d661031c366004611667565b610c28565b6101c161032f366004611456565b610c3d565b6101c1610342366004611456565b610d02565b610229610e33565b610214610e39565b610214610e48565b6101c161036d366004611456565b610e57565b6101c1610380366004611472565b610e84565b610229610393366004611500565b61106a565b6103a06106da565b6103c55760405162461bcd60e51b81526004016103bc90611b8e565b60405180910390fd5b6001600160a01b0381166103eb5760405162461bcd60e51b81526004016103bc90611bfa565b6001600160a01b03811660009081526037602052604090205460ff166104235760405162461bcd60e51b81526004016103bc906119ce565b6035546001106104455760405162461bcd60e51b81526004016103bc90611c68565b60365460355460001901101561046d5760405162461bcd60e51b81526004016103bc90611b3d565b6001600160a01b0381166000908152603760205260408120805460ff191690555b6035546000190181101561054157816001600160a01b0316603582815481106104b357fe5b6000918252602090912001546001600160a01b03161415610539576035805460001981019081106104e057fe5b600091825260209091200154603580546001600160a01b03909216918390811061050657fe5b9060005260206000200160006101000a8154816001600160a01b0302191690836001600160a01b03160217905550610541565b60010161048e565b50603580548061054d57fe5b600082815260208120820160001990810180546001600160a01b03191690559091019091556040516001600160a01b038316917f270bfc616dd36d5cb6b35aac93e6ef22b089c34e6f6ad6f0892797424840897b91a250565b6000818152603860205260408120816105bd6110ac565b6001600160a01b0316815260208101919091526040016000205460ff1690505b919050565b604080518082019091526002815261763360f01b602082015290565b6035818154811061060e57600080fd5b6000918252602090912001546001600160a01b0316905081565b603281565b6106356106da565b6106515760405162461bcd60e51b81526004016103bc90611b8e565b6033546040516000916001600160a01b0316907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908390a3603380546001600160a01b0319169055565b6033546001600160a01b031690565b6106b26106da565b6106ce5760405162461bcd60e51b81526004016103bc90611b8e565b6106d7816110b0565b50565b6033546000906001600160a01b03166106f16110ac565b6001600160a01b031614905090565b603860209081526000928352604080842090915290825290205460ff1681565b6060603580548060200260200160405190810160405280929190818152602001828054801561077857602002820191906000526020600020905b81546001600160a01b0316815260019091019060200180831161075a575b5050505050905090565b600080805b6035548110156107ec57600084815260386020526040812060358054919291849081106107b057fe5b60009182526020808320909101546001600160a01b0316835282019290925260400190205460ff16156107e4576001820191505b600101610787565b5092915050565b60376020526000908152604090205460ff1681565b6108106106da565b61082c5760405162461bcd60e51b81526004016103bc90611b8e565b6106d78161112c565b84518481811115801561084757508015155b801561085257508115155b61086e5760405162461bcd60e51b81526004016103bc9061192b565b600054610100900460ff1680610887575060005460ff16155b6108a35760405162461bcd60e51b81526004016103bc90611a0f565b600054610100900460ff161580156108ce576000805460ff1961ff0019909116610100171660011790555b6108d785610c3d565b6032885111156108f95760405162461bcd60e51b81526004016103bc90611997565b875161090c9060359060208b0190611376565b5060005b8851811015610a4157603760008a838151811061092957fe5b6020908102919091018101516001600160a01b031682528101919091526040016000205460ff16158015610983575060006001600160a01b031689828151811061096f57fe5b60200260200101516001600160a01b031614155b61099f5760405162461bcd60e51b81526004016103bc90611a57565b6001603760008b84815181106109b157fe5b60200260200101516001600160a01b03166001600160a01b0316815260200190815260200160002060006101000a81548160ff0219169083151502179055508881815181106109fc57fe5b60200260200101516001600160a01b03167f72114e270de66b9d2710ecf140403e5e99b1574767d6a8197bdc8d807a46e7c760405160405180910390a2600101610910565b5060368790556040517fa3f1ee9126a074d9326c682f561767f710e927faa811f7a99829d49dc421797a90610a779089906118cf565b60405180910390a1610a88866110b0565b610a918461112c565b8015610aa3576000805461ff00191690555b5050505050505050565b60009081526039602052604090205460ff1690565b60376000610ace6110ac565b6001600160a01b0316815260208101919091526040016000205460ff16610b075760405162461bcd60e51b81526004016103bc90611cf2565b610b0f6110ac565b6001600160a01b03167fbb00e6cbdccbb5b7549e189335249187223d88583604555326aa1d7ccbcad4428989898989898989604051610b55989796959493929190611d29565b60405180910390a25050505050505050565b610b6f6106da565b610b8b5760405162461bcd60e51b81526004016103bc90611b8e565b60355481818111801590610b9e57508015155b8015610ba957508115155b610bc55760405162461bcd60e51b81526004016103bc9061192b565b6002831015610be65760405162461bcd60e51b81526004016103bc90611bc3565b60368390556040517fa3f1ee9126a074d9326c682f561767f710e927faa811f7a99829d49dc421797a90610c1b9085906118cf565b60405180910390a1505050565b60396020526000908152604090205460ff1681565b600054610100900460ff1680610c56575060005460ff16155b610c725760405162461bcd60e51b81526004016103bc90611a0f565b600054610100900460ff16158015610c9d576000805460ff1961ff0019909116610100171660011790555b603380546001600160a01b0319166001600160a01b0384811691909117918290556040519116906000907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0908290a38015610cfe576000805461ff00191690555b5050565b610d0a6106da565b610d265760405162461bcd60e51b81526004016103bc90611b8e565b6001600160a01b038116610d4c5760405162461bcd60e51b81526004016103bc90611bfa565b6001600160a01b03811660009081526037602052604090205460ff1615610d855760405162461bcd60e51b81526004016103bc90611a8e565b603554603211610da75760405162461bcd60e51b81526004016103bc90611960565b6001600160a01b038116600081815260376020526040808220805460ff1916600190811790915560358054918201815583527fcfa4bec1d3298408bb5afcfcd9c430549c5b31f8aa5c5848151c0a55f473c34d0180546001600160a01b03191684179055517f72114e270de66b9d2710ecf140403e5e99b1574767d6a8197bdc8d807a46e7c79190a250565b60365481565b6034546001600160a01b031681565b603a546001600160a01b031681565b610e5f6106da565b610e7b5760405162461bcd60e51b81526004016103bc90611b8e565b6106d78161119d565b60376000610e906110ac565b6001600160a01b0316815260208101919091526040016000205460ff16610ec95760405162461bcd60e51b81526004016103bc90611cf2565b6000610eda8989898989898961106a565b60008181526039602052604090205490915060ff1615610efa5750610aa3565b600081815260386020526040812090610f116110ac565b6001600160a01b0316815260208101919091526040016000205460ff1615610f395750610aa3565b6000818152603860205260408120600191610f526110ac565b6001600160a01b031681526020810191909152604001600020805460ff19169115159190911790558084610f846110ac565b6001600160a01b03167fd22894491aaa5bb67855bcff4b9730bdf7768be1e25f66ced9a7d7ad623bf2918c8c8c8c8c8b604051610fc696959493929190611839565b60405180910390a4610fd78161121f565b1561105f576000818152603960205260409020805460ff19166001179055611005898989898989898961124f565b808461100f6110ac565b6001600160a01b03167fe21e4d3d66ef78424137270e65cfafe938736bb770702ab4fd630383e7820b738c8c8c8c8c8b60405161105196959493929190611839565b60405180910390a450610aa3565b505050505050505050565b6000878787878787876040516020016110899796959493929190611781565b604051602081830303815290604052805190602001209050979650505050505050565b3390565b6001600160a01b0381166110d65760405162461bcd60e51b81526004016103bc90611acf565b603480546001600160a01b0319166001600160a01b0383161790556040517f9775531310b2880b61484ed85cbb0b491c8fde3a07f289c63b92551782794497906111219083906117df565b60405180910390a150565b6001600160a01b0381166111525760405162461bcd60e51b81526004016103bc90611b06565b603a80546001600160a01b0319166001600160a01b0383161790556040517f41d363b5ede55d38b1fa8f7ba6188f9c20e353bc71e4a93de8938a20b27b6bc2906111219083906117df565b6001600160a01b0381166111c35760405162461bcd60e51b81526004016103bc90611cb0565b6033546040516001600160a01b038084169216907f8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e090600090a3603380546001600160a01b0319166001600160a01b0392909216919091179055565b60008061122b83610782565b905060365481101580156112485750603554600290046001018110155b9392505050565b600181600181111561125d57fe5b14156112fe57603a546001600160a01b031661128b5760405162461bcd60e51b81526004016103bc90611c31565b603a54604051636a86319160e01b81526001600160a01b0390911690636a863191906112c7908b908b908b908b908b908b908b906004016117f3565b600060405180830381600087803b1580156112e157600080fd5b505af11580156112f5573d6000803e3d6000fd5b50505050610aa3565b603454604051636a86319160e01b81526001600160a01b0390911690636a8631919061133a908b908b908b908b908b908b908b906004016117f3565b600060405180830381600087803b15801561135457600080fd5b505af1158015611368573d6000803e3d6000fd5b505050505050505050505050565b8280548282559060005260206000209081019282156113cb579160200282015b828111156113cb57825182546001600160a01b0319166001600160a01b03909116178255602090920191600190910190611396565b506113d79291506113db565b5090565b5b808211156113d757600081556001016113dc565b80356105dd81611d80565b60008083601f84011261140c578182fd5b50813567ffffffffffffffff811115611423578182fd5b60208301915083602082850101111561143b57600080fd5b9250929050565b803563ffffffff811681146105dd57600080fd5b600060208284031215611467578081fd5b813561124881611d80565b600080600080600080600080610100898b03121561148e578384fd5b883561149981611d80565b975060208901356114a981611d80565b965060408901356114b981611d80565b9550606089013594506080890135935060a089013592506114dc60c08a01611442565b915060e0890135600281106114ef578182fd5b809150509295985092959890939650565b600080600080600080600060e0888a03121561151a578283fd5b873561152581611d80565b9650602088013561153581611d80565b9550604088013561154581611d80565b9450606088013593506080880135925060a0880135915061156860c08901611442565b905092959891949750929550565b600080600080600060a0868803121561158d578081fd5b853567ffffffffffffffff808211156115a4578283fd5b818801915088601f8301126115b7578283fd5b81356020828211156115c557fe5b808202604051828282010181811086821117156115de57fe5b604052838152828101945085830182870184018e10156115fc578788fd5b8796505b8487101561162557611611816113f0565b865260019690960195948301948301611600565b50995050890135965061163f9250506040880190506113f0565b925061164d606087016113f0565b915061165b608087016113f0565b90509295509295909350565b600060208284031215611678578081fd5b5035919050565b60008060408385031215611691578182fd5b8235915060208301356116a381611d80565b809150509250929050565b60008060008060008060008060a0898b0312156116c9578384fd5b8835975060208901359650604089013567ffffffffffffffff808211156116ee578586fd5b6116fa8c838d016113fb565b909850965060608b0135915080821115611712578586fd5b61171e8c838d016113fb565b909650945060808b0135915080821115611736578384fd5b506117438b828c016113fb565b999c989b5096995094979396929594505050565b60008284528282602086013780602084860101526020601f19601f85011685010190509392505050565b606097881b6bffffffffffffffffffffffff19908116825296881b871660148201529490961b9094166028840152603c830191909152605c820152607c81019190915260e09190911b6001600160e01b031916609c82015260a00190565b6001600160a01b0391909116815260200190565b6001600160a01b03978816815295871660208701529390951660408501526060840191909152608083015260a082019290925263ffffffff90911660c082015260e00190565b6001600160a01b03968716815294861660208601529290941660408401526060830152608082019290925263ffffffff90911660a082015260c00190565b6020808252825182820181905260009190848201906040850190845b818110156118b85783516001600160a01b031683529284019291840191600101611893565b50909695505050505050565b901515815260200190565b90815260200190565b6000602080835283518082850152825b81811015611904578581018301518582016040015282016118e8565b818111156119155783604083870101525b50601f01601f1916929092016040019392505050565b6020808252818101527f46656465726174696f6e3a20496e76616c696420726571756972656d656e7473604082015260600190565b6020808252601f908201527f46656465726174696f6e3a204d6178206d656d62657273207265616368656400604082015260600190565b6020808252601c908201527f46656465726174696f6e3a20546f6f206d616e79206d656d6265727300000000604082015260600190565b60208082526021908201527f46656465726174696f6e3a204d656d62657220646f65736e27742065786973746040820152607360f81b606082015260800190565b60208082526028908201527f436f6e747261637420696e7374616e636520697320616c726561647920696e696040820152671d1a585b1a5e995960c21b606082015260800190565b6020808252601b908201527f46656465726174696f6e3a20496e76616c6964206d656d626572730000000000604082015260600190565b60208082526021908201527f46656465726174696f6e3a204d656d62657220616c72656164792065786973746040820152607360f81b606082015260800190565b60208082526018908201527f46656465726174696f6e3a20456d707479206272696467650000000000000000604082015260600190565b6020808252601c908201527f46656465726174696f6e3a20456d707479204e46542062726964676500000000604082015260600190565b60208082526031908201527f46656465726174696f6e3a2043616e27742068617665206c657373207468616e604082015270207265717569726564206d656d6265727360781b606082015260800190565b6020808252818101527f4f776e61626c653a2063616c6c6572206973206e6f7420746865206f776e6572604082015260600190565b6020808252601f908201527f46656465726174696f6e3a205265717569726573206174206c65617374203200604082015260600190565b60208082526018908201527f46656465726174696f6e3a20456d707479206d656d6265720000000000000000604082015260600190565b6020808252601b908201527f46656465726174696f6e3a20456d707479204e46544272696467650000000000604082015260600190565b60208082526028908201527f46656465726174696f6e3a2043616e27742072656d6f766520616c6c20746865604082015267206d656d6265727360c01b606082015260800190565b60208082526022908201527f4f776e61626c653a206e6577206f776e6572206973207a65726f206164647265604082015261737360f01b606082015260800190565b60208082526019908201527f46656465726174696f6e3a204e6f7420466564657261746f7200000000000000604082015260600190565b600089825288602083015260a06040830152611d4960a08301888a611757565b8281036060840152611d5c818789611757565b90508281036080840152611d71818587611757565b9b9a5050505050505050505050565b6001600160a01b03811681146106d757600080fdfea26469706673582212208aa1d2dd4590c44473c5e505bfb4d78ecb4c655a2f568f5eef1510b1514c437e64736f6c63430007060033",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {
+      "addMember(address)": {
+        "params": {
+          "_newMember": "address of the new member"
+        }
+      },
+      "changeRequirement(uint256)": {
+        "details": "Emits the RequirementChange event",
+        "params": {
+          "_required": "the number of minimum members to approve an transaction, it has to be bigger than 1"
+        }
+      },
+      "emitHeartbeat(uint256,uint256,string,string,string)": {
+        "details": "Emits HeartBeat event"
+      },
+      "getMembers()": {
+        "returns": {
+          "_0": "Current members"
+        }
+      },
+      "getTransactionCount(bytes32)": {
+        "params": {
+          "transactionId": "The transaction hashed from getTransactionId function"
+        }
+      },
+      "getTransactionId(address,address,address,uint256,bytes32,bytes32,uint32)": {
+        "details": "It encodes and applies keccak256 to the parameters received in the same order",
+        "params": {
+          "amount": "Could be the amount or the tokenId",
+          "blockHash": "The block hash in which the transaction with the cross event occurred",
+          "logIndex": "Index of the event in the logs",
+          "originalTokenAddress": "The address of the token in the origin (main) chain",
+          "receiver": "Who is going to receive the token in the opposite chain",
+          "sender": "The address who solicited the cross token",
+          "transactionHash": "The transaction in which the cross event occurred"
+        },
+        "returns": {
+          "_0": "The hash generated by the parameters."
+        }
+      },
+      "initialize(address)": {
+        "details": "Initializes the contract setting the deployer as the initial owner."
+      },
+      "isOwner()": {
+        "details": "Returns true if the caller is the current owner."
+      },
+      "owner()": {
+        "details": "Returns the address of the current owner."
+      },
+      "removeMember(address)": {
+        "params": {
+          "_oldMember": "address of the member to be removed from federation"
+        }
+      },
+      "renounceOwnership()": {
+        "details": "Leaves the contract without owner. It will not be possible to call `onlyOwner` functions anymore. Can only be called by the current owner. > Note: Renouncing ownership will leave the contract without an owner, thereby removing any functionality that is only available to the owner."
+      },
+      "setBridge(address)": {
+        "details": "Emits BridgeChanged event",
+        "params": {
+          "_bridge": "the new bridge contract address that should implement the IBridge interface"
+        }
+      },
+      "setNFTBridge(address)": {
+        "details": "Emits NFTBridgeChanged event",
+        "params": {
+          "_bridgeNFT": "the new NFT bridge contract address that should implement the INFTBridge interface"
+        }
+      },
+      "transferOwnership(address)": {
+        "details": "Transfers ownership of the contract to a new account (`newOwner`). Can only be called by the current owner."
+      },
+      "version()": {
+        "returns": {
+          "_0": "version in v{Number}"
+        }
+      },
+      "voteTransaction(address,address,address,uint256,bytes32,bytes32,uint32,uint8)": {
+        "params": {
+          "blockHash": "The block hash in which the transaction with the cross event occurred",
+          "logIndex": "Index of the event in the logs",
+          "originalTokenAddress": "The address of the token in the origin (main) chain",
+          "receiver": "Who is going to receive the token in the opposite chain",
+          "sender": "The address who solicited the cross token",
+          "tokenType": "Is the type of bridge to be used",
+          "transactionHash": "The transaction in which the cross event occurred",
+          "value": "Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT"
+        }
+      }
+    },
+    "stateVariables": {
+      "isMember": {
+        "details": "The address should be a member to vote in transactions"
+      },
+      "required": {
+        "details": "It should have more members than the required amount"
+      },
+      "votes": {
+        "details": "usually the members should approve the transaction by 50% + 1"
+      }
+    },
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {
+      "addMember(address)": {
+        "notice": "Add a new member to the federation"
+      },
+      "bridgeNFT()": {
+        "notice": "Federator v3 variables "
+      },
+      "changeRequirement(uint256)": {
+        "notice": "Changes the number of required members to vote and approve an transaction"
+      },
+      "emitHeartbeat(uint256,uint256,string,string,string)": {
+        "notice": "It emits an HeartBeat like an health check"
+      },
+      "getMembers()": {
+        "notice": "Return all the current members of the federation"
+      },
+      "getTransactionCount(bytes32)": {
+        "notice": "Get the amount of approved votes for that transactionId"
+      },
+      "getTransactionId(address,address,address,uint256,bytes32,bytes32,uint32)": {
+        "notice": "Gets the hash of transaction from the following parameters encoded and keccaked"
+      },
+      "isMember(address)": {
+        "notice": "All the addresses that are members of the federation"
+      },
+      "processed(bytes32)": {
+        "notice": "(bytes32) transactionId => (bool) votedCheck if that transaction was already processed"
+      },
+      "removeMember(address)": {
+        "notice": "Remove a member of the federation"
+      },
+      "required()": {
+        "notice": "The minimum amount of votes to approve a transaction"
+      },
+      "setBridge(address)": {
+        "notice": "Sets a new bridge contract"
+      },
+      "setNFTBridge(address)": {
+        "notice": "Sets a new NFT bridge contract"
+      },
+      "version()": {
+        "notice": "Current version of the contract"
+      },
+      "voteTransaction(address,address,address,uint256,bytes32,bytes32,uint32,uint8)": {
+        "notice": "Vote in a transaction, if it has enough votes it accepts the transfer"
+      },
+      "votes(bytes32,address)": {
+        "notice": "(bytes32) transactionId = keccak256( abi.encodePacked( originalTokenAddress, sender, receiver, amount, blockHash, transactionHash, logIndex ) ) => ( (address) members => (bool) voted )Votes by members by the transaction ID"
+      }
+    },
+    "version": 1
+  },
+  "storageLayout": {
+    "storage": [
+      {
+        "astId": 15789,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "initialized",
+        "offset": 0,
+        "slot": "0",
+        "type": "t_bool"
+      },
+      {
+        "astId": 15792,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "initializing",
+        "offset": 1,
+        "slot": "0",
+        "type": "t_bool"
+      },
+      {
+        "astId": 15832,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "______gap",
+        "offset": 0,
+        "slot": "1",
+        "type": "t_array(t_uint256)50_storage"
+      },
+      {
+        "astId": 16076,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "_owner",
+        "offset": 0,
+        "slot": "51",
+        "type": "t_address"
+      },
+      {
+        "astId": 4016,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "bridge",
+        "offset": 0,
+        "slot": "52",
+        "type": "t_contract(IBridge)7398"
+      },
+      {
+        "astId": 4019,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "members",
+        "offset": 0,
+        "slot": "53",
+        "type": "t_array(t_address)dyn_storage"
+      },
+      {
+        "astId": 4022,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "required",
+        "offset": 0,
+        "slot": "54",
+        "type": "t_uint256"
+      },
+      {
+        "astId": 4027,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "isMember",
+        "offset": 0,
+        "slot": "55",
+        "type": "t_mapping(t_address,t_bool)"
+      },
+      {
+        "astId": 4034,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "votes",
+        "offset": 0,
+        "slot": "56",
+        "type": "t_mapping(t_bytes32,t_mapping(t_address,t_bool))"
+      },
+      {
+        "astId": 4039,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "processed",
+        "offset": 0,
+        "slot": "57",
+        "type": "t_mapping(t_bytes32,t_bool)"
+      },
+      {
+        "astId": 4042,
+        "contract": "contracts/Federation/Federation.sol:Federation",
+        "label": "bridgeNFT",
+        "offset": 0,
+        "slot": "58",
+        "type": "t_contract(INFTBridge)7960"
+      }
+    ],
+    "types": {
+      "t_address": {
+        "encoding": "inplace",
+        "label": "address",
+        "numberOfBytes": "20"
+      },
+      "t_array(t_address)dyn_storage": {
+        "base": "t_address",
+        "encoding": "dynamic_array",
+        "label": "address[]",
+        "numberOfBytes": "32"
+      },
+      "t_array(t_uint256)50_storage": {
+        "base": "t_uint256",
+        "encoding": "inplace",
+        "label": "uint256[50]",
+        "numberOfBytes": "1600"
+      },
+      "t_bool": {
+        "encoding": "inplace",
+        "label": "bool",
+        "numberOfBytes": "1"
+      },
+      "t_bytes32": {
+        "encoding": "inplace",
+        "label": "bytes32",
+        "numberOfBytes": "32"
+      },
+      "t_contract(IBridge)7398": {
+        "encoding": "inplace",
+        "label": "contract IBridge",
+        "numberOfBytes": "20"
+      },
+      "t_contract(INFTBridge)7960": {
+        "encoding": "inplace",
+        "label": "contract INFTBridge",
+        "numberOfBytes": "20"
+      },
+      "t_mapping(t_address,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_address",
+        "label": "mapping(address => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_bool)": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => bool)",
+        "numberOfBytes": "32",
+        "value": "t_bool"
+      },
+      "t_mapping(t_bytes32,t_mapping(t_address,t_bool))": {
+        "encoding": "mapping",
+        "key": "t_bytes32",
+        "label": "mapping(bytes32 => mapping(address => bool))",
+        "numberOfBytes": "32",
+        "value": "t_mapping(t_address,t_bool)"
+      },
+      "t_uint256": {
+        "encoding": "inplace",
+        "label": "uint256",
+        "numberOfBytes": "32"
+      }
+    }
+  }
+}
