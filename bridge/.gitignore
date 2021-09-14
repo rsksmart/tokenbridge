@@ -54,3 +54,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Script files
+arguments.js

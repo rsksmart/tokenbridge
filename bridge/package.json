@@ -18,7 +18,7 @@
     "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
     "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment",
     "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest",
-    "verifyDeployments": "bash hardhat/script/verify.sh"
+    "verifyDeployments": "python hardhat/script/verify.py -n"
   },
   "keywords": [
     "rsk",
