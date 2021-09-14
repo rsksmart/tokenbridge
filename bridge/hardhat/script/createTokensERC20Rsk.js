@@ -25,7 +25,7 @@ async function main() {
       name: 'BSC-DAI Token',
       symbol: 'DAI',
       typeId: 1,
-      originalTokenAddress: '0x13878644c0f2c9c5c8a85da43ebc3bb74bbc05a9',
+      originalTokenAddress: '0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867',
     },
     {
       name: 'BSC-ETH Token',
