@@ -2,6 +2,7 @@ const ETHEREUM_MAIN_NET_CHAIN_ID = 1;
 const RSK_MAIN_NET_CHAIN_ID = 30;
 const RSK_TEST_NET_CHAIN_ID = 31;
 const KOVAN_TEST_NET_CHAIN_ID = 42;
+const RINKEBY_TEST_NET_CHAIN_ID = 4;
 const BSC_MAIN_NET_CHAIN_ID = 56;
 const BSC_TEST_NET_CHAIN_ID = 97;
 const GANACHE_DEV_MIRROR_CHAIN_ID = 5776;
@@ -28,7 +29,7 @@ function tokenSymbol(network) {
   return network.config.token_symbol ?? 'e';
 }
 
-function isMainet(network) {
+function isMainnet(network) {
   const chainID = network.config.network_id;
   return [ETHEREUM_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID, BSC_MAIN_NET_CHAIN_ID].includes(chainID);
 }
@@ -38,6 +39,7 @@ module.exports = {
   RSK_MAIN_NET_CHAIN_ID: RSK_MAIN_NET_CHAIN_ID,
   RSK_TEST_NET_CHAIN_ID: RSK_TEST_NET_CHAIN_ID,
   KOVAN_TEST_NET_CHAIN_ID: KOVAN_TEST_NET_CHAIN_ID,
+  RINKEBY_TEST_NET_CHAIN_ID: RINKEBY_TEST_NET_CHAIN_ID,
   BSC_MAIN_NET_CHAIN_ID: BSC_MAIN_NET_CHAIN_ID,
   BSC_TEST_NET_CHAIN_ID: BSC_TEST_NET_CHAIN_ID,
   GANACHE_DEV_MIRROR_CHAIN_ID: GANACHE_DEV_MIRROR_CHAIN_ID,
@@ -45,5 +47,5 @@ module.exports = {
   HARDHAT_TEST_NET_CHAIN_ID: HARDHAT_TEST_NET_CHAIN_ID,
   isRSK: isRSK,
   tokenSymbol: tokenSymbol,
-  isMainet: isMainet,
+  isMainnet: isMainnet,
 };
