@@ -15,6 +15,11 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
   const multiSigAddress = await address.getMultiSigAddress(hre);
 
+  const owner = await allowTokens.methods.owner().call({from: deployer});
+  if (owner === multiSigAddress) {
+    return
+  }
+
   await setTokens(network, allowTokens, deployer);
   log(`AllowTokens Setted Tokens`);
 

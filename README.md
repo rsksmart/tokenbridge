@@ -56,7 +56,7 @@ For testing purposes only, an empty `test.local.federator.key` file is available
 Also, a `test.local.config.js` configuration is provided in `federator/config` for the same purpose, acting as the `config.js` file would in a productive environment.
 
 1. Check `mnemonic.key` in `bridge`
-1. Check `infura.key` in `bridge`
+1. Check `infura.key` in `bridge` (must contain your Infura's project ID in plain text)
 1. Check your `networkName` in `bridge/migrations/4_deploy_erc1820.js` when your test network does not have **ERC1820:Pseudo-introspection Registry Contract** deployed.
 
 Then
