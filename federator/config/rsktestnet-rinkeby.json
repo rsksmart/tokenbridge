@@ -1,0 +1,10 @@
+{
+    "bridge": "0x8c8a34fe13400169a8da50908dffde4985237d19",
+    "nftBridge": "0xd28f2eeb1a242462149542bdf90c4cc99271fa70",
+    "federation": "0xbc7a3f163b2fe1d6810a942417922f09f1fe82ed",
+    "multiSig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+    "allowTokens": "0x71f228664e2a118decd19b68c5151014769757a0",
+    "nftConfirmations": 5,
+    "host": "<Your private node url and port>",
+    "fromBlock": 2170986
+}
