@@ -17,6 +17,14 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
     return;
   }
   const BridgeProxy = await deployments.get(bridgeProxyName);
+  const SideTokenFactory = await deployments.get(sideTokenFactoryName);
+
+  const sideTokenFactoryContract = new web3.eth.Contract(SideTokenFactory.abi, SideTokenFactory.address);
+  const primary = await sideTokenFactoryContract.methods.primary().call({from: deployer});
+  if (primary === BridgeProxy.address) {
+    return
+  }
+
   await execute(sideTokenFactoryName, {from: deployer, gasLimit: GAS_LIMIT}, 'transferPrimary', BridgeProxy.address);
   log(`SideTokenFactory Transferred Primary to BridgeProxy`);
 };
