@@ -9,7 +9,7 @@ RUN chown -R node:node /app
 USER node
 WORKDIR /app/federator
 
-RUN npm install
+RUN npm ci
 RUN npm run build
 
 ENTRYPOINT [ "npm", "start" ]
