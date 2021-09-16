@@ -10,5 +10,6 @@ USER node
 WORKDIR /app/federator
 
 RUN npm install
+RUN npm run build
 
 ENTRYPOINT [ "npm", "start" ]
