@@ -3,8 +3,8 @@ FROM node:16.6.1-alpine3.13
 RUN apk add --no-cache python2 build-base
 
 
-COPY ./federator /app/federator
-COPY ./bridge/abi /app/bridge/abi
+COPY --chown=node:node ./federator /app/federator
+COPY --chown=node:node ./bridge/abi /app/bridge/abi
 
 WORKDIR /app/federator
 
