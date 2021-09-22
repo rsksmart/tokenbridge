@@ -355,7 +355,7 @@ module.exports = class Federator {
     try {
       txId = txId.toLowerCase();
       this.logger.info(
-        `Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`
+        `TransactionId ${txId} Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`
       );
 
       const txData = await fedContract.getVoteTransactionABI({
@@ -392,6 +392,10 @@ module.exports = class Federator {
         return false;
       }
 
+      this.logger.info(
+        `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`,
+      );
+      
       const receipt = await this.transactionSender.sendTransaction(
         fedContract.getAddress(),
         txData,
@@ -400,6 +404,11 @@ module.exports = class Federator {
       );
 
       if (receipt.status == false) {
+        this.logger.info(
+          `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} failed, check the receipt`,
+          receipt
+        );
+        
         fs.writeFileSync(
           this.revertedTxnsPath,
           JSON.stringify({
