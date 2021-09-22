@@ -1,11 +1,11 @@
-// How to run the script: npx hardhat run ./hardhat/script/addFederatorMemeber.js --network rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/deleteFederatorMemeber.js --network rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
   const transactionEtherValue = 0;
-  const memberFederatorAddress = "0x0e6fa08809bc166ab5ce237fdccb1802fdf13b27";
+  const oldFederatorAddress = "0xeac27e59f8a71613137e9c5d475d05c7d4d198e8";
 
   const Federation = await deployments.get('FederationV2');
   const FederationProxy = await deployments.get('FederationProxy');
@@ -14,21 +14,21 @@ async function main() {
   const federator = new web3.eth.Contract(Federation.abi, FederationProxy.address);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
 
-  const methodCallAddNewMember = federator.methods.addMember(
-    memberFederatorAddress
+  const methodCallRemoveOldMember = federator.methods.removeMember(
+    oldFederatorAddress
   );
-  const result = await methodCallAddNewMember.call({ from: MultiSigWallet.address});
+  const result = await methodCallRemoveOldMember.call({ from: MultiSigWallet.address});
   console.log("Method call result", result);
 
   const receipt = await multiSigContract.methods.submitTransaction(
     FederationProxy.address,
     transactionEtherValue,
-    methodCallAddNewMember.encodeABI()
+    methodCallRemoveOldMember.encodeABI()
   ).send({
     from: deployer,
     gasLimit: 3000000
   });
-  console.log("Transaction worked, member added, txHash:", receipt.transactionHash);
+  console.log("Transaction worked, member removed, txHash:", receipt.transactionHash);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

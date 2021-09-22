@@ -218,6 +218,7 @@ module.exports = class TransactionSender {
             return receipt;
 
         } catch(err) {
+            this.logger.error('Error in sendTransaction', err, `transactionHash:${txHash} to:${to} data:${data}`);
             if(throwOnError)
                 throw new CustomError('Error in sendTransaction', err);
 
