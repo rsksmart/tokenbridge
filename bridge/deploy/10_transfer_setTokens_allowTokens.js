@@ -138,7 +138,7 @@ async function setTokensEthereum(allowTokens, deployer) {
     {token: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262', typeId: '6'}, //RFOX
     {token: '0xca0e7269600d353f70b14ad118a49575455c0f2f', typeId: '6'}, //AMLT
     // Side Tokens
-    {token: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5', typeId: '5'}, //eRIF
+    {token: '0x73c08467E23F7DCB7dDBbc8d05041B74467A498A', typeId: '5'}, //eRIF
     {token: '0xe700691da7b9851f2f35f8b8182c69c53ccad9db', typeId: '4'} //eDOC
   ]).send({from: deployer});
 }
