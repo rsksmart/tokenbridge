@@ -44,7 +44,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 public domainSeparator;
     uint256 internal _deprecatedSpentToday;
 
-    mapping (address => address) public mappedTokens; // OriginalToken => SideToken
+    mapping (address => address) public mappedTokens; // OirignalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
@@ -65,7 +65,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
     mapping(address => uint) public nonces;
 
-    //Bridge_v4 variables multichain changes
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
