@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/getWrappedCurrency.js --network rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/getWrappedCurrency.js --network rsktestnet rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
