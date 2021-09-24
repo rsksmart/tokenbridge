@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 // created using https://github.com/ProjectOpenSea/opensea-creatures/blob/master/contracts/ERC721Tradable.sol
 // and https://github.com/ProjectOpenSea/opensea-creatures/blob/master/contracts/Creature.sol
 import "../../zeppelin/token/ERC721/ERC721.sol";

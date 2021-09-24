@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
@@ -313,10 +313,10 @@ contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausa
         require(!alreadyRun, "already done");
         alreadyRun = true;
         address payable[4] memory sideTokens = [
-            0xe506F698b31a66049BD4653ed934E7a07Cbc5549,
-            0x5a42221D7AaE8e185BC0054Bb036D9757eC18857,
-            0xcdc8ccBbFB6407c53118fE47259e8d00C81F42CD,
-            0x6117C9529F15c52e2d3188d5285C745B757b5825
+            payable(0xe506F698b31a66049BD4653ed934E7a07Cbc5549),
+            payable(0x5a42221D7AaE8e185BC0054Bb036D9757eC18857),
+            payable(0xcdc8ccBbFB6407c53118fE47259e8d00C81F42CD),
+            payable(0x6117C9529F15c52e2d3188d5285C745B757b5825)
         ];
         for (uint i = 0; i < sideTokens.length; i++) {
             address originalToken = address(originalTokens[sideTokens[i]]);
