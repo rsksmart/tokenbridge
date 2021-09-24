@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 // Import base Initializable contract
@@ -65,7 +65,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
     mapping(address => uint) public nonces;
 
-    //Bridge_v4 variables multichain changes
+    //Bridge_v4 variables multichain
+    
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
