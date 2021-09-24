@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 import "../zeppelin/token/ERC777/IERC777Recipient.sol";
 import "../zeppelin/introspection/IERC1820Registry.sol";
