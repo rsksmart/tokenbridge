@@ -44,7 +44,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 public domainSeparator;
     uint256 internal _deprecatedSpentToday;
 
-    mapping (address => address) public mappedTokens; // OirignalToken => SideToken
+    mapping (address => address) public mappedTokens; // OriginalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
