@@ -134,7 +134,7 @@ module.exports = {
     //Ethereum
     kovan: {
       live: true,
-      url: 'https://kovan.infura.io/ws/v3/' + INFURA_API_KEY,
+      url: 'https://kovan.infura.io/v3/' + INFURA_API_KEY,
       network_id: chains.KOVAN_TEST_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
