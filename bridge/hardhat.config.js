@@ -21,7 +21,7 @@ const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
  */
 module.exports = {
   solidity: {
-    version: '0.7.6',
+    version: '0.8.0',
     settings: {
       evmVersion: 'istanbul',
       optimizer: {
