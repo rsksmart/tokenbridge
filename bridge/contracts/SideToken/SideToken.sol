@@ -31,15 +31,10 @@ contract SideToken is ISideToken, ERC777 {
         minter = _minterAddr;
         _granularity = _newGranularity;
 
-        uint chainId;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            chainId := chainid()
-        }
         domainSeparator = LibEIP712.hashEIP712Domain(
             name(),
             "1",
-            chainId,
+            block.chainid,
             address(this)
         );
     }
