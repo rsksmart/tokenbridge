@@ -44,7 +44,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     bytes32 public domainSeparator;
     uint256 internal _deprecatedSpentToday;
 
-    mapping (address => address) public mappedTokens; // OriginalToken => SideToken
+    mapping (address => address) public deprecatedMappedTokens; // OriginalToken => SideToken
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
@@ -66,7 +66,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     mapping(address => uint) public nonces;
 
     //Bridge_v4 variables multichain
-    
+    mapping (uint256 => mapping(address => address)) public chainMappedTokens;
+
     event AllowTokensChanged(address _newAllowTokens);
     event FederationChanged(address _newFederation);
     event SideTokenFactoryChanged(address _newSideTokenFactory);
@@ -101,15 +102,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
     }
 
     function initDomainSeparator() public {
-        uint chainId;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            chainId := chainid()
-        }
         domainSeparator = LibEIP712.hashEIP712Domain(
             "RSK Token Bridge",
             "1",
-            chainId,
+            block.chainid,
             address(this)
         );
     }
