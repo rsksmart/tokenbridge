@@ -45,7 +45,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	uint256 internal _deprecatedSpentToday;
 
 	mapping (address => address) public deprecatedMappedTokens; // OriginalToken => SideToken
-	mapping (address => address) public originalTokens; // SideToken => OriginalToken
+	mapping (address => address) public deprecatedOriginalTokens; // SideToken => OriginalToken
 	mapping (address => bool) public knownTokens; // OriginalToken => true
 	mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
 	IAllowTokens public allowTokens;
@@ -66,7 +66,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	mapping(address => uint) public nonces;
 
 	//Bridge_v4 variables multichain
-	mapping (uint256 => mapping(address => address)) public chainMappedTokens;
+	mapping (uint256 => mapping(address => address)) public chainMappedTokens; // chainId => OriginalToken => SideToken
+	mapping (uint256 => mapping(address => address)) public chainOriginalTokens; // chainId => SideToken => OriginalToken
 
 	event AllowTokensChanged(address _newAllowTokens);
 	event FederationChanged(address _newFederation);
@@ -133,6 +134,22 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	function setMappedTokens(uint256 chainId, address originalToken, address sideToken) public {
 		chainMappedTokens[chainId][originalToken] = sideToken;
+	}
+
+	function originalTokens(uint256 chainId, address sideToken) public view returns(address) {
+		// specification for retrocompatibility
+		if (isChain(chainId)) {
+			address originalToken = deprecatedOriginalTokens[sideToken];
+			if (originalToken != NULL_ADDRESS) {
+				return originalToken;
+			}
+		}
+
+		return chainOriginalTokens[chainId][sideToken];
+	}
+
+	function setOriginalTokens(uint256 chainId, address sideToken, address originalToken) public {
+		chainOriginalTokens[chainId][sideToken] = originalToken;
 	}
 
 	function acceptTransferMultichain(
@@ -224,7 +241,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
 
 		setMappedTokens(chainId, _originalTokenAddress, sideToken);
-		originalTokens[sideToken] = _originalTokenAddress;
+		setOriginalTokens(chainId, sideToken, _originalTokenAddress);
 		allowTokens.setToken(sideToken, _typeId);
 
 		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity);
@@ -254,26 +271,26 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function getDigest(
-			ClaimData memory _claimData,
-			address payable _relayer,
-			uint256 _fee,
-			uint256 _deadline
+		ClaimData memory _claimData,
+		address payable _relayer,
+		uint256 _fee,
+		uint256 _deadline
 	) internal returns (bytes32) {
-			return LibEIP712.hashEIP712Message(
-					domainSeparator,
-					keccak256(
-							abi.encode(
-									CLAIM_TYPEHASH,
-									_claimData.to,
-									_claimData.amount,
-									_claimData.transactionHash,
-									_relayer,
-									_fee,
-									nonces[_claimData.to]++,
-									_deadline
-							)
-					)
-			);
+		return LibEIP712.hashEIP712Message(
+			domainSeparator,
+			keccak256(
+				abi.encode(
+					CLAIM_TYPEHASH,
+					_claimData.to,
+					_claimData.amount,
+					_claimData.transactionHash,
+					_relayer,
+					_fee,
+					nonces[_claimData.to]++,
+					_deadline
+				)
+			)
+		);
 	}
 
 	function claimGasless(
@@ -390,111 +407,142 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function _claimCrossBackToToken(
-			address _originalTokenAddress,
-			address payable _receiver,
-			uint256 _amount,
-			address payable _relayer,
-			uint256 _fee
+		address _originalTokenAddress,
+		address payable _receiver,
+		uint256 _amount,
+		address payable _relayer,
+		uint256 _fee
 	) internal returns (uint256 receivedAmount) {
-			uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
-			//As side tokens are ERC777 they will always have 18 decimals
-			uint256 formattedAmount = _amount.div(uint256(10) ** (18 - decimals));
-			require(_fee <= formattedAmount, "Bridge: fee too high");
-			receivedAmount = formattedAmount - _fee;
-			if(address(wrappedCurrency) == _originalTokenAddress) {
-					wrappedCurrency.withdraw(formattedAmount);
-					_receiver.transfer(receivedAmount);
-					if(_fee > 0) {
-							_relayer.transfer(_fee);
-					}
-			} else {
-					IERC20(_originalTokenAddress).safeTransfer(_receiver, receivedAmount);
-					if(_fee > 0) {
-							IERC20(_originalTokenAddress).safeTransfer(_relayer, _fee);
-					}
+		uint256 decimals = LibUtils.getDecimals(_originalTokenAddress);
+		//As side tokens are ERC777 they will always have 18 decimals
+		uint256 formattedAmount = _amount.div(uint256(10) ** (18 - decimals));
+		require(_fee <= formattedAmount, "Bridge: fee too high");
+		receivedAmount = formattedAmount - _fee;
+		if (address(wrappedCurrency) == _originalTokenAddress) {
+			wrappedCurrency.withdraw(formattedAmount);
+			_receiver.transfer(receivedAmount);
+			if(_fee > 0) {
+				_relayer.transfer(_fee);
 			}
-			return receivedAmount;
+		} else {
+			IERC20(_originalTokenAddress).safeTransfer(_receiver, receivedAmount);
+			if(_fee > 0) {
+				IERC20(_originalTokenAddress).safeTransfer(_relayer, _fee);
+			}
+		}
+		return receivedAmount;
+	}
+
+	function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
+		return receiveTokensToMultichain(tokenToUse, to, amount, block.chainid);
 	}
 
 	/**
 		* ERC-20 tokens approve and transferFrom pattern
 		* See https://eips.ethereum.org/EIPS/eip-20#transferfrom
 		*/
-	function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
-			address sender = _msgSender();
-			//Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
-			IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
-			crossTokens(tokenToUse, sender, to, amount, "");
+	function receiveTokensToMultichain(address tokenToUse, address to, uint256 amount, uint256 chainId) public {
+		address sender = _msgSender();
+		//Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
+		IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
+		crossTokens(tokenToUse, sender, to, amount, "", chainId);
+	}
+
+	function depositTo(address to) override external payable {
+		return depositToMultichain(to, block.chainid);
 	}
 
 	/**
 		* Use network currency and cross it.
 		*/
-	function depositTo(address to) override external payable {
-			address sender = _msgSender();
-			require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
-			wrappedCurrency.deposit{ value: msg.value }();
-			crossTokens(address(wrappedCurrency), sender, to, msg.value, "");
+	function depositToMultichain(address to, uint256 chainId) public payable {
+		address sender = _msgSender();
+		require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
+		wrappedCurrency.deposit{ value: msg.value }();
+		crossTokens(address(wrappedCurrency), sender, to, msg.value, "", chainId);
 	}
 
 	/**
 		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
 		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
 		*/
-	function tokensReceived (
-			address operator,
-			address from,
-			address to,
-			uint amount,
-			bytes calldata userData,
-			bytes calldata
-	) external override(IBridge, IERC777Recipient){
-			//Hook from ERC777address
-			if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
-			require(to == address(this), "Bridge: Not to this address");
-			address tokenToUse = _msgSender();
-			require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-			require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
-			address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
-			crossTokens(tokenToUse, from, receiver, amount, userData);
+	function tokensReceived(
+		address operator,
+		address from,
+		address to,
+		uint amount,
+		bytes calldata userData,
+		bytes calldata
+	) external override(IBridge, IERC777Recipient) {
+		return tokensReceivedMultichain(operator, from, to, amount, userData, block.chainid);
 	}
 
-	function crossTokens(address tokenToUse, address from, address to, uint256 amount, bytes memory userData)
-	internal whenNotUpgrading whenNotPaused nonReentrant {
-			knownTokens[tokenToUse] = true;
-			uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
-			uint256 amountMinusFees = amount.sub(fee);
-			uint8 decimals = LibUtils.getDecimals(tokenToUse);
-			uint formattedAmount = amount;
-			if(decimals != 18) {
-					formattedAmount = amount.mul(uint256(10)**(18-decimals));
-			}
-			// We consider the amount before fees converted to 18 decimals to check the limits
-			// updateTokenTransfer revert if token not allowed
-			allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
-			address originalTokenAddress = tokenToUse;
-			if (originalTokens[tokenToUse] != NULL_ADDRESS) {
-					//Side Token Crossing
-					originalTokenAddress = originalTokens[tokenToUse];
-					uint256 granularity = LibUtils.getGranularity(tokenToUse);
-					uint256 modulo = amountMinusFees.mod(granularity);
-					fee = fee.add(modulo);
-					amountMinusFees = amountMinusFees.sub(modulo);
-					IERC777(tokenToUse).burn(amountMinusFees, userData);
-			}
+	/**
+		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
+		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
+		*/
+	function tokensReceivedMultichain(
+		address operator,
+		address from,
+		address to,
+		uint amount,
+		bytes calldata userData,
+		uint256 chainId
+	) public {
+		//Hook from ERC777address
+		if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
+		require(to == address(this), "Bridge: Not to this address");
+		address tokenToUse = _msgSender();
+		require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
+		require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
+		address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
+		crossTokens(tokenToUse, from, receiver, amount, userData, chainId);
+	}
 
-			emit Cross(
-					originalTokenAddress,
-					from,
-					to,
-					amountMinusFees,
-					userData
-			);
+	function crossTokens(
+		address tokenToUse,
+		address from,
+		address to,
+		uint256 amount,
+		bytes memory userData,
+		uint256 chainId
+	) internal whenNotUpgrading whenNotPaused nonReentrant {
+		knownTokens[tokenToUse] = true;
+		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
+		uint256 amountMinusFees = amount.sub(fee);
+		uint8 decimals = LibUtils.getDecimals(tokenToUse);
+		uint formattedAmount = amount;
+		if(decimals != 18) {
+			formattedAmount = amount.mul(uint256(10)**(18-decimals));
+		}
+		// We consider the amount before fees converted to 18 decimals to check the limits
+		// updateTokenTransfer revert if token not allowed
+		allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
+		address originalTokenAddress = tokenToUse;
 
-			if (fee > 0) {
-					//Send the payment to the MultiSig of the Federation
-					IERC20(tokenToUse).safeTransfer(owner(), fee);
-			}
+		address sideTokenAddress = originalTokens(chainId, tokenToUse);
+		if (sideTokenAddress != NULL_ADDRESS) {
+			//Side Token Crossing
+			originalTokenAddress = sideTokenAddress;
+			uint256 granularity = LibUtils.getGranularity(tokenToUse);
+			uint256 modulo = amountMinusFees.mod(granularity);
+			fee = fee.add(modulo);
+			amountMinusFees = amountMinusFees.sub(modulo);
+			IERC777(tokenToUse).burn(amountMinusFees, userData);
+		}
+
+		emit Cross(
+			originalTokenAddress,
+			from,
+			to,
+			amountMinusFees,
+			userData
+		);
+
+		if (fee > 0) {
+			//Send the payment to the MultiSig of the Federation
+			IERC20(tokenToUse).safeTransfer(owner(), fee);
+		}
 	}
 
 	function getTransactionDataHash(
