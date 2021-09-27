@@ -5,7 +5,7 @@ async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
 
-  const wrappedCurrencyAddress = "0x50f2cd4e18428e1c8c73b7638d5da32975663e16"
+  const wrappedCurrencyAddress = "0x50F2CD4e18428e1c8C73b7638d5DA32975663e16"
   const transactionEtherValue = 0;
 
   const AllowTokens = await deployments.get('AllowTokens');

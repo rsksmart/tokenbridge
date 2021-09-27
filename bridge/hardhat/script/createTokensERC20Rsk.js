@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
@@ -12,8 +12,14 @@ async function main() {
     {
       name: 'BSC-Binance Token',
       symbol: 'WBNB',
-      typeId: 1,
-      originalTokenAddress: '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd', // bsctestnet originalTokens 
+      typeId: 2,
+      originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // bsctestnet 0x0000 
+      // originalTokenAddress: '0xd15cDD74DfF1A6A81Ca639B038839B126BC01FF9', // kovan 0x0000
+      // originalTokenAddress: '0xae13d989dac2f0debff460ac112a837c89baa7cd', // rsktestnetbsc mappedTokens 0x50F2CD4e18428e1c8C73b7638d5DA32975663e16
+      // originalTokenAddress: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', // rsktestnet mappedTokens 0xd15cDD74DfF1A6A81Ca639B038839B126BC01FF9
+
+
+      // originalTokenAddress: '0xae13d989dac2f0debff460ac112a837c89baa7cd', // rsktestnetbsc mappedTokens 0x50F2CD4e18428e1c8C73b7638d5DA32975663e16
       // originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // rsktestnetbsc originalTokens 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
       // originalTokenAddress: '0xae13d989dac2f0debff460ac112a837c89baa7cd', // rsktestnetbsc mappedTokens 0x50F2CD4e18428e1c8C73b7638d5DA32975663e16
       // originalTokenAddress: '0xd15cDD74DfF1A6A81Ca639B038839B126BC01FF9', // rsktestnet originalTokens 0xd0A1E359811322d97991E03f863a0C30C2cF029C
@@ -104,8 +110,10 @@ async function main() {
     // });
     // console.log("Transaction worked", receipt.transactionHash);
 
-    const tokenAddress = await bridge.methods.mappedTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
-    console.log("Token address for", token.name, ":", tokenAddress);
+    const tokenAddressMapped = await bridge.methods.mappedTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
+    console.log("Token address Mapped for", token.name, ":", tokenAddressMapped);
+    const tokenAddressOriginal = await bridge.methods.originalTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
+    console.log("Token address Original for", token.name, ":", tokenAddressOriginal);
   }
 
   console.log("finish");
