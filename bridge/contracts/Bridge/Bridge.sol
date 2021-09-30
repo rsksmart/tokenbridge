@@ -68,9 +68,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
 	mapping(address => uint) public nonces;
 
-	//Bridge_v4 variables multichain
-	mapping (uint256 => mapping(address => address)) public chainMappedTokens; // chainId => OriginalToken => SideToken
-	mapping (uint256 => mapping(address => address)) public chainOriginalTokens; // chainId => SideToken => OriginalToken
+	//Bridge_v4 variables multichain sideTokenAddressByOriginalTokenAddress
+	mapping (uint256 => mapping(address => address)) public sideTokenAddressByOriginalTokenAddressByChain; // chainId => OriginalToken => SideToken
+	mapping (uint256 => mapping(address => address)) public originalTokenAddressBySideTokenAddressByChain; // chainId => SideToken => OriginalToken
 	mapping (uint256 => mapping(address => bool)) public chainKnownTokens; // chainId => OriginalToken => true
 
 	event AllowTokensChanged(address _newAllowTokens);
@@ -124,7 +124,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return chainId == block.chainid;
 	}
 
-	function mappedTokens(uint256 chainId, address originalToken) public view returns(address) {
+	function sideTokenAddressByOriginalTokenAddress(uint256 chainId, address originalToken) public view returns(address) {
 		// specification for retrocompatibility
 		if (isChain(chainId)) {
 			address sideToken = deprecatedMappedTokens[originalToken];
@@ -133,14 +133,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			}
 		}
 
-		return chainMappedTokens[chainId][originalToken];
+		return sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken];
 	}
 
-	function setMappedTokens(uint256 chainId, address originalToken, address sideToken) public {
-		chainMappedTokens[chainId][originalToken] = sideToken;
+	function setSideTokenByOriginalAddressByChain(uint256 chainId, address originalToken, address sideToken) public {
+		sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken] = sideToken;
 	}
 
-	function originalTokens(uint256 chainId, address sideToken) public view returns(address) {
+	function originalTokenAddressBySideTokenAddress(uint256 chainId, address sideToken) public view returns(address) {
 		// specification for retrocompatibility
 		if (isChain(chainId)) {
 			address originalToken = deprecatedOriginalTokens[sideToken];
@@ -149,11 +149,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			}
 		}
 
-		return chainOriginalTokens[chainId][sideToken];
+		return originalTokenAddressBySideTokenAddressByChain[chainId][sideToken];
 	}
 
-	function setOriginalTokens(uint256 chainId, address sideToken, address originalToken) public {
-		chainOriginalTokens[chainId][sideToken] = originalToken;
+	function setOriginalTokenAddressBySideTokenAddressByChain(uint256 chainId, address sideToken, address originalToken) public {
+		originalTokenAddressBySideTokenAddressByChain[chainId][sideToken] = originalToken;
 	}
 
 	function knownTokens(uint256 chainId, address originalToken) public view returns(bool) {
@@ -183,7 +183,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	) external whenNotPaused nonReentrant override {
 		require(_msgSender() == federation, "Bridge: Not Federation");
 		require(knownTokens(chainId, _originalTokenAddress) ||
-			mappedTokens(chainId, _originalTokenAddress) != NULL_ADDRESS,
+			sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress) != NULL_ADDRESS,
 			"Bridge: Unknown token"
 		);
 		require(_to != NULL_ADDRESS, "Bridge: Null To");
@@ -228,18 +228,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		);
 	}
 
-	function acceptTransfer(
-		address _originalTokenAddress,
-		address payable _from,
-		address payable _to,
-		uint256 _amount,
-		bytes32 _blockHash,
-		bytes32 _transactionHash,
-		uint32 _logIndex
-	) external whenNotPaused {
-		return _acceptTransfer(_originalTokenAddress, _from, _to, _amount, _blockHash, _transactionHash, _logIndex, block.chainid);
-	}
-
 	function createSideToken(
 		uint256 _typeId,
 		address _originalTokenAddress,
@@ -250,7 +238,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
 
-		address sideToken = mappedTokens(chainId, _originalTokenAddress);
+		address sideToken = sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress);
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
 		uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
@@ -259,8 +247,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		// Create side token
 		sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
 
-		setMappedTokens(chainId, _originalTokenAddress, sideToken);
-		setOriginalTokens(chainId, sideToken, _originalTokenAddress);
+		setSideTokenByOriginalAddressByChain(chainId, _originalTokenAddress, sideToken);
+		setOriginalTokenAddressBySideTokenAddressByChain(chainId, sideToken, _originalTokenAddress);
 		allowTokens.setToken(sideToken, _typeId);
 
 		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity, chainId);
@@ -433,7 +421,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 _fee,
 		uint256 chainId
 	) internal returns (uint256 receivedAmount) {
-		address sideToken = mappedTokens(chainId, _originalTokenAddress);
+		address sideToken = sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress);
 		uint256 granularity = IERC777(sideToken).granularity();
 		uint256 formattedAmount = _amount.mul(granularity);
 		require(_fee <= formattedAmount, "Bridge: fee too high");
@@ -566,7 +554,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
 		address originalTokenAddress = tokenToUse;
 
-		address sideTokenAddress = originalTokens(chainId, tokenToUse);
+		address sideTokenAddress = originalTokenAddressBySideTokenAddress(chainId, tokenToUse);
 		if (sideTokenAddress != NULL_ADDRESS) {
 			//Side Token Crossing
 			originalTokenAddress = sideTokenAddress;
