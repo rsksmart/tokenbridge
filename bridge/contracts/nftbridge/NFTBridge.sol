@@ -243,14 +243,17 @@ contract NFTBridge is
 
     crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
 
-    if (fixedFee > 0) {
-      require(msg.value >= fixedFee, "NFTBridge: value is smaller than fixed fee");
+    if (fixedFee == 0) {
+      return;
+    }
+    uint256 msgValue = msg.value;
+    require(msgValue >= fixedFee, "NFTBridge: value is smaller than fixed fee");
 
-      // Send the payment to the MultiSig of the Federation
-      federation.transfer(fixedFee);
-      if (msg.value > fixedFee) { // refund of unused value
-        sender.transfer(msg.value.sub(fixedFee));
-      }
+    // Send the payment to the MultiSig of the Federation
+    federation.transfer(fixedFee);
+
+    if (msgValue > fixedFee) { // refund of unused value
+      sender.transfer(msgValue.sub(fixedFee));
     }
   }
 
