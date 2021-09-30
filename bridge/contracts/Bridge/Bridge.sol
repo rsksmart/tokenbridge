@@ -71,7 +71,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	//Bridge_v4 variables multichain sideTokenAddressByOriginalTokenAddress
 	mapping (uint256 => mapping(address => address)) public sideTokenAddressByOriginalTokenAddressByChain; // chainId => OriginalToken => SideToken
 	mapping (uint256 => mapping(address => address)) public originalTokenAddressBySideTokenAddressByChain; // chainId => SideToken => OriginalToken
-	mapping (uint256 => mapping(address => bool)) public chainKnownTokens; // chainId => OriginalToken => true
+	mapping (uint256 => mapping(address => bool)) public knownTokenByChain; // chainId => OriginalToken => true
 
 	event AllowTokensChanged(address _newAllowTokens);
 	event FederationChanged(address _newFederation);
@@ -156,7 +156,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		originalTokenAddressBySideTokenAddressByChain[chainId][sideToken] = originalToken;
 	}
 
-	function knownTokens(uint256 chainId, address originalToken) public view returns(bool) {
+	function knownToken(uint256 chainId, address originalToken) public view returns(bool) {
 		// specification for retrocompatibility
 		if (isChain(chainId)) {
 			bool knowToken = deprecatedKnownTokens[originalToken];
@@ -164,11 +164,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 				return knowToken;
 			}
 		}
-		return chainKnownTokens[chainId][originalToken];
+		return knownTokenByChain[chainId][originalToken];
 	}
 
-	function setKnownTokens(uint256 chainId, address originalToken, bool knowToken) public {
-		chainKnownTokens[chainId][originalToken] = knowToken;
+	function setKnownTokenByChain(uint256 chainId, address originalToken, bool knowToken) public {
+		knownTokenByChain[chainId][originalToken] = knowToken;
 	}
 
 	function acceptTransfer(
@@ -182,7 +182,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 chainId
 	) external whenNotPaused nonReentrant override {
 		require(_msgSender() == federation, "Bridge: Not Federation");
-		require(knownTokens(chainId, _originalTokenAddress) ||
+		require(knownToken(chainId, _originalTokenAddress) ||
 			sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress) != NULL_ADDRESS,
 			"Bridge: Unknown token"
 		);
@@ -378,7 +378,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		require(!isClaimed(_claimData, transactionDataHash), "Bridge: Already claimed");
 
 		claimed[transactionDataHash] = true;
-		if (knownTokens(chainId, originalTokenAddress)) {
+		if (knownToken(chainId, originalTokenAddress)) {
 			receivedAmount =_claimCrossBackToToken(
 				originalTokenAddress,
 				_reciever,
@@ -541,7 +541,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		bytes memory userData,
 		uint256 chainId
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
-		setKnownTokens(chainId, tokenToUse, true);
+		setKnownTokenByChain(chainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
 		uint8 decimals = LibUtils.getDecimals(tokenToUse);
