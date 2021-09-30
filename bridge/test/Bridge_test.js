@@ -8,6 +8,7 @@ const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
 const WRBTC = artifacts.require('./WRBTC');
 
 const utils = require('./utils');
+const chains = require('../hardhat/helper/chains');
 const truffleAssert = require('truffle-assertions');
 const ethUtil = require('ethereumjs-util');
 
@@ -206,7 +207,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -223,7 +224,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -240,7 +241,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -261,7 +262,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -283,7 +284,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -312,7 +313,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc20Alternative.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc20Alternative.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc20Alternative.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -338,7 +339,7 @@ contract('Bridge', async function (accounts) {
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -361,7 +362,7 @@ contract('Bridge', async function (accounts) {
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -391,7 +392,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -406,7 +407,7 @@ contract('Bridge', async function (accounts) {
                 const result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -446,7 +447,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -462,7 +463,7 @@ contract('Bridge', async function (accounts) {
                 const result = await mockContract.callTokensReceived(erc777.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -502,7 +503,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -518,7 +519,7 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -530,7 +531,7 @@ contract('Bridge', async function (accounts) {
                         "indexed": true,
                         "name": "_from",
                         "type": "address"
-                      },
+                    },
                     {
                       "indexed": true,
                       "name": "_to",
@@ -558,7 +559,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -578,7 +579,7 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -621,7 +622,7 @@ contract('Bridge', async function (accounts) {
                 const ownerBalance = await erc777.balanceOf(bridgeManager);
                 assert.equal(ownerBalance.toString(), fees.toString());
                 assert.equal(fees.toString(), (amount*1.85/100).toString());
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -695,7 +696,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -723,7 +724,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -749,7 +750,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -764,7 +765,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(newToken.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -778,7 +779,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -793,7 +794,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(newToken.address);
+                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -913,6 +914,7 @@ contract('Bridge', async function (accounts) {
                 18,
                 tokenSymbol,
                 tokenName,
+                chains.HARDHAT_TEST_NET_CHAIN_ID,
                 { from: bridgeManager }
             );
 
@@ -922,6 +924,7 @@ contract('Bridge', async function (accounts) {
                 18,
                 'WRBTC',
                 'Wrapped RBTC',
+                chains.HARDHAT_TEST_NET_CHAIN_ID,
                 { from: bridgeManager }
             );
 
@@ -939,6 +942,7 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     )
                     const receipt = await this.mirrorBridge.acceptTransfer(
                         this.token.address,
@@ -966,7 +970,7 @@ contract('Bridge', async function (accounts) {
                 it('fail accept transfer with receiver empty address', async function () {
                     let decimals = 18;
                     let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                    await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
 
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, utils.NULL_ADDRESS, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
@@ -1062,7 +1066,8 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1083,7 +1088,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1101,7 +1106,8 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1122,7 +1128,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1223,7 +1229,8 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1244,7 +1251,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1267,7 +1274,7 @@ contract('Bridge', async function (accounts) {
                 it('should claim with decimals other than 18', async function () {
                     const decimals = 6;
                     const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
@@ -1286,12 +1293,12 @@ contract('Bridge', async function (accounts) {
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithDecimals.address);
+                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                    let originalTokenAddress = await this.mirrorBridge.originalTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                     assert.equal(originalTokenAddress, tokenWithDecimals.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1306,7 +1313,7 @@ contract('Bridge', async function (accounts) {
                     const granularity = '100';
                     const tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                     tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithGranularity.address, 18, "MAIN", "MAIN",  { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithGranularity.address, 18, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
@@ -1325,12 +1332,12 @@ contract('Bridge', async function (accounts) {
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
+                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
+                    let originalTokenAddress = await this.mirrorBridge.originalTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                     assert.equal(originalTokenAddress, tokenWithGranularity.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1396,7 +1403,8 @@ contract('Bridge', async function (accounts) {
                         this.gaslessAmount,
                         this.gaslessBlockHash,
                         this.gaslessTxHash,
-                        this.gaslessLogIndex
+                        this.gaslessLogIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.gaslessTxHash);
@@ -1443,7 +1451,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.gaslessTxHash);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1753,7 +1761,7 @@ contract('Bridge', async function (accounts) {
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, tokenSymbol, tokenName,  { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, tokenSymbol, tokenName, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
 
                 await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
                     blockHash, txHash, logIndex, { from: federation });
@@ -1772,7 +1780,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN('33');
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(aToken.address);
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1803,7 +1811,7 @@ contract('Bridge', async function (accounts) {
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
 
                 await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
                     blockHash, txHash, logIndex, { from: federation });
@@ -1822,7 +1830,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(aToken.address);
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
                 const sideToken = await SideToken.at(sideTokenAddress);;
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1866,7 +1874,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                const sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1898,7 +1906,7 @@ contract('Bridge', async function (accounts) {
                 this.amountToCrossBack = web3.utils.toWei('100');
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
-                this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                this.sideTokenAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
 
                 await this.mirrorBridge.claim(
                     {
@@ -1928,7 +1936,7 @@ contract('Bridge', async function (accounts) {
                 );
 
                 this.wrbtcAmountToCrossBack = web3.utils.toWei('1');
-                this.sideWrbtcAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                this.sideWrbtcAddress = await this.mirrorBridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
             });
 
             describe('Should burn the side tokens when transfered to the bridge', function () {
@@ -2261,9 +2269,10 @@ contract('Bridge', async function (accounts) {
                     6,
                     'MAIN',
                     'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
-                const sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
+                const sideTokenAddress = await this.bridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const sideTokenSymbol = await sideToken.symbol();
                 assert.equal(sideTokenSymbol, 'eMAIN');
@@ -2274,7 +2283,7 @@ contract('Bridge', async function (accounts) {
                 const sideTokenGranularity = await sideToken.granularity();
                 assert.equal(sideTokenGranularity.toString(), '1000000000000');
 
-                const originalTokenAddress = await this.bridge.originalTokens(sideTokenAddress);
+                const originalTokenAddress = await this.bridge.originalTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                 assert.equal(originalTokenAddress, this.token.address);
 
                 const result = await this.allowTokens.getInfoAndLimits(sideTokenAddress);
@@ -2291,6 +2300,7 @@ contract('Bridge', async function (accounts) {
                         19,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     )
                 );
@@ -2304,6 +2314,7 @@ contract('Bridge', async function (accounts) {
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     )
                 );
@@ -2317,6 +2328,7 @@ contract('Bridge', async function (accounts) {
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     )
                 );
@@ -2330,6 +2342,7 @@ contract('Bridge', async function (accounts) {
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     )
                 );
@@ -2341,6 +2354,7 @@ contract('Bridge', async function (accounts) {
                     18,
                     'MAIN',
                     'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
                 await utils.expectThrow(
@@ -2350,6 +2364,7 @@ contract('Bridge', async function (accounts) {
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     )
                 );
@@ -2378,13 +2393,14 @@ contract('Bridge', async function (accounts) {
                     18,
                     'MAIN',
                     'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
 
-                const sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
+                const sideTokenAddress = await this.bridge.mappedTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
 
-                const originalTokenAddress = await this.bridge.originalTokens(sideTokenAddress);
+                const originalTokenAddress = await this.bridge.originalTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                 assert.equal(originalTokenAddress, this.token.address);
 
                 const balanceBeforeTransfer = await sideToken.balanceOf(anAccount);
@@ -2401,6 +2417,7 @@ contract('Bridge', async function (accounts) {
                     blockHash,
                     txHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID
                 )
 
                 const receipt = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, amount,
