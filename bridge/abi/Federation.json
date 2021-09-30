@@ -68,6 +68,12 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       }
     ],
     "name": "Executed",
@@ -111,6 +117,12 @@
         "internalType": "string",
         "name": "nodeEthInfo",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       }
     ],
     "name": "HeartBeat",
@@ -243,6 +255,12 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       }
     ],
     "name": "Voted",
@@ -414,6 +432,11 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       }
     ],
     "name": "getTransactionId",
@@ -514,6 +537,54 @@
   {
     "inputs": [],
     "name": "isOwner",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "transactionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "transactionIdMultichain",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "transactionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "transactionIdMultichain",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isVoted",
     "outputs": [
       {
         "internalType": "bool",
@@ -720,6 +791,11 @@
         "internalType": "enum IFederation.TokenType",
         "name": "tokenType",
         "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
       }
     ],
     "name": "voteTransaction",

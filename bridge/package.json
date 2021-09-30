@@ -11,7 +11,7 @@
     "lint": "npx solhint  \"contracts/**/*.sol\"",
     "compile": "npx hardhat compile --show-stack-traces",
     "migrate": "rm -rf ./build && npx truffle migrate --reset",
-    "test": "npx hardhat test",
+    "test": "npx hardhat test --show-stack-traces",
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "deploy": "npx hardhat deploy --show-stack-traces --network",
