@@ -207,7 +207,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -224,7 +224,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -241,7 +241,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -262,7 +262,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -284,7 +284,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -313,7 +313,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc20Alternative.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc20Alternative.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc20Alternative.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -339,7 +339,7 @@ contract('Bridge', async function (accounts) {
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -362,7 +362,7 @@ contract('Bridge', async function (accounts) {
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -392,7 +392,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -447,7 +447,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -503,7 +503,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -559,7 +559,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -622,7 +622,7 @@ contract('Bridge', async function (accounts) {
                 const ownerBalance = await erc777.balanceOf(bridgeManager);
                 assert.equal(ownerBalance.toString(), fees.toString());
                 assert.equal(fees.toString(), (amount*1.85/100).toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -696,7 +696,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -724,7 +724,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -750,7 +750,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -765,7 +765,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -779,7 +779,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
@@ -794,7 +794,7 @@ contract('Bridge', async function (accounts) {
 
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
 
-                const isKnownToken = await this.bridge.knownTokens(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
