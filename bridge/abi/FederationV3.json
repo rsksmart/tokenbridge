@@ -146,6 +146,19 @@
     "anonymous": false,
     "inputs": [
       {
+        "indexed": false,
+        "internalType": "address",
+        "name": "bridgeNFT",
+        "type": "address"
+      }
+    ],
+    "name": "NFTBridgeChanged",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -267,6 +280,19 @@
     "outputs": [
       {
         "internalType": "contract IBridgeV3",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "bridgeNFT",
+    "outputs": [
+      {
+        "internalType": "contract INFTBridge",
         "name": "",
         "type": "address"
       }
@@ -441,6 +467,11 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_bridgeNFT",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -593,6 +624,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_bridgeNFT",
+        "type": "address"
+      }
+    ],
+    "name": "setNFTBridge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "transactionId",
         "type": "bytes32"
@@ -654,7 +698,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "value",
         "type": "uint256"
       },
       {
@@ -671,16 +715,15 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "enum IFederationV3.TokenType",
+        "name": "tokenType",
+        "type": "uint8"
       }
     ],
     "name": "voteTransaction",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
