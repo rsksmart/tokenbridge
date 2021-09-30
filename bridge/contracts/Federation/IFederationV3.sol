@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
-interface IFederation {
+interface IFederationV3 {
   enum TokenType{ COIN, NFT }
 
   /**
@@ -33,7 +33,6 @@ interface IFederation {
     @param transactionHash The transaction in which the cross event occurred
     @param logIndex Index of the event in the logs
     @param tokenType Is the type of bridge to be used
-    @param chainId Is chainId to check of the correct chain
   */
   function voteTransaction(
     address originalTokenAddress,
@@ -43,8 +42,7 @@ interface IFederation {
     bytes32 blockHash,
     bytes32 transactionHash,
     uint32 logIndex,
-    TokenType tokenType,
-    uint256 chainId
+    TokenType tokenType
   ) external;
 
   /**
@@ -91,8 +89,7 @@ interface IFederation {
     address receiver,
     uint256 amount,
     bytes32 blockHash,
-    uint32 logIndex,
-    uint256 chainId
+    uint32 logIndex
   );
   event MemberAddition(address indexed member);
   event MemberRemoval(address indexed member);
@@ -108,8 +105,7 @@ interface IFederation {
     address receiver,
     uint256 amount,
     bytes32 blockHash,
-    uint32 logIndex,
-    uint256 chainId
+    uint32 logIndex
   );
   event HeartBeat(
     address indexed sender,
@@ -117,8 +113,7 @@ interface IFederation {
     uint256 fedEthBlock,
     string federatorVersion,
     string nodeRskInfo,
-    string nodeEthInfo,
-    uint256 chainId
+    string nodeEthInfo
   );
 
 }
