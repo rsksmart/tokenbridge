@@ -469,49 +469,6 @@
         "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
-      }
-    ],
-    "name": "acceptTransfer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_originalTokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_blockHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_transactionHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "_logIndex",
-        "type": "uint32"
       },
       {
         "internalType": "uint256",
@@ -569,54 +526,6 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "chainMappedTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "chainOriginalTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1396,30 +1305,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "originalToken",
-        "type": "address"
-      }
-    ],
-    "name": "mappedTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
@@ -1439,12 +1324,17 @@
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "",
-        "type": "bytes32"
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "sideToken",
+        "type": "address"
       }
     ],
-    "name": "originalTokenAddresses",
+    "name": "originalTokenAddressBySideTokenAddress",
     "outputs": [
       {
         "internalType": "address",
@@ -1459,16 +1349,35 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "",
         "type": "uint256"
       },
       {
         "internalType": "address",
-        "name": "sideToken",
+        "name": "",
         "type": "address"
       }
     ],
-    "name": "originalTokens",
+    "name": "originalTokenAddressBySideTokenAddressByChain",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
+    ],
+    "name": "originalTokenAddresses",
     "outputs": [
       {
         "internalType": "address",
@@ -1641,16 +1550,16 @@
       },
       {
         "internalType": "address",
-        "name": "originalToken",
+        "name": "sideToken",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "sideToken",
+        "name": "originalToken",
         "type": "address"
       }
     ],
-    "name": "setMappedTokens",
+    "name": "setOriginalTokenAddressBySideTokenAddressByChain",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1664,16 +1573,16 @@
       },
       {
         "internalType": "address",
-        "name": "sideToken",
+        "name": "originalToken",
         "type": "address"
       },
       {
         "internalType": "address",
-        "name": "originalToken",
+        "name": "sideToken",
         "type": "address"
       }
     ],
-    "name": "setOriginalTokens",
+    "name": "setSideTokenByOriginalAddressByChain",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1702,6 +1611,54 @@
     "name": "setWrappedCurrency",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      }
+    ],
+    "name": "sideTokenAddressByOriginalTokenAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "sideTokenAddressByOriginalTokenAddressByChain",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
