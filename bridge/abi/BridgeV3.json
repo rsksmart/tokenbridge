@@ -43,12 +43,6 @@
         "internalType": "uint256",
         "name": "_logIndex",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_chainId",
-        "type": "uint256"
       }
     ],
     "name": "AcceptedCrossTransfer",
@@ -129,12 +123,6 @@
         "internalType": "uint256",
         "name": "_fee",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_chainId",
-        "type": "uint256"
       }
     ],
     "name": "Claimed",
@@ -172,12 +160,6 @@
         "internalType": "bytes",
         "name": "_userData",
         "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
       }
     ],
     "name": "Cross",
@@ -234,12 +216,6 @@
         "indexed": false,
         "internalType": "uint256",
         "name": "_granularity",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
         "type": "uint256"
       }
     ],
@@ -399,44 +375,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "userData",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "_tokensReceived",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "_originalTokenAddress",
         "type": "address"
       },
@@ -469,54 +407,6 @@
         "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
-      }
-    ],
-    "name": "acceptTransfer",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_originalTokenAddress",
-        "type": "address"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_from",
-        "type": "address"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_blockHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_transactionHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "_logIndex",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
       }
     ],
     "name": "acceptTransfer",
@@ -543,78 +433,6 @@
     "outputs": [
       {
         "internalType": "contract IAllowTokens",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "chainKnownTokens",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "chainMappedTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "chainOriginalTokens",
-    "outputs": [
-      {
-        "internalType": "address",
         "name": "",
         "type": "address"
       }
@@ -691,7 +509,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct IBridge.ClaimData",
+        "internalType": "struct IBridgeV3.ClaimData",
         "name": "_claimData",
         "type": "tuple"
       }
@@ -737,7 +555,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct IBridge.ClaimData",
+        "internalType": "struct IBridgeV3.ClaimData",
         "name": "_claimData",
         "type": "tuple"
       }
@@ -783,7 +601,7 @@
             "type": "uint32"
           }
         ],
-        "internalType": "struct IBridge.ClaimData",
+        "internalType": "struct IBridgeV3.ClaimData",
         "name": "_claimData",
         "type": "tuple"
       },
@@ -819,87 +637,6 @@
       }
     ],
     "name": "claimGasless",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "receivedAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address payable",
-            "name": "to",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blockHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "transactionHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint32",
-            "name": "logIndex",
-            "type": "uint32"
-          }
-        ],
-        "internalType": "struct IBridge.ClaimData",
-        "name": "_claimData",
-        "type": "tuple"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_relayer",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_fee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "_v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_s",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "claimGaslessMultichain",
     "outputs": [
       {
         "internalType": "uint256",
@@ -955,11 +692,6 @@
         "internalType": "string",
         "name": "_originalTokenName",
         "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
       }
     ],
     "name": "createSideToken",
@@ -978,81 +710,6 @@
     "name": "depositTo",
     "outputs": [],
     "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "depositToMultichain",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "deprecatedKnownTokens",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "deprecatedMappedTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "deprecatedOriginalTokens",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1133,11 +790,6 @@
         "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_chainId",
-        "type": "uint256"
       }
     ],
     "name": "getTransactionDataHash",
@@ -1250,81 +902,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "address payable",
-            "name": "to",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blockHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "transactionHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint32",
-            "name": "logIndex",
-            "type": "uint32"
-          }
-        ],
-        "internalType": "struct IBridge.ClaimData",
-        "name": "_claimData",
-        "type": "tuple"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "transactionDataHashMultichain",
-        "type": "bytes32"
-      }
-    ],
-    "name": "isClaimed",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "transactionDataHash",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "transactionDataHashMultichain",
-        "type": "bytes32"
-      }
-    ],
-    "name": "isClaimed",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "isOwner",
     "outputs": [
@@ -1372,13 +949,8 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "originalToken",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1396,13 +968,8 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "originalToken",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1458,13 +1025,8 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "sideToken",
+        "name": "",
         "type": "address"
       }
     ],
@@ -1536,34 +1098,6 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenToUse",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "receiveTokensToMultichain",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
     "inputs": [],
     "name": "renounceOwnership",
     "outputs": [],
@@ -1605,75 +1139,6 @@
       }
     ],
     "name": "setFeePercentage",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "originalToken",
-        "type": "address"
-      },
-      {
-        "internalType": "bool",
-        "name": "knowToken",
-        "type": "bool"
-      }
-    ],
-    "name": "setKnownTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "originalToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "sideToken",
-        "type": "address"
-      }
-    ],
-    "name": "setMappedTokens",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "sideToken",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "originalToken",
-        "type": "address"
-      }
-    ],
-    "name": "setOriginalTokens",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1761,44 +1226,6 @@
         "internalType": "bytes",
         "name": "",
         "type": "bytes"
-      }
-    ],
-    "name": "tokensReceived",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "operator",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "from",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "bytes",
-        "name": "userData",
-        "type": "bytes"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
       }
     ],
     "name": "tokensReceived",
