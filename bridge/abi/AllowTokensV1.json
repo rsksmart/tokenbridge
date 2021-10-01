@@ -145,7 +145,7 @@
           }
         ],
         "indexed": false,
-        "internalType": "struct IAllowTokens.Limits",
+        "internalType": "struct IAllowTokensV1.Limits",
         "name": "limits",
         "type": "tuple"
       }
@@ -239,7 +239,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.Limits",
+        "internalType": "struct IAllowTokensV1.Limits",
         "name": "limits",
         "type": "tuple"
       }
@@ -258,36 +258,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "calcMaxWithdraw",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "maxWithdraw",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "deprecatedAllowedTokens",
+    "name": "allowedTokens",
     "outputs": [
       {
         "internalType": "bool",
@@ -307,6 +283,25 @@
       {
         "internalType": "uint256",
         "name": "lastDay",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "calcMaxWithdraw",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxWithdraw",
         "type": "uint256"
       }
     ],
@@ -339,13 +334,8 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
-        "name": "tokenAddress",
+        "name": "token",
         "type": "address"
       }
     ],
@@ -374,7 +364,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.TokenInfo",
+        "internalType": "struct IAllowTokensV1.TokenInfo",
         "name": "info",
         "type": "tuple"
       },
@@ -406,7 +396,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.Limits",
+        "internalType": "struct IAllowTokensV1.Limits",
         "name": "limit",
         "type": "tuple"
       }
@@ -472,7 +462,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.Limits[]",
+        "internalType": "struct IAllowTokensV1.Limits[]",
         "name": "limits",
         "type": "tuple[]"
       }
@@ -555,12 +545,12 @@
                 "type": "uint256"
               }
             ],
-            "internalType": "struct IAllowTokens.Limits",
+            "internalType": "struct IAllowTokensV1.Limits",
             "name": "limits",
             "type": "tuple"
           }
         ],
-        "internalType": "struct IAllowTokens.TypeInfo[]",
+        "internalType": "struct IAllowTokensV1.TypeInfo[]",
         "name": "typesInfo",
         "type": "tuple[]"
       }
@@ -585,11 +575,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "token",
@@ -662,11 +647,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -710,11 +690,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -727,7 +702,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.TokensAndType[]",
+        "internalType": "struct IAllowTokensV1.TokensAndType[]",
         "name": "tokensAndTypes",
         "type": "tuple[]"
       }
@@ -740,11 +715,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -756,51 +726,6 @@
       }
     ],
     "name": "setToken",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "allowed",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "typeId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "spentToday",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastDay",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IAllowTokens.TokenInfo",
-        "name": "info",
-        "type": "tuple"
-      }
-    ],
-    "name": "setTokenInfoByTokenAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -840,7 +765,7 @@
             "type": "uint256"
           }
         ],
-        "internalType": "struct IAllowTokens.Limits",
+        "internalType": "struct IAllowTokensV1.Limits",
         "name": "limits",
         "type": "tuple"
       }
@@ -857,91 +782,6 @@
       {
         "internalType": "uint256",
         "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      }
-    ],
-    "name": "tokenInfo",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "allowed",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "typeId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "spentToday",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastDay",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IAllowTokens.TokenInfo",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "tokenInfoByTokenAddressByChain",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "allowed",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "typeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "spentToday",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastDay",
         "type": "uint256"
       }
     ],
@@ -1034,11 +874,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "token",

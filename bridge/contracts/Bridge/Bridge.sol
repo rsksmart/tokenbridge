@@ -249,7 +249,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 		setSideTokenByOriginalAddressByChain(chainId, _originalTokenAddress, sideToken);
 		setOriginalTokenAddressBySideTokenAddressByChain(chainId, sideToken, _originalTokenAddress);
-		allowTokens.setToken(sideToken, _typeId);
+		allowTokens.setToken(chainId, sideToken, _typeId);
 
 		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity, chainId);
 	}
@@ -551,7 +551,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		}
 		// We consider the amount before fees converted to 18 decimals to check the limits
 		// updateTokenTransfer revert if token not allowed
-		allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
+		allowTokens.updateTokenTransfer(chainId, tokenToUse, formattedAmount);
 		address originalTokenAddress = tokenToUse;
 
 		address sideTokenAddress = originalTokenAddressBySideTokenAddress(chainId, tokenToUse);

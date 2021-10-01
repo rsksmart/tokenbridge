@@ -24,7 +24,7 @@ import "../lib/LibUtils.sol";
 import "./IBridgeV3.sol";
 import "../interface/ISideToken.sol";
 import "../interface/ISideTokenFactory.sol";
-import "../interface/IAllowTokens.sol";
+import "../AllowTokens/IAllowTokensV1.sol";
 import "../interface/IWrapped.sol";
 
 // solhint-disable-next-line max-states-count
@@ -48,7 +48,7 @@ contract BridgeV3 is Initializable, IBridgeV3, IERC777Recipient, UpgradablePausa
     mapping (address => address) public originalTokens; // SideToken => OriginalToken
     mapping (address => bool) public knownTokens; // OriginalToken => true
     mapping (bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
-    IAllowTokens public allowTokens;
+    IAllowTokensV1 public allowTokens;
     ISideTokenFactory public sideTokenFactory;
     //Bridge_v1 variables
     bool public isUpgrading;
@@ -81,7 +81,7 @@ contract BridgeV3 is Initializable, IBridgeV3, IERC777Recipient, UpgradablePausa
         UpgradableOwnable.initialize(_manager);
         UpgradablePausable.__Pausable_init(_manager);
         symbolPrefix = _symbolPrefix;
-        allowTokens = IAllowTokens(_allowTokens);
+        allowTokens = IAllowTokensV1(_allowTokens);
         sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
         federation = _federation;
         //keccak256("ERC777TokensRecipient")
@@ -469,7 +469,7 @@ contract BridgeV3 is Initializable, IBridgeV3, IERC777Recipient, UpgradablePausa
 
     function changeAllowTokens(address newAllowTokens) external onlyOwner {
         require(newAllowTokens != NULL_ADDRESS, "Bridge: AllowTokens is empty");
-        allowTokens = IAllowTokens(newAllowTokens);
+        allowTokens = IAllowTokensV1(newAllowTokens);
         emit AllowTokensChanged(newAllowTokens);
     }
 
