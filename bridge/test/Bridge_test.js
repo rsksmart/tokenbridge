@@ -971,7 +971,15 @@ contract('Bridge', async function (accounts) {
                 it('fail accept transfer with receiver empty address', async function () {
                     let decimals = 18;
                     let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
+                    await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
 
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, utils.NULL_ADDRESS, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,

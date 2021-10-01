@@ -103,7 +103,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 await this.token.transfer(anAccount, amount, { from: deployerAddress });
                 await this.token.approve(this.proxyBridge.options.address, amount, { from: anAccount });
 
-                let tx = await this.proxyBridge.methods.receiveTokens(this.token.address, amount).send({ from: anAccount, gas: 200_000});
+                const tx = await this.proxyBridge.methods.receiveTokens(this.token.address, amount).send({ from: anAccount, gas: 200_000});
                 assert.equal(tx.status, true);
                 utils.checkGas(tx.cumulativeGasUsed);
 
@@ -163,7 +163,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 });
 
                 it('proxy admin', async () => {
-                    let admin = await this.proxyAdmin.getProxyAdmin(this.proxyBridge.options.address);
+                    const admin = await this.proxyAdmin.getProxyAdmin(this.proxyBridge.options.address);
                     assert.equal(admin, this.proxyAdmin.address);
                 });
 
@@ -253,7 +253,7 @@ contract('Bridge upgrade test', async (accounts) => {
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxyBridge.options.address, amount, { from: anAccount });
 
-                        let tx = await this.proxyBridge.methods.receiveTokensTo(this.token.address, anAccount, amount).send({ from: anAccount, gas: 200_000});
+                        const tx = await this.proxyBridge.methods.receiveTokensTo(this.token.address, anAccount, amount).send({ from: anAccount, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         assert.equal(tx.events.Cross.event, 'Cross');
@@ -272,18 +272,18 @@ contract('Bridge upgrade test', async (accounts) => {
                             'MAIN'
                         ).send({from: managerAddress, gas: 4_000_000});
 
-                        let sideTokenAddress = await this.proxyBridge.methods.mappedTokens(this.token.address).call();
+                        const sideTokenAddress = await this.proxyBridge.methods.mappedTokens(this.token.address).call();
                         let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
 
-                        let originalTokenAddress = await this.proxyBridge.methods.originalTokens(sideTokenAddress).call();
+                        const originalTokenAddress = await this.proxyBridge.methods.originalTokens(sideTokenAddress).call();
                         assert.equal(originalTokenAddress, this.token.address);
 
                         const blockHash = utils.getRandomHash();
                         const txHash = utils.getRandomHash();
                         const logIndex = 0;
-                        let tx = await this.proxyBridge.methods.acceptTransfer(
+                        const tx = await this.proxyBridge.methods.acceptTransfer(
                             this.token.address,
                             anAccount,
                             otherAccount,
