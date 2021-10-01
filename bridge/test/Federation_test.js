@@ -401,7 +401,7 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
-                let receipt = await this.federators.voteTransaction(
+                const receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
                     anAccount,
@@ -485,7 +485,7 @@ contract('Federation', async function (accounts) {
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
 
-                let bridgeTransactionId = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionId = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
                 transactionWasProcessed = await this.bridge.hasCrossed(bridgeTransactionId);
                 assert.equal(transactionWasProcessed, false);
             });
