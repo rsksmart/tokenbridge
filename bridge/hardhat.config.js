@@ -227,7 +227,7 @@ function getMultiSigAddressesByChainId() {
   const multiSigAddressesByChainId = {};
   multiSigAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
   multiSigAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
-  // @TODO: add two level mapping to allow rsk testnet to be used from multiple external testnet chains.
+  // add two level mapping to allow rsk testnet to be used from multiple external testnet chains.
   multiSigAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a';
   multiSigAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
   multiSigAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xE3848f411587C2C8658A0d6F649e7F1E403873a6';
