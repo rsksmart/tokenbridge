@@ -4,6 +4,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
+const chains = require('../hardhat/helper/chains');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
@@ -97,7 +98,7 @@ contract('AllowTokens', async function (accounts) {
         describe('Tokens whitelist', async function () {
             it('should have correct version', async function () {
                 let version = await this.allowTokens.version();
-                assert.equal(version, 'v1');
+                assert.equal(version, 'v2');
             });
 
             it('fails isTokenAllowed if null address provided', async function() {
@@ -130,13 +131,13 @@ contract('AllowTokens', async function (accounts) {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 //Use owner to set the token
-                await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
+                let isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, true);
                 let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
                 //use primary to set token
-                await this.allowTokens.setToken(otherToken.address, typeId, { from: tokenDeployer });
-                isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, otherToken.address, typeId, { from: tokenDeployer });
+                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, otherToken.address);
                 assert.equal(isAllowed, true);
             });
 
@@ -144,54 +145,55 @@ contract('AllowTokens', async function (accounts) {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
-                await this.allowTokens.setMultipleTokens([
+                await this.allowTokens.setMultipleTokens(chains.HARDHAT_TEST_NET_CHAIN_ID,
+                [
                     { token:this.token.address, typeId: typeId },
                     { token: otherToken.address, typeId: typeId }
                 ], { from: manager });
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, true);
-                isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
+                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, otherToken.address);
                 assert.equal(isAllowed, true);
             });
 
             it('fail if setToken caller is not the owner', async function() {
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
-                await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: anotherOwner }));
+                await utils.expectThrow(this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: anotherOwner }));
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
             it('fail if setToken address is empty', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
-                await utils.expectThrow(this.allowTokens.setToken(utils.NULL_ADDRESS, typeId, { from: manager }));
+                await utils.expectThrow(this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, utils.NULL_ADDRESS, typeId, { from: manager }));
             });
 
             it('fail if setToken typeid does not exist', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = '2';
-                await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: manager }));
+                await utils.expectThrow(this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager }));
             });
 
             it('setToken type even if address was already added', async function() {
-                let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                let result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(result.info.typeId.toString(), '0');
                 assert.equal(result.info.allowed, false);
 
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
-                await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
+                result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(result.info.typeId.toString(), typeId.toString());
                 assert.equal(result.info.allowed, true);
 
                 await this.allowTokens.addTokenType('DOC', { max:toWei('20000'), min:toWei('2'), daily:toWei('200000'), mediumAmount:toWei('3'), largeAmount:toWei('10')}, { from: manager });
                 typeId = 1;
-                await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
+                result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(result.info.typeId.toString(), typeId.toString());
                 assert.equal(result.info.allowed, true);
             });
@@ -199,28 +201,28 @@ contract('AllowTokens', async function (accounts) {
             it('removes allowed token', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
-                await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
+                let isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, true);
 
-                await this.allowTokens.removeAllowedToken(this.token.address, { from: manager });
-                isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                await this.allowTokens.removeAllowedToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, { from: manager });
+                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, false);
             });
 
             it('fail if removeAllowedToken caller is not the owner', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
-                await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
+                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 await utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }));
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
             it('fail if removeAllowedToken address is not in the whitelist', async function() {
-                await utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: manager }));
+                await utils.expectThrow(this.allowTokens.removeAllowedToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, { from: manager }));
             });
 
 
@@ -319,18 +321,18 @@ contract('AllowTokens', async function (accounts) {
                 const largeAmount = web3.utils.toWei('3');
 
                 await this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                let maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
+                let maxWithdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(maxWithdraw, newMaxTokens);
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, newMaxTokens);
-                maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, newMaxTokens);
+                maxWithdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 let expected = web3.utils.toWei('2000');
                 assert.equal(maxWithdraw.toString(), expected);
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, expected);
-                maxWithdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, expected);
+                maxWithdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(maxWithdraw.toString(), '0');
             });
         });
@@ -341,9 +343,9 @@ contract('AllowTokens', async function (accounts) {
             it('should check max value', async function() {
                 let maxLimit = toWei('10000');
                 await this.allowTokens.addTokenType('RIF', { max:maxLimit, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, maxLimit);
 
                 await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(maxLimit).add(new BN('1'))));
             });
@@ -351,9 +353,9 @@ contract('AllowTokens', async function (accounts) {
             it('should check min value', async function() {
                 let minLimit = toWei('1');
                 await this.allowTokens.addTokenType('RIF', {max:toWei('10000'), min:minLimit, daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, minLimit);
 
                 await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(minLimit).sub(new BN('1'))));
             });
@@ -362,19 +364,19 @@ contract('AllowTokens', async function (accounts) {
                 let minLimit = toWei('1');
                 let dailyLimit = toWei('1');
                 await this.allowTokens.addTokenType('RIF', { max:toWei('1'), min:minLimit, daily:dailyLimit, mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, minLimit);
 
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, minLimit, dailyLimit));
+                await utils.expectThrow(this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, minLimit, dailyLimit));
             });
 
             it('should allow side and whitelisted tokens', async function() {
                 let maxLimit = toWei('10000');
                 await this.allowTokens.addTokenType('RIF', {max:maxLimit, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, maxLimit);
             });
 
             it('should check allowed token if not side or allowed token', async function() {
@@ -383,9 +385,9 @@ contract('AllowTokens', async function (accounts) {
                 await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed));
 
                 await this.allowTokens.addTokenType('RIF', {max:maxTokensAllowed, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
-                await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: manager });
 
-                await this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed);
+                await this.allowTokens.updateTokenTransfer(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, maxTokensAllowed);
             });
 
         });
@@ -527,52 +529,52 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should fail to add a new allowed token due to missing signatures', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                let data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, false);
 
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, false);
             });
 
             it('should add a new allowed token', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                let data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
 
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
 
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                let isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, true);
             });
 
             it('should fail to remove an allowed token due to missing signatures', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                let data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, true);
 
-                data = this.allowTokens.contract.methods.removeAllowedToken(this.token.address).encodeABI();
+                data = this.allowTokens.contract.methods.removeAllowedToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, false);
 
-                isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, true);
             });
 
             it('should remove an allowed token', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                let data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
 
-                data = this.allowTokens.contract.methods.removeAllowedToken(this.token.address).encodeABI();
+                data = this.allowTokens.contract.methods.removeAllowedToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
@@ -580,12 +582,12 @@ contract('AllowTokens', async function (accounts) {
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, true);
 
-                isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, false);
             });
 
             it('should fail to set max tokens due to missing signatures', async function() {
-                let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                let result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 let limit = result.limit;
                 let maxTokens = limit.max.toString();
                 let newMax = web3.utils.toWei('1000');
@@ -597,14 +599,14 @@ contract('AllowTokens', async function (accounts) {
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, false);
 
-                result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 let maxTokensAfter = result.limit.max;
                 assert.equal(maxTokensAfter.toString(), maxTokens);
             });
 
             it('should set max tokens', async function() {
                 let newMax = web3.utils.toWei('1000');
-                let result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                let result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 let limit = result.limit;
                 let data = this.allowTokens.contract.methods.setTypeLimits(result.info.typeId.toString(), {max:newMax, min:limit.min.toString(), daily:limit.daily.toString(), mediumAmount:toWei('2'), largeAmount:toWei('3')}).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
@@ -614,7 +616,7 @@ contract('AllowTokens', async function (accounts) {
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, true);
 
-                result = await this.allowTokens.getInfoAndLimits(this.token.address);
+                result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(result.limit.max.toString(), newMax);
             });
 

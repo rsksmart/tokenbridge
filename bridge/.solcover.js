@@ -8,6 +8,7 @@ module.exports = {
     'SideToken/SideTokenV1.sol',
     'Federation/FederationV1.sol',
     'Federation/FederationV2.sol',
+    'AllowTokens/AllowTokensV1.sol',
     'AllowTokens/AllowTokensV0.sol',
     'SideTokenFactory/SideTokenFactoryV1.sol',
   ],
