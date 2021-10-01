@@ -1284,7 +1284,15 @@ contract('Bridge', async function (accounts) {
                 it('should claim with decimals other than 18', async function () {
                     const decimals = 6;
                     const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
@@ -1303,12 +1311,12 @@ contract('Bridge', async function (accounts) {
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
+                    const originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                     assert.equal(originalTokenAddress, tokenWithDecimals.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1323,7 +1331,15 @@ contract('Bridge', async function (accounts) {
                     const granularity = '100';
                     const tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                     tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithGranularity.address, 18, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithGranularity.address,
+                        18,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
@@ -1342,12 +1358,12 @@ contract('Bridge', async function (accounts) {
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
+                    const originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                     assert.equal(originalTokenAddress, tokenWithGranularity.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
