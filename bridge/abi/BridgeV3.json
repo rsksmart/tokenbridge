@@ -432,7 +432,7 @@
     "name": "allowTokens",
     "outputs": [
       {
-        "internalType": "contract IAllowTokens",
+        "internalType": "contract IAllowTokensV1",
         "name": "",
         "type": "address"
       }
