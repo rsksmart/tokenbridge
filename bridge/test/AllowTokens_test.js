@@ -540,7 +540,7 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should add a new allowed token', async function() {
-                let data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
+                const data = this.allowTokens.contract.methods.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId).encodeABI();
 
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
@@ -582,7 +582,7 @@ contract('AllowTokens', async function (accounts) {
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, true);
 
-                isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isAllowed, false);
             });
 
