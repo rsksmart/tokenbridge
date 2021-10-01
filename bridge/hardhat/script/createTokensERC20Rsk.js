@@ -83,25 +83,25 @@ async function main() {
     console.log("\nBridgeProxy", BridgeProxy.address);
     console.log("\nMultiSigWallet", MultiSigWallet.address);
 
-    // const methodCallCreateSideToken = bridge.methods.createSideToken(
-    //   token.typeId,
-    //   token.originalTokenAddress,
-    //   tokenDecimals,
-    //   token.symbol,
-    //   token.name
-    // );
-    // const result = await methodCallCreateSideToken.call({ from: MultiSigWallet.address});
-    // console.log("Method call result", result);
+    const methodCallCreateSideToken = bridge.methods.createSideToken(
+      token.typeId,
+      token.originalTokenAddress,
+      tokenDecimals,
+      token.symbol,
+      token.name
+    );
+    const result = await methodCallCreateSideToken.call({ from: MultiSigWallet.address});
+    console.log("Method call result", result);
 
-    // const receipt = await multiSigContract.methods.submitTransaction(
-    //   BridgeProxy.address,
-    //   transactionEtherValue,
-    //   methodCallCreateSideToken.encodeABI()
-    // ).send({
-    //   from: deployer,
-    //   gasLimit: 3000000
-    // });
-    // console.log("Transaction worked", receipt.transactionHash);
+    const receipt = await multiSigContract.methods.submitTransaction(
+      BridgeProxy.address,
+      transactionEtherValue,
+      methodCallCreateSideToken.encodeABI()
+    ).send({
+      from: deployer,
+      gasLimit: 3000000
+    });
+    console.log("Transaction worked", receipt.transactionHash);
 
     const mappedTokenAddress = await bridge.methods.mappedTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
     console.log("Mapped Token address for", token.name, ":", mappedTokenAddress);
