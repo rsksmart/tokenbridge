@@ -27,8 +27,8 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     const AllowTokens = await deployments.get('AllowTokens');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
-    methodCall = allowTokens.methods.setToken(WRBTC.address, '0');
-    await methodCall.call({ from: multiSigAddress })
+    methodCall = allowTokens.methods.setToken(network.config.network_id, WRBTC.address, '0');
+    await methodCall.call({ from: multiSigAddress });
     await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
   } else {
