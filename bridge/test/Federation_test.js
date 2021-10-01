@@ -367,7 +367,7 @@ contract('Federation', async function (accounts) {
                     }]
                 );
 
-                await this.allowTokens.setToken(originalTokenAddress, typeId);
+                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, originalTokenAddress, typeId);
                 this.sideTokenFactory = await SideTokenFactory.new();
                 this.bridge = await Bridge.new();
                 await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federators.address,
