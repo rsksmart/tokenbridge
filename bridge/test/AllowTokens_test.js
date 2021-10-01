@@ -157,12 +157,12 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('fail if setToken caller is not the owner', async function() {
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 await utils.expectThrow(this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: anotherOwner }));
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
@@ -214,10 +214,10 @@ contract('AllowTokens', async function (accounts) {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 let typeId = 0;
                 await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, typeId, { from: manager });
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 await utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }));
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const isTokenAllowed = await this.allowTokens.isTokenAllowed(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
