@@ -7,6 +7,7 @@ const IERC721 = artifacts.require("./IERC721");
 
 const utils = require("../utils");
 const truffleAssert = require("truffle-assertions");
+const chains = require("../../hardhat/helper/chains");
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
@@ -64,7 +65,7 @@ contract("Bridge NFT", async function(accounts) {
     ]);
 
     this.typeId = 0;
-    await this.allowTokens.setToken(this.token.address, this.typeId, {
+    await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, {
       from: bridgeManager,
     });
     this.mainChainSideTokenFactory = await SideNFTTokenFactory.new();
