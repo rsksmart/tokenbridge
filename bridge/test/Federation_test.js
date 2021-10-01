@@ -598,8 +598,8 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
-                let bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
                 transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
@@ -667,8 +667,8 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
-                let bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
                 transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
@@ -729,8 +729,8 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
-                let bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
                 transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
@@ -792,8 +792,8 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
-                let bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
                 transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
@@ -854,8 +854,8 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
-                let bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
                 transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
@@ -964,7 +964,7 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                let expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
                 bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
