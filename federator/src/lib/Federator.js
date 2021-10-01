@@ -395,7 +395,7 @@ module.exports = class Federator {
       this.logger.info(
         `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`,
       );
-      
+
       const receipt = await this.transactionSender.sendTransaction(
         fedContract.getAddress(),
         txData,
@@ -408,7 +408,7 @@ module.exports = class Federator {
           `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} failed, check the receipt`,
           receipt
         );
-        
+
         fs.writeFileSync(
           this.revertedTxnsPath,
           JSON.stringify({
