@@ -94,7 +94,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@return version in v{Number}
 		*/
 	function version() external pure override returns (string memory) {
-		return "v3";
+		return "v4";
 	}
 
 	/**
