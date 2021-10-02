@@ -1,5 +1,5 @@
 const FederationV2 = artifacts.require('FederationV2');
-const Federation = artifacts.require('Federation');
+const FederationV3 = artifacts.require('FederationV3');
 const FederationProxy = artifacts.require('FederationProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 const NftBridge = artifacts.require("NFTBridge");
@@ -14,7 +14,7 @@ contract('Federation', async function (accounts) {
   beforeEach(async function() {
     this.federationV2 = await FederationV2.new();
     this.proxyAdmin = await ProxyAdmin.new();
-    this.federation = await Federation.new();
+    this.federationV3 = await FederationV3.new();
     this.nftBridge = await NftBridge.new();
   });
 
@@ -27,8 +27,8 @@ contract('Federation', async function (accounts) {
       let result = await proxyFederationV2.methods.version().call();
       assert.equal(result, 'v2');
 
-      await this.proxyAdmin.upgrade(federationProxy.address, this.federation.address)
-      const proxyFederation = new web3.eth.Contract(this.federation.abi, federationProxy.address);
+      await this.proxyAdmin.upgrade(federationProxy.address, this.federationV3.address)
+      const proxyFederation = new web3.eth.Contract(this.federationV3.abi, federationProxy.address);
 
       result = await proxyFederation.methods.version().call();
       assert.equal(result, 'v3');
@@ -42,8 +42,8 @@ contract('Federation', async function (accounts) {
       let ownerV2 = await proxyFederationV2.methods.owner().call();
       assert.equal(ownerV2, deployer);
 
-      await this.proxyAdmin.upgrade(federationProxy.address, this.federation.address)
-      const proxyFederation = new web3.eth.Contract(this.federation.abi, federationProxy.address);
+      await this.proxyAdmin.upgrade(federationProxy.address, this.federationV3.address)
+      const proxyFederation = new web3.eth.Contract(this.federationV3.abi, federationProxy.address);
 
       let ownerV3 = await proxyFederation.methods.owner().call();
       assert.equal(ownerV2, ownerV3);
@@ -61,8 +61,8 @@ contract('Federation', async function (accounts) {
       const initData = await this.federationV2.contract.methods.initialize([federator1], 1, bridge, deployer).encodeABI();
       const federationProxy = await FederationProxy.new(this.federationV2.address, this.proxyAdmin.address, initData);
 
-      await this.proxyAdmin.upgrade(federationProxy.address, this.federation.address)
-      const proxyFederation = new web3.eth.Contract(this.federation.abi, federationProxy.address);
+      await this.proxyAdmin.upgrade(federationProxy.address, this.federationV3.address)
+      const proxyFederation = new web3.eth.Contract(this.federationV3.abi, federationProxy.address);
 
       await proxyFederation.methods.setNFTBridge(this.nftBridge.address).send({from: deployer});
       const nftBridgeSet = await proxyFederation.methods.bridgeNFT().call();
@@ -81,8 +81,8 @@ contract('Federation', async function (accounts) {
       assert.equal(members[1], initialMembers[1]);
 
 
-      await this.proxyAdmin.upgrade(federationProxy.address, this.federation.address)
-      const proxyFederation = new web3.eth.Contract(this.federation.abi, federationProxy.address);
+      await this.proxyAdmin.upgrade(federationProxy.address, this.federationV3.address)
+      const proxyFederation = new web3.eth.Contract(this.federationV3.abi, federationProxy.address);
 
       members = await proxyFederation.methods.getMembers().call();
       assert.equal(members.length, initialMembers.length);
