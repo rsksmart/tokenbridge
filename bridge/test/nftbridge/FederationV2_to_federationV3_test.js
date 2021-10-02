@@ -39,13 +39,13 @@ contract('Federation', async function (accounts) {
       const federationProxy = await FederationProxy.new(this.federationV2.address, this.proxyAdmin.address, initData);
       const proxyFederationV2 = new web3.eth.Contract(this.federationV2.abi, federationProxy.address);
 
-      let ownerV2 = await proxyFederationV2.methods.owner().call();
+      const ownerV2 = await proxyFederationV2.methods.owner().call();
       assert.equal(ownerV2, deployer);
 
       await this.proxyAdmin.upgrade(federationProxy.address, this.federationV3.address)
       const proxyFederation = new web3.eth.Contract(this.federationV3.abi, federationProxy.address);
 
-      let ownerV3 = await proxyFederation.methods.owner().call();
+      const ownerV3 = await proxyFederation.methods.owner().call();
       assert.equal(ownerV2, ownerV3);
     });
 
