@@ -300,7 +300,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		);
 	}
 
+	// Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
 	function claimGasless(
+		uint256 chainId,
 		ClaimData calldata _claimData,
 		address payable _relayer,
 		uint256 _fee,
@@ -309,20 +311,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		bytes32 _r,
 		bytes32 _s
 	) external override returns (uint256 receivedAmount) {
-		return claimGaslessMultichain(_claimData, _relayer, _fee, _deadline, _v, _r, _s, block.chainid);
-	}
-
-	// Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
-	function claimGaslessMultichain(
-		ClaimData calldata _claimData,
-		address payable _relayer,
-		uint256 _fee,
-		uint256 _deadline,
-		uint8 _v,
-		bytes32 _r,
-		bytes32 _s,
-		uint256 chainId
-	) public returns (uint256 receivedAmount) {
 		require(_deadline >= block.timestamp, "Bridge: EXPIRED"); // solhint-disable-line not-rely-on-time
 
 		bytes32 digest = getDigest(_claimData, _relayer, _fee, _deadline);
@@ -460,29 +448,21 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return receivedAmount;
 	}
 
-	function receiveTokensTo(address tokenToUse, address to, uint256 amount) override public {
-		return receiveTokensToMultichain(tokenToUse, to, amount, block.chainid);
-	}
-
 	/**
 		* ERC-20 tokens approve and transferFrom pattern
 		* See https://eips.ethereum.org/EIPS/eip-20#transferfrom
 		*/
-	function receiveTokensToMultichain(address tokenToUse, address to, uint256 amount, uint256 chainId) public {
+	function receiveTokensTo(uint256 chainId, address tokenToUse, address to, uint256 amount) external override {
 		address sender = _msgSender();
 		//Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
 		IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
 		crossTokens(tokenToUse, sender, to, amount, "", chainId);
 	}
 
-	function depositTo(address to) override external payable {
-		return depositToMultichain(to, block.chainid);
-	}
-
 	/**
 		* Use network currency and cross it.
 		*/
-	function depositToMultichain(address to, uint256 chainId) public payable {
+	function depositTo(uint256 chainId, address to) external payable override {
 		address sender = _msgSender();
 		require(address(wrappedCurrency) != NULL_ADDRESS, "Bridge: wrappedCurrency empty");
 		wrappedCurrency.deposit{ value: msg.value }();
