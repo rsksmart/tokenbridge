@@ -61,7 +61,8 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		return tokenInfoByTokenAddressByChain[chainId][tokenAddress];
 	}
 
-	function setTokenInfoByTokenAddress(uint256 chainId, address tokenAddress, TokenInfo memory info) public onlyOwner {
+	function setTokenInfoByTokenAddress(uint256 chainId, address tokenAddress, TokenInfo memory info) public {
+		require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
 		tokenInfoByTokenAddressByChain[chainId][tokenAddress] = info;
 	}
 
