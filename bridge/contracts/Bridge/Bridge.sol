@@ -120,13 +120,13 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		_;
 	}
 
-	function isChain(uint256 chainId) private view returns(bool) {
+	function isCurrentChainId(uint256 chainId) private view returns(bool) {
 		return chainId == block.chainid;
 	}
 
 	function sideTokenAddressByOriginalTokenAddress(uint256 chainId, address originalToken) public view returns(address) {
 		// specification for retrocompatibility
-		if (isChain(chainId)) {
+		if (isCurrentChainId(chainId)) {
 			address sideToken = deprecatedMappedTokens[originalToken];
 			if (sideToken != NULL_ADDRESS) {
 				return sideToken;
@@ -142,7 +142,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	function originalTokenAddressBySideTokenAddress(uint256 chainId, address sideToken) public view returns(address) {
 		// specification for retrocompatibility
-		if (isChain(chainId)) {
+		if (isCurrentChainId(chainId)) {
 			address originalToken = deprecatedOriginalTokens[sideToken];
 			if (originalToken != NULL_ADDRESS) {
 				return originalToken;
@@ -158,17 +158,17 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	function knownToken(uint256 chainId, address originalToken) public view returns(bool) {
 		// specification for retrocompatibility
-		if (isChain(chainId)) {
-			bool knowToken = deprecatedKnownTokens[originalToken];
-			if (knowToken) {
-				return knowToken;
+		if (isCurrentChainId(chainId)) {
+			bool knownTokenValue = deprecatedKnownTokens[originalToken];
+			if (knownTokenValue) {
+				return knownTokenValue;
 			}
 		}
 		return knownTokenByChain[chainId][originalToken];
 	}
 
-	function setKnownTokenByChain(uint256 chainId, address originalToken, bool knowToken) public {
-		knownTokenByChain[chainId][originalToken] = knowToken;
+	function setKnownTokenByChain(uint256 chainId, address originalToken, bool knownTokenValue) public {
+		knownTokenByChain[chainId][originalToken] = knownTokenValue;
 	}
 
 	function acceptTransfer(
