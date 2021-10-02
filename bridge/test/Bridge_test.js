@@ -193,7 +193,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, anAccount, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
                 truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
                     return ev._tokenAddress === this.token.address
@@ -217,7 +217,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
@@ -234,7 +234,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
@@ -255,7 +255,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await token.balanceOf(tokenOwner);
@@ -277,7 +277,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await token.balanceOf(tokenOwner);
@@ -298,7 +298,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await erc20Alternative.balanceOf(tokenOwner);
                 let receipt = await erc20Alternative.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(erc20Alternative.address, anAccount, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, erc20Alternative.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
@@ -326,7 +326,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address, this.typeId, { from: bridgeManager });
 
-                receipt = await this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount });
+                receipt = await this.bridge.depositTo(chains.HARDHAT_TEST_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
                 truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
@@ -377,7 +377,7 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(erc777.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
@@ -686,7 +686,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
-                let receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                let receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await this.token.balanceOf(bridgeManager);
@@ -714,7 +714,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
 
-                let receipt = await this.bridge.receiveTokensTo(erc777.address, tokenOwner, amount, { from: tokenOwner });
+                let receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await erc777.balanceOf(bridgeManager);
@@ -807,7 +807,7 @@ contract('Bridge', async function (accounts) {
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
                 await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner}));
             });
@@ -822,7 +822,7 @@ contract('Bridge', async function (accounts) {
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await newToken.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address, tokenOwner, amount.toString(), { from: tokenOwner })
                 }
                 await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
             });
@@ -836,7 +836,7 @@ contract('Bridge', async function (accounts) {
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
                 maxWidthdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(maxWidthdraw.toString(), '0');
@@ -853,12 +853,12 @@ contract('Bridge', async function (accounts) {
 
                 for(let tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
                 await utils.increaseTimestamp(web3, ONE_DAY + 1);
 
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-                let receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner});
+                let receipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner});
                 utils.checkRcpt(receipt);
             });
 
@@ -906,7 +906,7 @@ contract('Bridge', async function (accounts) {
             this.decimals = (await this.token.decimals()).toString();
             this.granularity = 1;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
-            this.txReceipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, this.amount, { from: tokenOwner });
+            this.txReceipt = await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, this.amount, { from: tokenOwner });
 
             await this.mirrorBridge.createSideToken(
                 0,
@@ -930,7 +930,7 @@ contract('Bridge', async function (accounts) {
 
             //Cross wrapped token to test unwrap when crossing back
             this.wrbtcAmount = web3.utils.toWei('2');
-            this.txReceiptWrbtc = await this.bridge.depositTo(tokenOwner, { from: tokenOwner, value: this.wrbtcAmount });
+            this.txReceiptWrbtc = await this.bridge.depositTo(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenOwner, { from: tokenOwner, value: this.wrbtcAmount });
         });
 
         describe('Cross the tokens', async function() {
@@ -1458,6 +1458,7 @@ contract('Bridge', async function (accounts) {
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.mirrorBridge.claimGasless(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.gaslessAmount,
@@ -1513,6 +1514,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
@@ -1554,6 +1556,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: anAccount,
                                 amount: this.gaslessAmount,
@@ -1595,6 +1598,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.amount,
@@ -1636,6 +1640,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
@@ -1677,6 +1682,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
@@ -1718,6 +1724,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
@@ -1759,6 +1766,7 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
+                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
@@ -1817,7 +1825,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1867,7 +1875,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1911,7 +1919,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1975,7 +1983,7 @@ contract('Bridge', async function (accounts) {
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     let receipt = await sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
-                    receipt = await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
+                    receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -2009,12 +2017,12 @@ contract('Bridge', async function (accounts) {
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
                     await this.sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, this.accountWallet.address, this.amountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideTokenAddress, this.accountWallet.address, this.amountToCrossBack, { from: anAccount });
 
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideWrbtc = await SideToken.at(this.sideWrbtcAddress);
                     await this.sideWrbtc.approve(this.mirrorBridge.address, this.wrbtcAmountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(this.sideWrbtc.address, this.accountWallet.address, this.wrbtcAmountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideWrbtc.address, this.accountWallet.address, this.wrbtcAmountToCrossBack, { from: anAccount });
                 });
 
                 it('main Bridge should release the tokens', async function () {
@@ -2090,6 +2098,7 @@ contract('Bridge', async function (accounts) {
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.bridge.claimGasless(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.amountToCrossBack,
@@ -2145,6 +2154,7 @@ contract('Bridge', async function (accounts) {
                     const originalRelayerBalance = await web3.eth.getBalance(relayer);
 
                     const receipt = await this.bridge.claimGasless(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.wrbtcAmountToCrossBack,
