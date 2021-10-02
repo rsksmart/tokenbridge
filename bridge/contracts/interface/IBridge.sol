@@ -20,12 +20,12 @@ interface IBridge {
 		* ERC-20 tokens approve and transferFrom pattern
 		* See https://eips.ethereum.org/EIPS/eip-20#transferfrom
 		*/
-	function receiveTokensTo(address tokenToUse, address to, uint256 amount) external;
+	function receiveTokensTo(uint256 chainId, address tokenToUse, address to, uint256 amount) external;
 
 	/**
 		* Use network currency and cross it.
 		*/
-	function depositTo(address to) external payable;
+	function depositTo(uint256 chainId, address to) external payable;
 
 	/**
 		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
@@ -75,6 +75,7 @@ interface IBridge {
 	function claimFallback(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
 
 	function claimGasless(
+		uint256 chainId,
 		ClaimData calldata _claimData,
 		address payable _relayer,
 		uint256 _fee,

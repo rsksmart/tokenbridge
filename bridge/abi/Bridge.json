@@ -641,6 +641,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
         "components": [
           {
             "internalType": "address payable",
@@ -717,87 +722,6 @@
   {
     "inputs": [
       {
-        "components": [
-          {
-            "internalType": "address payable",
-            "name": "to",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "amount",
-            "type": "uint256"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "blockHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "bytes32",
-            "name": "transactionHash",
-            "type": "bytes32"
-          },
-          {
-            "internalType": "uint32",
-            "name": "logIndex",
-            "type": "uint32"
-          }
-        ],
-        "internalType": "struct IBridge.ClaimData",
-        "name": "_claimData",
-        "type": "tuple"
-      },
-      {
-        "internalType": "address payable",
-        "name": "_relayer",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_fee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_deadline",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint8",
-        "name": "_v",
-        "type": "uint8"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_r",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "bytes32",
-        "name": "_s",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "claimGaslessMultichain",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "receivedAmount",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
@@ -855,30 +779,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "to",
         "type": "address"
       }
     ],
     "name": "depositTo",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "depositToMultichain",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -1424,6 +1335,11 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "tokenToUse",
         "type": "address"
@@ -1440,34 +1356,6 @@
       }
     ],
     "name": "receiveTokensTo",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "tokenToUse",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "to",
-        "type": "address"
-      },
-      {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      }
-    ],
-    "name": "receiveTokensToMultichain",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1532,7 +1420,7 @@
       },
       {
         "internalType": "bool",
-        "name": "knowToken",
+        "name": "knownTokenValue",
         "type": "bool"
       }
     ],
