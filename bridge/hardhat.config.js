@@ -11,7 +11,7 @@ require("@nomiclabs/hardhat-etherscan");
 const fs = require('fs');
 const chains = require('./hardhat/helper/chains');
 const MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', {encoding: 'utf8'}) : ''; // Your metamask's recovery words
-const ETHERESCAN_KEY = fs.existsSync('./etherscan.key') ? fs.readFileSync('./etherscan.key', {encoding: 'utf8'}) : ''; // Your metamask's recovery words
+const ETHERESCAN_KEY = fs.existsSync('./etherscan.key') ? fs.readFileSync('./etherscan.key', {encoding: 'utf8'}) : ''; // Your etherscan API key
 const INFURA_PROJECT_ID = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key', {encoding: 'utf8'}) : ''; // Your Infura API Key after its registration
 
 const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
