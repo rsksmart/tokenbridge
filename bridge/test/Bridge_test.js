@@ -1825,7 +1825,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1875,7 +1875,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1919,7 +1919,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1983,7 +1983,13 @@ contract('Bridge', async function (accounts) {
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     let receipt = await sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
-                    receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
+                    receipt = await this.mirrorBridge.receiveTokensTo(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        this.sideTokenAddress,
+                        tokenOwner,
+                        this.amountToCrossBack,
+                        { from: anAccount }
+                    );
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -2017,12 +2023,24 @@ contract('Bridge', async function (accounts) {
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
                     await this.sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideTokenAddress, this.accountWallet.address, this.amountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        this.sideTokenAddress,
+                        this.accountWallet.address,
+                        this.amountToCrossBack,
+                        { from: anAccount }
+                    );
 
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideWrbtc = await SideToken.at(this.sideWrbtcAddress);
                     await this.sideWrbtc.approve(this.mirrorBridge.address, this.wrbtcAmountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.sideWrbtc.address, this.accountWallet.address, this.wrbtcAmountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        this.sideWrbtc.address,
+                        this.accountWallet.address,
+                        this.wrbtcAmountToCrossBack,
+                        { from: anAccount }
+                    );
                 });
 
                 it('main Bridge should release the tokens', async function () {
