@@ -40,17 +40,13 @@ contract OpenSeaEIP712Base is Initializable {
                 keccak256(bytes(name)),
                 keccak256(bytes(ERC712_VERSION)),
                 address(this),
-                bytes32(getChainId())
+                bytes32(block.chainid)
             )
         );
     }
 
     function getDomainSeperator() public view returns (bytes32) {
         return domainSeperator;
-    }
-
-    function getChainId() public view returns (uint256) {
-        return block.chainid;
     }
 
     /**
