@@ -103,7 +103,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function version() override external pure returns (string memory) {
-		return "v3";
+		return "v4";
 	}
 
 	function initDomainSeparator() public {
@@ -136,7 +136,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken];
 	}
 
-	function setSideTokenByOriginalAddressByChain(uint256 chainId, address originalToken, address sideToken) public {
+	function setSideTokenByOriginalAddressByChain(uint256 chainId, address originalToken, address sideToken) public onlyOwner {
 		sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken] = sideToken;
 	}
 
