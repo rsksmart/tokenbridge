@@ -152,7 +152,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return originalTokenAddressBySideTokenAddressByChain[chainId][sideToken];
 	}
 
-	function setOriginalTokenAddressBySideTokenAddressByChain(uint256 chainId, address sideToken, address originalToken) public {
+	function setOriginalTokenAddressBySideTokenAddressByChain(uint256 chainId, address sideToken, address originalToken) public onlyOwner {
 		originalTokenAddressBySideTokenAddressByChain[chainId][sideToken] = originalToken;
 	}
 
