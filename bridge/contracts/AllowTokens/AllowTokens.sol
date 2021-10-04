@@ -26,11 +26,11 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 	// v2 multichain variables
 	mapping (uint256 => mapping (address => TokenInfo)) public tokenInfoByTokenAddressByChain;
 
-	event SetToken(address indexed _tokenAddress, uint256 _typeId);
-	event AllowedTokenRemoved(address indexed _tokenAddress);
+	event SetToken(uint256 chainId, address indexed _tokenAddress, uint256 _typeId);
+	event AllowedTokenRemoved(uint256 chainId, address indexed _tokenAddress);
 	event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
 	event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
-	event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
+	event UpdateTokensTransfered(uint256 chainId, address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
 	event ConfirmationsChanged(uint256 _smallAmountConfirmations, uint256 _mediumAmountConfirmations, uint256 _largeAmountConfirmations);
 
 	modifier notNull(address _address) {
@@ -114,7 +114,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		info.spentToday = info.spentToday.add(amount);
 		setTokenInfoByTokenAddress(chainId, token, info);
 
-		emit UpdateTokensTransfered(token, info.lastDay, info.spentToday);
+		emit UpdateTokensTransfered(chainId, token, info.lastDay, info.spentToday);
 	}
 
 	function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
@@ -176,7 +176,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		info.allowed = true;
 		info.typeId = typeId;
 		setTokenInfoByTokenAddress(chainId, token, info);
-		emit SetToken(token, typeId);
+		emit SetToken(chainId, token, typeId);
 	}
 
 	function setMultipleTokens(uint256 chainId, TokensAndType[] calldata tokensAndTypes) external onlyOwner {
@@ -191,7 +191,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		require(info.allowed, "AllowTokens: Not Allowed");
 		info.allowed = false;
 		setTokenInfoByTokenAddress(chainId, token, info);
-		emit AllowedTokenRemoved(token);
+		emit AllowedTokenRemoved(chainId, token);
 	}
 
 	function setConfirmations(
