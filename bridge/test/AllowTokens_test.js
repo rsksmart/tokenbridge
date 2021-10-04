@@ -5,6 +5,7 @@ const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
 const chains = require('../hardhat/helper/chains');
+const truffleAssert = require('truffle-assertions');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
@@ -13,6 +14,7 @@ contract('AllowTokens', async function (accounts) {
     const manager = accounts[1];
     const anotherAccount = accounts[2];
     const anotherOwner = accounts[3];
+    const unauthorizedAccount = accounts[6];
 
     before(async function () {
         await utils.saveState();
@@ -95,16 +97,34 @@ contract('AllowTokens', async function (accounts) {
                 this.typeId = 0;
             });
 
+        describe('Set Token', async function () {
+            it('should fail calling from unauthorized sender', async function () {
+                await truffleAssert.fails(
+                    this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, 0, { from: unauthorizedAccount }),
+                    truffleAssert.ErrorType.REVERT,
+                    'AllowTokens: unauthorized sender'
+                );
+            });
+
+            it('should fail calling with type id bigger than type descriptions', async function () {
+                const currentTypeDescriptionLength = await this.allowTokens.getTypeDescriptionsLength();
+                await truffleAssert.fails(
+                    this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, currentTypeDescriptionLength + 1, { from: manager }),
+                    truffleAssert.ErrorType.REVERT,
+                    'AllowTokens: typeId does not exist'
+                );
+            });
+        });
+
         describe('Tokens whitelist', async function () {
             it('should have correct version', async function () {
-                let version = await this.allowTokens.version();
+                const version = await this.allowTokens.version();
                 assert.equal(version, 'v2');
             });
 
             it('fails isTokenAllowed if null address provided', async function() {
                 await utils.expectThrow(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS));
             })
-
 
             it('add token type', async function() {
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
