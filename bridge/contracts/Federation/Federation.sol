@@ -151,11 +151,11 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	}
 
 	function isProcessed(bytes32 transactionId, bytes32 transactionIdMultichain) public view returns(bool) {
-		return processed[transactionId] || processed[transactionIdMultichain];
+		return processed[transactionIdMultichain] || processed[transactionId];
 	}
 
 	function isVoted(bytes32 transactionId, bytes32 transactionIdMultichain) public view returns(bool) {
-		return votes[transactionId][_msgSender()] || votes[transactionIdMultichain][_msgSender()];
+		return votes[transactionIdMultichain][_msgSender()] || votes[transactionId][_msgSender()];
 	}
 
 	/**
