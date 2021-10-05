@@ -1,5 +1,5 @@
 const abiFederationV2 = require('../../../bridge/abi/FederationV2.json');
-const abiFederationV3 = require('../../../bridge/abi/Federation.json');
+const abiFederationV3 = require('../../../bridge/abi/FederationV3.json');
 const abiBridge = require('../../../bridge/abi/Bridge.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const FederationInterfaceV2 = require('./IFederationV2.js');
