@@ -236,7 +236,6 @@ contract NFTBridge is
     uint256 tokenId
   ) public payable override {
     address tokenCreator = getTokenCreator(tokenAddress, tokenId);
-
     address payable sender = _msgSender();
     // Transfer the tokens on IERC721, they should be already Approved for the bridge Address to use them
     IERC721(tokenAddress).transferFrom(sender, address(this), tokenId);
@@ -266,15 +265,15 @@ contract NFTBridge is
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
     isAddressFromCrossedOriginalToken[tokenAddress] = true;
 
+    IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
+    IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
+    string memory tokenURI = metadataIERC.tokenURI(tokenId);
+
     address originalTokenAddress = tokenAddress;
     if (originalTokenAddressBySideTokenAddress[tokenAddress] != NULL_ADDRESS) {
       originalTokenAddress = originalTokenAddressBySideTokenAddress[tokenAddress];
       ERC721Burnable(tokenAddress).burn(tokenId);
     }
-
-    IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
-    IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
-    string memory tokenURI = metadataIERC.tokenURI(tokenId);
 
     emit Cross(
       originalTokenAddress,
