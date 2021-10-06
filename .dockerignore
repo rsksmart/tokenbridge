@@ -1,6 +1,5 @@
 ./docs
 ./ui
 ./federator/test
-./federator/config/config.js
 ./federator/integrationTest
 ./federator/node_modules
