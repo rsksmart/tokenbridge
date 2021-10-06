@@ -106,7 +106,7 @@ contract NFTBridge is
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
       isAddressFromCrossedOriginalToken[_tokenAddress] ||
-          sideTokenAddressByOriginalTokenAddress[_tokenAddress] != NULL_ADDRESS,
+      sideTokenAddressByOriginalTokenAddress[_tokenAddress] != NULL_ADDRESS,
       "NFTBridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "NFTBridge: Null To");
