@@ -104,12 +104,20 @@ module.exports = class TransactionSender {
     }
 
     async getChainId() {
-        return parseInt(this.chainId || await this.client.eth.net.getId());
+        if (this.chainId == undefined) {
+            this.chainId = parseInt(await this.client.eth.net.getId());
+        }
+        return this.chainId;
+    }
+
+    async isRsk() {
+        const chainId = await this.getChainId();
+        return chainId == 30 || chainId == 31;
     }
 
     async createRawTransaction(from, to, data, value) {
         const nonce = await this.getNonce(from);
-        const chainId =  await this.getChainId();
+        const chainId = await this.getChainId();
         const gasPrice = await this.getGasPrice();
         let rawTx = {
             chainId: chainId,
@@ -122,13 +130,20 @@ module.exports = class TransactionSender {
             r: 0,
             s: 0
         }
+
+        if (await this.isRsk()) {
+            this.logger.debug(`it is rsk, I will delete rawTx.chainId`);
+            delete rawTx.chainId;
+            delete rawTx.r;
+            delete rawTx.s;
+        }
         rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
 
         if(this.debuggingMode) {
             rawTx.gas = this.numberToHexString(100);
             this.logger.debug(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`)
         }
-        this.logger.debug('RawTx', rawTx);
+        this.logger.debug('createRawTransaction RawTx', rawTx);
         return rawTx;
     }
 
@@ -177,7 +192,7 @@ module.exports = class TransactionSender {
     }
 
     async sendTransaction(to, data, value, privateKey, throwOnError=false) {
-        const chainId =  await this.getChainId();
+        const chainId = await this.getChainId();
         let txHash;
         let receipt;
         let rawTx;
@@ -218,6 +233,9 @@ module.exports = class TransactionSender {
             return receipt;
 
         } catch(err) {
+            const receiptCallError = await this.client.eth.call(rawTx);
+            this.logger.error(`Error in sendTransaction, calling RAW TX CALL WITH PK`, receiptCallError);
+
             this.logger.error('Error in sendTransaction', err, `transactionHash:${txHash} to:${to} data:${data}`);
             if(throwOnError)
                 throw new CustomError('Error in sendTransaction', err);
