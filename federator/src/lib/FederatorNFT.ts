@@ -211,18 +211,19 @@ export class FederatorNFT {
           _originalTokenAddress: originalTokenAddress,
         } = log.returnValues;
 
+        const originalTokenAddressLowerCase = originalTokenAddress.toLowerCase();
         const blocksConfirmed = currentBlock - blockNumber;
         const nftConfirmationsForCurrentChainId = await this.getNftConfirmationsForCurrentChainId();
         if (blocksConfirmed < nftConfirmationsForCurrentChainId) {
           this.logger.debug(
-            `[NFT] Tx: originalTokenAddress:${originalTokenAddress} won't be proccessed yet ${blocksConfirmed} < ${nftConfirmationsForCurrentChainId}`,
+            `[NFT] Tx: originalTokenAddress:${originalTokenAddressLowerCase} won't be proccessed yet ${blocksConfirmed} < ${nftConfirmationsForCurrentChainId}`,
           );
           continue;
         }
 
         const transactionId = await typescriptUtils.retryNTimes(
           fedContract.getTransactionId({
-            originalTokenAddress,
+            originalTokenAddress: originalTokenAddressLowerCase,
             sender,
             receiver,
             amount: tokenId,
@@ -238,7 +239,7 @@ export class FederatorNFT {
         );
         if (wasProcessed) {
           this.logger.debug(
-            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress} was already processed`,
+            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddressLowerCase} was already processed`,
           );
           continue;
         }
@@ -246,17 +247,18 @@ export class FederatorNFT {
         const hasVoted: boolean = await fedContract.hasVoted(transactionId, from);
         if (hasVoted) {
           this.logger.debug(
-            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddress}  has already been voted by us`,
+            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${originalTokenAddressLowerCase}  has already been voted by us`,
           );
           continue;
         }
 
         this.logger.info(
-          `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${originalTokenAddress}`,
+          `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${originalTokenAddressLowerCase}`,
         );
 
+        this.logger.debug(`_voteTransaction sending - originalTokenAddress: ${originalTokenAddressLowerCase}`);
         await this._voteTransaction(
-          originalTokenAddress,
+          originalTokenAddressLowerCase,
           sender,
           receiver,
           tokenId,
@@ -301,6 +303,10 @@ export class FederatorNFT {
         tokenType: utils.tokenType.NFT,
       });
 
+      this.logger.debug(
+        `_voteTransaction, handleRevertedTxns originalTokenAddress ${originalTokenAddress}`,
+        voteTransactionTxData,
+      );
       return await this.handleRevertedTxns(
         originalTokenAddress,
         sender,
