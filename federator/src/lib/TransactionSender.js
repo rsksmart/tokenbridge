@@ -234,7 +234,7 @@ module.exports = class TransactionSender {
 
         } catch(err) {
             const receiptCallError = await this.client.eth.call(rawTx);
-            this.logger.error(`Error in sendTransaction, calling RAW TX CALL WITH PK`, receiptCallError);
+            this.logger.debug(`Error in sendTransaction, calling RAW TX CALL WITH PK`, receiptCallError);
 
             this.logger.error('Error in sendTransaction', err, `transactionHash:${txHash} to:${to} data:${data}`);
             if(throwOnError)
