@@ -47,21 +47,25 @@ jobs:
       - run:
           name: federator integration tests
           command: |
+            set -e
             cd federator
             npm run integrationTest
       - run:
           name: NFT federator integration tests
           command: |
+            set -e
             cd federator
             npm run nftIntegrationTest
       - run:
           name: federator unit tests
           command: |
+            set -e
             cd federator
             npm test
       - run:
           name: bridge unit tests + coverage
           command: |
+            set -e
             cd bridge
             npm run coverage
       - coveralls/upload:
