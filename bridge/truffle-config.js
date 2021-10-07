@@ -118,14 +118,31 @@ module.exports = {
       websockets: true,
     },
     ethmainnet: {
-      provider: () => new HDWalletProvider(MNEMONIC, "wss://mainnet.infura.io/ws/v3/" + INFURA_API_KEY),
+      provider: () => new HDWalletProvider(MNEMONIC, "https://ethereum.squidswap.cash"),
       network_id: 1,
-      gas: 6700000,
-      gasPrice: 250000000000,
+      gas: 4700000,
+      gasPrice: 60000000000,
       skipDryRun: true,
       networkCheckTimeout: 1000000,
       timeoutBlocks: 200,
-      websockets: true,
+    },
+    bchmainnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, "https://smartbch.squidswap.cash"),
+      network_id: 10001,
+      gas: 6800000,
+      gasPrice: 1050000000,
+      skipDryRun: true,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
+    },
+    bscmainnet: {
+      provider: () => new HDWalletProvider(MNEMONIC, "https://bsc-dataseed.binance.org"),
+      network_id: 56,
+      gas: 6800000,
+      gasPrice: 5000000000,
+      skipDryRun: true,
+      networkCheckTimeout: 1000000,
+      timeoutBlocks: 200,
     },
   },
   plugins: ['solidity-coverage', 'truffle-plugin-verify'], //truffle-plugin-blockscout-verify
@@ -143,7 +160,7 @@ module.exports = {
             // Optimize for how many times you intend to run the code.
             // Lower values will optimize more for initial deployment cost, higher
             // values will optimize more for high-frequency usage.
-            runs: 200
+            runs: 1000000
           }
         }
       }

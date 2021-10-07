@@ -1,0 +1,8 @@
+{
+    "bridge": "0x5634e72c9c20ae2b2f3094303e7b18bb817c88cf",
+    "federation": "0x792ed489fcd28c52a4502dcf08326822479b12e2",
+    "multiSig": "0x50eef54fe616a7d92e41b2f47486bb9e03393767",
+    "allowTokens": "0xcd067b74c3bee97b448f57d7e686d6fe66c1809a",
+    "host": "https://smartbch.squidswap.cash",
+    "fromBlock": 1035411
+}

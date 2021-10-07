@@ -1,9 +1,4 @@
-// Dependency file: contracts/zeppelin/upgradable/Initializable.sol
-
-// SPDX-License-Identifier: MIT
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
+// File: contracts/zeppelin/upgradable/Initializable.sol
 
 /**
  * @title Initializable
@@ -52,13 +47,9 @@ contract Initializable {
   uint256[50] private ______gap;
 }
 
-// Dependency file: contracts/zeppelin/upgradable/utils/ReentrancyGuard.sol
+// File: contracts/zeppelin/upgradable/utils/ReentrancyGuard.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
-
-// import "contracts/zeppelin/upgradable/Initializable.sol";
 
 /**
  * @title Helps contracts guard against reentrancy attacks.
@@ -91,11 +82,8 @@ contract ReentrancyGuard is Initializable {
     }
 }
 
-// Dependency file: contracts/zeppelin/GSN/Context.sol
+// File: contracts/zeppelin/GSN/Context.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -119,12 +107,8 @@ abstract contract  Context {
     }
 }
 
+// File: contracts/zeppelin/access/Roles.sol
 
-// Dependency file: contracts/zeppelin/access/Roles.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @title Roles
@@ -161,17 +145,11 @@ library Roles {
     }
 }
 
+// File: contracts/zeppelin/upgradable/access/roles/UpgradablePauserRole.sol
 
-// Dependency file: contracts/zeppelin/upgradable/access/roles/UpgradablePauserRole.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
-// import "contracts/zeppelin/access/Roles.sol";
 
 contract UpgradablePauserRole is Initializable, Context {
     using Roles for Roles.Role;
@@ -215,17 +193,11 @@ contract UpgradablePauserRole is Initializable, Context {
     }
 }
 
+// File: contracts/zeppelin/upgradable/lifecycle/UpgradablePausable.sol
 
-// Dependency file: contracts/zeppelin/upgradable/lifecycle/UpgradablePausable.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
-// import "contracts/zeppelin/upgradable/access/roles/UpgradablePauserRole.sol";
 
 /**
  * @dev Contract module which allows children to implement an emergency stop
@@ -299,16 +271,10 @@ contract UpgradablePausable is Initializable, Context, UpgradablePauserRole {
     }
 }
 
+// File: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
 
-// Dependency file: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
-
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -385,12 +351,8 @@ contract UpgradableOwnable is Initializable, Context {
 
 }
 
+// File: contracts/zeppelin/introspection/IERC1820Registry.sol
 
-// Dependency file: contracts/zeppelin/introspection/IERC1820Registry.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Interface of the global ERC1820 Registry, as defined in the
@@ -500,12 +462,8 @@ interface IERC1820Registry {
     event ManagerChanged(address indexed account, address indexed newManager);
 }
 
+// File: contracts/zeppelin/token/ERC777/IERC777Recipient.sol
 
-// Dependency file: contracts/zeppelin/token/ERC777/IERC777Recipient.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Interface of the ERC777TokensRecipient standard as defined in the EIP.
@@ -538,12 +496,8 @@ interface IERC777Recipient {
     ) external;
 }
 
+// File: contracts/zeppelin/token/ERC20/IERC20.sol
 
-// Dependency file: contracts/zeppelin/token/ERC20/IERC20.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include
@@ -620,12 +574,8 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
+// File: contracts/zeppelin/math/SafeMath.sol
 
-// Dependency file: contracts/zeppelin/math/SafeMath.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -782,12 +732,8 @@ library SafeMath {
     }
 }
 
+// File: contracts/zeppelin/utils/Address.sol
 
-// Dependency file: contracts/zeppelin/utils/Address.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Collection of functions related to the address type,
@@ -865,16 +811,11 @@ library Address {
     }
 }
 
+// File: contracts/zeppelin/token/ERC20/SafeERC20.sol
 
-// Dependency file: contracts/zeppelin/token/ERC20/SafeERC20.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
-// import "contracts/zeppelin/token/ERC20/IERC20.sol";
-// import "contracts/zeppelin/math/SafeMath.sol";
-// import "contracts/zeppelin/utils/Address.sol";
 
 /**
  * @title SafeERC20
@@ -946,12 +887,8 @@ library SafeERC20 {
     }
 }
 
+// File: contracts/zeppelin/token/ERC777/IERC777.sol
 
-// Dependency file: contracts/zeppelin/token/ERC777/IERC777.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @dev Interface of the ERC777Token standard as defined in the EIP.
@@ -1140,12 +1077,7 @@ interface IERC777 {
     event RevokedOperator(address indexed operator, address indexed tokenHolder);
 }
 
-
-// Dependency file: contracts/LibEIP712.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
+// File: contracts/LibEIP712.sol
 
 // https://github.com/0xProject/0x-monorepo/blob/development/contracts/utils/contracts/src/LibEIP712.sol
 library LibEIP712 {
@@ -1242,11 +1174,8 @@ library LibEIP712 {
     }
 }
 
-// Dependency file: contracts/LibUtils.sol
+// File: contracts/LibUtils.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 library LibUtils {
 
@@ -1281,12 +1210,8 @@ library LibUtils {
 
 }
 
+// File: contracts/IBridge.sol
 
-// Dependency file: contracts/IBridge.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 interface IBridge {
 
     struct ClaimData {
@@ -1400,21 +1325,15 @@ interface IBridge {
     );
 }
 
-// Dependency file: contracts/ISideToken.sol
+// File: contracts/ISideToken.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 interface ISideToken {
     function mint(address account, uint256 amount, bytes calldata userData, bytes calldata operatorData) external;
 }
 
-// Dependency file: contracts/ISideTokenFactory.sol
+// File: contracts/ISideTokenFactory.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 interface ISideTokenFactory {
 
@@ -1423,11 +1342,8 @@ interface ISideTokenFactory {
     event SideTokenCreated(address indexed sideToken, string symbol, uint256 granularity);
 }
 
-// Dependency file: contracts/IAllowTokens.sol
+// File: contracts/IAllowTokens.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 interface IAllowTokens {
 
     struct Limits {
@@ -1476,11 +1392,8 @@ interface IAllowTokens {
     function updateTokenTransfer(address token, uint256 amount) external;
 }
 
-// Dependency file: contracts/IWrapped.sol
+// File: contracts/IWrapped.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 interface IWrapped {
     function balanceOf(address) external returns(uint);
 
@@ -1499,36 +1412,16 @@ interface IWrapped {
         returns (bool);
 }
 
-// Root file: contracts/Bridge.sol
+// File: contracts/Bridge.sol
 
+// Import base Initializable contract
+
+// Import interface and library from OpenZeppelin contracts
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
 pragma abicoder v2;
-
-// Import base Initializable contract
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-// Import interface and library from OpenZeppelin contracts
-// import "contracts/zeppelin/upgradable/utils/ReentrancyGuard.sol";
-// import "contracts/zeppelin/upgradable/lifecycle/UpgradablePausable.sol";
-// import "contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol";
-
-// import "contracts/zeppelin/introspection/IERC1820Registry.sol";
-// import "contracts/zeppelin/token/ERC777/IERC777Recipient.sol";
-// import "contracts/zeppelin/token/ERC20/IERC20.sol";
-// import "contracts/zeppelin/token/ERC20/SafeERC20.sol";
-// import "contracts/zeppelin/utils/Address.sol";
-// import "contracts/zeppelin/math/SafeMath.sol";
-// import "contracts/zeppelin/token/ERC777/IERC777.sol";
-
-// import "contracts/LibEIP712.sol";
-// import "contracts/LibUtils.sol";
-
-// import "contracts/IBridge.sol";
-// import "contracts/ISideToken.sol";
-// import "contracts/ISideTokenFactory.sol";
-// import "contracts/IAllowTokens.sol";
-// import "contracts/IWrapped.sol";
-
 
 contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable, UpgradableOwnable, ReentrancyGuard {
     using SafeMath for uint256;

@@ -3,7 +3,7 @@
 // SPDX-License-Identifier: MIT
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -32,7 +32,7 @@ abstract contract  Context {
 
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 // import "contracts/zeppelin/GSN/Context.sol";
 /**
@@ -114,7 +114,7 @@ abstract contract Ownable is Context {
 
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 /**
  * @dev This abstract contract provides a fallback function that delegates all calls to another contract using the EVM
@@ -201,7 +201,7 @@ abstract contract Proxy {
 
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 /**
  * @dev Collection of functions related to the address type,
@@ -284,7 +284,7 @@ library Address {
 
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 // import "contracts/zeppelin/upgradable/proxy/Proxy.sol";
 // import "contracts/zeppelin/utils/Address.sol";
@@ -366,7 +366,7 @@ contract UpgradeableProxy is Proxy {
 
 
 // pragma solidity ^0.7.0;
-pragma abicoder v2;
+// pragma abicoder v2;
 
 // import "contracts/zeppelin/upgradable/proxy/UpgradeableProxy.sol";
 

@@ -1,9 +1,4 @@
-// Dependency file: contracts/zeppelin/math/SafeMath.sol
-
-// SPDX-License-Identifier: MIT
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
+// File: contracts/zeppelin/math/SafeMath.sol
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -160,12 +155,8 @@ library SafeMath {
     }
 }
 
+// File: contracts/zeppelin/upgradable/Initializable.sol
 
-// Dependency file: contracts/zeppelin/upgradable/Initializable.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /**
  * @title Initializable
@@ -214,11 +205,8 @@ contract Initializable {
   uint256[50] private ______gap;
 }
 
-// Dependency file: contracts/zeppelin/GSN/Context.sol
+// File: contracts/zeppelin/GSN/Context.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -242,16 +230,10 @@ abstract contract  Context {
     }
 }
 
+// File: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
 
-// Dependency file: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
-
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -328,16 +310,10 @@ contract UpgradableOwnable is Initializable, Context {
 
 }
 
+// File: contracts/zeppelin/upgradable/ownership/UpgradableSecondary.sol
 
-// Dependency file: contracts/zeppelin/upgradable/ownership/UpgradableSecondary.sol
 
 
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
-
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
 
 /**
  * @dev A Secondary contract can only be used by its primary account (the one that created it).
@@ -387,11 +363,8 @@ contract UpgradableSecondary is Initializable, Context {
 
 }
 
-// Dependency file: contracts/IAllowTokens.sol
+// File: contracts/IAllowTokens.sol
 
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 interface IAllowTokens {
 
     struct Limits {
@@ -440,19 +413,14 @@ interface IAllowTokens {
     function updateTokenTransfer(address token, uint256 amount) external;
 }
 
-// Root file: contracts/AllowTokens.sol
+// File: contracts/AllowTokens.sol
 
+// Upgradables
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
 pragma abicoder v2;
-
-// import "contracts/zeppelin/math/SafeMath.sol";
-// Upgradables
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-// import "contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol";
-// import "contracts/zeppelin/upgradable/ownership/UpgradableSecondary.sol";
-
-// import "contracts/IAllowTokens.sol";
 
 contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
     using SafeMath for uint256;

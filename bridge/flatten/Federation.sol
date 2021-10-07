@@ -1,9 +1,4 @@
-// Dependency file: contracts/zeppelin/upgradable/Initializable.sol
-
-// SPDX-License-Identifier: MIT
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
+// File: contracts/zeppelin/upgradable/Initializable.sol
 
 /**
  * @title Initializable
@@ -52,11 +47,7 @@ contract Initializable {
   uint256[50] private ______gap;
 }
 
-// Dependency file: contracts/zeppelin/GSN/Context.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
+// File: contracts/zeppelin/GSN/Context.sol
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -80,16 +71,7 @@ abstract contract  Context {
     }
 }
 
-
-// Dependency file: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
-
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-
-// import "contracts/zeppelin/GSN/Context.sol";
+// File: contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -166,12 +148,8 @@ contract UpgradableOwnable is Initializable, Context {
 
 }
 
+// File: contracts/IBridge.sol
 
-// Dependency file: contracts/IBridge.sol
-
-
-// pragma solidity ^0.7.0;
-// pragma abicoder v2;
 interface IBridge {
 
     struct ClaimData {
@@ -285,17 +263,14 @@ interface IBridge {
     );
 }
 
-// Root file: contracts/Federation.sol
+// File: contracts/Federation.sol
 
+// Upgradables
+
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
 pragma abicoder v2;
-
-// Upgradables
-// import "contracts/zeppelin/upgradable/Initializable.sol";
-// import "contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol";
-
-// import "contracts/IBridge.sol";
 
 contract Federation is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;

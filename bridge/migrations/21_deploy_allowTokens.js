@@ -10,11 +10,11 @@ module.exports = async (deployer, networkName, accounts) => {
     const allowTokensLogic = await AllowTokens.deployed();
     deployedJson.AllowTokens = allowTokensLogic.address.toLowerCase();
 
-    deployedJson.smallAmountConfirmations = deployedJson.smallAmountConfirmations || '0';
-    deployedJson.mediumAmountConfirmations = deployedJson.mediumAmountConfirmations || '0';
-    deployedJson.largeAmountConfirmations = deployedJson.largeAmountConfirmations || '0';
+    deployedJson.smallAmountConfirmations = deployedJson.smallAmountConfirmations || '12';
+    deployedJson.mediumAmountConfirmations = deployedJson.mediumAmountConfirmations || '12';
+    deployedJson.largeAmountConfirmations = deployedJson.largeAmountConfirmations || '12';
 
-    const typesInfo = networkName == 'rskmainnet' || networkName == 'ethmainnet'
+    const typesInfo = networkName == 'rskmainnet' || networkName == 'ethmainnet' || networkName == 'rinkeby' || networkName == 'ropsten' || networkName == 'bchmainnet' || networkName == 'bscmainnet'
     ? tokensTypesMainnet()
     : tokensTypesTestnet();
 
@@ -45,6 +45,12 @@ module.exports = async (deployer, networkName, accounts) => {
     if (networkName == 'ethmainnet') {
         await setTokensEthereum(allowTokens);
     }
+    if (networkName == 'bchmainnet') {
+        await setTokensBCH(allowTokens);
+    }
+    if (networkName == 'bscmainnet') {
+        await setTokensBSC(allowTokens);
+    }
     //Set multisig as the owner
     await allowTokens.transferOwnership(deployedJson.MultiSig);
 }
@@ -53,52 +59,52 @@ function tokensTypesMainnet() {
     return [
         { description: 'BTC', limits: {
             min:toWei('0.0001'),
-            max:toWei('25'),
-            daily:toWei('100'),
-            mediumAmount:toWei('0.1'),
-            largeAmount:toWei('1') }
-        },
-        { description: 'ETH', limits: {
-            min:toWei('0.005'),
-            max:toWei('750'),
-            daily:toWei('3000'),
-            mediumAmount:toWei('3'),
-            largeAmount:toWei('30') }
-        },
-        { description: '<1000usd', limits: {
-            min:toWei('0.01'),
-            max:toWei('2500'),
-            daily:toWei('5000'),
-            mediumAmount:toWei('10'),
-            largeAmount:toWei('100') }
-        },
-        { description: '<100usd', limits: {
-            min:toWei('0.1'),
             max:toWei('25000'),
-            daily:toWei('50000'),
+            daily:toWei('100000'),
             mediumAmount:toWei('100'),
             largeAmount:toWei('1000') }
         },
-        { description: '=1usd', limits: {
-            min:toWei('10'),
+        { description: 'ETH', limits: {
+            min:toWei('0.005'),
+            max:toWei('750000'),
+            daily:toWei('3000000'),
+            mediumAmount:toWei('3000'),
+            largeAmount:toWei('30000') }
+        },
+        { description: '<1000usd', limits: {
+            min:toWei('0.01'),
             max:toWei('2500000'),
             daily:toWei('5000000'),
             mediumAmount:toWei('10000'),
             largeAmount:toWei('100000') }
         },
+        { description: '<100usd', limits: {
+            min:toWei('0.1'),
+            max:toWei('25000000'),
+            daily:toWei('50000000'),
+            mediumAmount:toWei('100000'),
+            largeAmount:toWei('1000000') }
+        },
+        { description: '=1usd', limits: {
+            min:toWei('1'),
+            max:toWei('2500000000'),
+            daily:toWei('5000000000'),
+            mediumAmount:toWei('10000000'),
+            largeAmount:toWei('100000000') }
+        },
         { description: '<1usd', limits: {
-            min:toWei('1000'),
-            max:toWei('250000000'),
-            daily:toWei('500000000'),
-            mediumAmount:toWei('1000000'),
-            largeAmount:toWei('10000000') }
+            min:toWei('10'),
+            max:toWei('250000000000'),
+            daily:toWei('500000000000'),
+            mediumAmount:toWei('1000000000'),
+            largeAmount:toWei('10000000000') }
         },
         { description: '<1cent', limits: {
-            min:toWei('100000'),
-            max:toWei('25000000000'),
-            daily:toWei('50000000000'),
-            mediumAmount:toWei('100000000'),
-            largeAmount:toWei('1000000000') }
+            min:toWei('100'),
+            max:toWei('25000000000000'),
+            daily:toWei('50000000000000'),
+            mediumAmount:toWei('100000000000'),
+            largeAmount:toWei('1000000000000') }
         },
     ]
 }
@@ -107,52 +113,52 @@ function tokensTypesTestnet() {
     return [
         { description: 'BTC', limits: {
             min:toWei('0.0001'),
-            max:toWei('25'),
-            daily:toWei('100'),
-            mediumAmount:toWei('0.01'),
-            largeAmount:toWei('0.1') }
+            max:toWei('25000'),
+            daily:toWei('100000'),
+            mediumAmount:toWei('100'),
+            largeAmount:toWei('1000') }
         },
         { description: 'ETH', limits: {
-            min:toWei('0.0005'),
-            max:toWei('750'),
-            daily:toWei('3000'),
-            mediumAmount:toWei('0.03'),
-            largeAmount:toWei('0.3') }
+            min:toWei('0.005'),
+            max:toWei('750000'),
+            daily:toWei('3000000'),
+            mediumAmount:toWei('3000'),
+            largeAmount:toWei('30000') }
         },
         { description: '<1000usd', limits: {
-            min:toWei('0.001'),
-            max:toWei('2500'),
-            daily:toWei('5000'),
-            mediumAmount:toWei('0.01'),
-            largeAmount:toWei('0.1') }
+            min:toWei('0.01'),
+            max:toWei('2500000'),
+            daily:toWei('5000000'),
+            mediumAmount:toWei('10000'),
+            largeAmount:toWei('100000') }
         },
         { description: '<100usd', limits: {
             min:toWei('0.1'),
-            max:toWei('25000'),
-            daily:toWei('50000'),
-            mediumAmount:toWei('1'),
-            largeAmount:toWei('10') }
+            max:toWei('25000000'),
+            daily:toWei('50000000'),
+            mediumAmount:toWei('100000'),
+            largeAmount:toWei('1000000') }
         },
         { description: '=1usd', limits: {
             min:toWei('1'),
-            max:toWei('2500000'),
-            daily:toWei('5000000'),
-            mediumAmount:toWei('10'),
-            largeAmount:toWei('100') }
+            max:toWei('2500000000'),
+            daily:toWei('5000000000'),
+            mediumAmount:toWei('10000000'),
+            largeAmount:toWei('100000000') }
         },
         { description: '<1usd', limits: {
             min:toWei('10'),
-            max:toWei('250000000'),
-            daily:toWei('500000000'),
-            mediumAmount:toWei('100'),
-            largeAmount:toWei('1000') }
+            max:toWei('250000000000'),
+            daily:toWei('500000000000'),
+            mediumAmount:toWei('1000000000'),
+            largeAmount:toWei('10000000000') }
         },
         { description: '<1cent', limits: {
-            min:toWei('10'),
-            max:toWei('25000000000'),
-            daily:toWei('50000000000'),
-            mediumAmount:toWei('100'),
-            largeAmount:toWei('1000') }
+            min:toWei('100'),
+            max:toWei('25000000000000'),
+            daily:toWei('50000000000000'),
+            mediumAmount:toWei('100000000000'),
+            largeAmount:toWei('1000000000000') }
         },
     ]
 }
@@ -215,18 +221,27 @@ async function setTokensRskMainnet(allowTokens) {
 async function setTokensEthereum(allowTokens) {
     await allowTokens.setMultipleTokens([
         { token: '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599', typeId: '0' }, //WBTC
-        { token: '0xeb4c2781e4eba804ce9a9803c67d0893436bb27d', typeId: '0' }, //renBTC
         { token: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2', typeId: '1' }, //WETH
-        { token: '0x6b175474e89094c44da98b954eedeac495271d0f', typeId: '4' }, //DAI
+        { token: '0x6b175474e89094c44da98b954eedeac495271d0f', typeId: '5' }, //DAI
         { token: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', typeId: '5' }, //USDC
         { token: '0xdac17f958d2ee523a2206206994597c13d831ec7', typeId: '5' }, //USDT
-        { token: '0x514910771af9ca656af840dff83e8264ecf986ca', typeId: '3' }, //LINK
-        { token: '0x8d3e855f3f55109d473735ab76f753218400fe96', typeId: '3' }, //BUND
-        { token: '0xf04a8ac553fcedb5ba99a64799155826c136b0be', typeId: '6' }, //FLIXX
-        { token: '0xa1d6Df714F91DeBF4e0802A542E13067f31b8262', typeId: '6' }, //RFOX
-        { token: '0xca0e7269600d353f70b14ad118a49575455c0f2f', typeId: '6' }, //AMLT
-        // Side Tokens
-        { token: '0x2acc95758f8b5f583470ba265eb685a8f45fc9d5', typeId: '5' }, //eRIF
-        { token: '0xe700691da7b9851f2f35f8b8182c69c53ccad9db', typeId: '4' }, //eDOC
+        { token: '0x514910771af9ca656af840dff83e8264ecf986ca', typeId: '4' }, //LINK
+        { token: '0x7fc66500c84a76ad7e9c93437bfc5ac33e2ddae9', typeId: '3' }, //AAVE
+        { token: '0x6b3595068778dd592e39a122f4f5a5cf09c90fe2', typeId: '4' }, //SUSHI
+        { token: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984', typeId: '4' }, //UNI
+    ]);
+}
+
+async function setTokensBCH(allowTokens) {
+    await allowTokens.setMultipleTokens([
+        { token: '0x3743eC0673453E5009310C727Ba4eaF7b3a1cc04', typeId: '3' }, //WBCH
+    ]);
+}
+
+async function setTokensBSC(allowTokens) {
+    await allowTokens.setMultipleTokens([
+        { token: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', typeId: '3' }, //WBNB
+        { token: '0xe9e7cea3dedca5984780bafc599bd69add087d56', typeId: '5' }, //BUSD
+        { token: '0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82', typeId: '4' }, //CAKE
     ]);
 }

@@ -1,8 +1,8 @@
 {
-    "bridge": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-    "federation": "0x479f86ecbe766073d2712ef418aceb56d5362a2b",
-    "multiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
-    "allowTokens": "0xe4aa0f414725c9322a1a9d80d469c5e234786653",
-    "host": "<YOUR HOST URL AND PORT>",
-    "fromBlock": 10823910
+    "bridge": "0x0fa0b4cc33d5a4f0ed073ca7f88259ab75c7a98b",
+    "federation": "0x18a6d00b2e7fe50c7cbdd3ed9b2fc00a6630e7e2",
+    "multiSig": "0x319b64a5ebee44d270d79b5bd478f8e0aa28d182",
+    "allowTokens": "0x900fb32d746d4ee1cc3d500f3eafb02a89783047",
+    "host": "https://ethereum.squidswap.cash",
+    "fromBlock": 13345385
 }
