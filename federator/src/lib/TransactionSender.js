@@ -8,6 +8,7 @@ const axios = require('axios');
 const CustomError = require('./CustomError');
 const ESTIMATED_GAS = 250000;
 
+const chains = require('./chainId');
 module.exports = class TransactionSender {
     constructor(client, logger, config) {
         this.client = client;
@@ -30,8 +31,7 @@ module.exports = class TransactionSender {
     }
 
     async getGasPrice() {
-        const chainId = await this.getChainId();
-        if (chainId >= 30 && chainId <= 33) {
+        if (await this.isRsk()) {
             return this.getRskGasPrice();
         }
         return this.getEthGasPrice();
@@ -112,7 +112,7 @@ module.exports = class TransactionSender {
 
     async isRsk() {
         const chainId = await this.getChainId();
-        return chainId == 30 || chainId == 31;
+        return chainId == chains.RSK_TEST_NET_CHAIN_ID || chainId == chains.RSK_MAIN_NET_CHAIN_ID;
     }
 
     async createRawTransaction(from, to, data, value) {
