@@ -62,45 +62,45 @@ For example, spinning up clean AWS / DigitalOcean / Linode / Vultr / Bitlaunch.i
 
 ```bash
 # Update ubuntu system libraries
-apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
+  $ apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
 # Reboot server to apply updates
-reboot
+  $ reboot
 # Install docker-ce
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
+  $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
 # Clone this repository
-git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge
+  $ git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge
 # Copy configuration file to spin up bch-eth bridge
-cd tokenbridge && cp federator/config/config.eth-sample.js federator/config/config.js
+  $ cd tokenbridge && cp federator/config/config.eth-sample.js federator/config/config.js
 # Replace <your-private-key-here> to your validator address's private key.
-sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
+  $ sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Build docker image
-docker build . -t fed-tokenbridge
+  $ docker build . -t fed-tokenbridge
 # Run validation docker node
-docker run -d \
+  $ docker run -d \
     --network host \
     --restart always \
     -v $PWD/federator/config:/app/federator/config \
     --name=fed-tokenbridge \
     fed-tokenbridge:latest
 # Clone another repository for bch-bsc bridge
-cd .. && git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge tokenbridge-bsc
+  $ cd .. && git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge tokenbridge-bsc
 # Copy configuration file
-cd tokenbridge-bsc && cp federator/config/config.bsc-sample.js federator/config/config.js
+  $ cd tokenbridge-bsc && cp federator/config/config.bsc-sample.js federator/config/config.js
 # Replace <your-private-key-here> to your other validator address's private key.
-sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
+  $ sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Replace default port 5000 to another one in order to avoid conflict.
-sed -i 's/5000/5001/g' federator/config/config.js
+  $ sed -i 's/5000/5001/g' federator/config/config.js
 # Build docker image
-docker build . -t fed-tokenbridge-bsc
+  $ docker build . -t fed-tokenbridge-bsc
 # Run validation docker node
-docker run -d \
+  $ docker run -d \
     --network host \
     --restart always \
     -v $PWD/federator/config:/app/federator/config \
     --name=fed-tokenbridge-bsc \
     fed-tokenbridge-bsc:latest
 # Check logs if the spinned up federators work fine
-docker logs fed-tokenbridge && docker logs fed-tokenbridge-bsc
+  $ docker logs fed-tokenbridge && docker logs fed-tokenbridge-bsc
 ```
 
 ### config
