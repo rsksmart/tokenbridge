@@ -22,12 +22,12 @@ StatusServer.init(logger);
 
 if(!config.mainchain || !config.sidechain) {
   logger.error('Mainchain and Sidechain configuration are required');
-  process.exit();
+  process.exit(1);
 }
 
 if (!config.etherscanApiKey) {
   logger.error('Etherscan API configuration is required');
-  process.exit();
+  process.exit(1);
 }
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
@@ -58,15 +58,15 @@ scheduler.start().catch((err) => {
 
 async function run() {
   try {
-    await mainFederator.run();
-    await sideFederator.run();
+    // await mainFederator.run();
+    // await sideFederator.run();
 
     await runNftFederator();
 
     await heartbeat.readLogs();
   } catch(err) {
     logger.error('Unhandled Error on run()', err);
-    process.exit();
+    process.exit(1);
   }
 }
 
@@ -98,7 +98,7 @@ async function scheduleHeartbeatProcesses() {
             await heartbeat.run();
         } catch(err) {
             logger.error('Unhandled Error on runHeartbeat()', err);
-            process.exit();
+            process.exit(1);
         }
       }
     }
@@ -112,7 +112,7 @@ async function scheduleHeartbeatProcesses() {
 scheduleHeartbeatProcesses();
 
 async function exitHandler() {
-  process.exit();
+  process.exit(1);
 }
 
 // catches ctrl+c event
