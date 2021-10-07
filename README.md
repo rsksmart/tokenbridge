@@ -13,15 +13,21 @@ Forked from [RSK Token Bridge](https://tokenbridge.rsk.co/), deployment codes mo
 #### SmartBCH side
 
 [bridge](https://www.smartscan.cash/address/0xf0b94070fd55b74a766cc0cef961944e5c4c3493)
+
 [federation](https://www.smartscan.cash/address/0xe6eb40300e2666c57fe09660420021edbb3bb638)
+
 [multisig](https://www.smartscan.cash/address/0x4b535dc383a34b0dadbfc161fab9c7c71ad2c95c)
+
 [allowtokens](https://www.smartscan.cash/address/0x58218b74548ac223cb90392177a42d371a94279c)
 
 #### Ethereum side
 
 [bridge](https://etherscan.io/address/0x0fa0b4cc33d5a4f0ed073ca7f88259ab75c7a98b)
+
 [federation](https://etherscan.io/address/0x18a6d00b2e7fe50c7cbdd3ed9b2fc00a6630e7e2)
+
 [multisig](https://etherscan.io/address/0x319b64a5ebee44d270d79b5bd478f8e0aa28d182)
+
 [allowtokens](https://etherscan.io/address/0x900fb32d746d4ee1cc3d500f3eafb02a89783047)
 
 ### SmartBCH - Binance Smart Chain Bridge
@@ -29,15 +35,21 @@ Forked from [RSK Token Bridge](https://tokenbridge.rsk.co/), deployment codes mo
 #### SmartBCH side
 
 [bridge](https://www.smartscan.cash/address/0x5634e72c9c20ae2b2f3094303e7b18bb817c88cf)
+
 [federation](https://www.smartscan.cash/address/0x792ed489fcd28c52a4502dcf08326822479b12e2)
+
 [multisig](https://www.smartscan.cash/address/0x50eef54fe616a7d92e41b2f47486bb9e03393767)
+
 [allowtokens](https://www.smartscan.cash/address/0xcd067b74c3bee97b448f57d7e686d6fe66c1809a)
 
 #### Binance Smart Chain side
 
 [bridge](https://bscscan.com/address/0x6658010f8eb89889e5fcec7178f87a219f076166)
+
 [federation](https://bscscan.com/address/0x5e507fc0304a01e90fef894db3833196a3c43013)
+
 [multisig](https://bscscan.com/address/0x9e163d98c09da4debae442b070b04be217d97bcb)
+
 [allowtokens](https://bscscan.com/address/0x06587228b1b848e6c23ffd454a5944872b151fb4)
 
 ### How to deploy Federation node
