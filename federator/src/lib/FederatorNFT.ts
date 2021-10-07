@@ -11,12 +11,7 @@ import FederationFactory from '../contracts/FederationFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
 import { IFederationV3 } from '../contracts/IFederationV3';
-
-const RSK_TEST_NET_CHAIN_ID = 31;
-const ETH_KOVAN_CHAIN_ID = 42;
-const ETH_MAIN_NET_CHAIN_ID = 1;
-const RSK_MAIN_NET_CHAIN_ID = 30;
-
+import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 export class FederatorNFT {
   public logger: Logger;
   public config: Config;
