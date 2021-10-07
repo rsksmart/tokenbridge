@@ -185,7 +185,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         txDataHash = await destinationBridgeContract.methods.transactionsDataHashes(receipt.transactionHash).call();
         if(txDataHash === utils.zeroHash) {
             logger.error('Token was not voted by federators');
-            process.exit();
+            process.exit(1);
         }
 
         await claimTokensFromDestinationBridge(destinationBridgeContract, userAddress, amount, receipt,
@@ -196,7 +196,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         let balance = await destinationTokenContract.methods.balanceOf(userAddress).call();
         if (balance.toString() === '0' ) {
             logger.error('Token was not claimed');
-            process.exit();
+            process.exit(1);
         }
         logger.info(`${destinationLoggerName} token balance`, balance);
 
@@ -275,19 +275,19 @@ async function transfer(originFederators, destinationFederators, config, originL
         let expectedBalance = BigInt(bridgeBalanceBefore) - BigInt(amount);
         if (expectedBalance !== BigInt(bridgeBalanceAfter)) {
             logger.error(`Wrong Bridge balance. Expected ${expectedBalance} but got ${bridgeBalanceAfter}`);
-            process.exit();
+            process.exit(1);
         }
 
         expectedBalance = BigInt(receiverBalanceBefore) + BigInt(amount);
         if (expectedBalance !== BigInt(receiverBalanceAfter)) {
             logger.error(`Wrong Receiver balance. Expected ${receiverBalanceBefore} but got ${receiverBalanceAfter}`);
-            process.exit();
+            process.exit(1);
         }
 
         expectedBalance = BigInt(senderBalanceBefore) - BigInt(amount);
         if (expectedBalance !== BigInt(senderBalanceAfter)) {
             logger.error(`Wrong Sender balance. Expected ${expectedBalance} but got ${senderBalanceAfter}`);
-            process.exit();
+            process.exit(1);
         }
 
         let crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
@@ -359,7 +359,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         logger.info(`${destinationLoggerName} token balance`, balance);
         if (balance.toString() === '0' ) {
             logger.error('Token was not claimed');
-            process.exit();
+            process.exit(1);
         }
 
         crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
@@ -382,7 +382,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         txDataHash = await bridgeContract.methods.transactionsDataHashes(receipt.transactionHash).call();
         if(txDataHash === utils.zeroHash) {
             logger.error('Token was not voted by federators');
-            process.exit();
+            process.exit(1);
         }
 
         logger.info('------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------');
@@ -406,7 +406,7 @@ async function transfer(originFederators, destinationFederators, config, originL
 
         if (senderBalanceBefore === BigInt(senderBalanceAfter)) {
             logger.error(`Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfter}`);
-            process.exit();
+            process.exit(1);
         }
 
         crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
@@ -446,7 +446,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         logger.info(`${destinationLoggerName} token address`, destinationAnotherTokenAddress);
         if(destinationAnotherTokenAddress === utils.zeroAddress) {
             logger.error('Token was not voted by federators');
-            process.exit();
+            process.exit(1);
         }
 
         logger.debug('Check balance on the other side before crossing');
@@ -512,7 +512,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         expectedBalance = BigInt(destinationInitialUserBalance) + BigInt(userSmallAmount);
         if (expectedBalance !== BigInt(balance)) {
             logger.error(`userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`);
-            process.exit();
+            process.exit(1);
         }
 
         logger.debug('Mine medium amount confirmations blocks');
@@ -544,7 +544,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         expectedBalance = BigInt(destinationInitialUserBalance) + BigInt(userMediumAmount) + BigInt(userSmallAmount);
         if (expectedBalance !== BigInt(balance)) {
             logger.error(`userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`);
-            process.exit();
+            process.exit(1);
         }
 
         logger.debug('Mine large amount confirmations blocks');
@@ -576,7 +576,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         expectedBalance = BigInt(destinationInitialUserBalance) + BigInt(userLargeAmount) + BigInt(userMediumAmount) + BigInt(userSmallAmount);
         if (expectedBalance !== BigInt(balance)) {
             logger.error(`Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`);
-            process.exit();
+            process.exit(1);
         }
 
         userBalanceAnotherToken = await anotherTokenContract.methods.balanceOf(userAddress).call();
@@ -586,7 +586,7 @@ async function transfer(originFederators, destinationFederators, config, originL
 
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
-        process.exit();
+        process.exit(1);
     }
 }
 
@@ -609,7 +609,7 @@ async function getDestinationTokenAddress(destinationBridgeContract, originAddre
     destinationTokenAddress = await destinationBridgeContract.methods.mappedTokens(originAddress).call();
     if (destinationTokenAddress === utils.zeroAddress) {
       logger.error('Failed to create side token');
-      process.exit();
+      process.exit(1);
     }
   }
   logger.info(`${destinationLoggerName} token address`, destinationTokenAddress);
