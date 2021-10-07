@@ -7,7 +7,12 @@ function isMainnet(network) {
 function isLocalNetwork(network) {
     return !network.toLowerCase().includes('mainnet')
         && !network.toLowerCase().includes('kovan')
-        && !network.toLowerCase().includes('testnet');
+        && !network.toLowerCase().includes('testnet')
+        && !network.toLowerCase().includes('rinkeby')
+        && !network.toLowerCase().includes('ropsten')
+        && !network.toLowerCase().includes('ethmainnet')
+        && !network.toLowerCase().includes('bchmainnet')
+        && !network.toLowerCase().includes('bscmainnet');
 }
 
 function getDeployed(network) {

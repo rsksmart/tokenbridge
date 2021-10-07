@@ -1,9 +1,4 @@
-// Dependency file: contracts/zeppelin/GSN/Context.sol
-
-// SPDX-License-Identifier: MIT
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/GSN/Context.sol
 
 /*
  * @dev Provides information about the current execution context, including the
@@ -27,12 +22,7 @@ abstract contract  Context {
     }
 }
 
-
-// Dependency file: contracts/zeppelin/token/ERC777/IERC777.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/token/ERC777/IERC777.sol
 
 /**
  * @dev Interface of the ERC777Token standard as defined in the EIP.
@@ -221,12 +211,7 @@ interface IERC777 {
     event RevokedOperator(address indexed operator, address indexed tokenHolder);
 }
 
-
-// Dependency file: contracts/zeppelin/token/ERC777/IERC777Recipient.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/token/ERC777/IERC777Recipient.sol
 
 /**
  * @dev Interface of the ERC777TokensRecipient standard as defined in the EIP.
@@ -259,12 +244,7 @@ interface IERC777Recipient {
     ) external;
 }
 
-
-// Dependency file: contracts/zeppelin/token/ERC777/IERC777Sender.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/token/ERC777/IERC777Sender.sol
 
 /**
  * @dev Interface of the ERC777TokensSender standard as defined in the EIP.
@@ -297,12 +277,7 @@ interface IERC777Sender {
     ) external;
 }
 
-
-// Dependency file: contracts/zeppelin/token/ERC20/IERC20.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/token/ERC20/IERC20.sol
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP. Does not include
@@ -379,12 +354,7 @@ interface IERC20 {
     event Approval(address indexed owner, address indexed spender, uint256 value);
 }
 
-
-// Dependency file: contracts/zeppelin/math/SafeMath.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/math/SafeMath.sol
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -541,12 +511,7 @@ library SafeMath {
     }
 }
 
-
-// Dependency file: contracts/zeppelin/utils/Address.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/utils/Address.sol
 
 /**
  * @dev Collection of functions related to the address type,
@@ -624,12 +589,7 @@ library Address {
     }
 }
 
-
-// Dependency file: contracts/zeppelin/introspection/IERC1820Registry.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/zeppelin/introspection/IERC1820Registry.sol
 
 /**
  * @dev Interface of the global ERC1820 Registry, as defined in the
@@ -739,21 +699,7 @@ interface IERC1820Registry {
     event ManagerChanged(address indexed account, address indexed newManager);
 }
 
-
-// Dependency file: contracts/zeppelin/token/ERC777/ERC777.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
-
-// import "contracts/zeppelin/GSN/Context.sol";
-// import "contracts/zeppelin/token/ERC777/IERC777.sol";
-// import "contracts/zeppelin/token/ERC777/IERC777Recipient.sol";
-// import "contracts/zeppelin/token/ERC777/IERC777Sender.sol";
-// import "contracts/zeppelin/token/ERC20/IERC20.sol";
-// import "contracts/zeppelin/math/SafeMath.sol";
-// import "contracts/zeppelin/utils/Address.sol";
-// import "contracts/zeppelin/introspection/IERC1820Registry.sol";
+// File: contracts/zeppelin/token/ERC777/ERC777.sol
 
 /**
  * @dev Implementation of the {IERC777} interface.
@@ -1223,32 +1169,19 @@ contract ERC777 is Context, IERC777, IERC20 {
     }
 }
 
-
-// Dependency file: contracts/IERC677Receiver.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/IERC677Receiver.sol
 
 interface IERC677Receiver {
   function onTokenTransfer(address _sender, uint _value, bytes calldata _data) external;
 }
 
-// Dependency file: contracts/ISideToken.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/ISideToken.sol
 
 interface ISideToken {
     function mint(address account, uint256 amount, bytes calldata userData, bytes calldata operatorData) external;
 }
 
-// Dependency file: contracts/LibEIP712.sol
-
-
-// pragma solidity ^0.7.0;
-pragma abicoder v2;
+// File: contracts/LibEIP712.sol
 
 // https://github.com/0xProject/0x-monorepo/blob/development/contracts/utils/contracts/src/LibEIP712.sol
 library LibEIP712 {
@@ -1345,16 +1278,12 @@ library LibEIP712 {
     }
 }
 
-// Root file: contracts/SideToken.sol
+// File: contracts/SideToken.sol
 
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.7.0;
 pragma abicoder v2;
-
-// import "contracts/zeppelin/token/ERC777/ERC777.sol";
-// import "contracts/IERC677Receiver.sol";
-// import "contracts/ISideToken.sol";
-// import "contracts/LibEIP712.sol";
 
 contract SideToken is ISideToken, ERC777 {
     using Address for address;

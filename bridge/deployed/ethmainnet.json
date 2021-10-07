@@ -1,17 +1,4 @@
 {
     "network": "ethmainnet",
-    "MultiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
-    "ProxyAdmin": "0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6",
-    "Utils": "0x5f989f2f323a1732a565c9a3f694f2Fa8f0b6120",
-    "Federation": "0x5631a6ac95b6bde690807085aaa70e3b2d9d76c5",
-    "SideTokenFactory": "0xf73c60863bf2930bde2c69df4cb8fe700ae713fb",
-    "AllowTokens": "0x118522603dc0b8490fec2b8db92e6f1c66cd697c",
-    "BridgeProxy": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-    "Bridge": "0x9f29f9bda2052884d39f0f032b68aaa14fc363d8",
-    "smallAmountConfirmations": "120",
-    "mediumAmountConfirmations": "240",
-    "largeAmountConfirmations": "5760",
-    "WrappedCurrency": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-    "AllowTokensProxy": "0xa3fc98e0a7a979677bc14d541be770b2cb0a15f3",
-    "FederationProxy": "0x5e29c223d99648c88610519f96e85e627b3abe17"
+    "WrappedCurrency": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
 }

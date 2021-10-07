@@ -1,0 +1,8 @@
+{
+    "bridge": "0x6658010f8eb89889e5fcec7178f87a219f076166",
+    "federation": "0x5e507fc0304a01e90fef894db3833196a3c43013",
+    "multiSig": "0x9e163d98c09da4debae442b070b04be217d97bcb",
+    "allowTokens": "0x06587228b1b848e6c23ffd454a5944872b151fb4",
+    "host": "https://bsc-dataseed.binance.org",
+    "fromBlock": 11525912
+}

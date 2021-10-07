@@ -1,4 +1,3 @@
-
 const Tx = require('ethereumjs-tx');
 const ethUtils = require('ethereumjs-util');
 const utils = require('./utils');
@@ -13,7 +12,6 @@ module.exports = class TransactionSender {
         this.logger = logger;
         this.chainId = null;
         this.manuallyCheck = `${config.storagePath || __dirname}/manuallyCheck.txt`;
-        this.etherscanApiKey = config.etherscanApiKey;
         this.debuggingMode = false;
     }
 
@@ -30,25 +28,15 @@ module.exports = class TransactionSender {
 
     async getGasPrice() {
         const chainId = await this.getChainId();
-        if (chainId >= 30 && chainId <= 33) {
-            return this.getRskGasPrice();
+        if (chainId == 10000) {
+            const bchgasprice = 1050000000;
+            return bchgasprice;
         }
         return this.getEthGasPrice();
     }
 
     async getGasLimit(rawTx) {
-        const chainId = await this.getChainId();
-        let estimatedGas = await this.client.eth.estimateGas({
-            gasPrice: rawTx.gasPrice,
-            value: rawTx.value,
-            to: rawTx.to,
-            data: rawTx.data,
-            from: rawTx.from
-        });
-
-        if (chainId >= 30 && chainId <= 33) {
-            estimatedGas = 200000;
-        }
+        const estimatedGas = 300000;
 
         return estimatedGas;
     }
@@ -57,7 +45,7 @@ module.exports = class TransactionSender {
         const chainId = await this.getChainId();
         const gasPrice = parseInt(await this.client.eth.getGasPrice());
         let useGasPrice = gasPrice <= 1 ? 1: Math.round(gasPrice * 1.5);
-        if (chainId == 1) {
+        if (chainId == 1 || chainId == 56) {
             const data = {
                 module: 'gastracker',
                 action: 'gasoracle'
@@ -154,13 +142,14 @@ module.exports = class TransactionSender {
 
     async useEtherscanApi(data) {
         const chainId = await this.getChainId();
-        if(chainId != 1 && chainId != 42)
+        if(chainId != 1 && chainId != 56)
             throw new Error(`ChainId:${chainId} can't use Etherescan API`);
 
-        const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
+        const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api.bscscan.com/api';
+        const etherscanApiKey = chainId == 1 ? '1NUG83MEXBQZ9V6RECYGDEKTSTUHHMWKJQs' : 'JINV2N6JSEZDBRC5W7XNYFE4ICJ5RNWG62';
 
         const params = new URLSearchParams();
-        params.append('apikey', this.etherscanApiKey);
+        params.append('apikey', etherscanApiKey);
         for (const property in data) {
             params.append(property, data[property]);
         }
@@ -190,7 +179,7 @@ module.exports = class TransactionSender {
                 const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
                 receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
                     txHash = hash;
-                    if (chainId == 1) {
+                    if (chainId == 1 || chainId == 56) {
                         // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
                         // see  https://github.com/ethereum/go-ethereum/issues/22308
                         const data = {
@@ -219,7 +208,7 @@ module.exports = class TransactionSender {
             return receipt;
 
         } catch(err) {
-            if(throwOnError) 
+            if(throwOnError)
                 throw new CustomError('Error in sendTransaction', err);
 
             if (err.message.indexOf('it might still be mined') > 0) {
