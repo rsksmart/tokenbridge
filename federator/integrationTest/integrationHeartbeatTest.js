@@ -58,7 +58,7 @@ async function emitAndListenToHeartbeats(
   config
 ) {
   try {
-   
+
     logger.debug('Starting heartbeat processes');
 
     // Start MAIN hearbeats with delay between them
@@ -87,11 +87,11 @@ async function emitAndListenToHeartbeats(
         logger.info('HeartBeat Event detected on Log File');
     } else {
         logger.error('HeartBeat Event NOT detected on Log File');
-        process.exit()
+        process.exit(1);
     }
 
     } catch(err) {
         logger.error('Unhandled error:', err.stack);
-        process.exit();
+        process.exit(1);
     }
 }

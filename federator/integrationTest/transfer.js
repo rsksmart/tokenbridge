@@ -60,7 +60,7 @@ async function run() {
 
     } catch(err) {
         logger.error('Unhandled Error on run()', err.stack);
-        process.exit();
+        process.exit(1);
     }
 
 }

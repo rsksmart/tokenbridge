@@ -55,7 +55,7 @@ module.exports = class Heartbeat {
                 if(retries > 0) {
                     await utils.sleep(sleepAfterRetrie);
                 } else {
-                    process.exit();
+                    process.exit(1);
                 }
             }
         }
@@ -137,7 +137,7 @@ module.exports = class Heartbeat {
                 if( retries > 0) {
                     await utils.sleep(sleepAfterRetrie);
                 } else {
-                    process.exit();
+                    process.exit(1);
                 }
             }
         }
@@ -217,7 +217,7 @@ module.exports = class Heartbeat {
         const chainId = await this.mainWeb3.eth.net.getId();
         if (!utils.checkIfItsInRSK(chainId)) {
             this.logger.error(new Error(`Heartbeat should only run on RSK ${chainId}`));
-            process.exit();
+            process.exit(1);
         }
     }
 }
