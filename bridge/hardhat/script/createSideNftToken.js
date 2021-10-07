@@ -1,9 +1,15 @@
 // How to run the script: npx hardhat run ./hardhat/script/createSideNftToken.js --network rsktestnetrinkeby
 const hre = require("hardhat");
+const chains = require('../helper/chains');
 
 async function main() {
-  const {getNamedAccounts, deployments} = hre;
+  const {getNamedAccounts, deployments, network} = hre;
   const {deployer} = await getNamedAccounts();
+
+  if (chains.isMainnet(network)) {
+    console.log('This is mainnet, are you sure? remove this check then .-.');
+    return;
+  }
 
   const transactionEtherValue = 0;
 
@@ -23,7 +29,6 @@ async function main() {
 
   const nftBridge = new web3.eth.Contract(NftBridge.abi, NftBridgeProxy.address);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
-
 
   for (const nftToken of nftTokens) {
     console.log("Token", nftToken);
