@@ -156,7 +156,7 @@ async function transferNFT(originFederators, destinationFederators, config, orig
         await assertNFTTokenBalanceForUserIsExpected(sideTokenContract, userAddress, expectedTokenAmount);
     } catch (err) {
         logger.error('Unhandled error:', err.stack);
-        process.exit();
+        process.exit(1);
     }
 }
 
@@ -174,7 +174,7 @@ async function getDestinationNFTTokenAddress(destinationBridgeContract, originAd
         destinationTokenAddress = await destinationBridgeContract.methods.sideTokenAddressByOriginalTokenAddress(originAddress).call();
         if (destinationTokenAddress === utils.zeroAddress) {
             logger.error('Failed to create side NFT token');
-            process.exit();
+            process.exit(1);
         }
     }
     logger.info(`${destinationLoggerName} token address`, destinationTokenAddress);
@@ -185,7 +185,7 @@ async function assertThatNftTokensCrossedToBridge(nftBridgeContract, transaction
     const txDataHash = await nftBridgeContract.methods.hasCrossed(transactionHash).call();
     if (txDataHash === utils.zeroHash) {
         logger.error('Token was not voted by federators');
-        process.exit();
+        process.exit(1);
     }
 }
 
@@ -193,7 +193,7 @@ async function assertNFTTokenBalanceForUserIsExpected(tokenContract, userAddress
     const nftTokenBalanceForUser = await tokenContract.methods.balanceOf(userAddress).call();
     if (!web3Utils.toBN(nftTokenBalanceForUser).eq(web3Utils.toBN(expectedTokenAmount))) {
         logger.error(`User ${userAddress}'s balance for token ${tokenContract.options.address} should be ${expectedTokenAmount} but is ${nftTokenBalanceForUser}`);
-        process.exit();
+        process.exit(1);
     }
 }
 
@@ -244,7 +244,7 @@ async function claimNftTokenInSideChain(receiveTokensToTxReceipt, destinationNft
     const acceptTransferEventDecodedLogs = abiDecoder.decodeLogs(receiveTokensToTxReceipt.logs);
     if (acceptTransferEventDecodedLogs.length !== 1) {
         logger.error(`Expected a single accept transfer event to have been emitted, but got ${acceptTransferEventDecodedLogs.length}`);
-        process.exit();
+        process.exit(1);
     }
 
     const acceptTransferEventAddress = acceptTransferEventDecodedLogs[0].address;
