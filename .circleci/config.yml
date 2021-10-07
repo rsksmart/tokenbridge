@@ -50,6 +50,7 @@ jobs:
             set -e
             cd federator
             npm run integrationTest
+            echo $
       - run:
           name: NFT federator integration tests
           command: |
