@@ -7,37 +7,37 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   if (bridgeProxy) return;
 
-  const Bridge = await deployments.get('Bridge');
+  const BridgeV3 = await deployments.get('BridgeV3');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
-  const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
+  const bridgeV3 = new web3.eth.Contract(BridgeV3.abi, bridgeProxyAddress);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
   if (!network.live) {
     const WRBTC = await deployments.get('WRBTC');
     log(`Get deployed WRBTC at ${WRBTC.address}`);
-    methodCall = bridge.methods.setWrappedCurrency(WRBTC.address);
+    methodCall = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
     await methodCall.call({ from: multiSigAddress })
     await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
 
-    const AllowTokens = await deployments.get('AllowTokens');
+    const AllowTokensV1 = await deployments.get('AllowTokensV1');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
-    const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
-    methodCall = allowTokens.methods.setToken(network.config.network_id, WRBTC.address, '0');
+    const allowTokensV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
+    methodCall = allowTokensV1.methods.setToken(WRBTC.address, '0');
     await methodCall.call({ from: multiSigAddress });
     await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
   } else {
-    methodCall = bridge.methods.setWrappedCurrency(wrappedCurrency);
+    methodCall = bridgeV3.methods.setWrappedCurrency(wrappedCurrency);
     await methodCall.call({ from: multiSigAddress });
     await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
   }
-  methodCall = bridge.methods.initDomainSeparator();
+  methodCall = bridgeV3.methods.initDomainSeparator();
   await methodCall.call({ from: multiSigAddress });
   await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
   log(`MultiSig submitTransaction init Domain Separator in the Bridge`);
@@ -45,4 +45,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'set_bridge_wrapped_currency'; // id required to prevent reexecution
 module.exports.tags = ['BridgeSetWrappedCurrency', 'new'];
-module.exports.dependencies = ['AllowTokensProxy', 'AllowTokens', 'Bridge', 'BridgeProxy', 'MultiSigWallet', 'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'];
+module.exports.dependencies = ['AllowTokensProxy', 'AllowTokensV1', 'BridgeV3', 'BridgeProxy', 'MultiSigWallet', 'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'];

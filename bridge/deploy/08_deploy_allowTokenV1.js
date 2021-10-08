@@ -4,14 +4,14 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
 
   if (allowTokensProxy) return;
 
-  const deployResult = await deploy('AllowTokens', {
+  const deployResult = await deploy('AllowTokensV1', {
     from: deployer,
     log: true
   });
 
   if (deployResult.newlyDeployed) {
-    log(`Contract AllowTokens deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+    log(`Contract AllowTokens V1 deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
   }
 };
 module.exports.id = 'deploy_allow_tokens'; // id required to prevent reexecution
-module.exports.tags = ['AllowTokens', 'new'];
+module.exports.tags = ['AllowTokensV1', 'new'];

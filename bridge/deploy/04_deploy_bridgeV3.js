@@ -10,8 +10,8 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   });
 
   if (deployResult.newlyDeployed) {
-    log(`Contract Bridge deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+    log(`Contract BridgeV3 deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
   }
 };
 module.exports.id = 'deploy_bridge'; // id required to prevent reexecution
-module.exports.tags = ['Bridge', 'new', 'BridgeDeployment'];
+module.exports.tags = ['BridgeV3', 'new', 'BridgeDeployment'];
