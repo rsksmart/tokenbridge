@@ -10,26 +10,26 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const AllowTokens = await deployments.get('AllowTokens');
+  const AllowTokensV1 = await deployments.get('AllowTokensV1');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
-  const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
+  const allowTokensV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
   const multiSigAddress = await address.getMultiSigAddress(hre);
 
-  const owner = await allowTokens.methods.owner().call({from: deployer});
+  const owner = await allowTokensV1.methods.owner().call({from: deployer});
   if (owner === multiSigAddress) {
     return
   }
 
-  await setTokens(network, allowTokens, deployer);
+  await setTokens(network, allowTokensV1, deployer);
   log(`AllowTokens Setted Tokens`);
 
   // Set multisig as the owner
-  await allowTokens.methods.transferOwnership(multiSigAddress).send({from: deployer});
+  await allowTokensV1.methods.transferOwnership(multiSigAddress).send({from: deployer});
   log(`AllowTokens Transfered Ownership to MultiSigWallet`);
 };
 module.exports.id = 'transfer_set_tokens_allow_tokens'; // id required to prevent reexecution
 module.exports.tags = ['AllowTokensProxyTransferSetTokens', 'new'];
-module.exports.dependencies = ['MultiSigWallet', 'AllowTokens', 'AllowTokensProxy'];
+module.exports.dependencies = ['MultiSigWallet', 'AllowTokensV1', 'AllowTokensProxy'];
 
 async function setTokens(network, allowTokens, deployer) {
   const chainID = network.config.network_id;
