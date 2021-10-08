@@ -14,4 +14,4 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   }
 };
 module.exports.id = 'deploy_bridge'; // id required to prevent reexecution
-module.exports.tags = ['Bridge', 'new'];
+module.exports.tags = ['Bridge', 'new', 'BridgeDeployment'];
