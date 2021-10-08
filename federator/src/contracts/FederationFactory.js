@@ -1,6 +1,6 @@
 const abiFederationV2 = require('../../../bridge/abi/FederationV2.json');
 const abiFederationV3 = require('../../../bridge/abi/FederationV3.json');
-const abiBridge = require('../../../bridge/abi/Bridge.json');
+const abiBridgeV3 = require('../../../bridge/abi/BridgeV3.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const FederationInterfaceV2 = require('./IFederationV2.js');
 const FederationInterfaceV3 = require('./IFederationV3');
@@ -12,8 +12,8 @@ module.exports = class FederationFactory extends ContractFactory {
 
     constructor(config, logger, Web3) {
         super(config, logger, Web3)
-        this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-        this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
+        this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridgeV3, this.config.mainchain.bridge);
+        this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3, this.config.sidechain.bridge);
         if (this.config.mainchain.nftBridge) {
           this.mainChainNftBridgeContract = new this.mainWeb3.eth.Contract(abiNftBridge, this.config.mainchain.nftBridge);
         }
