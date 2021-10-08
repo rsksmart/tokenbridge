@@ -344,11 +344,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         receivedAmount = formattedAmount - _fee;
         if(address(wrappedCurrency) == _originalTokenAddress) {
             wrappedCurrency.withdraw(formattedAmount);
-            (bool success, ) = _receiver.call{value:receivedAmount, gas:15000}("");
+            (bool success, ) = _receiver.call{value:receivedAmount, gas:23000}("");
             require(success, "Bridge: transfer fail");
             if(_fee > 0) {
-                (success, ) = _relayer.call{value:_fee, gas:15000}("");
-                require(success, "Bridge: transfer fail");
+                (success, ) = _relayer.call{value:_fee, gas:23000}("");
+                require(success, "Bridge: transfer fee fail");
             }
         } else {
             IERC20(_originalTokenAddress).safeTransfer(_receiver, receivedAmount);
