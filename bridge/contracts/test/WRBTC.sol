@@ -27,7 +27,8 @@ contract WRBTC is IWrapped {
     function withdraw(uint wad) override public {
         require(balanceOf[msg.sender] >= wad, "WRBTC: Balance less than wad");
         balanceOf[msg.sender] -= wad;
-        msg.sender.transfer(wad);
+        (bool success, ) = msg.sender.call{value:wad, gas:23000}("");
+        require(success, "WRBTC: transfer fail");
         emit Withdrawal(msg.sender, wad);
     }
 
