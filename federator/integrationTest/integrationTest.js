@@ -6,10 +6,10 @@ const log4js = require('log4js');
 // the following file should only be used for integration tests
 const config = require('../config/test.local.config.js');
 const logConfig = require('../config/log-config.json');
-const abiBridge = require('../../bridge/abi/Bridge.json');
+const abiBridgeV3 = require('../../bridge/abi/BridgeV3.json');
 const abiMainToken = require('../../bridge/abi/MainToken.json');
 const abiSideToken = require('../../bridge/abi/SideToken.json');
-const abiAllowTokens = require('../../bridge/abi/AllowTokens.json');
+const abiAllowTokensV1 = require('../../bridge/abi/AllowTokensV1.json');
 const abiMultiSig = require('../../bridge/abi/MultiSigWallet.json');
 
 //utils
@@ -113,12 +113,12 @@ async function transfer(originFederators, destinationFederators, config, originL
         const amount = mainChainWeb3.utils.toWei('10');
         const originAddress = originTokenContract.options.address;
         const cowAddress = (await mainChainWeb3.eth.getAccounts())[0];
-        const allowTokensContract = new mainChainWeb3.eth.Contract(abiAllowTokens, config.mainchain.allowTokens);
+        const allowTokensContract = new mainChainWeb3.eth.Contract(abiAllowTokensV1, config.mainchain.allowTokens);
         const sideMultiSigContract = new mainChainWeb3.eth.Contract(abiMultiSig, config.sidechain.multiSig);
         const sideAllowTokensAddress = config.sidechain.allowTokens;
         const destinationBridgeAddress = config.sidechain.bridge;
         logger.debug(`${destinationLoggerName} bridge address`, destinationBridgeAddress);
-        const destinationBridgeContract = new sideChainWeb3.eth.Contract(abiBridge, destinationBridgeAddress);
+        const destinationBridgeContract = new sideChainWeb3.eth.Contract(abiBridgeV3, destinationBridgeAddress);
 
         let data = '';
         let txDataHash = '';
@@ -153,7 +153,7 @@ async function transfer(originFederators, destinationFederators, config, originL
         logger.debug('Token transfer approved');
 
         logger.debug('Bridge receiveTokens (transferFrom)');
-        let bridgeContract = new mainChainWeb3.eth.Contract(abiBridge, originBridgeAddress);
+        let bridgeContract = new mainChainWeb3.eth.Contract(abiBridgeV3, originBridgeAddress);
         console.log('Bridge addr', originBridgeAddress)
         console.log('allowTokens addr', allowTokensContract.options.address)
         console.log('Bridge AllowTokensAddr', await bridgeContract.methods.allowTokens().call())
