@@ -26,13 +26,13 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   };
 
   if (!network.live) {
-    const AllowTokens = await deployments.get('AllowTokens');
-    const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
+    const AllowTokensV1 = await deployments.get('AllowTokensV1');
+    const allowTokensV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
     const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
     const MainToken = await deployments.get('MainToken');
     config.testToken = MainToken.address.toLowerCase();
-    let data = allowTokens.methods.addTokenType(
+    let data = allowTokensV1.methods.addTokenType(
       'MAIN', {
         max:toWei('10000'),
         min:toWei('1'),
@@ -45,7 +45,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     log(`MultiSig submitTransaction addTokenType in the AllowTokens`);
 
     const typeId = 0;
-    data = allowTokens.methods.setToken(network.config.network_id, MainToken.address, typeId).encodeABI();
+    data = allowTokensV1.methods.setToken(MainToken.address, typeId).encodeABI();
     await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
     log(`MultiSig submitTransaction setToken MainToken in the AllowTokens`);
     // Uncomment below lines to use multiple federators
@@ -63,4 +63,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'create_config_file'; // id required to prevent reexecution
 module.exports.tags = ['CreateConfigFile', 'new'];
-module.exports.dependencies = ['BridgeProxy', 'FederationV2', 'MultiSigWallet', 'AllowTokensProxy', 'AllowTokens', 'MainToken'];
+module.exports.dependencies = ['BridgeProxy', 'FederationV2', 'MultiSigWallet', 'AllowTokensProxy', 'AllowTokensV1', 'MainToken'];
