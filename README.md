@@ -74,9 +74,9 @@ cd tokenbridge && cp federator/config/config.eth-example.js federator/config/con
 # Replace d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21 to your validator address's private key.
 sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Build docker image
-docker build . -t fed-tokenbridge
+sudo docker build . -t fed-tokenbridge
 # Run validation docker node
-docker run -d \
+sudo docker run -d \
     --network host \
     --restart always \
     -v $PWD/federator/config:/app/federator/config \
@@ -85,22 +85,22 @@ docker run -d \
 # Clone another repository for bch-bsc bridge
 cd .. && git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge tokenbridge-bsc
 # Copy configuration file
-cd tokenbridge-bsc && cp federator/config/config.bsc-example.js federator/config/config.jss
+cd tokenbridge-bsc && cp federator/config/config.bsc-example.js federator/config/config.js
 # Replace d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21 to your other validator address's private key.
 sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Replace default port 5000 to another one in order to avoid conflict.
 sed -i 's/5000/5001/g' federator/config/config.js
 # Build docker image
-docker build . -t fed-tokenbridge-bsc
+sudo docker build . -t fed-tokenbridge-bsc
 # Run validation docker node
-docker run -d \
+sudo docker run -d \
     --network host \
     --restart always \
     -v $PWD/federator/config:/app/federator/config \
     --name=fed-tokenbridge-bsc \
     fed-tokenbridge-bsc:latest
 # Check logs if the spinned up federators work fine
-docker logs fed-tokenbridge && docker logs fed-tokenbridge-bsc
+sudo docker logs fed-tokenbridge && sudo docker logs fed-tokenbridge-bsc
 ```
 
 ### config
