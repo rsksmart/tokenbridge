@@ -58,20 +58,20 @@ Forked from [RSK Token Bridge](https://tokenbridge.rsk.co/), deployment codes mo
 
 It is recommended to use at least 2 cores VPS with enough ram and swap memory space to ensure that the federation node works fine without crashing.
 
-For example, spinning up clean AWS / DigitalOcean / Linode / Vultr / Bitlaunch.io Ubuntu 20 instance and logging on root permission.
+For example, spinning up clean AWS / DigitalOcean / Linode / Vultr / Bitlaunch.io Ubuntu 20 instance and logging on root / non-root sudo permission.
 
 ```bash
 # Update ubuntu system libraries
-apt-get update && apt-get -y upgrade && apt-get -y dist-upgrade
+sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get -y dist-upgrade
 # Reboot server to apply updates
-reboot
+sudo reboot
 # Install docker-ce
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && apt-get update && apt-get install -y docker-ce docker-ce-cli containerd.io
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && sudo apt-get update && sudo apt-get install -y build-essential docker-ce docker-ce-cli containerd.io
 # Clone this repository
 git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge
 # Copy configuration file to spin up bch-eth bridge
-cd tokenbridge && cp federator/config/config.eth-sample.js federator/config/config.js
-# Replace <your-private-key-here> to your validator address's private key.
+cd tokenbridge && cp federator/config/config.eth-example.js federator/config/config.js
+# Replace d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21 to your validator address's private key.
 sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Build docker image
 docker build . -t fed-tokenbridge
@@ -85,8 +85,8 @@ docker run -d \
 # Clone another repository for bch-bsc bridge
 cd .. && git clone --depth 1 https://github.com/tokenbridgecash/tokenbridge tokenbridge-bsc
 # Copy configuration file
-cd tokenbridge-bsc && cp federator/config/config.bsc-sample.js federator/config/config.js
-# Replace <your-private-key-here> to your other validator address's private key.
+cd tokenbridge-bsc && cp federator/config/config.bsc-example.js federator/config/config.jss
+# Replace d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21 to your other validator address's private key.
 sed -i 's/<your-private-key-here>/d909047b7115a8f7e100d31f33b71fce4e2ff07cc8f0e7fba959e214265dfd21/g' federator/config/config.js
 # Replace default port 5000 to another one in order to avoid conflict.
 sed -i 's/5000/5001/g' federator/config/config.js
