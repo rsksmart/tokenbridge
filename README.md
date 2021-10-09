@@ -58,6 +58,13 @@ Forked from [RSK Token Bridge](https://tokenbridge.rsk.co/), deployment codes mo
 
 It is recommended to use at least 2 cores VPS with enough ram and swap memory space to ensure that the federation node works fine without crashing.
 
+### One line install script
+
+```bash
+#For clean server only with Ubuntu setup
+curl -fsSL https://raw.githubusercontent.com/tokenbridgecash/tokenbridge/master/init.sh | sudo -E bash -
+```
+
 For example, spinning up clean AWS / DigitalOcean / Linode / Vultr / Bitlaunch.io Ubuntu 20 instance and logging on root / non-root sudo permission.
 
 ```bash
