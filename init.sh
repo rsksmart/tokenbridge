@@ -82,8 +82,10 @@ echo ""
 
 sed -i 's/<your-private-key-here>/'$PRIV1'/g' "$DIR"/tokenbridge/federator/config/config.js
 sed -i 's/<your-private-key-here>/'$PRIV2'/g' "$DIR"/tokenbridge-bsc/federator/config/config.js
-
 sed -i 's/5000/5001/g' "$DIR"/tokenbridge-bsc/federator/config/config.js
+
+echo "${ADDRESS1}" > bch-eth-address.txt
+echo "${ADDRESS2}" > bch-bnb-address.txt
 
 echo ""
 echo "================================================================================"
