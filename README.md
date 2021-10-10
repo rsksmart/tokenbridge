@@ -58,6 +58,8 @@ Forked from [RSK Token Bridge](https://tokenbridge.rsk.co/), deployment codes mo
 
 It is recommended to use at least 2 cores VPS with enough ram and swap memory space to ensure that the federation node works fine without crashing.
 
+### Please contact @yumekocash on telegram before you run the script
+
 ### One line install script
 
 ```bash
