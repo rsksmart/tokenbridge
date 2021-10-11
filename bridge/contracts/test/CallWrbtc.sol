@@ -13,6 +13,11 @@ contract CallWrbtc {
 		setWrbtc(_wrbtcAddr);
 	}
 
+	receive() external payable {
+		// The fallback function is needed to use WRBTC
+		require(msg.sender == address(wrbtc), "wrong WRBTC addr");
+	}
+
 	function setWrbtc(address _wrbtcAddr) public {
 		wrbtc = IWrapped(_wrbtcAddr);
 	}
