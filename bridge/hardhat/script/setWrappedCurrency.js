@@ -1,13 +1,13 @@
-// How to run the script: npx hardhat run ./hardhat/script/setWrappedCurrency.js --network rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/setWrappedCurrency.js --network bsctestnet
 const hre = require("hardhat");
 
 async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
 
-  const wrappedCurrencyAddress = "0x50f2cd4e18428e1c8c73b7638d5da32975663e16"
   const transactionEtherValue = 0;
 
+  const WBNB = await deployments.get('WBNB');
   const Bridge = await deployments.get('Bridge');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
@@ -21,7 +21,7 @@ async function main() {
   console.log("\nMultiSigWallet", MultiSigWallet.address);
 
   const methodCallSetWrappedCurrency = bridge.methods.setWrappedCurrency(
-    wrappedCurrencyAddress
+    WBNB.address
   );
   const result = await methodCallSetWrappedCurrency.call({ from: MultiSigWallet.address});
   console.log("Method call result", result);
