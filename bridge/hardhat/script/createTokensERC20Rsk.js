@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network kovan bsctestnet rsktestnet rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
@@ -13,11 +13,10 @@ async function main() {
       name: 'BSC-Binance Token',
       symbol: 'WBNB',
       typeId: 1,
-      originalTokenAddress: '0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd', // bsctestnet originalTokens 
-      // originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // rsktestnetbsc originalTokens 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
-      // originalTokenAddress: '0xae13d989dac2f0debff460ac112a837c89baa7cd', // rsktestnetbsc mappedTokens 0x50F2CD4e18428e1c8C73b7638d5DA32975663e16
-      // originalTokenAddress: '0xd15cDD74DfF1A6A81Ca639B038839B126BC01FF9', // rsktestnet originalTokens 0xd0A1E359811322d97991E03f863a0C30C2cF029C
-      // originalTokenAddress: '0xd0a1e359811322d97991e03f863a0c30c2cf029c', // rsktestnet mappedTokens 0xd15cDD74DfF1A6A81Ca639B038839B126BC01FF9
+      // originalTokenAddress: '0xa9f70D8c300B28DB2c94eD1690EA7c161a905B63', // rsktestnetbsc Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
+      originalTokenAddress: '0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4', // bsctestnet Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
+      // originalTokenAddress: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', // rsktestnetbsc originalTokens
+      // originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // bsctestnet originalTokens 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
     },
     // {
     //   name: 'BSC-Binance Token',
@@ -104,15 +103,17 @@ async function main() {
     // });
     // console.log("Transaction worked", receipt.transactionHash);
 
-    const tokenAddress = await bridge.methods.mappedTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
-    console.log("Token address for", token.name, ":", tokenAddress);
+    const mappedTokenAddress = await bridge.methods.mappedTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
+    console.log("Mapped Token address for", token.name, ":", mappedTokenAddress);
+    const originalTokenAddress = await bridge.methods.originalTokens(token.originalTokenAddress).call({from: MultiSigWallet.address});
+    console.log("Original Token address for", token.name, ":", originalTokenAddress);
   }
 
   console.log("finish");
 }
 
 // We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
+// and properly handle errors. 1.4539
 main()
   .then(() => process.exit(0))
   .catch((error) => {
