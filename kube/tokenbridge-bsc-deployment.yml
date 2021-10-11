@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  labels:
+    service: tokenbridge-bsc
+  name: tokenbridge-bsc
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      service: tokenbridge-bsc
+  template:
+    metadata:
+      labels:
+        service: tokenbridge-bsc
+    spec:
+      containers:
+      - args:
+        - start
+        command:
+        - npm
+        image: zquestz/tokenbridge
+        imagePullPolicy: Always
+        name: tokenbridge-bsc
+        volumeMounts:
+          - name: tokenbridge-bsc-config
+            mountPath: /app/federator/config
+        resources:
+          requests:
+            memory: "4Gi"
+          limits:
+            memory: "4Gi"
+        ports:
+          - name: api
+            containerPort: 5000
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 600
+      volumes:
+        - name: tokenbridge-bsc-config
+          secret:
+            secretName: "tokenbridge-bsc-config"
+            items:
+            - key: config
+              path: "config.js"
+              mode: 0666
+            - key: bchforbscmainnet
+              path: "bchforbscmainnet.json"
+              mode: 0666
+            - key: bchforethmainnet
+              path: "bchforethmainnet.json"
+              mode: 0666
+            - key: bscmainnet
+              path: "bscmainnet.json"
+              mode: 0666
+            - key: ethmainnet
+              path: "ethmainnet.json"
+              mode: 0666
+            - key: logconfig
+              path: "log-config.json"
+              mode: 0666

@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: default
+  labels:
+    service: tokenbridge-eth
+  name: tokenbridge-eth
+spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+      service: tokenbridge-eth
+  template:
+    metadata:
+      labels:
+        service: tokenbridge-eth
+    spec:
+      containers:
+      - args:
+        - start
+        command:
+        - npm
+        image: zquestz/tokenbridge
+        imagePullPolicy: Always
+        name: tokenbridge-eth
+        volumeMounts:
+          - name: tokenbridge-eth-config
+            mountPath: /app/federator/config
+        resources:
+          requests:
+            memory: "4Gi"
+          limits:
+            memory: "4Gi"
+        ports:
+          - name: api
+            containerPort: 5000
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 600
+      volumes:
+        - name: tokenbridge-eth-config
+          secret:
+            secretName: "tokenbridge-eth-config"
+            items:
+            - key: config
+              path: "config.js"
+              mode: 0666
+            - key: bchforbscmainnet
+              path: "bchforbscmainnet.json"
+              mode: 0666
+            - key: bchforethmainnet
+              path: "bchforethmainnet.json"
+              mode: 0666
+            - key: bscmainnet
+              path: "bscmainnet.json"
+              mode: 0666
+            - key: ethmainnet
+              path: "ethmainnet.json"
+              mode: 0666
+            - key: logconfig
+              path: "log-config.json"
+              mode: 0666
