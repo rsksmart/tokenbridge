@@ -5,9 +5,9 @@ async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
 
-  const wrappedCurrencyAddress = "0x50f2cd4e18428e1c8c73b7638d5da32975663e16"
   const transactionEtherValue = 0;
 
+  const WBNB = await deployments.get('WBNB');
   const AllowTokens = await deployments.get('AllowTokens');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
@@ -15,12 +15,11 @@ async function main() {
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
 
-
   console.log("\nAllowTokens", AllowTokens.address);
   console.log("\nAllowTokensProxy", AllowTokensProxy.address);
   console.log("\nMultiSigWallet", MultiSigWallet.address);
 
-  const methodCallSetToken = allowTokens.methods.setToken(wrappedCurrencyAddress, '0');
+  const methodCallSetToken = allowTokens.methods.setToken(WBNB.address, '0');
   const result = await methodCallSetToken.call({ from: MultiSigWallet.address});
   console.log("Method call result", result);
 

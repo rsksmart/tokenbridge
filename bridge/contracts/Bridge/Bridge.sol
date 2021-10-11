@@ -89,9 +89,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
         initDomainSeparator();
     }
 
-    receive () external payable {
+    receive() external payable {
         // The fallback function is needed to use WRBTC
-        require(_msgSender() == address(wrappedCurrency), "Bridge: not wrappedCurrency");
+        assert(_msgSender() == address(wrappedCurrency));
     }
 
     function version() override external pure returns (string memory) {
