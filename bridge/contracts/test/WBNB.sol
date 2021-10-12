@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
 import "../interface/IWrapped.sol";
 
@@ -55,7 +55,7 @@ contract WBNB is IWrapped {
 	) override public returns (bool) {
 		require(balanceOf[src] >= wad, "WBNB: Balance less than wad");
 
-		if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+		if (src != msg.sender && allowance[src][msg.sender] != type(uint).max) {
 			require(allowance[src][msg.sender] >= wad, "WBNB: Allowance less than wad");
 			allowance[src][msg.sender] -= wad;
 		}
