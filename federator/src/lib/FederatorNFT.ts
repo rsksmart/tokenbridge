@@ -137,11 +137,11 @@ export class FederatorNFT {
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
         retries--;
-        this.logger.debug(`Run ${3 - retries} retrie`);
+        this.logger.debug(`Runned ${3 - retries} retrie`);
         if (retries > 0) {
           await utils.sleep(sleepAfterRetrie);
         } else {
-          process.exit();
+          process.exit(1);
         }
       }
     }
