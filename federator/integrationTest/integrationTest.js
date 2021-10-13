@@ -645,14 +645,14 @@ async function transfer(
       userPrivateKey
     );
 
-    destinationTokenContract = new sideChainWeb3.eth.Contract(
+    const destTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
       destinationAnotherTokenAddress
     );
 
     logger.debug("Check balance on the other side");
     await checkAddressBalance(
-      destinationTokenContract,
+      destTokenContract,
       userAddress,
       destinationLoggerName
     );
@@ -663,11 +663,11 @@ async function transfer(
     logger.info(
       "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
     );
-    senderBalanceBefore = await destinationTokenContract.methods
+    senderBalanceBefore = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
 
-    methodCall = destinationTokenContract.methods.send(
+    methodCall = destTokenContract.methods.send(
       destinationBridgeAddress,
       amount,
       "0x"
@@ -718,7 +718,7 @@ async function transfer(
     receiverBalanceAfter = await originTokenContract.methods
       .balanceOf(userAddress)
       .call();
-    senderBalanceAfter = await destinationTokenContract.methods
+    senderBalanceAfter = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.debug(
@@ -782,7 +782,7 @@ async function transfer(
       "user balance before crossing tokens:",
       userBalanceAnotherToken
     );
-    balance = await destinationTokenContract.methods
+    balance = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
@@ -803,11 +803,11 @@ async function transfer(
     }
 
     logger.debug("Check balance on the other side before crossing");
-    destinationTokenContract = new sideChainWeb3.eth.Contract(
+    destTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
       destinationAnotherTokenAddress
     );
-    balance = await destinationTokenContract.methods
+    balance = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(`${destinationLoggerName} token balance`, balance);
@@ -909,7 +909,7 @@ async function transfer(
     logger.debug("Small amount claim completed");
 
     // check small amount txn went through
-    balance = await destinationTokenContract.methods
+    balance = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
@@ -955,7 +955,7 @@ async function transfer(
     logger.debug("Medium amount claim completed");
 
     // check medium amount txn went through
-    balance = await destinationTokenContract.methods
+    balance = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
@@ -1005,7 +1005,7 @@ async function transfer(
     logger.debug("Large amount claim completed");
 
     // check large amount txn went through
-    balance = await destinationTokenContract.methods
+    balance = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
