@@ -803,11 +803,11 @@ async function transfer(
     }
 
     logger.debug("Check balance on the other side before crossing");
-    destTokenContract = new sideChainWeb3.eth.Contract(
+    const destSideTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
       destinationAnotherTokenAddress
     );
-    balance = await destTokenContract.methods
+    balance = await destSideTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(`${destinationLoggerName} token balance`, balance);
@@ -909,7 +909,7 @@ async function transfer(
     logger.debug("Small amount claim completed");
 
     // check small amount txn went through
-    balance = await destTokenContract.methods
+    let balance = await destSideTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
@@ -955,7 +955,7 @@ async function transfer(
     logger.debug("Medium amount claim completed");
 
     // check medium amount txn went through
-    balance = await destTokenContract.methods
+    balance = await destSideTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
@@ -1005,7 +1005,7 @@ async function transfer(
     logger.debug("Large amount claim completed");
 
     // check large amount txn went through
-    balance = await destTokenContract.methods
+    balance = await destSideTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.info(
