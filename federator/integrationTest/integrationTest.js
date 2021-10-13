@@ -55,10 +55,10 @@ const SIDE_CHAIN_LOGGER_NAME = "SIDE";
 const SIDE_TOKEN_TYPE_ID = 0;
 const SIDE_TOKEN_DECIMALS = 18;
 
-run({ mainchainFederators, sidechainFederators, config, sideConfig });
+run(mainchainFederators, sidechainFederators, config, sideConfig);
 
 function getMainchainFederators(keys) {
-  let federators = [];
+  const federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
       const federator = new Federator(
@@ -105,12 +105,12 @@ function getSidechainFederators(keys, sideConfig) {
   return federators;
 }
 
-async function run({
+async function run(
   mainchainFederators,
   sidechainFederators,
   config,
-  sideConfig,
-}) {
+  sideConfig
+) {
   logger.info("Starting transfer from Mainchain to Sidechain");
   await transfer(
     mainchainFederators,
