@@ -44,8 +44,8 @@ const sideKeys = process.argv[3]
   ? process.argv[3].replace(/ /g, "").split(",")
   : [];
 
-const mainchainFederators = getMainchainFederators(mainKeys);
-const sidechainFederators = getSidechainFederators(sideKeys, sideConfig);
+const mainchainFederators = getFederators(config, mainKeys);
+const sidechainFederators = getFederators(sideConfig, sideKeys, "side-fed");
 
 const ONE_DAY_IN_SECONDS = 24 * 3600;
 const SIDE_TOKEN_SYMBOL = "MAIN";
@@ -57,50 +57,32 @@ const SIDE_TOKEN_DECIMALS = 18;
 
 run(mainchainFederators, sidechainFederators, config, sideConfig);
 
-function getMainchainFederators(keys) {
+function getFederators(configFile, keys, storagePathPrefix = "fed") {
   const federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
       const federator = new Federator(
         {
-          ...config,
+          ...configFile,
           privateKey: key,
-          storagePath: `${config.storagePath}/fed-${i + 1}`,
+          storagePath: `${configFile.storagePath}/${storagePathPrefix}-${
+            i + 1
+          }`,
         },
         log4js.getLogger("FEDERATOR")
       );
       federators.push(federator);
     });
   } else {
-    const federator = new Federator(config, log4js.getLogger("FEDERATOR"));
-    federators.push(federator);
-  }
-  return federators;
-}
-
-function getSidechainFederators(keys, sideConfig) {
-  let federators = [];
-  if (keys && keys.length) {
-    keys.forEach((key, i) => {
-      const federator = new Federator(
+    federators.push(
+      new Federator(
         {
-          ...sideConfig,
-          privateKey: key,
-          storagePath: `${config.storagePath}/side-fed-${i + 1}`,
+          ...configFile,
+          storagePath: `${config.storagePath}/${storagePathPrefix}`,
         },
         log4js.getLogger("FEDERATOR")
-      );
-      federators.push(federator);
-    });
-  } else {
-    const federator = new Federator(
-      {
-        ...sideConfig,
-        storagePath: `${config.storagePath}/side-fed`,
-      },
-      log4js.getLogger("FEDERATOR")
+      )
     );
-    federators.push(federator);
   }
   return federators;
 }
