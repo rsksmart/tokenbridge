@@ -456,7 +456,7 @@ module.exports = class Federator {
 
   async trackTransactionResultMetric(wasTransactionVoted, federatorAddress) {
     const federator = await this.federationFactory.getSideFederationContract();
-    await this.metricCollector.trackERC20FederatorVotingResult(
+    await this.metricCollector?.trackERC20FederatorVotingResult(
       wasTransactionVoted,
       federatorAddress,
       federator.getVersion(),
