@@ -9,7 +9,7 @@ async function main() {
   const NFTERC721TestToken = await deployments.get('NFTERC721TestToken');
   const nftErc721TestToken = new web3.eth.Contract(NFTERC721TestToken.abi, NFTERC721TestToken.address);
 
-  console.log("\NFTERC721TestToken", NFTERC721TestToken.address);
+  console.log("\nNFTERC721TestToken", NFTERC721TestToken.address);
 
   const totalSupply = await nftErc721TestToken.methods.totalSupply().call();
   console.log('total supply is', totalSupply);
