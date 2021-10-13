@@ -2,7 +2,9 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   const {deployer, bridgeProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (bridgeProxy) return;
+  if (bridgeProxy) {
+    return;
+  }
 
   const deployResult = await deploy('BridgeV3', {
     from: deployer,
