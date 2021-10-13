@@ -29,5 +29,5 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   log(`SideTokenFactory Transferred Primary to BridgeProxy`);
 };
 module.exports.id = 'transfer_side_token_factory_to_bridge';
-module.exports.tags = ['SideTokenFactoryToBridge', 'new'];
+module.exports.tags = ['SideTokenFactoryToBridge', 'new', 'IntegrationTest'];
 module.exports.dependencies = [bridgeProxyName, sideTokenFactoryName];

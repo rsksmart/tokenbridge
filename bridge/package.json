@@ -15,8 +15,9 @@
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "deploy": "npx hardhat deploy --show-stack-traces --network",
+    "deployIntegrationTag": "npx hardhat deploy --tags IntegrationTest,IntegrationTestNft --show-stack-traces --network",
     "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
-    "deployLocalIntegrationTest": "npm run deploy development && npm run deploy mirrorDevelopment",
+    "deployLocalIntegrationTest": "npm run deployIntegrationTag development && npm run deployIntegrationTag mirrorDevelopment",
     "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest",
     "verifyDeployments": "python hardhat/script/verify.py -n"
   },

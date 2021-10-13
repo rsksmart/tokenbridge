@@ -17,4 +17,4 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   }
 };
 module.exports.id = 'deploy_sideTokenFactory'; // id required to prevent reexecution
-module.exports.tags = ['SideTokenFactory', 'new'];
+module.exports.tags = ['SideTokenFactory', 'new', 'IntegrationTest'];
