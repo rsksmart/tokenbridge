@@ -12,4 +12,4 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   }
 };
 module.exports.id = 'deploy_nft_bridge'; // id required to prevent reexecution
-module.exports.tags = ['NftBridge', 'nft', '3.0.0'];
+module.exports.tags = ['NftBridge', 'nft', '3.0.0', 'IntegrationTestNft'];

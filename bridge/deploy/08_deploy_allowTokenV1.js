@@ -14,4 +14,4 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   }
 };
 module.exports.id = 'deploy_allow_tokens'; // id required to prevent reexecution
-module.exports.tags = ['AllowTokensV1', 'new'];
+module.exports.tags = ['AllowTokensV1', 'new', 'IntegrationTest'];
