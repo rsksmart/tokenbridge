@@ -88,16 +88,16 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
 }
 
 async function run(
-  mainchainFederators,
-  sidechainFederators,
-  config,
-  sideConfig
+  federatorsMainChain,
+  federatorsSideChain,
+  configMain,
+  configSide
 ) {
   logger.info("Starting transfer from Mainchain to Sidechain");
   await transfer(
-    mainchainFederators,
-    sidechainFederators,
-    config,
+    federatorsMainChain,
+    federatorsSideChain,
+    configMain,
     MAIN_CHAIN_LOGGER_NAME,
     SIDE_CHAIN_LOGGER_NAME
   );
@@ -105,9 +105,9 @@ async function run(
 
   logger.info("Starting transfer from Sidechain to Mainchain");
   await transfer(
-    sidechainFederators,
-    mainchainFederators,
-    sideConfig,
+    federatorsSideChain,
+    federatorsMainChain,
+    configSide,
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
   );
@@ -115,7 +115,7 @@ async function run(
 }
 
 async function checkAddressBalance(tokenContract, userAddress, loggerName) {
-  let balance = await tokenContract.methods.balanceOf(userAddress).call();
+  const balance = await tokenContract.methods.balanceOf(userAddress).call();
   logger.info(`${loggerName} token balance`, balance);
   if (balance.toString() === "0") {
     logger.error("Token was not claimed");
