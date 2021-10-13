@@ -41,5 +41,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
 };
 module.exports.id = 'deploy_bridge_proxy'; // id required to prevent reexecution
-module.exports.tags = ['BridgeProxy', 'old'];
+module.exports.tags = ['BridgeProxy', 'old', 'IntegrationTest'];
 module.exports.dependencies = ['BridgeV3', 'MultiSigWallet', 'ProxyAdmin', 'SideTokenFactory'];
