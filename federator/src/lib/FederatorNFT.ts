@@ -24,10 +24,10 @@ export class FederatorNFT {
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
   private federatorContract: import('../contracts/IFederationV3').IFederationV3;
-  private metricCollector: MetricCollector;
+  private readonly metricCollector: MetricCollector;
   private chainId: number;
 
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector, Web3 = web3) {
+  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
     if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
@@ -82,8 +82,6 @@ export class FederatorNFT {
    * @returns Federator Interface
    */
   async getFederator(): Promise<import('../contracts/IFederationV3').IFederationV3> {
-    // TODO: this logic is potentially wrong (and in Federator.js as well) - we're always
-    // getting the side federation contract, independent of where we are.
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }
@@ -402,7 +400,7 @@ export class FederatorNFT {
 
   private async trackTransactionResultMetric(wasTransactionVoted, federatorAddress) {
     const federator = await this.getFederator();
-    await this.metricCollector.trackERC721FederatorVotingResult(
+    this.metricCollector?.trackERC721FederatorVotingResult(
       wasTransactionVoted,
       federatorAddress,
       federator.getVersion(),

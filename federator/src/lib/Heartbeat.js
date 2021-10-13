@@ -203,8 +203,6 @@ module.exports = class Heartbeat {
                 nodeRskInfo,
                 nodeEthInfo
             )
-            // TODO: eth variables should be renamed taking into account
-            // that the side chain can be BSC for example.
             this._trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo);
             this.logger.info(`Success emitting heartbeat`);
             return true;
@@ -215,10 +213,10 @@ module.exports = class Heartbeat {
 
     _trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo) {
         this.mainWeb3.eth.net.getId().then(chainId => {
-            this.metricCollector.trackMainChainHeartbeatEmission(from, fedVersion, fedRskBlock, nodeRskInfo, chainId);
+            this.metricCollector?.trackMainChainHeartbeatEmission(from, fedVersion, fedRskBlock, nodeRskInfo, chainId);
         });
         this.sideWeb3.eth.net.getId().then(chainId => {
-            this.metricCollector.trackSideChainHeartbeatEmission(from, fedVersion, fedEthBlock, nodeEthInfo, chainId);
+            this.metricCollector?.trackSideChainHeartbeatEmission(from, fedVersion, fedEthBlock, nodeEthInfo, chainId);
         });
     }
 
