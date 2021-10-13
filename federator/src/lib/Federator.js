@@ -6,9 +6,10 @@ const BridgeFactory = require("../contracts/BridgeFactory");
 const FederationFactory = require("../contracts/FederationFactory");
 const AllowTokensFactory = require("../contracts/AllowTokensFactory");
 const utils = require("./utils");
+const metrics = require("./MetricCollector");
 const typescriptUtils = require("./typescriptUtils");
 module.exports = class Federator {
-  constructor(config, logger, Web3 = web3) {
+  constructor(config, logger, metricCollector, Web3 = web3) {
     this.config = config;
     this.logger = logger;
 
@@ -44,6 +45,14 @@ module.exports = class Federator {
       this.logger,
       Web3
     );
+    this.metricCollector = metricCollector;
+  }
+
+  async getCurrentChainId() {
+    if (this.chainId === undefined) {
+      this.chainId = await this.mainWeb3.eth.net.getId();
+    }
+    return this.chainId;
   }
 
   async run() {
@@ -52,7 +61,7 @@ module.exports = class Federator {
     while (retries > 0) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-        const chainId = await this.mainWeb3.eth.net.getId();
+        const chainId = this.getCurrentChainId();
 
         const isMainSyncing = await this.mainWeb3.eth.isSyncing();
         if (isMainSyncing !== false) {
@@ -192,7 +201,7 @@ module.exports = class Federator {
 
   async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
     try {
-      const from = await this.transactionSender.getAddress(
+      const federatorAddress = await this.transactionSender.getAddress(
         this.config.privateKey
       );
       const fedContract =
@@ -200,10 +209,10 @@ module.exports = class Federator {
       const allowTokens =
         await this.allowTokensFactory.getMainAllowTokensContract();
 
-      const isMember = await typescriptUtils.retryNTimes(fedContract.isMember(from));
+      const isMember = await typescriptUtils.retryNTimes(fedContract.isMember(federatorAddress));
       if (!isMember) {
         throw new Error(
-          `This Federator addr:${from} is not part of the federation`
+          `This Federator addr:${federatorAddress} is not part of the federation`
         );
       }
 
@@ -302,7 +311,7 @@ module.exports = class Federator {
           fedContract.transactionWasProcessed(transactionId)
         );
         if (!wasProcessed) {
-          const hasVoted = await fedContract.hasVoted(transactionId, from);
+          const hasVoted = await fedContract.hasVoted(transactionId, federatorAddress);
           if (!hasVoted) {
             this.logger.info(
               `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`
@@ -320,7 +329,8 @@ module.exports = class Federator {
               decimals,
               granularity,
               typeId,
-              transactionId
+              transactionId,
+              federatorAddress
             );
           } else {
             this.logger.debug(
@@ -353,7 +363,8 @@ module.exports = class Federator {
     decimals,
     granularity,
     typeId,
-    txId
+    txId,
+    federatorAddress
   ) {
     try {
       txId = txId.toLowerCase();
@@ -432,6 +443,8 @@ module.exports = class Federator {
         );
       }
 
+      await this.trackTransactionResultMetric(receipt.status, federatorAddress);
+
       return true;
     } catch (err) {
       throw new CustomError(
@@ -439,6 +452,16 @@ module.exports = class Federator {
         err
       );
     }
+  }
+
+  async trackTransactionResultMetric(wasTransactionVoted, federatorAddress) {
+    const federator = await this.federationFactory.getSideFederationContract();
+    await this.metricCollector.trackERC20FederatorVotingResult(
+      wasTransactionVoted,
+      federatorAddress,
+      federator.getVersion(),
+      await this.getCurrentChainId(),
+    );
   }
 
   _saveProgress(path, value) {
