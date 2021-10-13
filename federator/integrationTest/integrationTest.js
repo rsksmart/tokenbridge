@@ -285,7 +285,7 @@ async function transfer(
       amount
     );
     await methodCallReceiveTokensTo.call({ from: userAddress });
-    receipt = await transactionSender.sendTransaction(
+    const receiptSendTransaction = await transactionSender.sendTransaction(
       originBridgeAddress,
       methodCallReceiveTokensTo.encodeABI(),
       0,
@@ -321,13 +321,13 @@ async function transfer(
       "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
 
-    await checkTxDataHash(destinationBridgeContract, receipt);
+    await checkTxDataHash(destinationBridgeContract, receiptSendTransaction);
 
     await claimTokensFromDestinationBridge(
       destinationBridgeContract,
       userAddress,
       amount,
-      receipt,
+      receiptSendTransaction,
       destinationTransactionSender,
       destinationBridgeAddress,
       userPrivateKey
@@ -374,12 +374,12 @@ async function transfer(
     );
 
     logger.debug("Approving token transfer on destination");
-    dataTransfer = destinationTokenContract.methods
+    const dataApproveAbi = destinationTokenContract.methods
       .approve(destinationBridgeAddress, amount)
       .encodeABI();
     await destinationTransactionSender.sendTransaction(
       destinationTokenAddress,
-      dataTransfer,
+      dataApproveAbi,
       0,
       userPrivateKey,
       true
@@ -393,7 +393,7 @@ async function transfer(
 
     if (federatorKeys.length === 1) {
       const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, dataTransfer)
+        .submitTransaction(sideAllowTokensAddress, 0, dataApproveAbi)
         .encodeABI();
       await destinationTransactionSender.sendTransaction(
         config.sidechain.multiSig,
@@ -404,7 +404,7 @@ async function transfer(
       );
     } else {
       const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, dataTransfer)
+        .submitTransaction(sideAllowTokensAddress, 0, dataApproveAbi)
         .encodeABI();
       await destinationTransactionSender.sendTransaction(
         config.sidechain.multiSig,
