@@ -11,6 +11,7 @@ const Scheduler = require('./services/Scheduler.js');
 const Federator = require('./lib/Federator.js');
 const FederatorNFT = require('./lib/FederatorNFT');
 const Heartbeat = require('./lib/Heartbeat.js');
+const MetricCollector = require('./lib/MetricCollector');
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
@@ -30,24 +31,33 @@ if (!config.etherscanApiKey) {
   process.exit(1);
 }
 
-const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'));
-const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'));
+const metricCollector = new MetricCollector.MetricCollector();
+
+const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'), metricCollector);
+const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'), metricCollector);
 const sideFederator = new Federator({
   ...config,
   mainchain: config.sidechain,
   sidechain: config.mainchain,
   storagePath: `${config.storagePath}/side-fed`
-}, log4js.getLogger('SIDE-FEDERATOR'));
+}, log4js.getLogger('SIDE-FEDERATOR'), metricCollector);
+
 const mainFederatorNFT = new FederatorNFT.FederatorNFT({
-  ...config,
-  storagePath: `${config.storagePath}/nft`
-}, log4js.getLogger('MAIN-FEDERATOR'));
+    ...config,
+    storagePath: `${config.storagePath}/nft`
+  },
+  log4js.getLogger("MAIN-NFT-FEDERATOR"),
+  metricCollector
+);
+
 const sideFederatorNFT = new FederatorNFT.FederatorNFT({
-  ...config,
-  mainchain: config.sidechain,
-  sidechain: config.mainchain,
-  storagePath: `${config.storagePath}/nft/side-fed`
-}, log4js.getLogger('SIDE-FEDERATOR'));
+    ...config,
+    mainchain: config.sidechain,
+    sidechain: config.mainchain,
+    storagePath: `${config.storagePath}/nft/side-fed`
+  },
+  log4js.getLogger("SIDE-NFT-FEDERATOR"),
+  metricCollector);
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
@@ -58,11 +68,9 @@ scheduler.start().catch((err) => {
 
 async function run() {
   try {
+    await runNftFederator();
     await mainFederator.run();
     await sideFederator.run();
-
-    await runNftFederator();
-
     await heartbeat.readLogs();
   } catch(err) {
     logger.error('Unhandled Error on run()', err);
