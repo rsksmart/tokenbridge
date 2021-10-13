@@ -21,4 +21,4 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   }
 };
 module.exports.id = 'deploy_multiSigWallet'; // id required to prevent re-execution
-module.exports.tags = ['MultiSigWallet'];
+module.exports.tags = ['MultiSigWallet', 'IntegrationTest'];
