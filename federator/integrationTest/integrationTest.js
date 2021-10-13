@@ -123,6 +123,16 @@ async function checkAddressBalance(tokenContract, userAddress, loggerName) {
   }
 }
 
+async function checkTxDataHash(bridgeContract, receipt) {
+  const txDataHash = await bridgeContract.methods
+    .transactionsDataHashes(receipt.transactionHash)
+    .call();
+  if (txDataHash === utils.zeroHash) {
+    logger.error(MSG_TOKEN_NOT_VOTED);
+    process.exit(1);
+  }
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -174,8 +184,7 @@ async function transfer(
       destinationBridgeAddress
     );
 
-    let data = "";
-    let txDataHash = "";
+    let dataTransfer = "";
     let receipt = "";
     let methodCall = "";
 
@@ -224,12 +233,12 @@ async function transfer(
     await originTokenContract.methods
       .transfer(userAddress, amount)
       .call({ from: userAddress });
-    data = originTokenContract.methods
+    const methodTransferData = originTokenContract.methods
       .transfer(userAddress, amount)
       .encodeABI();
     await transactionSender.sendTransaction(
       originAddress,
-      data,
+      methodTransferData,
       0,
       config.privateKey,
       true
@@ -237,12 +246,13 @@ async function transfer(
     await originTokenContract.methods
       .approve(originBridgeAddress, amount)
       .call({ from: userAddress });
-    data = originTokenContract.methods
+
+    const methodApproveData = originTokenContract.methods
       .approve(originBridgeAddress, amount)
       .encodeABI();
     await transactionSender.sendTransaction(
       originAddress,
-      data,
+      methodApproveData,
       0,
       userPrivateKey,
       true
@@ -269,15 +279,15 @@ async function transfer(
       await allowTokensContract.methods.owner().call()
     );
     logger.debug("accounts:", await mainChainWeb3.eth.getAccounts());
-    methodCall = bridgeContract.methods.receiveTokensTo(
+    const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
       originAddress,
       userAddress,
       amount
     );
-    await methodCall.call({ from: userAddress });
+    await methodCallReceiveTokensTo.call({ from: userAddress });
     receipt = await transactionSender.sendTransaction(
       originBridgeAddress,
-      methodCall.encodeABI(),
+      methodCallReceiveTokensTo.encodeABI(),
       0,
       userPrivateKey,
       true
@@ -311,13 +321,7 @@ async function transfer(
       "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
 
-    txDataHash = await destinationBridgeContract.methods
-      .transactionsDataHashes(receipt.transactionHash)
-      .call();
-    if (txDataHash === utils.zeroHash) {
-      logger.error(MSG_TOKEN_NOT_VOTED);
-      process.exit(1);
-    }
+    await checkTxDataHash(destinationBridgeContract, receipt);
 
     await claimTokensFromDestinationBridge(
       destinationBridgeContract,
@@ -330,7 +334,7 @@ async function transfer(
     );
 
     logger.debug("Check balance on the other side");
-    let destinationTokenContract = new sideChainWeb3.eth.Contract(
+    const destinationTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
       destinationTokenAddress
     );
@@ -370,12 +374,12 @@ async function transfer(
     );
 
     logger.debug("Approving token transfer on destination");
-    data = destinationTokenContract.methods
+    dataTransfer = destinationTokenContract.methods
       .approve(destinationBridgeAddress, amount)
       .encodeABI();
     await destinationTransactionSender.sendTransaction(
       destinationTokenAddress,
-      data,
+      dataTransfer,
       0,
       userPrivateKey,
       true
@@ -389,7 +393,7 @@ async function transfer(
 
     if (federatorKeys.length === 1) {
       const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, data)
+        .submitTransaction(sideAllowTokensAddress, 0, dataTransfer)
         .encodeABI();
       await destinationTransactionSender.sendTransaction(
         config.sidechain.multiSig,
@@ -400,7 +404,7 @@ async function transfer(
       );
     } else {
       const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, data)
+        .submitTransaction(sideAllowTokensAddress, 0, dataTransfer)
         .encodeABI();
       await destinationTransactionSender.sendTransaction(
         config.sidechain.multiSig,
@@ -548,12 +552,12 @@ async function transfer(
     logger.debug("Token deployed");
     logger.debug("Minting new token");
     const anotherTokenAddress = anotherTokenContract.options.address;
-    data = anotherTokenContract.methods
+    dataTransfer = anotherTokenContract.methods
       .mint(userAddress, amount, "0x", "0x")
       .encodeABI();
     await transactionSender.sendTransaction(
       anotherTokenAddress,
-      data,
+      dataTransfer,
       0,
       userPrivateKey,
       true
@@ -565,13 +569,13 @@ async function transfer(
       config.mainchain.multiSig
     );
     const allowTokensAddress = allowTokensContract.options.address;
-    data = allowTokensContract.methods
+    dataTransfer = allowTokensContract.methods
       .setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID)
       .encodeABI();
 
     if (federatorKeys.length === 1) {
       const multiSigData = multiSigContract.methods
-        .submitTransaction(allowTokensAddress, 0, data)
+        .submitTransaction(allowTokensAddress, 0, dataTransfer)
         .encodeABI();
       await transactionSender.sendTransaction(
         config.mainchain.multiSig,
@@ -582,7 +586,7 @@ async function transfer(
       );
     } else {
       const multiSigData = multiSigContract.methods
-        .submitTransaction(allowTokensAddress, 0, data)
+        .submitTransaction(allowTokensAddress, 0, dataTransfer)
         .encodeABI();
       await transactionSender.sendTransaction(
         config.mainchain.multiSig,
@@ -701,13 +705,7 @@ async function transfer(
       });
     }, Promise.resolve());
 
-    txDataHash = await bridgeContract.methods
-      .transactionsDataHashes(receipt.transactionHash)
-      .call();
-    if (txDataHash === utils.zeroHash) {
-      logger.error(MSG_TOKEN_NOT_VOTED);
-      process.exit(1);
-    }
+    await checkTxDataHash(bridgeContract, receipt);
 
     logger.info(
       "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
@@ -759,14 +757,14 @@ async function transfer(
     await allowTokensContract.methods
       .setConfirmations("100", "1000", "2000")
       .call({ from: config.mainchain.multiSig });
-    data = allowTokensContract.methods
+    dataTransfer = allowTokensContract.methods
       .setConfirmations("100", "1000", "2000")
       .encodeABI();
 
     methodCall = multiSigContract.methods.submitTransaction(
       allowTokensAddress,
       0,
-      data
+      dataTransfer
     );
     await methodCall.call({ from: cowAddress });
     await methodCall.send({ from: cowAddress, gas: 500000 });
@@ -776,12 +774,12 @@ async function transfer(
       .getConfirmations()
       .call();
 
-    data = anotherTokenContract.methods
+    dataTransfer = anotherTokenContract.methods
       .mint(userAddress, amount, "0x", "0x")
       .encodeABI();
     await transactionSender.sendTransaction(
       anotherTokenAddress,
-      data,
+      dataTransfer,
       0,
       userPrivateKey,
       true
