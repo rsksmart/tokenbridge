@@ -22,6 +22,9 @@ enum ChainType {
 
 export class MetricCollector {
   constructor() {
+    if (!process.env.DATADOG_API_KEY) {
+      throw new Error("Datadog API key is not set as environment variable 'DATADOG_API_KEY'");
+    }
     datadogMetrics.init({ host: DEFAULT_DATADOG_AGENT_HOST, prefix: DEFAULT_PROJECT_METRIC_PREFIX });
   }
 
