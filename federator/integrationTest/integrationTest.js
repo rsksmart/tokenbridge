@@ -17,6 +17,7 @@ const TransactionSender = require("../src/lib/TransactionSender.js");
 const Federator = require("../src/lib/Federator.js");
 const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
+const MSG_TOKEN_NOT_VOTED = "Token was not voted by federators";
 
 const sideTokenBytecode = fs.readFileSync(
   `${__dirname}/sideTokenBytecode.txt`,
@@ -60,7 +61,7 @@ function getMainchainFederators(keys) {
   let federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      let federator = new Federator(
+      const federator = new Federator(
         {
           ...config,
           privateKey: key,
@@ -71,7 +72,7 @@ function getMainchainFederators(keys) {
       federators.push(federator);
     });
   } else {
-    let federator = new Federator(config, log4js.getLogger("FEDERATOR"));
+    const federator = new Federator(config, log4js.getLogger("FEDERATOR"));
     federators.push(federator);
   }
   return federators;
@@ -81,7 +82,7 @@ function getSidechainFederators(keys, sideConfig) {
   let federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      let federator = new Federator(
+      const federator = new Federator(
         {
           ...sideConfig,
           privateKey: key,
@@ -92,7 +93,7 @@ function getSidechainFederators(keys, sideConfig) {
       federators.push(federator);
     });
   } else {
-    let federator = new Federator(
+    const federator = new Federator(
       {
         ...sideConfig,
         storagePath: `${config.storagePath}/side-fed`,
@@ -257,7 +258,7 @@ async function transfer(
     logger.debug("Token transfer approved");
 
     logger.debug("Bridge receiveTokens (transferFrom)");
-    let bridgeContract = new mainChainWeb3.eth.Contract(
+    const bridgeContract = new mainChainWeb3.eth.Contract(
       abiBridgeV3,
       originBridgeAddress
     );
@@ -322,7 +323,7 @@ async function transfer(
       .transactionsDataHashes(receipt.transactionHash)
       .call();
     if (txDataHash === utils.zeroHash) {
-      logger.error("Token was not voted by federators");
+      logger.error(MSG_TOKEN_NOT_VOTED);
       process.exit(1);
     }
 
@@ -359,10 +360,10 @@ async function transfer(
     // Transfer back
     logger.info("------------- TRANSFER BACK THE TOKENS -----------------");
     logger.debug("Getting initial balances before transfer");
-    let bridgeBalanceBefore = await originTokenContract.methods
+    const bridgeBalanceBefore = await originTokenContract.methods
       .balanceOf(originBridgeAddress)
       .call();
-    let receiverBalanceBefore = await originTokenContract.methods
+    const receiverBalanceBefore = await originTokenContract.methods
       .balanceOf(userAddress)
       .call();
     let senderBalanceBefore = await destinationTokenContract.methods
@@ -391,7 +392,7 @@ async function transfer(
       true
     );
     logger.debug("Token transfer approved");
-    let allowed = await destinationTokenContract.methods
+    const allowed = await destinationTokenContract.methods
       .allowance(userAddress, destinationBridgeAddress)
       .call();
     logger.debug("Allowed to transfer ", allowed);
@@ -420,7 +421,7 @@ async function transfer(
         true
       );
 
-      let nextTransactionCount = await sideMultiSigContract.methods
+      const nextTransactionCount = await sideMultiSigContract.methods
         .getTransactionCount(true, false)
         .call();
       for (let i = 1; i < federatorKeys.length; i++) {
@@ -602,7 +603,7 @@ async function transfer(
         true
       );
 
-      let nextTransactionCount = await multiSigContract.methods
+      const nextTransactionCount = await multiSigContract.methods
         .getTransactionCount(true, false)
         .call();
       for (let i = 1; i < federatorKeys.length; i++) {
@@ -718,7 +719,7 @@ async function transfer(
       .transactionsDataHashes(receipt.transactionHash)
       .call();
     if (txDataHash === utils.zeroHash) {
-      logger.error("Token was not voted by federators");
+      logger.error(MSG_TOKEN_NOT_VOTED);
       process.exit(1);
     }
 
@@ -785,7 +786,7 @@ async function transfer(
     await methodCall.send({ from: cowAddress, gas: 500000 });
 
     await utils.evm_mine(1, mainChainWeb3);
-    let confirmations = await allowTokensContract.methods
+    const confirmations = await allowTokensContract.methods
       .getConfirmations()
       .call();
 
@@ -828,7 +829,7 @@ async function transfer(
       destinationAnotherTokenAddress
     );
     if (destinationAnotherTokenAddress === utils.zeroAddress) {
-      logger.error("Token was not voted by federators");
+      logger.error(MSG_TOKEN_NOT_VOTED);
       process.exit(1);
     }
 
@@ -1138,7 +1139,7 @@ async function claimTokensFromDestinationBridge(
   destinationBridgeAddress,
   userPrivateKey
 ) {
-  let methodCall = destinationBridgeContract.methods.claim({
+  const methodCall = destinationBridgeContract.methods.claim({
     to: userAddress,
     amount: amount,
     blockHash: receipt.blockHash,
