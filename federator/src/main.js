@@ -31,7 +31,12 @@ if (!config.etherscanApiKey) {
   process.exit(1);
 }
 
-const metricCollector = new MetricCollector.MetricCollector();
+let metricCollector;
+try {
+  metricCollector = new MetricCollector.MetricCollector();
+} catch (err) {
+  logger.error(`Error creating MetricCollector instance: ${err.stack}`);
+}
 
 const heartbeat = new Heartbeat(config, log4js.getLogger('HEARTBEAT'), metricCollector);
 const mainFederator = new Federator(config, log4js.getLogger('MAIN-FEDERATOR'), metricCollector);
