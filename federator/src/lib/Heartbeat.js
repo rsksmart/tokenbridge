@@ -8,7 +8,7 @@ const utils = require('./utils');
 const scriptVersion = process.env.npm_package_version;
 
 module.exports = class Heartbeat {
-    constructor(config, logger, Web3 = web3) {
+    constructor(config, logger, metricCollector, Web3 = web3) {
         this.config = config;
         this.logger = logger;
 
@@ -19,12 +19,13 @@ module.exports = class Heartbeat {
         this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+        this.metricCollector = metricCollector;
     }
 
     async run() {
         await this._checkIfRsk()
         let retries = 3;
-        const sleepAfterRetrie = 3000;
+        const sleepAfterRetryMs = 3000;
         while(retries > 0) {
             try {
                 const [
@@ -51,9 +52,9 @@ module.exports = class Heartbeat {
                 console.log(err)
                 this.logger.error(new Error('Exception Running Heartbeat'), err);
                 retries--;
-                this.logger.debug(`Run ${3-retries} retrie`);
+                this.logger.debug(`Run ${3-retries} retry`);
                 if(retries > 0) {
-                    await utils.sleep(sleepAfterRetrie);
+                    await utils.sleep(sleepAfterRetryMs);
                 } else {
                     process.exit(1);
                 }
@@ -202,11 +203,23 @@ module.exports = class Heartbeat {
                 nodeRskInfo,
                 nodeEthInfo
             )
-            this.logger.info(`Success emiting heartbeat`);
+            // TODO: eth variables should be renamed taking into account
+            // that the side chain can be BSC for example.
+            this._trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo);
+            this.logger.info(`Success emitting heartbeat`);
             return true;
         } catch (err) {
-            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`, err);
+            throw new CustomError(`Exception Emitting Heartbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`, err);
         }
+    }
+
+    _trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo) {
+        this.mainWeb3.eth.net.getId().then(chainId => {
+            this.metricCollector.trackMainChainHeartbeatEmission(from, fedVersion, fedRskBlock, nodeRskInfo, chainId);
+        });
+        this.sideWeb3.eth.net.getId().then(chainId => {
+            this.metricCollector.trackSideChainHeartbeatEmission(from, fedVersion, fedEthBlock, nodeEthInfo, chainId);
+        });
     }
 
     _saveProgress (path, value) {
