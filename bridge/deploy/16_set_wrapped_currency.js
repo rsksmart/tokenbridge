@@ -19,27 +19,27 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   if (!network.live) {
     const WRBTC = await deployments.get('WRBTC');
     log(`Get deployed WRBTC at ${WRBTC.address}`);
-    let methodCall = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
-    await methodCall.call({ from: multiSigAddress })
-    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const methodCallSetWrappedCurrency = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
+    await methodCallSetWrappedCurrency.call({ from: multiSigAddress })
+    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallSetWrappedCurrency.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
 
     const AllowTokensV1 = await deployments.get('AllowTokensV1');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
     const allowTokensV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
-    methodCall = allowTokensV1.methods.setToken(WRBTC.address, '0');
-    await methodCall.call({ from: multiSigAddress });
-    await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const methodCallSetToken = allowTokensV1.methods.setToken(WRBTC.address, '0');
+    await methodCallSetToken.call({ from: multiSigAddress });
+    await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCallSetToken.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
   } else {
-    methodCall = bridgeV3.methods.setWrappedCurrency(wrappedCurrency);
-    await methodCall.call({ from: multiSigAddress });
-    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const methodCallSetWrappedCurrency = bridgeV3.methods.setWrappedCurrency(wrappedCurrency);
+    await methodCallSetWrappedCurrency.call({ from: multiSigAddress });
+    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallSetWrappedCurrency.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
   }
-  methodCall = bridgeV3.methods.initDomainSeparator();
-  await methodCall.call({ from: multiSigAddress });
-  await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+  const methodCallInitDomainSeparator = bridgeV3.methods.initDomainSeparator();
+  await methodCallInitDomainSeparator.call({ from: multiSigAddress });
+  await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallInitDomainSeparator.encodeABI()).send({ from: deployer });
   log(`MultiSig submitTransaction init Domain Separator in the Bridge`);
 
 };
