@@ -1069,8 +1069,6 @@ async function transfer(
     await resetConfirmationsForFutureRuns(
       allowTokensContract,
       config,
-      data,
-      methodCall,
       multiSigContract,
       allowTokensAddress,
       cowAddress,
@@ -1161,8 +1159,6 @@ async function claimTokensFromDestinationBridge(
 async function resetConfirmationsForFutureRuns(
   allowTokensContract,
   config,
-  data,
-  methodCall,
   multiSigContract,
   allowTokensAddress,
   cowAddress,
@@ -1172,11 +1168,11 @@ async function resetConfirmationsForFutureRuns(
   await allowTokensContract.methods
     .setConfirmations("0", "0", "0")
     .call({ from: config.mainchain.multiSig });
-  data = allowTokensContract.methods
+  const data = allowTokensContract.methods
     .setConfirmations("0", "0", "0")
     .encodeABI();
 
-  methodCall = multiSigContract.methods.submitTransaction(
+  const methodCall = multiSigContract.methods.submitTransaction(
     allowTokensAddress,
     0,
     data
