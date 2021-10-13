@@ -44,5 +44,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
 };
 module.exports.id = 'set_bridge_wrapped_currency'; // id required to prevent reexecution
-module.exports.tags = ['BridgeSetWrappedCurrency', 'new'];
+module.exports.tags = ['BridgeSetWrappedCurrency', 'new', 'IntegrationTest'];
 module.exports.dependencies = ['AllowTokensProxy', 'AllowTokensV1', 'BridgeV3', 'BridgeProxy', 'MultiSigWallet', 'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'];

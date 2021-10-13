@@ -18,4 +18,4 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   }
 };
 module.exports.id = 'deploy_federation_v2'; // id required to prevent reexecution
-module.exports.tags = ['FederationV2', 'new'];
+module.exports.tags = ['FederationV2', 'new', 'IntegrationTest'];

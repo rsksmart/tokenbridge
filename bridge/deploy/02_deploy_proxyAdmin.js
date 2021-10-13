@@ -24,5 +24,5 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   log(`Transfered Ownership to MultiSig`);
 };
 module.exports.id = 'deploy_proxyAdmin'; // id required to prevent reexecution
-module.exports.tags = ['ProxyAdmin'];
+module.exports.tags = ['ProxyAdmin', 'IntegrationTest'];
 module.exports.dependencies = ['MultiSigWallet'];

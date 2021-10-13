@@ -20,4 +20,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     }
 };
 module.exports.id = 'deploy_main_token'; // id required to prevent reexecution
-module.exports.tags = ['MainToken', 'test'];
+module.exports.tags = ['MainToken', 'test', 'IntegrationTest'];

@@ -48,5 +48,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   log(`${sideNFTTokenFactoryName} transferred primary ownership to ${nftBridgeProxyName}`);
 };
 module.exports.id = 'deploy_nft_bridge_proxy'; // id required to prevent re-execution
-module.exports.tags = [nftBridgeProxyName, 'nft', '3.0.0'];
+module.exports.tags = [nftBridgeProxyName, 'nft', '3.0.0', 'IntegrationTestNft'];
 module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'FederationProxy', sideNFTTokenFactoryName];

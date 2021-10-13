@@ -15,4 +15,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   }
 };
 module.exports.id = 'deploy_nft_erc721_test_token'; // id required to prevent reexecution
-module.exports.tags = ['ERC721', 'nft', '3.0.0'];
+module.exports.tags = ['ERC721', 'nft', '3.0.0', 'IntegrationTestNft'];

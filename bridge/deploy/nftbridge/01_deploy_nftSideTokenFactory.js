@@ -12,4 +12,4 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
   }
 };
 module.exports.id = 'deploy_nft_side_token_factory'; // id required to prevent reexecution
-module.exports.tags = ['SideNFTTokenFactory', 'nft', '3.0.0'];
+module.exports.tags = ['SideNFTTokenFactory', 'nft', '3.0.0', 'IntegrationTestNft'];
