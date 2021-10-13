@@ -2,7 +2,9 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   const {deployer, allowTokensProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (allowTokensProxy) return;
+  if (allowTokensProxy) {
+    return;
+  }
 
   const deployResult = await deploy('AllowTokensV1', {
     from: deployer,
