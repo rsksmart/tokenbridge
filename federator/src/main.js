@@ -58,8 +58,8 @@ scheduler.start().catch((err) => {
 
 async function run() {
   try {
-    // await mainFederator.run();
-    // await sideFederator.run();
+    await mainFederator.run();
+    await sideFederator.run();
 
     await runNftFederator();
 
