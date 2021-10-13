@@ -114,6 +114,15 @@ async function run(
   logger.info("Completed transfer from Sidechain to Mainchain");
 }
 
+async function checkAddressBalance(tokenContract, userAddress, loggerName) {
+  let balance = await tokenContract.methods.balanceOf(userAddress).call();
+  logger.info(`${loggerName} token balance`, balance);
+  if (balance.toString() === "0") {
+    logger.error("Token was not claimed");
+    process.exit(1);
+  }
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -127,6 +136,7 @@ async function transfer(
     // Increase time in one day to reset all the Daily limits from AllowTokens
     await utils.increaseTimestamp(mainChainWeb3, ONE_DAY_IN_SECONDS + 1);
     await utils.increaseTimestamp(sideChainWeb3, ONE_DAY_IN_SECONDS + 1);
+
     const originTokenContract = new mainChainWeb3.eth.Contract(
       abiMainToken,
       config.mainchain.testToken
@@ -244,21 +254,21 @@ async function transfer(
       abiBridgeV3,
       originBridgeAddress
     );
-    console.log("Bridge addr", originBridgeAddress);
-    console.log("allowTokens addr", allowTokensContract.options.address);
-    console.log(
+    logger.debug("Bridge addr", originBridgeAddress);
+    logger.debug("allowTokens addr", allowTokensContract.options.address);
+    logger.debug(
       "Bridge AllowTokensAddr",
       await bridgeContract.methods.allowTokens().call()
     );
-    console.log(
+    logger.debug(
       "allowTokens primary",
       await allowTokensContract.methods.primary().call()
     );
-    console.log(
+    logger.debug(
       "allowTokens owner",
       await allowTokensContract.methods.owner().call()
     );
-    console.log("accounts:", await mainChainWeb3.eth.getAccounts());
+    logger.debug("accounts:", await mainChainWeb3.eth.getAccounts());
     methodCall = bridgeContract.methods.receiveTokensTo(
       originAddress,
       userAddress,
@@ -324,14 +334,11 @@ async function transfer(
       abiSideToken,
       destinationTokenAddress
     );
-    let balance = await destinationTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    if (balance.toString() === "0") {
-      logger.error("Token was not claimed");
-      process.exit(1);
-    }
-    logger.info(`${destinationLoggerName} token balance`, balance);
+    await checkAddressBalance(
+      destinationTokenContract,
+      userAddress,
+      destinationLoggerName
+    );
 
     let crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
     logger.debug(
@@ -655,14 +662,11 @@ async function transfer(
     );
 
     logger.debug("Check balance on the other side");
-    balance = await destinationTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.info(`${destinationLoggerName} token balance`, balance);
-    if (balance.toString() === "0") {
-      logger.error("Token was not claimed");
-      process.exit(1);
-    }
+    await checkAddressBalance(
+      destinationTokenContract,
+      userAddress,
+      destinationLoggerName
+    );
 
     crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
     logger.debug("One way cross user balance", crossCompletedBalance);
