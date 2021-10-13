@@ -133,6 +133,53 @@ async function checkTxDataHash(bridgeContract, receipt) {
   }
 }
 
+async function sendFederatorTx(
+  multiSigAddr,
+  multiSigContract,
+  tokenAddr,
+  dataAbi,
+  federatorKeys,
+  transactionSender
+) {
+  const multiSigSubmitData = multiSigContract.methods
+    .submitTransaction(tokenAddr, 0, dataAbi)
+    .encodeABI();
+
+  if (federatorKeys.length === 1) {
+    await transactionSender.sendTransaction(
+      multiSigAddr,
+      multiSigSubmitData,
+      0,
+      "",
+      true
+    );
+  } else {
+    await transactionSender.sendTransaction(
+      multiSigAddr,
+      multiSigSubmitData,
+      0,
+      federatorKeys[0],
+      true
+    );
+
+    const nextTransactionCount = await multiSigContract.methods
+      .getTransactionCount(true, false)
+      .call();
+    for (let i = 1; i < federatorKeys.length; i++) {
+      const multiSigConfirmTxData = multiSigContract.methods
+        .confirmTransaction(nextTransactionCount)
+        .encodeABI();
+      await transactionSender.sendTransaction(
+        multiSigAddr,
+        multiSigConfirmTxData,
+        0,
+        federatorKeys[i],
+        true
+      );
+    }
+  }
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -391,45 +438,14 @@ async function transfer(
     logger.debug("Allowed to transfer ", allowed);
     logger.debug("Set side token limit");
 
-    if (federatorKeys.length === 1) {
-      const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, dataApproveAbi)
-        .encodeABI();
-      await destinationTransactionSender.sendTransaction(
-        config.sidechain.multiSig,
-        multiSigData,
-        0,
-        "",
-        true
-      );
-    } else {
-      const multiSigData = sideMultiSigContract.methods
-        .submitTransaction(sideAllowTokensAddress, 0, dataApproveAbi)
-        .encodeABI();
-      await destinationTransactionSender.sendTransaction(
-        config.sidechain.multiSig,
-        multiSigData,
-        0,
-        federatorKeys[0],
-        true
-      );
-
-      const nextTransactionCount = await sideMultiSigContract.methods
-        .getTransactionCount(true, false)
-        .call();
-      for (let i = 1; i < federatorKeys.length; i++) {
-        const multiSigData = sideMultiSigContract.methods
-          .confirmTransaction(nextTransactionCount)
-          .encodeABI();
-        await destinationTransactionSender.sendTransaction(
-          config.sidechain.multiSig,
-          multiSigData,
-          0,
-          federatorKeys[i],
-          true
-        );
-      }
-    }
+    await sendFederatorTx(
+      config.sidechain.multiSig,
+      sideMultiSigContract,
+      sideAllowTokensAddress,
+      dataApproveAbi,
+      federatorKeys,
+      destinationTransactionSender
+    );
 
     logger.debug("Bridge side receiveTokens");
     methodCall = destinationBridgeContract.methods.receiveTokensTo(
@@ -569,49 +585,18 @@ async function transfer(
       config.mainchain.multiSig
     );
     const allowTokensAddress = allowTokensContract.options.address;
-    dataTransfer = allowTokensContract.methods
+    const setTokenEncodedAbi = allowTokensContract.methods
       .setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID)
       .encodeABI();
 
-    if (federatorKeys.length === 1) {
-      const multiSigData = multiSigContract.methods
-        .submitTransaction(allowTokensAddress, 0, dataTransfer)
-        .encodeABI();
-      await transactionSender.sendTransaction(
-        config.mainchain.multiSig,
-        multiSigData,
-        0,
-        "",
-        true
-      );
-    } else {
-      const multiSigData = multiSigContract.methods
-        .submitTransaction(allowTokensAddress, 0, dataTransfer)
-        .encodeABI();
-      await transactionSender.sendTransaction(
-        config.mainchain.multiSig,
-        multiSigData,
-        0,
-        federatorKeys[0],
-        true
-      );
-
-      const nextTransactionCount = await multiSigContract.methods
-        .getTransactionCount(true, false)
-        .call();
-      for (let i = 1; i < federatorKeys.length; i++) {
-        const multiSigData = multiSigContract.methods
-          .confirmTransaction(nextTransactionCount)
-          .encodeABI();
-        await transactionSender.sendTransaction(
-          config.mainchain.multiSig,
-          multiSigData,
-          0,
-          federatorKeys[i],
-          true
-        );
-      }
-    }
+    await sendFederatorTx(
+      config.mainchain.multiSig,
+      multiSigContract,
+      allowTokensAddress,
+      setTokenEncodedAbi,
+      federatorKeys,
+      transactionSender
+    );
 
     let destinationAnotherTokenAddress = await getDestinationTokenAddress(
       destinationBridgeContract,
