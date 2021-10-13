@@ -1,6 +1,6 @@
 const abiAllowTokensV0 = require('../../../bridge/abi/AllowTokensV0.json');
 const abiAllowTokensV1 = require('../../../bridge/abi/AllowTokensV1.json');
-const abiBridge = require('../../../bridge/abi/Bridge.json');
+const abiBridgeV3 = require('../../../bridge/abi/BridgeV3.json');
 const IAllowTokensV1 = require('./IAllowTokensV1');
 const IAllowTokensV0 = require('./IAllowTokensV0');
 const CustomError = require('../lib/CustomError');
@@ -10,8 +10,8 @@ const ContractFactory = require('./ContractFactory');
 module.exports = class AllowTokensFactory extends ContractFactory {
     constructor(config, logger, Web3) {
         super(config, logger, Web3);
-        this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge, this.config.mainchain.bridge);
-        this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridge, this.config.sidechain.bridge);
+        this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridgeV3, this.config.mainchain.bridge);
+        this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3, this.config.sidechain.bridge);
     }
 
     async getVersion(allowTokensContract) {

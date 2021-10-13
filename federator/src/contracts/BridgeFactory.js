@@ -1,5 +1,5 @@
 const abiBridgeV2 = require('../../../bridge/abi/BridgeV2.json');
-const abiBridgeNew = require('../../../bridge/abi/Bridge.json');
+const abiBridgeV3 = require('../../../bridge/abi/BridgeV3.json');
 const abiNftBridge = require('../../../bridge/abi/NFTBridge.json');
 const BridgeInterface = require('./IBridge.js');
 const NftBridgeInterface = require('./IBridgeNft');
@@ -21,7 +21,7 @@ module.exports = class BridgeFactory extends ContractFactory {
     let bridgeContract = this.getContractByAbi(abiBridgeV2, address, web3);
     const version = await this.getVersion(bridgeContract);
     if (version === 'v3') {
-      bridgeContract = this.getContractByAbi(abiBridgeNew, address, web3);
+      bridgeContract = this.getContractByAbi(abiBridgeV3, address, web3);
     } else if (!['v2','v1'].includes(version)) {
       throw Error('Unknown Bridge contract version');
     }
