@@ -19,7 +19,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   if (!network.live) {
     const WRBTC = await deployments.get('WRBTC');
     log(`Get deployed WRBTC at ${WRBTC.address}`);
-    methodCall = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
+    let methodCall = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
     await methodCall.call({ from: multiSigAddress })
     await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
@@ -45,4 +45,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'set_bridge_wrapped_currency'; // id required to prevent reexecution
 module.exports.tags = ['BridgeSetWrappedCurrency', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['AllowTokensProxy', 'AllowTokensV1', 'BridgeV3', 'BridgeProxy', 'MultiSigWallet', 'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'];
+module.exports.dependencies = [
+  'AllowTokensProxy', 'AllowTokensV1', 'BridgeV3', 'BridgeProxy', 'MultiSigWallet',
+  'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'
+];
