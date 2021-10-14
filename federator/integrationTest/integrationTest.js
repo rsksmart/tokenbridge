@@ -218,6 +218,40 @@ async function transferReceiveTokensOtherSide({
   );
 }
 
+function checkBalance(currentBalance, expectedBalance) {
+  if (expectedBalance !== BigInt(currentBalance)) {
+    logger.error(
+      `Wrong balance. Expected ${expectedBalance} but got ${currentBalance}`
+    );
+    process.exit(1);
+  }
+}
+
+async function getUsersBalances(
+  originTokenContract,
+  destinationTokenContract,
+  originBridgeAddress,
+  userAddress
+) {
+  const bridgeBalance = await originTokenContract.methods
+    .balanceOf(originBridgeAddress)
+    .call();
+  const receiverBalance = await originTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  const senderBalance = await destinationTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  logger.debug(
+    `bridge balance:${bridgeBalance}, receiver balance:${receiverBalance}, sender balance:${senderBalance} `
+  );
+  return {
+    bridgeBalance,
+    receiverBalance,
+    senderBalance,
+  };
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -427,18 +461,17 @@ async function transfer(
     // Transfer back
     logger.info("------------- TRANSFER BACK THE TOKENS -----------------");
     logger.debug("Getting initial balances before transfer");
-    const bridgeBalanceBefore = await originTokenContract.methods
-      .balanceOf(originBridgeAddress)
-      .call();
-    const receiverBalanceBefore = await originTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    let senderBalanceBefore = await destinationTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.debug(
-      `bridge balance:${bridgeBalanceBefore}, receiver balance:${receiverBalanceBefore}, sender balance:${senderBalanceBefore} `
+    const {
+      bridgeBalance: bridgeBalanceBefore,
+      receiverBalance: receiverBalanceBefore,
+      senderBalance: senderBalanceBefore,
+    } = await getUsersBalances(
+      originTokenContract,
+      destinationTokenContract,
+      originBridgeAddress,
+      userAddress
     );
+
     await destinationTransactionSender.sendTransaction(
       userAddress,
       "",
@@ -531,42 +564,23 @@ async function transfer(
     logger.debug("Bridge receivedTokens completed");
 
     logger.debug("Getting final balances");
-    let bridgeBalanceAfter = await originTokenContract.methods
-      .balanceOf(originBridgeAddress)
-      .call();
-    let receiverBalanceAfter = await originTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    let senderBalanceAfter = await destinationTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.debug(
-      `bridge balance:${bridgeBalanceAfter}, receiver balance:${receiverBalanceAfter}, sender balance:${senderBalanceAfter} `
+    const {
+      bridgeBalance: bridgeBalanceAfter,
+      receiverBalance: receiverBalanceAfter,
+      senderBalance: senderBalanceAfter,
+    } = await getUsersBalances(
+      originTokenContract,
+      destinationTokenContract,
+      originBridgeAddress,
+      userAddress
     );
 
-    let expectedBalance = BigInt(bridgeBalanceBefore) - BigInt(amount);
-    if (expectedBalance !== BigInt(bridgeBalanceAfter)) {
-      logger.error(
-        `Wrong Bridge balance. Expected ${expectedBalance} but got ${bridgeBalanceAfter}`
-      );
-      process.exit(1);
-    }
-
-    expectedBalance = BigInt(receiverBalanceBefore) + BigInt(amount);
-    if (expectedBalance !== BigInt(receiverBalanceAfter)) {
-      logger.error(
-        `Wrong Receiver balance. Expected ${receiverBalanceBefore} but got ${receiverBalanceAfter}`
-      );
-      process.exit(1);
-    }
-
-    expectedBalance = BigInt(senderBalanceBefore) - BigInt(amount);
-    if (expectedBalance !== BigInt(senderBalanceAfter)) {
-      logger.error(
-        `Wrong Sender balance. Expected ${expectedBalance} but got ${senderBalanceAfter}`
-      );
-      process.exit(1);
-    }
+    const expectedBalanceBridge = BigInt(bridgeBalanceBefore) - BigInt(amount);
+    checkBalance(bridgeBalanceAfter, expectedBalanceBridge);
+    const expBalanceReceiver = BigInt(receiverBalanceBefore) + BigInt(amount);
+    checkBalance(receiverBalanceAfter, expBalanceReceiver);
+    const expectedBalanceSender = BigInt(senderBalanceBefore) - BigInt(amount);
+    checkBalance(senderBalanceAfter, expectedBalanceSender);
 
     let crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
       userAddress
@@ -690,7 +704,7 @@ async function transfer(
     logger.info(
       "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
     );
-    senderBalanceBefore = await destTokenContract.methods
+    const senderBalanceBeforeErc777 = await destTokenContract.methods
       .balanceOf(userAddress)
       .call();
 
@@ -739,22 +753,17 @@ async function transfer(
     );
     logger.debug("Destination Bridge claim completed");
     logger.debug("Getting final balances");
-    bridgeBalanceAfter = await originTokenContract.methods
-      .balanceOf(originBridgeAddress)
-      .call();
-    receiverBalanceAfter = await originTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    senderBalanceAfter = await destTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.debug(
-      `bridge balance:${bridgeBalanceAfter}, receiver balance:${receiverBalanceAfter}, sender balance:${senderBalanceAfter} `
+
+    const { senderBalance: senderBalanceAfterErc777 } = await getUsersBalances(
+      originTokenContract,
+      destTokenContract,
+      originBridgeAddress,
+      userAddress
     );
 
-    if (senderBalanceBefore === BigInt(senderBalanceAfter)) {
+    if (senderBalanceBeforeErc777 === BigInt(senderBalanceAfterErc777)) {
       logger.error(
-        `Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfter}`
+        `Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfterErc777}`
       );
       process.exit(1);
     }
@@ -940,11 +949,11 @@ async function transfer(
       balance
     );
 
-    expectedBalance =
+    const expectedBalanceUser =
       BigInt(destinationInitialUserBalance) + BigInt(userSmallAmount);
-    if (expectedBalance !== BigInt(balance)) {
+    if (expectedBalanceUser !== BigInt(balance)) {
       logger.error(
-        `userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`
+        `userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUser} but got ${balance}`
       );
       process.exit(1);
     }
@@ -986,13 +995,13 @@ async function transfer(
       balance
     );
 
-    expectedBalance =
+    const expectedBalanceUsers =
       BigInt(destinationInitialUserBalance) +
       BigInt(userMediumAmount) +
       BigInt(userSmallAmount);
-    if (expectedBalance !== BigInt(balance)) {
+    if (expectedBalanceUsers !== BigInt(balance)) {
       logger.error(
-        `userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`
+        `userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUsers} but got ${balance}`
       );
       process.exit(1);
     }
@@ -1034,14 +1043,14 @@ async function transfer(
       balance
     );
 
-    expectedBalance =
+    const expectedBalanceAll =
       BigInt(destinationInitialUserBalance) +
       BigInt(userLargeAmount) +
       BigInt(userMediumAmount) +
       BigInt(userSmallAmount);
-    if (expectedBalance !== BigInt(balance)) {
+    if (expectedBalanceAll !== BigInt(balance)) {
       logger.error(
-        `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalance} but got ${balance}`
+        `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${balance}`
       );
       process.exit(1);
     }
