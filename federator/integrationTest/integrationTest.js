@@ -180,48 +180,87 @@ async function sendFederatorTx(
   }
 }
 
+async function transferReceiveTokensOtherSide(
+  destinationBridgeContract,
+  receiptSendTransaction,
+  userAddress,
+  amount,
+  destinationTransactionSender,
+  destinationBridgeAddress,
+  userPrivateKey,
+  sideChainWeb3,
+  destinationLoggerName,
+  destinationTokenContract,
+  mainChainWeb3
+) {
+  await checkTxDataHash(destinationBridgeContract, receiptSendTransaction);
+
+  await claimTokensFromDestinationBridge(
+    destinationBridgeContract,
+    userAddress,
+    amount,
+    receiptSendTransaction,
+    destinationTransactionSender,
+    destinationBridgeAddress,
+    userPrivateKey
+  );
+
+  logger.debug("Check balance on the other side");
+  await checkAddressBalance(
+    destinationTokenContract,
+    userAddress,
+    destinationLoggerName
+  );
+
+  let crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  logger.debug(
+    "One way cross user balance (ETH or RBTC)",
+    crossCompletedBalance
+  );
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
-  config,
+  configChain,
   originLoggerName,
   destinationLoggerName
 ) {
   try {
-    const mainChainWeb3 = new Web3(config.mainchain.host);
-    const sideChainWeb3 = new Web3(config.sidechain.host);
+    const mainChainWeb3 = new Web3(configChain.mainchain.host);
+    const sideChainWeb3 = new Web3(configChain.sidechain.host);
     // Increase time in one day to reset all the Daily limits from AllowTokens
     await utils.increaseTimestamp(mainChainWeb3, ONE_DAY_IN_SECONDS + 1);
     await utils.increaseTimestamp(sideChainWeb3, ONE_DAY_IN_SECONDS + 1);
 
     const originTokenContract = new mainChainWeb3.eth.Contract(
       abiMainToken,
-      config.mainchain.testToken
+      configChain.mainchain.testToken
     );
     const transactionSender = new TransactionSender(
       mainChainWeb3,
       logger,
-      config
+      configChain
     );
     const destinationTransactionSender = new TransactionSender(
       sideChainWeb3,
       logger,
-      config
+      configChain
     );
-    const originBridgeAddress = config.mainchain.bridge;
+    const originBridgeAddress = configChain.mainchain.bridge;
     const amount = mainChainWeb3.utils.toWei("10");
     const originAddress = originTokenContract.options.address;
     const cowAddress = (await mainChainWeb3.eth.getAccounts())[0];
     const allowTokensContract = new mainChainWeb3.eth.Contract(
       abiAllowTokensV1,
-      config.mainchain.allowTokens
+      configChain.mainchain.allowTokens
     );
     const sideMultiSigContract = new mainChainWeb3.eth.Contract(
       abiMultiSig,
-      config.sidechain.multiSig
+      configChain.sidechain.multiSig
     );
-    const sideAllowTokensAddress = config.sidechain.allowTokens;
-    const destinationBridgeAddress = config.sidechain.bridge;
+    const sideAllowTokensAddress = configChain.sidechain.allowTokens;
+    const destinationBridgeAddress = configChain.sidechain.bridge;
     logger.debug(
       `${destinationLoggerName} bridge address`,
       destinationBridgeAddress
@@ -241,7 +280,7 @@ async function transfer(
       originAddress,
       sideMultiSigContract,
       destinationTransactionSender,
-      config,
+      configChain,
       destinationLoggerName
     );
 
@@ -253,13 +292,13 @@ async function transfer(
       userAddress,
       "",
       mainChainWeb3.utils.toWei("1"),
-      config.privateKey
+      configChain.privateKey
     );
     await destinationTransactionSender.sendTransaction(
       userAddress,
       "",
       mainChainWeb3.utils.toWei("1"),
-      config.privateKey,
+      configChain.privateKey,
       true
     );
     logger.info(
@@ -287,7 +326,7 @@ async function transfer(
       originAddress,
       methodTransferData,
       0,
-      config.privateKey,
+      configChain.privateKey,
       true
     );
     await originTokenContract.methods
@@ -341,7 +380,7 @@ async function transfer(
     );
     logger.debug("Bridge receivedTokens completed");
 
-    let waitBlocks = config.confirmations || 0;
+    let waitBlocks = configChain.confirmations || 0;
     logger.debug(`Wait for ${waitBlocks} blocks`);
     await utils.waitBlocks(mainChainWeb3, waitBlocks);
 
@@ -350,11 +389,11 @@ async function transfer(
     // Start origin federators with delay between them
     logger.debug("Fund federator wallets");
     let federatorKeys =
-      mainKeys && mainKeys.length ? mainKeys : [config.privateKey];
+      mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
     await fundFederators(
-      config.sidechain.host,
+      configChain.sidechain.host,
       federatorKeys,
-      config.sidechain.privateKey,
+      configChain.sidechain.privateKey,
       sideChainWeb3.utils.toWei("1")
     );
 
@@ -368,33 +407,23 @@ async function transfer(
       "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
 
-    await checkTxDataHash(destinationBridgeContract, receiptSendTransaction);
-
-    await claimTokensFromDestinationBridge(
-      destinationBridgeContract,
-      userAddress,
-      amount,
-      receiptSendTransaction,
-      destinationTransactionSender,
-      destinationBridgeAddress,
-      userPrivateKey
-    );
-
-    logger.debug("Check balance on the other side");
     const destinationTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
       destinationTokenAddress
     );
-    await checkAddressBalance(
-      destinationTokenContract,
-      userAddress,
-      destinationLoggerName
-    );
 
-    let crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug(
-      "One way cross user balance (ETH or RBTC)",
-      crossCompletedBalance
+    await transferReceiveTokensOtherSide(
+      destinationBridgeContract,
+      receiptSendTransaction,
+      userAddress,
+      amount,
+      destinationTransactionSender,
+      destinationBridgeAddress,
+      userPrivateKey,
+      sideChainWeb3,
+      destinationLoggerName,
+      destinationTokenContract,
+      mainChainWeb3
     );
 
     // Transfer back
@@ -416,7 +445,7 @@ async function transfer(
       userAddress,
       "",
       6000000,
-      config.privateKey,
+      configChain.privateKey,
       true
     );
 
@@ -439,7 +468,7 @@ async function transfer(
     logger.debug("Set side token limit");
 
     await sendFederatorTx(
-      config.sidechain.multiSig,
+      configChain.sidechain.multiSig,
       sideMultiSigContract,
       sideAllowTokensAddress,
       dataApproveAbi,
@@ -467,11 +496,11 @@ async function transfer(
 
     logger.debug("Fund federator wallets");
     federatorKeys =
-      sideKeys && sideKeys.length ? sideKeys : [config.privateKey];
+      sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
     await fundFederators(
-      config.mainchain.host,
+      configChain.mainchain.host,
       federatorKeys,
-      config.mainchain.privateKey,
+      configChain.mainchain.privateKey,
       mainChainWeb3.utils.toWei("1")
     );
 
@@ -582,7 +611,7 @@ async function transfer(
     logger.debug("Adding new token to list of allowed on bridge");
     const multiSigContract = new mainChainWeb3.eth.Contract(
       abiMultiSig,
-      config.mainchain.multiSig
+      configChain.mainchain.multiSig
     );
     const allowTokensAddress = allowTokensContract.options.address;
     const setTokenEncodedAbi = allowTokensContract.methods
@@ -590,7 +619,7 @@ async function transfer(
       .encodeABI();
 
     await sendFederatorTx(
-      config.mainchain.multiSig,
+      configChain.mainchain.multiSig,
       multiSigContract,
       allowTokensAddress,
       setTokenEncodedAbi,
@@ -603,7 +632,7 @@ async function transfer(
       anotherTokenAddress,
       sideMultiSigContract,
       destinationTransactionSender,
-      config,
+      configChain,
       destinationLoggerName
     );
 
@@ -741,7 +770,7 @@ async function transfer(
 
     await allowTokensContract.methods
       .setConfirmations("100", "1000", "2000")
-      .call({ from: config.mainchain.multiSig });
+      .call({ from: configChain.mainchain.multiSig });
     dataTransfer = allowTokensContract.methods
       .setConfirmations("100", "1000", "2000")
       .encodeABI();
@@ -782,9 +811,7 @@ async function transfer(
       "user balance before crossing tokens:",
       userBalanceAnotherToken
     );
-    balance = await destTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
+    balance = await destTokenContract.methods.balanceOf(userAddress).call();
     logger.info(
       `${destinationLoggerName} token balance before crossing`,
       balance
@@ -807,9 +834,7 @@ async function transfer(
       abiSideToken,
       destinationAnotherTokenAddress
     );
-    balance = await destSideTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
+    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
     logger.info(`${destinationLoggerName} token balance`, balance);
     let destinationInitialUserBalance = balance;
 
@@ -955,9 +980,7 @@ async function transfer(
     logger.debug("Medium amount claim completed");
 
     // check medium amount txn went through
-    balance = await destSideTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
+    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
     logger.info(
       `DESTINATION ${destinationLoggerName} token balance after ${
         delta_1 + delta_2
@@ -1005,9 +1028,7 @@ async function transfer(
     logger.debug("Large amount claim completed");
 
     // check large amount txn went through
-    balance = await destSideTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
+    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
     logger.info(
       `DESTINATION ${destinationLoggerName} token balance after ${
         delta_1 + delta_2 + delta_3
@@ -1037,7 +1058,7 @@ async function transfer(
 
     await resetConfirmationsForFutureRuns(
       allowTokensContract,
-      config,
+      configChain,
       multiSigContract,
       allowTokensAddress,
       cowAddress,
@@ -1055,7 +1076,7 @@ async function getDestinationTokenAddress(
   originAddress,
   sideMultiSigContract,
   destinationTransactionSender,
-  config,
+  chainConfig,
   destinationLoggerName
 ) {
   let destinationTokenAddress = await destinationBridgeContract.methods
@@ -1076,7 +1097,7 @@ async function getDestinationTokenAddress(
       .submitTransaction(destinationBridgeContract.options.address, 0, data)
       .encodeABI();
     await destinationTransactionSender.sendTransaction(
-      config.sidechain.multiSig,
+      chainConfig.sidechain.multiSig,
       multiSigData,
       0,
       "",
@@ -1127,7 +1148,7 @@ async function claimTokensFromDestinationBridge(
 
 async function resetConfirmationsForFutureRuns(
   allowTokensContract,
-  config,
+  chainConfig,
   multiSigContract,
   allowTokensAddress,
   cowAddress,
@@ -1136,7 +1157,7 @@ async function resetConfirmationsForFutureRuns(
 ) {
   await allowTokensContract.methods
     .setConfirmations("0", "0", "0")
-    .call({ from: config.mainchain.multiSig });
+    .call({ from: chainConfig.mainchain.multiSig });
   const data = allowTokensContract.methods
     .setConfirmations("0", "0", "0")
     .encodeABI();
