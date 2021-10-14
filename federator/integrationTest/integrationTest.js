@@ -312,25 +312,19 @@ async function transferBackTokens({
   );
 
   logger.debug("Bridge side receiveTokens");
-  const callReceiveTokens = destinationBridgeContract.methods.receiveTokensTo(
+  const receiptReceiveTokensTo = await callReceiveTokens(
+    destinationBridgeContract,
     destinationTokenAddress,
     userAddress,
-    amount
+    amount,
+    destinationBridgeAddress,
+    destinationTransactionSender,
+    userPrivateKey
   );
-  await callReceiveTokens.call({ from: userAddress });
-  const receiptReceiveTokensTo =
-    await destinationTransactionSender.sendTransaction(
-      destinationBridgeAddress,
-      callReceiveTokens.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
   logger.debug("Bridge side receiveTokens completed");
-
   logger.debug("Starting federator processes");
-
   logger.debug("Fund federator wallets");
+
   federatorKeys =
     sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
   await fundFederators(
@@ -359,14 +353,13 @@ async function callReceiveTokens(
     userAmount
   );
   await methodCallReceiveTokensTo.call({ from: userAddress });
-  const amountReceipt = await transactionSender.sendTransaction(
+  return await transactionSender.sendTransaction(
     originBridgeAddress,
     methodCallReceiveTokensTo.encodeABI(),
     0,
     userPrivateKey,
     true
   );
-  return amountReceipt;
 }
 
 async function callAllReceiveTokens({
