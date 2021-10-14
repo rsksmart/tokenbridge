@@ -344,6 +344,110 @@ async function transferBackTokens({
   return receiptReceiveTokensTo;
 }
 
+async function transferCheckStartErc777({
+  mainChainWeb3,
+  userAddress,
+  amount,
+  transactionSender,
+  userPrivateKey,
+  configChain,
+  allowTokensContract,
+  federatorKeys,
+  destinationBridgeContract,
+  sideMultiSigContract,
+  destinationTransactionSender,
+  destinationLoggerName,
+  originBridgeAddress,
+  waitBlocks,
+  originFederators,
+}) {
+  logger.info(
+    "------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------"
+  );
+  const AnotherToken = new mainChainWeb3.eth.Contract(abiSideToken);
+  const knownAccount = (await mainChainWeb3.eth.getAccounts())[0];
+
+  logger.debug("Deploying another token contract");
+  const anotherTokenContract = await AnotherToken.deploy({
+    data: sideTokenBytecode,
+    arguments: ["MAIN", "MAIN", userAddress, "1"],
+  }).send({
+    from: knownAccount,
+    gas: 6700000,
+    gasPrice: 20000000000,
+  });
+  logger.debug("Token deployed");
+  logger.debug("Minting new token");
+  const anotherTokenAddress = anotherTokenContract.options.address;
+  const dataMintAbi = anotherTokenContract.methods
+    .mint(userAddress, amount, "0x", "0x")
+    .encodeABI();
+  await transactionSender.sendTransaction(
+    anotherTokenAddress,
+    dataMintAbi,
+    0,
+    userPrivateKey,
+    true
+  );
+
+  logger.debug("Adding new token to list of allowed on bridge");
+  const multiSigContract = new mainChainWeb3.eth.Contract(
+    abiMultiSig,
+    configChain.mainchain.multiSig
+  );
+  const allowTokensAddress = allowTokensContract.options.address;
+  const setTokenEncodedAbi = allowTokensContract.methods
+    .setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID)
+    .encodeABI();
+
+  await sendFederatorTx(
+    configChain.mainchain.multiSig,
+    multiSigContract,
+    allowTokensAddress,
+    setTokenEncodedAbi,
+    federatorKeys,
+    transactionSender
+  );
+
+  const destinationAnotherTokenAddress = await getDestinationTokenAddress(
+    destinationBridgeContract,
+    anotherTokenAddress,
+    sideMultiSigContract,
+    destinationTransactionSender,
+    configChain,
+    destinationLoggerName
+  );
+
+  const methodCallSend = anotherTokenContract.methods.send(
+    originBridgeAddress,
+    amount,
+    "0x"
+  );
+  await methodCallSend.call({ from: userAddress });
+  const receiptSend = await transactionSender.sendTransaction(
+    anotherTokenAddress,
+    methodCallSend.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Call to transferAndCall completed");
+
+  logger.debug(`Wait for ${waitBlocks} blocks`);
+  await utils.waitBlocks(mainChainWeb3, waitBlocks);
+
+  await runFederators(originFederators);
+
+  return {
+    anotherTokenAddress,
+    anotherTokenContract,
+    allowTokensAddress,
+    multiSigContract,
+    destinationAnotherTokenAddress,
+    receiptSend,
+  };
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -625,82 +729,31 @@ async function transfer(
       BigInt(initialUserBalance) - BigInt(crossBackCompletedBalance)
     );
 
-    logger.info(
-      "------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------"
-    );
-    const AnotherToken = new mainChainWeb3.eth.Contract(abiSideToken);
-    const knownAccount = (await mainChainWeb3.eth.getAccounts())[0];
-
-    logger.debug("Deploying another token contract");
-    const anotherTokenContract = await AnotherToken.deploy({
-      data: sideTokenBytecode,
-      arguments: ["MAIN", "MAIN", userAddress, "1"],
-    }).send({
-      from: knownAccount,
-      gas: 6700000,
-      gasPrice: 20000000000,
-    });
-    logger.debug("Token deployed");
-    logger.debug("Minting new token");
-    const anotherTokenAddress = anotherTokenContract.options.address;
-    dataTransfer = anotherTokenContract.methods
-      .mint(userAddress, amount, "0x", "0x")
-      .encodeABI();
-    await transactionSender.sendTransaction(
+    const {
       anotherTokenAddress,
-      dataTransfer,
-      0,
-      userPrivateKey,
-      true
-    );
-
-    logger.debug("Adding new token to list of allowed on bridge");
-    const multiSigContract = new mainChainWeb3.eth.Contract(
-      abiMultiSig,
-      configChain.mainchain.multiSig
-    );
-    const allowTokensAddress = allowTokensContract.options.address;
-    const setTokenEncodedAbi = allowTokensContract.methods
-      .setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID)
-      .encodeABI();
-
-    await sendFederatorTx(
-      configChain.mainchain.multiSig,
-      multiSigContract,
+      anotherTokenContract,
       allowTokensAddress,
-      setTokenEncodedAbi,
+      multiSigContract,
+      destinationAnotherTokenAddress,
+      receiptSend,
+    } = await transferCheckStartErc777({
+      mainChainWeb3,
+      userAddress,
+      amount,
+      transactionSender,
+      userPrivateKey,
+      configChain,
+      allowTokensContract,
       federatorKeys,
-      transactionSender
-    );
-
-    let destinationAnotherTokenAddress = await getDestinationTokenAddress(
       destinationBridgeContract,
-      anotherTokenAddress,
       sideMultiSigContract,
       destinationTransactionSender,
-      configChain,
-      destinationLoggerName
-    );
-
-    methodCall = anotherTokenContract.methods.send(
+      destinationLoggerName,
       originBridgeAddress,
-      amount,
-      "0x"
-    );
-    await methodCall.call({ from: userAddress });
-    receipt = await transactionSender.sendTransaction(
-      anotherTokenAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Call to transferAndCall completed");
+      waitBlocks,
+      originFederators,
+    });
 
-    logger.debug(`Wait for ${waitBlocks} blocks`);
-    await utils.waitBlocks(mainChainWeb3, waitBlocks);
-
-    await runFederators(originFederators);
     logger.info(
       "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
@@ -709,7 +762,7 @@ async function transfer(
       destinationBridgeContract,
       userAddress,
       amount,
-      receipt,
+      receiptSend,
       destinationTransactionSender,
       destinationBridgeAddress,
       userPrivateKey
