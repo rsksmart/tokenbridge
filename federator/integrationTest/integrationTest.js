@@ -180,7 +180,7 @@ async function sendFederatorTx(
   }
 }
 
-async function transferReceiveTokensOtherSide(
+async function transferReceiveTokensOtherSide({
   destinationBridgeContract,
   receiptSendTransaction,
   userAddress,
@@ -188,11 +188,10 @@ async function transferReceiveTokensOtherSide(
   destinationTransactionSender,
   destinationBridgeAddress,
   userPrivateKey,
-  sideChainWeb3,
   destinationLoggerName,
   destinationTokenContract,
-  mainChainWeb3
-) {
+  mainChainWeb3,
+}) {
   await checkTxDataHash(destinationBridgeContract, receiptSendTransaction);
 
   await claimTokensFromDestinationBridge(
@@ -212,7 +211,7 @@ async function transferReceiveTokensOtherSide(
     destinationLoggerName
   );
 
-  let crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  const crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
   logger.debug(
     "One way cross user balance (ETH or RBTC)",
     crossCompletedBalance
@@ -380,7 +379,7 @@ async function transfer(
     );
     logger.debug("Bridge receivedTokens completed");
 
-    let waitBlocks = configChain.confirmations || 0;
+    const waitBlocks = configChain.confirmations || 0;
     logger.debug(`Wait for ${waitBlocks} blocks`);
     await utils.waitBlocks(mainChainWeb3, waitBlocks);
 
@@ -412,7 +411,7 @@ async function transfer(
       destinationTokenAddress
     );
 
-    await transferReceiveTokensOtherSide(
+    await transferReceiveTokensOtherSide({
       destinationBridgeContract,
       receiptSendTransaction,
       userAddress,
@@ -420,11 +419,10 @@ async function transfer(
       destinationTransactionSender,
       destinationBridgeAddress,
       userPrivateKey,
-      sideChainWeb3,
       destinationLoggerName,
       destinationTokenContract,
-      mainChainWeb3
-    );
+      mainChainWeb3,
+    });
 
     // Transfer back
     logger.info("------------- TRANSFER BACK THE TOKENS -----------------");
