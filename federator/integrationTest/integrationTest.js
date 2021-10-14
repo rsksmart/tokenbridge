@@ -413,7 +413,7 @@ async function callAllReceiveTokens({
   };
 }
 
-async function tranferCheckAmounts({
+async function tranferCheckAmountsGetDestinationBalance({
   allowTokensContract,
   configChain,
   multiSigContract,
@@ -430,11 +430,6 @@ async function tranferCheckAmounts({
   destinationLoggerName,
   destinationBridgeContract,
   sideChainWeb3,
-  originBridgeAddress,
-  bridgeContract,
-  originFederators,
-  destinationTransactionSender,
-  destinationBridgeAddress,
 }) {
   logger.info(
     "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
@@ -480,7 +475,7 @@ async function tranferCheckAmounts({
     .balanceOf(userAddress)
     .call();
   logger.debug("user balance before crossing tokens:", userBalanceAnotherToken);
-  balance = await destTokenContract.methods.balanceOf(userAddress).call();
+  let balance = await destTokenContract.methods.balanceOf(userAddress).call();
   logger.info(
     `${destinationLoggerName} token balance before crossing`,
     balance
@@ -505,7 +500,59 @@ async function tranferCheckAmounts({
   );
   balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
   logger.info(`${destinationLoggerName} token balance`, balance);
-  let destinationInitialUserBalance = balance;
+
+  return {
+    confirmations,
+    destSideTokenContract,
+    balance,
+  };
+}
+
+async function tranferCheckAmounts({
+  allowTokensContract,
+  configChain,
+  multiSigContract,
+  allowTokensAddress,
+  cowAddress,
+  mainChainWeb3,
+  anotherTokenContract,
+  userAddress,
+  amount,
+  transactionSender,
+  anotherTokenAddress,
+  userPrivateKey,
+  destTokenContract,
+  destinationLoggerName,
+  destinationBridgeContract,
+  sideChainWeb3,
+  originBridgeAddress,
+  bridgeContract,
+  originFederators,
+  destinationTransactionSender,
+  destinationBridgeAddress,
+}) {
+  let {
+    confirmations,
+    balance: destinationInitialUserBalance,
+    destSideTokenContract,
+  } = await tranferCheckAmountsGetDestinationBalance({
+    allowTokensContract,
+    configChain,
+    multiSigContract,
+    allowTokensAddress,
+    cowAddress,
+    mainChainWeb3,
+    anotherTokenContract,
+    userAddress,
+    amount,
+    transactionSender,
+    anotherTokenAddress,
+    userPrivateKey,
+    destTokenContract,
+    destinationLoggerName,
+    destinationBridgeContract,
+    sideChainWeb3,
+  });
 
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
   const userSmallAmount = mainChainWeb3.utils.toWei("0.0056");
