@@ -353,7 +353,7 @@ async function callReceiveTokens(
     userAmount
   );
   await methodCallReceiveTokensTo.call({ from: userAddress });
-  return await transactionSender.sendTransaction(
+  return transactionSender.sendTransaction(
     originBridgeAddress,
     methodCallReceiveTokensTo.encodeABI(),
     0,
