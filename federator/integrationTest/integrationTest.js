@@ -344,6 +344,82 @@ async function transferBackTokens({
   return receiptReceiveTokensTo;
 }
 
+async function callReceiveTokens(
+  bridgeContract,
+  tokenAddr,
+  userAddress,
+  userAmount,
+  originBridgeAddress,
+  transactionSender,
+  userPrivateKey
+) {
+  const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
+    tokenAddr,
+    userAddress,
+    userAmount
+  );
+  await methodCallReceiveTokensTo.call({ from: userAddress });
+  const amountReceipt = await transactionSender.sendTransaction(
+    originBridgeAddress,
+    methodCallReceiveTokensTo.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  return amountReceipt;
+}
+
+async function callAllReceiveTokens({
+  userSmallAmount,
+  userMediumAmount,
+  userLargeAmount,
+  bridgeContract,
+  anotherTokenAddress,
+  userAddress,
+  originBridgeAddress,
+  transactionSender,
+  userPrivateKey,
+}) {
+  // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
+  const smallAmountReceipt = await callReceiveTokens(
+    bridgeContract,
+    anotherTokenAddress,
+    userAddress,
+    userSmallAmount,
+    originBridgeAddress,
+    transactionSender,
+    userPrivateKey
+  );
+
+  // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
+  const mediumAmountReceipt = await callReceiveTokens(
+    bridgeContract,
+    anotherTokenAddress,
+    userAddress,
+    userMediumAmount,
+    originBridgeAddress,
+    transactionSender,
+    userPrivateKey
+  );
+
+  // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
+  const largeAmountReceipt = await callReceiveTokens(
+    bridgeContract,
+    anotherTokenAddress,
+    userAddress,
+    userLargeAmount,
+    originBridgeAddress,
+    transactionSender,
+    userPrivateKey
+  );
+
+  return {
+    smallAmountReceipt,
+    mediumAmountReceipt,
+    largeAmountReceipt,
+  };
+}
+
 async function tranferCheckAmounts({
   allowTokensContract,
   configChain,
@@ -461,49 +537,18 @@ async function tranferCheckAmounts({
   );
 
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
-  const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
-    anotherTokenAddress,
-    userAddress,
-    userSmallAmount
-  );
-  await methodCallReceiveTokensTo.call({ from: userAddress });
-  const smallAmountReceipt = await transactionSender.sendTransaction(
-    originBridgeAddress,
-    methodCallReceiveTokensTo.encodeABI(),
-    0,
-    userPrivateKey,
-    true
-  );
-
-  // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
-  const callerReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
-    anotherTokenAddress,
-    userAddress,
-    userMediumAmount
-  );
-  await callerReceiveTokensTo.call({ from: userAddress });
-  const mediumAmountReceipt = await transactionSender.sendTransaction(
-    originBridgeAddress,
-    callerReceiveTokensTo.encodeABI(),
-    0,
-    userPrivateKey,
-    true
-  );
-
-  // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
-  const callerReceiveTokensLarge = bridgeContract.methods.receiveTokensTo(
-    anotherTokenAddress,
-    userAddress,
-    userLargeAmount
-  );
-  await callerReceiveTokensLarge.call({ from: userAddress });
-  const largeAmountReceipt = await transactionSender.sendTransaction(
-    originBridgeAddress,
-    callerReceiveTokensLarge.encodeABI(),
-    0,
-    userPrivateKey,
-    true
-  );
+  const { smallAmountReceipt, mediumAmountReceipt, largeAmountReceipt } =
+    await callAllReceiveTokens({
+      userSmallAmount,
+      userMediumAmount,
+      userLargeAmount,
+      bridgeContract,
+      anotherTokenAddress,
+      userAddress,
+      originBridgeAddress,
+      transactionSender,
+      userPrivateKey,
+    });
 
   logger.debug("Mine small amount confirmations blocks");
   const delta_1 = parseInt(confirmations.smallAmount);
@@ -916,9 +961,6 @@ async function transfer(
       destinationBridgeAddress
     );
 
-    let dataTransfer = "";
-    let methodCall = "";
-
     logger.debug("Get the destination token address");
     const destinationTokenAddress = await getDestinationTokenAddress(
       destinationBridgeContract,
@@ -1100,17 +1142,17 @@ async function transfer(
       "------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
     );
     logger.debug("Check balance on the starting side");
-    methodCall = bridgeContract.methods.claim({
+    const methodCallClaim = bridgeContract.methods.claim({
       to: userAddress,
       amount: amount,
       blockHash: receiptReceiveTokensTo.blockHash,
       transactionHash: receiptReceiveTokensTo.transactionHash,
       logIndex: receiptReceiveTokensTo.logs[6].logIndex,
     });
-    await methodCall.call({ from: userAddress });
+    await methodCallClaim.call({ from: userAddress });
     await transactionSender.sendTransaction(
       originBridgeAddress,
-      methodCall.encodeABI(),
+      methodCallClaim.encodeABI(),
       0,
       userPrivateKey,
       true
@@ -1285,23 +1327,23 @@ async function claimTokensFromDestinationBridge(
   destinationBridgeAddress,
   userPrivateKey
 ) {
-  const methodCall = destinationBridgeContract.methods.claim({
+  const methodCallClaim = destinationBridgeContract.methods.claim({
     to: userAddress,
     amount: amount,
     blockHash: receipt.blockHash,
     transactionHash: receipt.transactionHash,
     logIndex: receipt.logs[3].logIndex,
   });
-  await methodCall.call({ from: userAddress });
+  await methodCallClaim.call({ from: userAddress });
   await destinationTransactionSender.sendTransaction(
     destinationBridgeAddress,
-    methodCall.encodeABI(),
+    methodCallClaim.encodeABI(),
     0,
     userPrivateKey,
     true
   );
   logger.debug("Destination Bridge claim completed");
-  return methodCall;
+  return methodCallClaim;
 }
 
 async function resetConfirmationsForFutureRuns(
