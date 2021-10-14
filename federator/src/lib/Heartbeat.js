@@ -78,7 +78,9 @@ module.exports = class Heartbeat {
                 }
 
                 if (!fs.existsSync(this.config.storagePath)) {
-                    fs.mkdirSync(this.config.storagePath);
+                    await fs.mkdirSync(this.config.storagePath, {
+                        recursive: true
+                    });
                 }
                 let originalFromBlock = this.config.mainchain.fromBlock || 0;
                 let fromBlock = null;
