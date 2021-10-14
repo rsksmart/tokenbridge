@@ -937,6 +937,144 @@ async function transferCheckStartErc777({
   };
 }
 
+async function transferCheckSendingTokens({
+  mainChainWeb3,
+  transactionSender,
+  configChain,
+  destinationTransactionSender,
+  originLoggerName,
+  originAddress,
+  originTokenContract,
+  amount,
+  cowAddress,
+  originBridgeAddress,
+  allowTokensContract,
+  sideChainWeb3,
+}) {
+  logger.info("------------- SENDING THE TOKENS -----------------");
+  logger.debug("Getting address from pk");
+  const userPrivateKey = mainChainWeb3.eth.accounts.create().privateKey;
+  const userAddress = await transactionSender.getAddress(userPrivateKey);
+  await transactionSender.sendTransaction(
+    userAddress,
+    "",
+    mainChainWeb3.utils.toWei("1"),
+    configChain.privateKey
+  );
+  await destinationTransactionSender.sendTransaction(
+    userAddress,
+    "",
+    mainChainWeb3.utils.toWei("1"),
+    configChain.privateKey,
+    true
+  );
+  logger.info(
+    `${originLoggerName} token address ${originAddress} - User Address: ${userAddress}`
+  );
+
+  const initialUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  logger.debug("Initial user balance ", initialUserBalance);
+  await originTokenContract.methods
+    .transfer(userAddress, amount)
+    .send({ from: cowAddress });
+  const initialTokenBalance = await originTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  logger.debug("Initial token balance ", initialTokenBalance);
+
+  logger.debug("Approving token transfer");
+  await originTokenContract.methods
+    .transfer(userAddress, amount)
+    .call({ from: userAddress });
+  const methodTransferData = originTokenContract.methods
+    .transfer(userAddress, amount)
+    .encodeABI();
+  await transactionSender.sendTransaction(
+    originAddress,
+    methodTransferData,
+    0,
+    configChain.privateKey,
+    true
+  );
+  await originTokenContract.methods
+    .approve(originBridgeAddress, amount)
+    .call({ from: userAddress });
+
+  const methodApproveData = originTokenContract.methods
+    .approve(originBridgeAddress, amount)
+    .encodeABI();
+  await transactionSender.sendTransaction(
+    originAddress,
+    methodApproveData,
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Token transfer approved");
+
+  logger.debug("Bridge receiveTokens (transferFrom)");
+  const bridgeContract = new mainChainWeb3.eth.Contract(
+    abiBridgeV3,
+    originBridgeAddress
+  );
+  logger.debug("Bridge addr", originBridgeAddress);
+  logger.debug("allowTokens addr", allowTokensContract.options.address);
+  logger.debug(
+    "Bridge AllowTokensAddr",
+    await bridgeContract.methods.allowTokens().call()
+  );
+  logger.debug(
+    "allowTokens primary",
+    await allowTokensContract.methods.primary().call()
+  );
+  logger.debug(
+    "allowTokens owner",
+    await allowTokensContract.methods.owner().call()
+  );
+  logger.debug("accounts:", await mainChainWeb3.eth.getAccounts());
+  const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
+    originAddress,
+    userAddress,
+    amount
+  );
+  await methodCallReceiveTokensTo.call({ from: userAddress });
+  const receiptSendTransaction = await transactionSender.sendTransaction(
+    originBridgeAddress,
+    methodCallReceiveTokensTo.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Bridge receivedTokens completed");
+
+  const waitBlocks = configChain.confirmations || 0;
+  logger.debug(`Wait for ${waitBlocks} blocks`);
+  await utils.waitBlocks(mainChainWeb3, waitBlocks);
+
+  logger.debug("Starting federator processes");
+
+  // Start origin federators with delay between them
+  logger.debug("Fund federator wallets");
+  const federatorKeys =
+    mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
+  await fundFederators(
+    configChain.sidechain.host,
+    federatorKeys,
+    configChain.sidechain.privateKey,
+    sideChainWeb3.utils.toWei("1")
+  );
+
+  return {
+    receiptSendTransaction,
+    userAddress,
+    userPrivateKey,
+    federatorKeys,
+    bridgeContract,
+    initialUserBalance,
+    waitBlocks,
+  };
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -998,119 +1136,28 @@ async function transfer(
       destinationLoggerName
     );
 
-    logger.info("------------- SENDING THE TOKENS -----------------");
-    logger.debug("Getting address from pk");
-    const userPrivateKey = mainChainWeb3.eth.accounts.create().privateKey;
-    const userAddress = await transactionSender.getAddress(userPrivateKey);
-    await transactionSender.sendTransaction(
+    const {
+      receiptSendTransaction,
       userAddress,
-      "",
-      mainChainWeb3.utils.toWei("1"),
-      configChain.privateKey
-    );
-    await destinationTransactionSender.sendTransaction(
-      userAddress,
-      "",
-      mainChainWeb3.utils.toWei("1"),
-      configChain.privateKey,
-      true
-    );
-    logger.info(
-      `${originLoggerName} token address ${originAddress} - User Address: ${userAddress}`
-    );
-
-    const initialUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug("Initial user balance ", initialUserBalance);
-    await originTokenContract.methods
-      .transfer(userAddress, amount)
-      .send({ from: cowAddress });
-    const initialTokenBalance = await originTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.debug("Initial token balance ", initialTokenBalance);
-
-    logger.debug("Approving token transfer");
-    await originTokenContract.methods
-      .transfer(userAddress, amount)
-      .call({ from: userAddress });
-    const methodTransferData = originTokenContract.methods
-      .transfer(userAddress, amount)
-      .encodeABI();
-    await transactionSender.sendTransaction(
-      originAddress,
-      methodTransferData,
-      0,
-      configChain.privateKey,
-      true
-    );
-    await originTokenContract.methods
-      .approve(originBridgeAddress, amount)
-      .call({ from: userAddress });
-
-    const methodApproveData = originTokenContract.methods
-      .approve(originBridgeAddress, amount)
-      .encodeABI();
-    await transactionSender.sendTransaction(
-      originAddress,
-      methodApproveData,
-      0,
       userPrivateKey,
-      true
-    );
-    logger.debug("Token transfer approved");
-
-    logger.debug("Bridge receiveTokens (transferFrom)");
-    const bridgeContract = new mainChainWeb3.eth.Contract(
-      abiBridgeV3,
-      originBridgeAddress
-    );
-    logger.debug("Bridge addr", originBridgeAddress);
-    logger.debug("allowTokens addr", allowTokensContract.options.address);
-    logger.debug(
-      "Bridge AllowTokensAddr",
-      await bridgeContract.methods.allowTokens().call()
-    );
-    logger.debug(
-      "allowTokens primary",
-      await allowTokensContract.methods.primary().call()
-    );
-    logger.debug(
-      "allowTokens owner",
-      await allowTokensContract.methods.owner().call()
-    );
-    logger.debug("accounts:", await mainChainWeb3.eth.getAccounts());
-    const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
-      originAddress,
-      userAddress,
-      amount
-    );
-    await methodCallReceiveTokensTo.call({ from: userAddress });
-    const receiptSendTransaction = await transactionSender.sendTransaction(
-      originBridgeAddress,
-      methodCallReceiveTokensTo.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Bridge receivedTokens completed");
-
-    const waitBlocks = configChain.confirmations || 0;
-    logger.debug(`Wait for ${waitBlocks} blocks`);
-    await utils.waitBlocks(mainChainWeb3, waitBlocks);
-
-    logger.debug("Starting federator processes");
-
-    // Start origin federators with delay between them
-    logger.debug("Fund federator wallets");
-    const federatorKeys =
-      mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
-    await fundFederators(
-      configChain.sidechain.host,
       federatorKeys,
-      configChain.sidechain.privateKey,
-      sideChainWeb3.utils.toWei("1")
-    );
-
+      bridgeContract,
+      initialUserBalance,
+      waitBlocks,
+    } = await transferCheckSendingTokens({
+      mainChainWeb3,
+      transactionSender,
+      configChain,
+      destinationTransactionSender,
+      originLoggerName,
+      originAddress,
+      originTokenContract,
+      amount,
+      cowAddress,
+      originBridgeAddress,
+      allowTokensContract,
+      sideChainWeb3,
+    });
     await runFederators(originFederators);
     logger.info(
       "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
