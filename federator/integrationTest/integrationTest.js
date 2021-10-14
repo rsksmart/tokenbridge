@@ -252,6 +252,14 @@ async function getUsersBalances(
   };
 }
 
+async function runFederators(federators) {
+  await federators.reduce(function (promise, item) {
+    return promise.then(function () {
+      return item.run();
+    });
+  }, Promise.resolve());
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -430,12 +438,7 @@ async function transfer(
       sideChainWeb3.utils.toWei("1")
     );
 
-    await originFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(originFederators);
     logger.info(
       "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
@@ -535,13 +538,7 @@ async function transfer(
       mainChainWeb3.utils.toWei("1")
     );
 
-    // Start destination federators with delay between them
-    await destinationFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(destinationFederators);
     logger.info(
       "------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
     );
@@ -666,12 +663,7 @@ async function transfer(
     logger.debug(`Wait for ${waitBlocks} blocks`);
     await utils.waitBlocks(mainChainWeb3, waitBlocks);
 
-    await originFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(originFederators);
     logger.info(
       "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
     );
@@ -725,12 +717,7 @@ async function transfer(
     logger.debug(`Wait for ${waitBlocks} blocks`);
     await utils.waitBlocks(sideChainWeb3, waitBlocks);
 
-    await destinationFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(destinationFederators);
     await checkTxDataHash(bridgeContract, receipt);
 
     logger.info(
@@ -916,12 +903,7 @@ async function transfer(
     const delta_1 = parseInt(confirmations.smallAmount);
     await utils.evm_mine(delta_1, mainChainWeb3);
 
-    await originFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(originFederators);
     logger.debug("Claim small amounts");
     methodCall = destinationBridgeContract.methods.claim({
       to: userAddress,
@@ -962,12 +944,7 @@ async function transfer(
     const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
     await utils.evm_mine(delta_2, mainChainWeb3);
 
-    await originFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(originFederators);
     logger.debug("Claim medium amounts");
     methodCall = destinationBridgeContract.methods.claim({
       to: userAddress,
@@ -1010,12 +987,7 @@ async function transfer(
     const delta_3 = parseInt(confirmations.largeAmount) - delta_2;
     await utils.evm_mine(delta_3, mainChainWeb3);
 
-    await originFederators.reduce(function (promise, item) {
-      return promise.then(function () {
-        return item.run();
-      });
-    }, Promise.resolve());
-
+    await runFederators(originFederators);
     logger.debug("Claim large amounts");
     methodCall = destinationBridgeContract.methods.claim({
       to: userAddress,
@@ -1035,12 +1007,14 @@ async function transfer(
     logger.debug("Large amount claim completed");
 
     // check large amount txn went through
-    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
+    const destBalance = await destSideTokenContract.methods
+      .balanceOf(userAddress)
+      .call();
     logger.info(
       `DESTINATION ${destinationLoggerName} token balance after ${
         delta_1 + delta_2 + delta_3
       } confirmations`,
-      balance
+      destBalance
     );
 
     const expectedBalanceAll =
@@ -1048,19 +1022,16 @@ async function transfer(
       BigInt(userLargeAmount) +
       BigInt(userMediumAmount) +
       BigInt(userSmallAmount);
-    if (expectedBalanceAll !== BigInt(balance)) {
+    if (expectedBalanceAll !== BigInt(destBalance)) {
       logger.error(
-        `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${balance}`
+        `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destBalance}`
       );
       process.exit(1);
     }
 
-    userBalanceAnotherToken = await anotherTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
     logger.debug(
       "ORIGIN user balance after crossing:",
-      userBalanceAnotherToken
+      await anotherTokenContract.methods.balanceOf(userAddress).call()
     );
 
     await resetConfirmationsForFutureRuns(
