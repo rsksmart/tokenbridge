@@ -1315,31 +1315,16 @@ async function transferChecks({
     }
   );
 
-  const { confirmations } = await tranferCheckAmounts({
-    allowTokensContract,
-    configChain,
+  return {
     multiSigContract,
     allowTokensAddress,
-    cowAddress,
-    mainChainWeb3,
-    anotherTokenContract,
-    userAddress,
-    amount,
-    transactionSender,
-    anotherTokenAddress,
-    userPrivateKey,
     destTokenContract,
-    destinationLoggerName,
-    destinationBridgeContract,
-    sideChainWeb3,
-    originBridgeAddress,
+    userAddress,
+    userPrivateKey,
+    anotherTokenContract,
+    anotherTokenAddress,
     bridgeContract,
-    originFederators,
-    destinationTransactionSender,
-    destinationBridgeAddress,
-  });
-
-  return { multiSigContract, allowTokensAddress, confirmations };
+  };
 }
 
 async function transfer(
@@ -1403,29 +1388,61 @@ async function transfer(
       destinationLoggerName
     );
 
-    const { multiSigContract, allowTokensAddress, confirmations } =
-      await transferChecks({
-        mainChainWeb3,
-        transactionSender,
-        configChain,
-        destinationTransactionSender,
-        originLoggerName,
-        originAddress,
-        originTokenContract,
-        amount,
-        cowAddress,
-        originBridgeAddress,
-        allowTokensContract,
-        sideChainWeb3,
-        originFederators,
-        destinationTokenAddress,
-        destinationBridgeContract,
-        destinationBridgeAddress,
-        destinationLoggerName,
-        sideMultiSigContract,
-        sideAllowTokensAddress,
-        destinationFederators,
-      });
+    const {
+      multiSigContract,
+      allowTokensAddress,
+      destTokenContract,
+      userAddress,
+      userPrivateKey,
+      anotherTokenContract,
+      anotherTokenAddress,
+      bridgeContract,
+    } = await transferChecks({
+      mainChainWeb3,
+      transactionSender,
+      configChain,
+      destinationTransactionSender,
+      originLoggerName,
+      originAddress,
+      originTokenContract,
+      amount,
+      cowAddress,
+      originBridgeAddress,
+      allowTokensContract,
+      sideChainWeb3,
+      originFederators,
+      destinationTokenAddress,
+      destinationBridgeContract,
+      destinationBridgeAddress,
+      destinationLoggerName,
+      sideMultiSigContract,
+      sideAllowTokensAddress,
+      destinationFederators,
+    });
+
+    const { confirmations } = await tranferCheckAmounts({
+      allowTokensContract,
+      configChain,
+      multiSigContract,
+      allowTokensAddress,
+      cowAddress,
+      mainChainWeb3,
+      anotherTokenContract,
+      userAddress,
+      amount,
+      transactionSender,
+      anotherTokenAddress,
+      userPrivateKey,
+      destTokenContract,
+      destinationLoggerName,
+      destinationBridgeContract,
+      sideChainWeb3,
+      originBridgeAddress,
+      bridgeContract,
+      originFederators,
+      destinationTransactionSender,
+      destinationBridgeAddress,
+    });
 
     await resetConfirmationsForFutureRuns(
       allowTokensContract,
