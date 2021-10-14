@@ -260,6 +260,90 @@ async function runFederators(federators) {
   }, Promise.resolve());
 }
 
+async function transferBackTokens({
+  destinationTokenContract,
+  userAddress,
+  destinationTransactionSender,
+  configChain,
+  destinationBridgeAddress,
+  amount,
+  destinationTokenAddress,
+  userPrivateKey,
+  sideMultiSigContract,
+  sideAllowTokensAddress,
+  federatorKeys,
+  destinationBridgeContract,
+  mainChainWeb3,
+  destinationFederators,
+}) {
+  await destinationTransactionSender.sendTransaction(
+    userAddress,
+    "",
+    6000000,
+    configChain.privateKey,
+    true
+  );
+
+  logger.debug("Approving token transfer on destination");
+  const dataApproveAbi = destinationTokenContract.methods
+    .approve(destinationBridgeAddress, amount)
+    .encodeABI();
+  await destinationTransactionSender.sendTransaction(
+    destinationTokenAddress,
+    dataApproveAbi,
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Token transfer approved");
+  const allowed = await destinationTokenContract.methods
+    .allowance(userAddress, destinationBridgeAddress)
+    .call();
+  logger.debug("Allowed to transfer ", allowed);
+  logger.debug("Set side token limit");
+
+  await sendFederatorTx(
+    configChain.sidechain.multiSig,
+    sideMultiSigContract,
+    sideAllowTokensAddress,
+    dataApproveAbi,
+    federatorKeys,
+    destinationTransactionSender
+  );
+
+  logger.debug("Bridge side receiveTokens");
+  const callReceiveTokens = destinationBridgeContract.methods.receiveTokensTo(
+    destinationTokenAddress,
+    userAddress,
+    amount
+  );
+  await callReceiveTokens.call({ from: userAddress });
+  const receiptReceiveTokensTo =
+    await destinationTransactionSender.sendTransaction(
+      destinationBridgeAddress,
+      callReceiveTokens.encodeABI(),
+      0,
+      userPrivateKey,
+      true
+    );
+  logger.debug("Bridge side receiveTokens completed");
+
+  logger.debug("Starting federator processes");
+
+  logger.debug("Fund federator wallets");
+  federatorKeys =
+    sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
+  await fundFederators(
+    configChain.mainchain.host,
+    federatorKeys,
+    configChain.mainchain.privateKey,
+    mainChainWeb3.utils.toWei("1")
+  );
+
+  await runFederators(destinationFederators);
+  return receiptReceiveTokensTo;
+}
+
 async function transfer(
   originFederators,
   destinationFederators,
@@ -475,70 +559,23 @@ async function transfer(
       userAddress
     );
 
-    await destinationTransactionSender.sendTransaction(
+    const receiptReceiveTokensTo = await transferBackTokens({
+      destinationTokenContract,
       userAddress,
-      "",
-      6000000,
-      configChain.privateKey,
-      true
-    );
-
-    logger.debug("Approving token transfer on destination");
-    const dataApproveAbi = destinationTokenContract.methods
-      .approve(destinationBridgeAddress, amount)
-      .encodeABI();
-    await destinationTransactionSender.sendTransaction(
+      destinationTransactionSender,
+      configChain,
+      destinationBridgeAddress,
+      amount,
       destinationTokenAddress,
-      dataApproveAbi,
-      0,
       userPrivateKey,
-      true
-    );
-    logger.debug("Token transfer approved");
-    const allowed = await destinationTokenContract.methods
-      .allowance(userAddress, destinationBridgeAddress)
-      .call();
-    logger.debug("Allowed to transfer ", allowed);
-    logger.debug("Set side token limit");
-
-    await sendFederatorTx(
-      configChain.sidechain.multiSig,
       sideMultiSigContract,
       sideAllowTokensAddress,
-      dataApproveAbi,
       federatorKeys,
-      destinationTransactionSender
-    );
+      destinationBridgeContract,
+      mainChainWeb3,
+      destinationFederators,
+    });
 
-    logger.debug("Bridge side receiveTokens");
-    methodCall = destinationBridgeContract.methods.receiveTokensTo(
-      destinationTokenAddress,
-      userAddress,
-      amount
-    );
-    await methodCall.call({ from: userAddress });
-    receipt = await destinationTransactionSender.sendTransaction(
-      destinationBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Bridge side receiveTokens completed");
-
-    logger.debug("Starting federator processes");
-
-    logger.debug("Fund federator wallets");
-    federatorKeys =
-      sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
-    await fundFederators(
-      configChain.mainchain.host,
-      federatorKeys,
-      configChain.mainchain.privateKey,
-      mainChainWeb3.utils.toWei("1")
-    );
-
-    await runFederators(destinationFederators);
     logger.info(
       "------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
     );
@@ -546,9 +583,9 @@ async function transfer(
     methodCall = bridgeContract.methods.claim({
       to: userAddress,
       amount: amount,
-      blockHash: receipt.blockHash,
-      transactionHash: receipt.transactionHash,
-      logIndex: receipt.logs[6].logIndex,
+      blockHash: receiptReceiveTokensTo.blockHash,
+      transactionHash: receiptReceiveTokensTo.transactionHash,
+      logIndex: receiptReceiveTokensTo.logs[6].logIndex,
     });
     await methodCall.call({ from: userAddress });
     await transactionSender.sendTransaction(
@@ -690,8 +727,8 @@ async function transfer(
       destinationLoggerName
     );
 
-    crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug("One way cross user balance", crossCompletedBalance);
+    const crossUsrBalance = await mainChainWeb3.eth.getBalance(userAddress);
+    logger.debug("One way cross user balance", crossUsrBalance);
 
     logger.info(
       "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
@@ -798,7 +835,7 @@ async function transfer(
       remainingUserBalance
     );
 
-    let userBalanceAnotherToken = await anotherTokenContract.methods
+    const userBalanceAnotherToken = await anotherTokenContract.methods
       .balanceOf(userAddress)
       .call();
     logger.debug(
