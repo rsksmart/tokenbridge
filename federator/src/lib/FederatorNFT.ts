@@ -115,7 +115,9 @@ export class FederatorNFT {
         }
 
         if (!fs.existsSync(this.config.storagePath)) {
-          fs.mkdirSync(this.config.storagePath);
+          await fs.mkdirSync(this.config.storagePath, {
+            recursive: true
+          });
         }
 
         let fromBlock = this.getLastBlock();
