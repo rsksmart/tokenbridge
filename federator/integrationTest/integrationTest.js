@@ -344,6 +344,304 @@ async function transferBackTokens({
   return receiptReceiveTokensTo;
 }
 
+async function tranferCheckAmounts({
+  allowTokensContract,
+  configChain,
+  multiSigContract,
+  allowTokensAddress,
+  cowAddress,
+  mainChainWeb3,
+  anotherTokenContract,
+  userAddress,
+  amount,
+  transactionSender,
+  anotherTokenAddress,
+  userPrivateKey,
+  destTokenContract,
+  destinationLoggerName,
+  destinationBridgeContract,
+  sideChainWeb3,
+  originBridgeAddress,
+  bridgeContract,
+  originFederators,
+  destinationTransactionSender,
+  destinationBridgeAddress,
+}) {
+  logger.info(
+    "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
+  );
+
+  await allowTokensContract.methods
+    .setConfirmations("100", "1000", "2000")
+    .call({ from: configChain.mainchain.multiSig });
+  const dataTransferSetConfirmations = allowTokensContract.methods
+    .setConfirmations("100", "1000", "2000")
+    .encodeABI();
+
+  const methodCallSetConfirmations = multiSigContract.methods.submitTransaction(
+    allowTokensAddress,
+    0,
+    dataTransferSetConfirmations
+  );
+  await methodCallSetConfirmations.call({ from: cowAddress });
+  await methodCallSetConfirmations.send({ from: cowAddress, gas: 500000 });
+
+  await utils.evm_mine(1, mainChainWeb3);
+  const confirmations = await allowTokensContract.methods
+    .getConfirmations()
+    .call();
+
+  const dataMintAbi = anotherTokenContract.methods
+    .mint(userAddress, amount, "0x", "0x")
+    .encodeABI();
+  await transactionSender.sendTransaction(
+    anotherTokenAddress,
+    dataMintAbi,
+    0,
+    userPrivateKey,
+    true
+  );
+  let remainingUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  logger.debug(
+    "user native token balance before crossing tokens:",
+    remainingUserBalance
+  );
+
+  const userBalanceAnotherToken = await anotherTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  logger.debug("user balance before crossing tokens:", userBalanceAnotherToken);
+  balance = await destTokenContract.methods.balanceOf(userAddress).call();
+  logger.info(
+    `${destinationLoggerName} token balance before crossing`,
+    balance
+  );
+
+  const anotherTokenOriginalAddr = await destinationBridgeContract.methods
+    .mappedTokens(anotherTokenAddress)
+    .call();
+  logger.info(
+    `${destinationLoggerName} token address`,
+    anotherTokenOriginalAddr
+  );
+  if (anotherTokenOriginalAddr === utils.zeroAddress) {
+    logger.error(MSG_TOKEN_NOT_VOTED);
+    process.exit(1);
+  }
+
+  logger.debug("Check balance on the other side before crossing");
+  const destSideTokenContract = new sideChainWeb3.eth.Contract(
+    abiSideToken,
+    anotherTokenOriginalAddr
+  );
+  balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
+  logger.info(`${destinationLoggerName} token balance`, balance);
+  let destinationInitialUserBalance = balance;
+
+  // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
+  const userSmallAmount = mainChainWeb3.utils.toWei("0.0056");
+  const userMediumAmount = mainChainWeb3.utils.toWei("0.019"); // < toWei('0.1')
+  const userLargeAmount = mainChainWeb3.utils.toWei("1.32");
+  const userAppoveTotalAmount = mainChainWeb3.utils.toWei("10");
+
+  logger.debug(
+    "Send small amount, medium amount and large amount transactions"
+  );
+  const methodCallApprove = anotherTokenContract.methods.approve(
+    originBridgeAddress,
+    userAppoveTotalAmount
+  );
+  await methodCallApprove.call({ from: userAddress });
+  await transactionSender.sendTransaction(
+    anotherTokenAddress,
+    methodCallApprove.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+
+  // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
+  const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
+    anotherTokenAddress,
+    userAddress,
+    userSmallAmount
+  );
+  await methodCallReceiveTokensTo.call({ from: userAddress });
+  const smallAmountReceipt = await transactionSender.sendTransaction(
+    originBridgeAddress,
+    methodCallReceiveTokensTo.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+
+  // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
+  const callerReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
+    anotherTokenAddress,
+    userAddress,
+    userMediumAmount
+  );
+  await callerReceiveTokensTo.call({ from: userAddress });
+  const mediumAmountReceipt = await transactionSender.sendTransaction(
+    originBridgeAddress,
+    callerReceiveTokensTo.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+
+  // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
+  const callerReceiveTokensLarge = bridgeContract.methods.receiveTokensTo(
+    anotherTokenAddress,
+    userAddress,
+    userLargeAmount
+  );
+  await callerReceiveTokensLarge.call({ from: userAddress });
+  const largeAmountReceipt = await transactionSender.sendTransaction(
+    originBridgeAddress,
+    callerReceiveTokensLarge.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+
+  logger.debug("Mine small amount confirmations blocks");
+  const delta_1 = parseInt(confirmations.smallAmount);
+  await utils.evm_mine(delta_1, mainChainWeb3);
+
+  await runFederators(originFederators);
+  logger.debug("Claim small amounts");
+  const methodCallClaim = destinationBridgeContract.methods.claim({
+    to: userAddress,
+    amount: userSmallAmount,
+    blockHash: smallAmountReceipt.blockHash,
+    transactionHash: smallAmountReceipt.transactionHash,
+    logIndex: smallAmountReceipt.logs[4].logIndex,
+  });
+  await methodCallClaim.call({ from: userAddress });
+  await destinationTransactionSender.sendTransaction(
+    destinationBridgeAddress,
+    methodCallClaim.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Small amount claim completed");
+
+  // check small amount txn went through
+  let balance = await destSideTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  logger.info(
+    `DESTINATION ${destinationLoggerName} token balance after ${delta_1} confirmations`,
+    balance
+  );
+
+  const expectedBalanceUser =
+    BigInt(destinationInitialUserBalance) + BigInt(userSmallAmount);
+  if (expectedBalanceUser !== BigInt(balance)) {
+    logger.error(
+      `userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUser} but got ${balance}`
+    );
+    process.exit(1);
+  }
+
+  logger.debug("Mine medium amount confirmations blocks");
+  const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
+  await utils.evm_mine(delta_2, mainChainWeb3);
+
+  await runFederators(originFederators);
+  logger.debug("Claim medium amounts");
+  const callerClaim = destinationBridgeContract.methods.claim({
+    to: userAddress,
+    amount: userMediumAmount,
+    blockHash: mediumAmountReceipt.blockHash,
+    transactionHash: mediumAmountReceipt.transactionHash,
+    logIndex: mediumAmountReceipt.logs[4].logIndex,
+  });
+  await callerClaim.call({ from: userAddress });
+  await destinationTransactionSender.sendTransaction(
+    destinationBridgeAddress,
+    callerClaim.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Medium amount claim completed");
+
+  // check medium amount txn went through
+  balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
+  logger.info(
+    `DESTINATION ${destinationLoggerName} token balance after ${
+      delta_1 + delta_2
+    } confirmations`,
+    balance
+  );
+
+  const expectedBalanceUsers =
+    BigInt(destinationInitialUserBalance) +
+    BigInt(userMediumAmount) +
+    BigInt(userSmallAmount);
+  if (expectedBalanceUsers !== BigInt(balance)) {
+    logger.error(
+      `userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUsers} but got ${balance}`
+    );
+    process.exit(1);
+  }
+
+  logger.debug("Mine large amount confirmations blocks");
+  const delta_3 = parseInt(confirmations.largeAmount) - delta_2;
+  await utils.evm_mine(delta_3, mainChainWeb3);
+
+  await runFederators(originFederators);
+  logger.debug("Claim large amounts");
+  const callerClaimDestination = destinationBridgeContract.methods.claim({
+    to: userAddress,
+    amount: userLargeAmount,
+    blockHash: largeAmountReceipt.blockHash,
+    transactionHash: largeAmountReceipt.transactionHash,
+    logIndex: largeAmountReceipt.logs[4].logIndex,
+  });
+  await callerClaimDestination.call({ from: userAddress });
+  await destinationTransactionSender.sendTransaction(
+    destinationBridgeAddress,
+    callerClaimDestination.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Large amount claim completed");
+
+  // check large amount txn went through
+  const destBalance = await destSideTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+  logger.info(
+    `DESTINATION ${destinationLoggerName} token balance after ${
+      delta_1 + delta_2 + delta_3
+    } confirmations`,
+    destBalance
+  );
+
+  const expectedBalanceAll =
+    BigInt(destinationInitialUserBalance) +
+    BigInt(userLargeAmount) +
+    BigInt(userMediumAmount) +
+    BigInt(userSmallAmount);
+  if (expectedBalanceAll !== BigInt(destBalance)) {
+    logger.error(
+      `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destBalance}`
+    );
+    process.exit(1);
+  }
+
+  logger.debug(
+    "ORIGIN user balance after crossing:",
+    await anotherTokenContract.methods.balanceOf(userAddress).call()
+  );
+
+  return { confirmations };
+}
 async function transferCheckErc777ReceiveTokensOtherSide({
   destinationBridgeContract,
   userAddress,
@@ -838,7 +1136,7 @@ async function transfer(
     const expectedBalanceSender = BigInt(senderBalanceBefore) - BigInt(amount);
     checkBalance(senderBalanceAfter, expectedBalanceSender);
 
-    let crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
+    const crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
       userAddress
     );
     logger.debug("Final user balance", crossBackCompletedBalance);
@@ -892,281 +1190,29 @@ async function transfer(
         originTokenContract,
       });
 
-    logger.info(
-      "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
-    );
-
-    await allowTokensContract.methods
-      .setConfirmations("100", "1000", "2000")
-      .call({ from: configChain.mainchain.multiSig });
-    dataTransfer = allowTokensContract.methods
-      .setConfirmations("100", "1000", "2000")
-      .encodeABI();
-
-    methodCall = multiSigContract.methods.submitTransaction(
+    const { confirmations } = await tranferCheckAmounts({
+      allowTokensContract,
+      configChain,
+      multiSigContract,
       allowTokensAddress,
-      0,
-      dataTransfer
-    );
-    await methodCall.call({ from: cowAddress });
-    await methodCall.send({ from: cowAddress, gas: 500000 });
-
-    await utils.evm_mine(1, mainChainWeb3);
-    const confirmations = await allowTokensContract.methods
-      .getConfirmations()
-      .call();
-
-    dataTransfer = anotherTokenContract.methods
-      .mint(userAddress, amount, "0x", "0x")
-      .encodeABI();
-    await transactionSender.sendTransaction(
-      anotherTokenAddress,
-      dataTransfer,
-      0,
-      userPrivateKey,
-      true
-    );
-    let remainingUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug(
-      "user native token balance before crossing tokens:",
-      remainingUserBalance
-    );
-
-    const userBalanceAnotherToken = await anotherTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.debug(
-      "user balance before crossing tokens:",
-      userBalanceAnotherToken
-    );
-    balance = await destTokenContract.methods.balanceOf(userAddress).call();
-    logger.info(
-      `${destinationLoggerName} token balance before crossing`,
-      balance
-    );
-
-    const anotherTokenOriginalAddr = await destinationBridgeContract.methods
-      .mappedTokens(anotherTokenAddress)
-      .call();
-    logger.info(
-      `${destinationLoggerName} token address`,
-      anotherTokenOriginalAddr
-    );
-    if (anotherTokenOriginalAddr === utils.zeroAddress) {
-      logger.error(MSG_TOKEN_NOT_VOTED);
-      process.exit(1);
-    }
-
-    logger.debug("Check balance on the other side before crossing");
-    const destSideTokenContract = new sideChainWeb3.eth.Contract(
-      abiSideToken,
-      anotherTokenOriginalAddr
-    );
-    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
-    logger.info(`${destinationLoggerName} token balance`, balance);
-    let destinationInitialUserBalance = balance;
-
-    // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
-    const userSmallAmount = mainChainWeb3.utils.toWei("0.0056");
-    const userMediumAmount = mainChainWeb3.utils.toWei("0.019"); // < toWei('0.1')
-    const userLargeAmount = mainChainWeb3.utils.toWei("1.32");
-    const userAppoveTotalAmount = mainChainWeb3.utils.toWei("10");
-
-    logger.debug(
-      "Send small amount, medium amount and large amount transactions"
-    );
-    methodCall = anotherTokenContract.methods.approve(
-      originBridgeAddress,
-      userAppoveTotalAmount
-    );
-    await methodCall.call({ from: userAddress });
-    await transactionSender.sendTransaction(
-      anotherTokenAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-
-    // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
-    methodCall = bridgeContract.methods.receiveTokensTo(
-      anotherTokenAddress,
+      cowAddress,
+      mainChainWeb3,
+      anotherTokenContract,
       userAddress,
-      userSmallAmount
-    );
-    await methodCall.call({ from: userAddress });
-    const smallAmountReceipt = await transactionSender.sendTransaction(
-      originBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-
-    // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
-    methodCall = bridgeContract.methods.receiveTokensTo(
+      amount,
+      transactionSender,
       anotherTokenAddress,
-      userAddress,
-      userMediumAmount
-    );
-    await methodCall.call({ from: userAddress });
-    const mediumAmountReceipt = await transactionSender.sendTransaction(
+      userPrivateKey,
+      destTokenContract,
+      destinationLoggerName,
+      destinationBridgeContract,
+      sideChainWeb3,
       originBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-
-    // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
-    methodCall = bridgeContract.methods.receiveTokensTo(
-      anotherTokenAddress,
-      userAddress,
-      userLargeAmount
-    );
-    await methodCall.call({ from: userAddress });
-    const largeAmountReceipt = await transactionSender.sendTransaction(
-      originBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-
-    logger.debug("Mine small amount confirmations blocks");
-    const delta_1 = parseInt(confirmations.smallAmount);
-    await utils.evm_mine(delta_1, mainChainWeb3);
-
-    await runFederators(originFederators);
-    logger.debug("Claim small amounts");
-    methodCall = destinationBridgeContract.methods.claim({
-      to: userAddress,
-      amount: userSmallAmount,
-      blockHash: smallAmountReceipt.blockHash,
-      transactionHash: smallAmountReceipt.transactionHash,
-      logIndex: smallAmountReceipt.logs[4].logIndex,
-    });
-    await methodCall.call({ from: userAddress });
-    await destinationTransactionSender.sendTransaction(
+      bridgeContract,
+      originFederators,
+      destinationTransactionSender,
       destinationBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Small amount claim completed");
-
-    // check small amount txn went through
-    let balance = await destSideTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.info(
-      `DESTINATION ${destinationLoggerName} token balance after ${delta_1} confirmations`,
-      balance
-    );
-
-    const expectedBalanceUser =
-      BigInt(destinationInitialUserBalance) + BigInt(userSmallAmount);
-    if (expectedBalanceUser !== BigInt(balance)) {
-      logger.error(
-        `userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUser} but got ${balance}`
-      );
-      process.exit(1);
-    }
-
-    logger.debug("Mine medium amount confirmations blocks");
-    const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
-    await utils.evm_mine(delta_2, mainChainWeb3);
-
-    await runFederators(originFederators);
-    logger.debug("Claim medium amounts");
-    methodCall = destinationBridgeContract.methods.claim({
-      to: userAddress,
-      amount: userMediumAmount,
-      blockHash: mediumAmountReceipt.blockHash,
-      transactionHash: mediumAmountReceipt.transactionHash,
-      logIndex: mediumAmountReceipt.logs[4].logIndex,
     });
-    await methodCall.call({ from: userAddress });
-    await destinationTransactionSender.sendTransaction(
-      destinationBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Medium amount claim completed");
-
-    // check medium amount txn went through
-    balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
-    logger.info(
-      `DESTINATION ${destinationLoggerName} token balance after ${
-        delta_1 + delta_2
-      } confirmations`,
-      balance
-    );
-
-    const expectedBalanceUsers =
-      BigInt(destinationInitialUserBalance) +
-      BigInt(userMediumAmount) +
-      BigInt(userSmallAmount);
-    if (expectedBalanceUsers !== BigInt(balance)) {
-      logger.error(
-        `userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUsers} but got ${balance}`
-      );
-      process.exit(1);
-    }
-
-    logger.debug("Mine large amount confirmations blocks");
-    const delta_3 = parseInt(confirmations.largeAmount) - delta_2;
-    await utils.evm_mine(delta_3, mainChainWeb3);
-
-    await runFederators(originFederators);
-    logger.debug("Claim large amounts");
-    methodCall = destinationBridgeContract.methods.claim({
-      to: userAddress,
-      amount: userLargeAmount,
-      blockHash: largeAmountReceipt.blockHash,
-      transactionHash: largeAmountReceipt.transactionHash,
-      logIndex: largeAmountReceipt.logs[4].logIndex,
-    });
-    await methodCall.call({ from: userAddress });
-    await destinationTransactionSender.sendTransaction(
-      destinationBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Large amount claim completed");
-
-    // check large amount txn went through
-    const destBalance = await destSideTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-    logger.info(
-      `DESTINATION ${destinationLoggerName} token balance after ${
-        delta_1 + delta_2 + delta_3
-      } confirmations`,
-      destBalance
-    );
-
-    const expectedBalanceAll =
-      BigInt(destinationInitialUserBalance) +
-      BigInt(userLargeAmount) +
-      BigInt(userMediumAmount) +
-      BigInt(userSmallAmount);
-    if (expectedBalanceAll !== BigInt(destBalance)) {
-      logger.error(
-        `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destBalance}`
-      );
-      process.exit(1);
-    }
-
-    logger.debug(
-      "ORIGIN user balance after crossing:",
-      await anotherTokenContract.methods.balanceOf(userAddress).call()
-    );
 
     await resetConfirmationsForFutureRuns(
       allowTokensContract,
