@@ -62,7 +62,7 @@ module.exports = class Heartbeat {
     }
 
     async readLogs() {
-        await this._checkIfRsk()
+        await this._checkIfRsk();
         let retries = 3;
         const sleepAfterRetrie = 3000;
         while(retries > 0) {
@@ -107,7 +107,7 @@ module.exports = class Heartbeat {
                 for(let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
                     let toPagedBlock = fromPageBlock + recordsPerPage - 1;
                     if(currentPage === numberOfPages) {
-                        toPagedBlock = toBlock
+                        toPagedBlock = toBlock;
                     }
 
                     this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
@@ -132,7 +132,7 @@ module.exports = class Heartbeat {
 
                 return true;
             } catch (err) {
-                console.log(err)
+                console.log(err);
                 this.logger.error(new Error('Exception Running Federator'), err);
                 retries--;
                 this.logger.debug(`Run ${3-retries} retrie`);
