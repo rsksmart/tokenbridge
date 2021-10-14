@@ -632,6 +632,43 @@ async function tranferCheckAmounts({
   await utils.evm_mine(delta_3, mainChainWeb3);
 
   await runFederators(originFederators);
+  const numberOfConfirmations = delta_1 + delta_2 + delta_3;
+  await claimLargeAmounts({
+    destinationBridgeContract,
+    userAddress,
+    userLargeAmount,
+    userMediumAmount,
+    userSmallAmount,
+    largeAmountReceipt,
+    destinationTransactionSender,
+    destinationBridgeAddress,
+    userPrivateKey,
+    destSideTokenContract,
+    destinationLoggerName,
+    numberOfConfirmations,
+    destinationInitialUserBalance,
+    anotherTokenContract,
+  });
+
+  return { confirmations };
+}
+
+async function claimLargeAmounts({
+  destinationBridgeContract,
+  userAddress,
+  userLargeAmount,
+  userMediumAmount,
+  userSmallAmount,
+  largeAmountReceipt,
+  destinationTransactionSender,
+  destinationBridgeAddress,
+  userPrivateKey,
+  destSideTokenContract,
+  destinationLoggerName,
+  numberOfConfirmations,
+  destinationInitialUserBalance,
+  anotherTokenContract,
+}) {
   logger.debug("Claim large amounts");
   const callerClaimDestination = destinationBridgeContract.methods.claim({
     to: userAddress,
@@ -655,9 +692,7 @@ async function tranferCheckAmounts({
     .balanceOf(userAddress)
     .call();
   logger.info(
-    `DESTINATION ${destinationLoggerName} token balance after ${
-      delta_1 + delta_2 + delta_3
-    } confirmations`,
+    `DESTINATION ${destinationLoggerName} token balance after ${numberOfConfirmations} confirmations`,
     destBalance
   );
 
@@ -677,9 +712,8 @@ async function tranferCheckAmounts({
     "ORIGIN user balance after crossing:",
     await anotherTokenContract.methods.balanceOf(userAddress).call()
   );
-
-  return { confirmations };
 }
+
 async function transferCheckErc777ReceiveTokensOtherSide({
   destinationBridgeContract,
   userAddress,
