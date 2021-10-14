@@ -344,6 +344,125 @@ async function transferBackTokens({
   return receiptReceiveTokensTo;
 }
 
+async function transferCheckErc777ReceiveTokensOtherSide({
+  destinationBridgeContract,
+  userAddress,
+  amount,
+  receiptSend,
+  destinationTransactionSender,
+  destinationBridgeAddress,
+  userPrivateKey,
+  sideChainWeb3,
+  destinationAnotherTokenAddress,
+  destinationLoggerName,
+  mainChainWeb3,
+  waitBlocks,
+  destinationFederators,
+  bridgeContract,
+  originBridgeAddress,
+  originTokenContract,
+}) {
+  logger.info(
+    "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
+  );
+
+  await claimTokensFromDestinationBridge(
+    destinationBridgeContract,
+    userAddress,
+    amount,
+    receiptSend,
+    destinationTransactionSender,
+    destinationBridgeAddress,
+    userPrivateKey
+  );
+
+  const destTokenContract = new sideChainWeb3.eth.Contract(
+    abiSideToken,
+    destinationAnotherTokenAddress
+  );
+
+  logger.debug("Check balance on the other side");
+  await checkAddressBalance(
+    destTokenContract,
+    userAddress,
+    destinationLoggerName
+  );
+
+  const crossUsrBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  logger.debug("One way cross user balance", crossUsrBalance);
+
+  logger.info(
+    "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
+  );
+  const senderBalanceBeforeErc777 = await destTokenContract.methods
+    .balanceOf(userAddress)
+    .call();
+
+  const methodSendCall = destTokenContract.methods.send(
+    destinationBridgeAddress,
+    amount,
+    "0x"
+  );
+  methodSendCall.call({ from: userAddress });
+  const receiptSendTx = await destinationTransactionSender.sendTransaction(
+    destinationAnotherTokenAddress,
+    methodSendCall.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+
+  logger.debug(`Wait for ${waitBlocks} blocks`);
+  await utils.waitBlocks(sideChainWeb3, waitBlocks);
+
+  await runFederators(destinationFederators);
+  await checkTxDataHash(bridgeContract, receiptSendTx);
+
+  logger.info(
+    "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
+  );
+  const methodCallClaim = bridgeContract.methods.claim({
+    to: userAddress,
+    amount: amount,
+    blockHash: receiptSendTx.blockHash,
+    transactionHash: receiptSendTx.transactionHash,
+    logIndex: receiptSendTx.logs[5].logIndex,
+  });
+  await methodCallClaim.call({ from: userAddress });
+  await destinationTransactionSender.sendTransaction(
+    originBridgeAddress,
+    methodCallClaim.encodeABI(),
+    0,
+    userPrivateKey,
+    true
+  );
+  logger.debug("Destination Bridge claim completed");
+  logger.debug("Getting final balances");
+
+  const { senderBalance: senderBalanceAfterErc777 } = await getUsersBalances(
+    originTokenContract,
+    destTokenContract,
+    originBridgeAddress,
+    userAddress
+  );
+
+  if (senderBalanceBeforeErc777 === BigInt(senderBalanceAfterErc777)) {
+    logger.error(
+      `Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfterErc777}`
+    );
+    process.exit(1);
+  }
+
+  const crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
+    userAddress
+  );
+  logger.debug("Final user balance", crossBackCompletedBalance);
+
+  return {
+    destTokenContract,
+  };
+}
+
 async function transferCheckStartErc777({
   mainChainWeb3,
   userAddress,
@@ -500,7 +619,6 @@ async function transfer(
     );
 
     let dataTransfer = "";
-    let receipt = "";
     let methodCall = "";
 
     logger.debug("Get the destination token address");
@@ -617,7 +735,7 @@ async function transfer(
 
     // Start origin federators with delay between them
     logger.debug("Fund federator wallets");
-    let federatorKeys =
+    const federatorKeys =
       mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
     await fundFederators(
       configChain.sidechain.host,
@@ -754,99 +872,25 @@ async function transfer(
       originFederators,
     });
 
-    logger.info(
-      "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
-    );
-
-    await claimTokensFromDestinationBridge(
-      destinationBridgeContract,
-      userAddress,
-      amount,
-      receiptSend,
-      destinationTransactionSender,
-      destinationBridgeAddress,
-      userPrivateKey
-    );
-
-    const destTokenContract = new sideChainWeb3.eth.Contract(
-      abiSideToken,
-      destinationAnotherTokenAddress
-    );
-
-    logger.debug("Check balance on the other side");
-    await checkAddressBalance(
-      destTokenContract,
-      userAddress,
-      destinationLoggerName
-    );
-
-    const crossUsrBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug("One way cross user balance", crossUsrBalance);
-
-    logger.info(
-      "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
-    );
-    const senderBalanceBeforeErc777 = await destTokenContract.methods
-      .balanceOf(userAddress)
-      .call();
-
-    methodCall = destTokenContract.methods.send(
-      destinationBridgeAddress,
-      amount,
-      "0x"
-    );
-    methodCall.call({ from: userAddress });
-    receipt = await destinationTransactionSender.sendTransaction(
-      destinationAnotherTokenAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-
-    logger.debug(`Wait for ${waitBlocks} blocks`);
-    await utils.waitBlocks(sideChainWeb3, waitBlocks);
-
-    await runFederators(destinationFederators);
-    await checkTxDataHash(bridgeContract, receipt);
-
-    logger.info(
-      "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
-    );
-    methodCall = bridgeContract.methods.claim({
-      to: userAddress,
-      amount: amount,
-      blockHash: receipt.blockHash,
-      transactionHash: receipt.transactionHash,
-      logIndex: receipt.logs[5].logIndex,
-    });
-    await methodCall.call({ from: userAddress });
-    await destinationTransactionSender.sendTransaction(
-      originBridgeAddress,
-      methodCall.encodeABI(),
-      0,
-      userPrivateKey,
-      true
-    );
-    logger.debug("Destination Bridge claim completed");
-    logger.debug("Getting final balances");
-
-    const { senderBalance: senderBalanceAfterErc777 } = await getUsersBalances(
-      originTokenContract,
-      destTokenContract,
-      originBridgeAddress,
-      userAddress
-    );
-
-    if (senderBalanceBeforeErc777 === BigInt(senderBalanceAfterErc777)) {
-      logger.error(
-        `Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfterErc777}`
-      );
-      process.exit(1);
-    }
-
-    crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
-    logger.debug("Final user balance", crossBackCompletedBalance);
+    const { destTokenContract } =
+      await transferCheckErc777ReceiveTokensOtherSide({
+        destinationBridgeContract,
+        userAddress,
+        amount,
+        receiptSend,
+        destinationTransactionSender,
+        destinationBridgeAddress,
+        userPrivateKey,
+        sideChainWeb3,
+        destinationAnotherTokenAddress,
+        destinationLoggerName,
+        mainChainWeb3,
+        waitBlocks,
+        destinationFederators,
+        bridgeContract,
+        originBridgeAddress,
+        originTokenContract,
+      });
 
     logger.info(
       "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
@@ -901,14 +945,14 @@ async function transfer(
       balance
     );
 
-    destinationAnotherTokenAddress = await destinationBridgeContract.methods
+    const anotherTokenOriginalAddr = await destinationBridgeContract.methods
       .mappedTokens(anotherTokenAddress)
       .call();
     logger.info(
       `${destinationLoggerName} token address`,
-      destinationAnotherTokenAddress
+      anotherTokenOriginalAddr
     );
-    if (destinationAnotherTokenAddress === utils.zeroAddress) {
+    if (anotherTokenOriginalAddr === utils.zeroAddress) {
       logger.error(MSG_TOKEN_NOT_VOTED);
       process.exit(1);
     }
@@ -916,7 +960,7 @@ async function transfer(
     logger.debug("Check balance on the other side before crossing");
     const destSideTokenContract = new sideChainWeb3.eth.Contract(
       abiSideToken,
-      destinationAnotherTokenAddress
+      anotherTokenOriginalAddr
     );
     balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
     logger.info(`${destinationLoggerName} token balance`, balance);
