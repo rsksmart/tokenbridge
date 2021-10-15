@@ -7,42 +7,45 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   if (bridgeProxy) return;
 
-  const Bridge = await deployments.get('Bridge');
+  const BridgeV3 = await deployments.get('BridgeV3');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
-  const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
+  const bridgeV3 = new web3.eth.Contract(BridgeV3.abi, bridgeProxyAddress);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
   if (!network.live) {
     const WRBTC = await deployments.get('WRBTC');
     log(`Get deployed WRBTC at ${WRBTC.address}`);
-    methodCall = bridge.methods.setWrappedCurrency(WRBTC.address);
-    await methodCall.call({ from: multiSigAddress })
-    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const methodCallSetWrappedCurrency = bridgeV3.methods.setWrappedCurrency(WRBTC.address);
+    await methodCallSetWrappedCurrency.call({ from: multiSigAddress })
+    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallSetWrappedCurrency.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
 
-    const AllowTokens = await deployments.get('AllowTokens');
+    const AllowTokensV1 = await deployments.get('AllowTokensV1');
     const AllowTokensProxy = await deployments.get('AllowTokensProxy');
-    const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
-    methodCall = allowTokens.methods.setToken(network.config.network_id, WRBTC.address, '0');
-    await methodCall.call({ from: multiSigAddress });
-    await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const allowTokensV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
+    const methodCallSetToken = allowTokensV1.methods.setToken(WRBTC.address, '0');
+    await methodCallSetToken.call({ from: multiSigAddress });
+    await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCallSetToken.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
   } else {
-    methodCall = bridge.methods.setWrappedCurrency(wrappedCurrency);
-    await methodCall.call({ from: multiSigAddress });
-    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+    const methodCallSetWrappedCurrency = bridgeV3.methods.setWrappedCurrency(wrappedCurrency);
+    await methodCallSetWrappedCurrency.call({ from: multiSigAddress });
+    await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallSetWrappedCurrency.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
   }
-  methodCall = bridge.methods.initDomainSeparator();
-  await methodCall.call({ from: multiSigAddress });
-  await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCall.encodeABI()).send({ from: deployer });
+  const methodCallInitDomainSeparator = bridgeV3.methods.initDomainSeparator();
+  await methodCallInitDomainSeparator.call({ from: multiSigAddress });
+  await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallInitDomainSeparator.encodeABI()).send({ from: deployer });
   log(`MultiSig submitTransaction init Domain Separator in the Bridge`);
 
 };
 module.exports.id = 'set_bridge_wrapped_currency'; // id required to prevent reexecution
-module.exports.tags = ['BridgeSetWrappedCurrency', 'new'];
-module.exports.dependencies = ['AllowTokensProxy', 'AllowTokens', 'Bridge', 'BridgeProxy', 'MultiSigWallet', 'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'];
+module.exports.tags = ['BridgeSetWrappedCurrency', 'new', 'IntegrationTest'];
+module.exports.dependencies = [
+  'AllowTokensProxy', 'AllowTokensV1', 'BridgeV3', 'BridgeProxy', 'MultiSigWallet',
+  'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'
+];
