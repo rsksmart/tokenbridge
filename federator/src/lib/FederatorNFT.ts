@@ -33,12 +33,12 @@ export class FederatorNFT {
       throw new Error(`Invalid host configuration, https or localhost required`);
     }
 
-    this.mainWeb3 = new Web3(config.mainchain.host);
-    this.sideWeb3 = new Web3(config.sidechain.host);
+    this.mainWeb3 = new web3(config.mainchain.host);
+    this.sideWeb3 = new web3(config.sidechain.host);
 
     this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-    this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
-    this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+    this.bridgeFactory = new BridgeFactory(this.config, this.logger, web3);
+    this.federationFactory = new FederationFactory(this.config, this.logger, web3);
     this.metricCollector = metricCollector;
   }
 
