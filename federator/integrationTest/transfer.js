@@ -2,12 +2,11 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
-const abiBridgeV2 = require('../../bridge/abi/BridgeV2.json');
+const abiBridgeV3 = require('../../bridge/abi/BridgeV3.json');
 const erc20TokenAbi = require('../../bridge/abi/IERC20.json');
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');
 const utils = require('../src/lib/utils.js');
-
 
 const logger = log4js.getLogger('test');
 logger.level = 'debug';
@@ -37,7 +36,7 @@ async function run() {
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.privateKey);
 
         logger.debug('bridge receiveTokens (transferFrom)');
-        let bridgeContract = new rskWeb3.eth.Contract(abiBridgeV2, bridgeAddress);
+        const bridgeContract = new rskWeb3.eth.Contract(abiBridgeV3, bridgeAddress);
         data = bridgeContract.methods.receiveTokensTo(mainTokenAddress, senderAddress, amount).encodeABI();
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.privateKey);
 
@@ -49,8 +48,8 @@ async function run() {
         await utils.sleep(config.runEvery * 60 * 1000);
 
         logger.debug('get the side token address');
-        let sideBridgeContract = new ethWeb3.eth.Contract(abiBridgeV2, config.sidechain.bridge);
-        let sideTokenAddress = await sideBridgeContract.methods.mappedTokens(mainTokenAddress).call();
+        const sideBridgeContract = new ethWeb3.eth.Contract(abiBridgeV3, config.sidechain.bridge);
+        const sideTokenAddress = await sideBridgeContract.methods.mappedTokens(mainTokenAddress).call();
         logger.info('side token address', sideTokenAddress);
 
         logger.debug('check balance on the other side');
