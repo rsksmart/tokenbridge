@@ -2,7 +2,7 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
-const abiBridge = require('../../bridge/abi/Bridge_v2.json');
+const abiBridgeV2 = require('../../bridge/abi/BridgeV2.json');
 const erc20TokenAbi = require('../../bridge/abi/IERC20.json');
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');
@@ -37,7 +37,7 @@ async function run() {
         await transactionSender.sendTransaction(mainTokenAddress, data, 0, config.privateKey);
 
         logger.debug('bridge receiveTokens (transferFrom)');
-        let bridgeContract = new rskWeb3.eth.Contract(abiBridge, bridgeAddress);
+        let bridgeContract = new rskWeb3.eth.Contract(abiBridgeV2, bridgeAddress);
         data = bridgeContract.methods.receiveTokensTo(mainTokenAddress, senderAddress, amount).encodeABI();
         await transactionSender.sendTransaction(bridgeAddress, data, 0, config.privateKey);
 
@@ -49,7 +49,7 @@ async function run() {
         await utils.sleep(config.runEvery * 60 * 1000);
 
         logger.debug('get the side token address');
-        let sideBridgeContract = new ethWeb3.eth.Contract(abiBridge, config.sidechain.bridge);
+        let sideBridgeContract = new ethWeb3.eth.Contract(abiBridgeV2, config.sidechain.bridge);
         let sideTokenAddress = await sideBridgeContract.methods.mappedTokens(mainTokenAddress).call();
         logger.info('side token address', sideTokenAddress);
 
@@ -60,7 +60,7 @@ async function run() {
 
     } catch(err) {
         logger.error('Unhandled Error on run()', err.stack);
-        process.exit();
+        process.exit(1);
     }
 
 }

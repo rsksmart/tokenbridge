@@ -8,7 +8,7 @@ const utils = require('./utils');
 const scriptVersion = process.env.npm_package_version;
 
 module.exports = class Heartbeat {
-    constructor(config, logger, Web3 = web3) {
+    constructor(config, logger, metricCollector, Web3 = web3) {
         this.config = config;
         this.logger = logger;
 
@@ -19,12 +19,13 @@ module.exports = class Heartbeat {
         this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
         this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
         this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+        this.metricCollector = metricCollector;
     }
 
     async run() {
         await this._checkIfRsk()
         let retries = 3;
-        const sleepAfterRetrie = 3000;
+        const sleepAfterRetryMs = 3000;
         while(retries > 0) {
             try {
                 const [
@@ -51,18 +52,18 @@ module.exports = class Heartbeat {
                 console.log(err)
                 this.logger.error(new Error('Exception Running Heartbeat'), err);
                 retries--;
-                this.logger.debug(`Run ${3-retries} retrie`);
+                this.logger.debug(`Run ${3-retries} retry`);
                 if(retries > 0) {
-                    await utils.sleep(sleepAfterRetrie);
+                    await utils.sleep(sleepAfterRetryMs);
                 } else {
-                    process.exit();
+                    process.exit(1);
                 }
             }
         }
     }
 
     async readLogs() {
-        await this._checkIfRsk()
+        await this._checkIfRsk();
         let retries = 3;
         const sleepAfterRetrie = 3000;
         while(retries > 0) {
@@ -78,7 +79,9 @@ module.exports = class Heartbeat {
                 }
 
                 if (!fs.existsSync(this.config.storagePath)) {
-                    fs.mkdirSync(this.config.storagePath);
+                    await fs.mkdirSync(this.config.storagePath, {
+                        recursive: true
+                    });
                 }
                 let originalFromBlock = this.config.mainchain.fromBlock || 0;
                 let fromBlock = null;
@@ -105,7 +108,7 @@ module.exports = class Heartbeat {
                 for(let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
                     let toPagedBlock = fromPageBlock + recordsPerPage - 1;
                     if(currentPage === numberOfPages) {
-                        toPagedBlock = toBlock
+                        toPagedBlock = toBlock;
                     }
 
                     this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
@@ -130,14 +133,14 @@ module.exports = class Heartbeat {
 
                 return true;
             } catch (err) {
-                console.log(err)
+                console.log(err);
                 this.logger.error(new Error('Exception Running Federator'), err);
                 retries--;
                 this.logger.debug(`Run ${3-retries} retrie`);
                 if( retries > 0) {
                     await utils.sleep(sleepAfterRetrie);
                 } else {
-                    process.exit();
+                    process.exit(1);
                 }
             }
         }
@@ -200,11 +203,21 @@ module.exports = class Heartbeat {
                 nodeRskInfo,
                 nodeEthInfo
             )
-            this.logger.info(`Success emiting heartbeat`);
+            this._trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo);
+            this.logger.info(`Success emitting heartbeat`);
             return true;
         } catch (err) {
-            throw new CustomError(`Exception Emiting Hearbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`, err);
+            throw new CustomError(`Exception Emitting Heartbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`, err);
         }
+    }
+
+    _trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo) {
+        this.mainWeb3.eth.net.getId().then(chainId => {
+            this.metricCollector?.trackMainChainHeartbeatEmission(from, fedVersion, fedRskBlock, nodeRskInfo, chainId);
+        });
+        this.sideWeb3.eth.net.getId().then(chainId => {
+            this.metricCollector?.trackSideChainHeartbeatEmission(from, fedVersion, fedEthBlock, nodeEthInfo, chainId);
+        });
     }
 
     _saveProgress (path, value) {
@@ -217,7 +230,7 @@ module.exports = class Heartbeat {
         const chainId = await this.mainWeb3.eth.net.getId();
         if (!utils.checkIfItsInRSK(chainId)) {
             this.logger.error(new Error(`Heartbeat should only run on RSK ${chainId}`));
-            process.exit();
+            process.exit(1);
         }
     }
 }

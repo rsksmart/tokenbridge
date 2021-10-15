@@ -14,8 +14,8 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
   });
 
   if (deployResult.newlyDeployed) {
-    log(`Contract Federation deployedV2 at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+    log(`Contract FederationV2 deployedV2 at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
   }
 };
 module.exports.id = 'deploy_federation_v2'; // id required to prevent reexecution
-module.exports.tags = ['FederationV2', 'new'];
+module.exports.tags = ['FederationV2', 'new', 'IntegrationTest'];
