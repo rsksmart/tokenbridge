@@ -33,6 +33,7 @@ module.exports = {
   gasReporter: {
     currency: 'RBTC',
     gasPrice: 0.06,
+    enabled: true,
   },
   abiExporter: {
     path: './abi',
@@ -66,6 +67,7 @@ module.exports = {
       token_symbol: 'h',
       gasPrice: 60000000,
       hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
+
       tags: ['test', 'local'],
     },
     //Ganache
