@@ -1,6 +1,5 @@
 import { Logger } from 'log4js';
 import { Config } from '../../config/configts';
-import Web3 from 'web3';
 
 import web3 from 'web3';
 import fs from 'fs';
@@ -17,8 +16,8 @@ import { MetricCollector } from './MetricCollector';
 export class FederatorNFT {
   public logger: Logger;
   public config: Config;
-  public mainWeb3: Web3;
-  public sideWeb3: Web3;
+  public mainWeb3: web3;
+  public sideWeb3: web3;
   public sideFederationAddress: string = null;
   public transactionSender: TransactionSender;
   public bridgeFactory: BridgeFactory;
@@ -128,7 +127,7 @@ export class FederatorNFT {
 
         if (!fs.existsSync(this.config.storagePath)) {
           await fs.mkdirSync(this.config.storagePath, {
-            recursive: true
+            recursive: true,
           });
         }
 
