@@ -5,15 +5,17 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {deployer, federatorProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (federatorProxy) return;
+  if (federatorProxy) {
+    return;
+  }
 
-  const FederationV2 = await deployments.get('FederationV2');
+  const Federation = await deployments.get('Federation');
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
   const federationConf = getFederationConf(deployer, network);
 
-  const federationLogic = new web3.eth.Contract(FederationV2.abi, FederationV2.address);
+  const federationLogic = new web3.eth.Contract(Federation.abi, Federation.address);
   const methodCall = federationLogic.methods.initialize(
     federationConf.members,
     federationConf.required,
@@ -26,7 +28,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     from: deployer,
     contract: 'TransparentUpgradeableProxy',
     args: [
-      FederationV2.address,
+      Federation.address,
       proxyAdminAddress,
       methodCall.encodeABI()
     ],
@@ -38,7 +40,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
 module.exports.tags = ['FederationProxy', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'FederationV2', 'BridgeProxy'];
+module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'BridgeProxy'];
 
 function getFederationConf(deployer, network) {
   const networkName = network.name.toLowerCase();

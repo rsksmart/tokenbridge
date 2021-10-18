@@ -26,8 +26,8 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   };
 
   if (!network.live) {
-    const AllowTokensV1 = await deployments.get('AllowTokensV1');
-    const allowTokens = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensProxy.address);
+    const AllowTokens = await deployments.get('AllowTokens');
+    const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
     const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
 
     const MainToken = await deployments.get('MainToken');
@@ -64,4 +64,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'create_config_file'; // id required to prevent reexecution
 module.exports.tags = ['CreateConfigFile', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokensV1'];
+module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokens'];
