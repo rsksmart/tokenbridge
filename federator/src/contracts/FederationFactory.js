@@ -1,11 +1,14 @@
 const abiFederationV2 = require("../../../bridge/abi/FederationV2.json");
 const abiFederationV3 = require("../../../bridge/abi/FederationV3.json");
+const abiFederationV4 = require("../../../bridge/abi/Federation.json");
 const abiBridgeV3 = require("../../../bridge/abi/BridgeV3.json");
 const abiNftBridge = require("../../../bridge/abi/NFTBridge.json");
 const FederationInterfaceV2 = require("./IFederationV2.js");
 const FederationInterfaceV3 = require("./IFederationV3");
+const FederationInterfaceV4 = require("./IFederationV4");
 const CustomError = require("../lib/CustomError");
 const utils = require("../lib/utils");
+import { V2, V3, V4 } from "./Constants";
 import { ContractFactory } from "./ContractFactory";
 
 export class FederationFactory extends ContractFactory {
@@ -35,26 +38,37 @@ export class FederationFactory extends ContractFactory {
 
   async createInstance(web3, address) {
     let federationContract = this.getContractByAbi(
-      abiFederationV3,
+      abiFederationV4,
       address,
       web3
     );
     const version = await this.getVersion(federationContract);
 
-    if (version === "v3") {
-      return new FederationInterfaceV3.IFederationV3(
-        this.config,
-        federationContract
-      );
-    } else if (version === "v2") {
-      federationContract = this.getContractByAbi(
-        abiFederationV2,
-        address,
-        web3
-      );
-      return new FederationInterfaceV2(this.config, federationContract);
-    } else {
-      throw Error("Unknown Federation contract version");
+    switch (version) {
+      case V4:
+        return new FederationInterfaceV4.IFederationV4(
+          this.config,
+          federationContract
+        );
+      case V3:
+        federationContract = this.getContractByAbi(
+          abiFederationV3,
+          address,
+          web3
+        );
+        return new FederationInterfaceV3.IFederationV3(
+          this.config,
+          federationContract
+        );
+      case V2:
+        federationContract = this.getContractByAbi(
+          abiFederationV2,
+          address,
+          web3
+        );
+        return new FederationInterfaceV2(this.config, federationContract);
+      default:
+        throw Error("Unknown Federation contract version");
     }
   }
 
