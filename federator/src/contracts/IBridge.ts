@@ -34,4 +34,4 @@ export class IBridge {
   getMappedToken(originalTokenAddress: string) {
     return this.bridgeContract.methods.mappedTokens(originalTokenAddress);
   }
-};
+}
