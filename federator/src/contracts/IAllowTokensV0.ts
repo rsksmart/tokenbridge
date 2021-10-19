@@ -18,15 +18,15 @@ export class IAllowTokensV0 {
 
   async getConfirmations() {
     let confirmations = 0; //for rsk regtest and ganache
-    if (this.chainId == 31 || this.chainId == 42) {
+    if (this.chainId === 31 || this.chainId === 42) {
       // rsk testnet and kovan
       confirmations = 10;
     }
-    if (this.chainId == 1) {
+    if (this.chainId === 1) {
       //ethereum mainnet 24hs
       confirmations = 240;
     }
-    if (this.chainId == 30) {
+    if (this.chainId === 30) {
       // rsk mainnet 24hs
       confirmations = 120;
     }

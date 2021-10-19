@@ -2,8 +2,8 @@ import abiBridgeV2 from '../../../bridge/abi/BridgeV2.json';
 import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
 import abiBridgeV4 from '../../../bridge/abi/Bridge.json';
 import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
-import BridgeInterfaceV3 from './IBridge.js';
-import { IBridgeV4 as BridgeInterfaceV4 } from './IBridgeV4';
+import { IBridge } from './IBridge';
+import { IBridgeV4 } from './IBridgeV4';
 import { IBridgeNft } from './IBridgeNft';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
@@ -28,14 +28,14 @@ export class BridgeFactory extends ContractFactory {
     const version = await this.getVersion(bridgeContract);
     switch (version) {
       case V4:
-        return new BridgeInterfaceV4(bridgeContract);
+        return new IBridgeV4(bridgeContract);
       case V3:
         bridgeContract = this.getContractByAbi(abiBridgeV3 as AbiItem[], address, web3);
-        return new BridgeInterfaceV3(bridgeContract);
+        return new IBridge(bridgeContract);
       case V2:
       case V1:
         bridgeContract = this.getContractByAbi(abiBridgeV2 as AbiItem[], address, web3);
-        return new BridgeInterfaceV3(bridgeContract);
+        return new IBridge(bridgeContract);
       default:
         throw Error('Unknown Bridge contract version');
     }
