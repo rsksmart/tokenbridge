@@ -1,0 +1,75 @@
+import CustomError from '../lib/CustomError';
+import { V2 } from './Constants';
+
+export class IAllowTokensV2 {
+  allowTokensContract: any;
+  mapTokenInfoAndLimits: any;
+  chainId: number;
+
+  constructor(allowTokensContract, chainId: number) {
+    this.allowTokensContract = allowTokensContract;
+    this.mapTokenInfoAndLimits = {};
+    this.chainId = chainId;
+  }
+
+  getVersion() {
+    return V2;
+  }
+
+  async getConfirmations() {
+    const promises = [];
+    promises.push(this.getSmallAmountConfirmations());
+    promises.push(this.getMediumAmountConfirmations());
+    promises.push(this.getLargeAmountConfirmations());
+    const result = await Promise.all(promises);
+    return {
+      smallAmountConfirmations: result[0],
+      mediumAmountConfirmations: result[1],
+      largeAmountConfirmations: result[2],
+    };
+  }
+
+  async getSmallAmountConfirmations() {
+    try {
+      return this.allowTokensContract.methods.smallAmountConfirmations().call();
+    } catch (err) {
+      throw new CustomError(`Exception getSmallAmountConfirmations at AllowTokens Contract`, err);
+    }
+  }
+
+  async getMediumAmountConfirmations() {
+    try {
+      return this.allowTokensContract.methods.mediumAmountConfirmations().call();
+    } catch (err) {
+      throw new CustomError(`Exception getMediumAmountConfirmations at AllowTokens Contract`, err);
+    }
+  }
+
+  async getLargeAmountConfirmations() {
+    try {
+      return this.allowTokensContract.methods.largeAmountConfirmations().call();
+    } catch (err) {
+      throw new CustomError(`Exception getLargeAmountConfirmations at AllowTokens Contract`, err);
+    }
+  }
+
+  async getLimits(tokenAddress: string, chainId: number) {
+    try {
+      let result = this.mapTokenInfoAndLimits[tokenAddress];
+      if (!result) {
+        const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(chainId, tokenAddress).call();
+        result = {
+          allowed: infoAndLimits.info.allowed,
+          mediumAmount: infoAndLimits.limit.mediumAmount,
+          largeAmount: infoAndLimits.limit.largeAmount,
+        };
+        if (result.allowed) {
+          this.mapTokenInfoAndLimits[tokenAddress] = result;
+        }
+      }
+      return result;
+    } catch (err) {
+      throw new CustomError(`Exception getInfoAndLimits at AllowTokens Contract`, err);
+    }
+  }
+}
