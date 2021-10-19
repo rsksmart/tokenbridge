@@ -34,17 +34,9 @@ module.exports = class Federator {
     this.revertedTxnsPath = `${
       config.storagePath || __dirname
     }/revertedTxns.json`;
-    this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
-    this.federationFactory = new FederationFactory(
-      this.config,
-      this.logger,
-      Web3
-    );
-    this.allowTokensFactory = new AllowTokensFactory(
-      this.config,
-      this.logger,
-      Web3
-    );
+    this.bridgeFactory = new BridgeFactory.BridgeFactory(this.config, this.logger);
+    this.federationFactory = new FederationFactory.FederationFactory(this.config, this.logger);
+    this.allowTokensFactory = new AllowTokensFactory.AllowTokensFactory(this.config, this.logger);
     this.metricCollector = metricCollector;
   }
 
