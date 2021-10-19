@@ -1,7 +1,7 @@
 import { Config } from '../../config/configts';
 import Web3 from 'web3';
-import { AbiItem } from 'web3-utils/types/index';
-import { Contract } from 'web3-eth-contract/types/index';
+import { AbiItem } from 'web3-utils';
+import { Contract } from 'web3-eth-contract';
 
 export class ContractFactory {
   config: any;
