@@ -5,11 +5,11 @@ const IAllowTokensV1 = require('./IAllowTokensV1');
 const IAllowTokensV0 = require('./IAllowTokensV0');
 const CustomError = require('../lib/CustomError');
 const utils = require('../lib/utils');
-const ContractFactory = require('./ContractFactory');
+import { ContractFactory } from "./ContractFactory";
 
-module.exports = class AllowTokensFactory extends ContractFactory {
-    constructor(config, logger, Web3) {
-        super(config, logger, Web3);
+export class AllowTokensFactory extends ContractFactory {
+    constructor(config, logger) {
+        super(config, logger);
         this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridgeV3, this.config.mainchain.bridge);
         this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3, this.config.sidechain.bridge);
     }

@@ -6,11 +6,11 @@ const FederationInterfaceV2 = require("./IFederationV2.js");
 const FederationInterfaceV3 = require("./IFederationV3");
 const CustomError = require("../lib/CustomError");
 const utils = require("../lib/utils");
-const ContractFactory = require("./ContractFactory");
+import { ContractFactory } from "./ContractFactory";
 
-module.exports = class FederationFactory extends ContractFactory {
-  constructor(config, logger, Web3) {
-    super(config, logger, Web3);
+export class FederationFactory extends ContractFactory {
+  constructor(config, logger) {
+    super(config, logger);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3,
       this.config.mainchain.bridge
