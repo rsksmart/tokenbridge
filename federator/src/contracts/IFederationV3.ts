@@ -2,7 +2,7 @@ import { Config } from '../../config/types';
 import { Contract, EventData } from 'web3-eth-contract';
 
 export class IFederationV3 {
-  private federationContract: Contract;
+  private readonly federationContract: Contract;
   private config: Config;
 
   constructor(config: Config, fedContract: Contract) {
