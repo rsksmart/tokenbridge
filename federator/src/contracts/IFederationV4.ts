@@ -16,8 +16,8 @@ interface VoteTransactionParams extends TransactionIdParams {
 }
 
 export class IFederationV4 {
-  private federationContract: any;
-  private config: Config;
+  private readonly federationContract: any;
+  private readonly config: Config;
 
   constructor(config: Config, fedContract: any) {
     this.federationContract = fedContract;
