@@ -1,0 +1,105 @@
+import { Config } from '../../config/types';
+
+interface TransactionIdParams {
+  originalTokenAddress: string;
+  sender: string;
+  receiver: string;
+  amount: number;
+  blockHash: number;
+  transactionHash: string;
+  logIndex: string;
+  chainId: number;
+}
+
+interface VoteTransactionParams extends TransactionIdParams {
+  tokenType: number;
+}
+
+export class IFederationV4 {
+  private federationContract: any;
+  private config: Config;
+
+  constructor(config: Config, fedContract: any) {
+    this.federationContract = fedContract;
+    this.config = config;
+  }
+
+  getVersion(): string {
+    return 'v4';
+  }
+
+  isMember(address: string): Promise<any> {
+    return this.federationContract.methods.isMember(address).call();
+  }
+
+  setNFTBridge(address: string, from: string): Promise<any> {
+    return this.federationContract.methods.setNFTBridge(address).call({ from });
+  }
+
+  getTransactionId(paramsObj: TransactionIdParams): Promise<any> {
+    return this.federationContract.methods
+      .getTransactionId(
+        paramsObj.originalTokenAddress,
+        paramsObj.sender,
+        paramsObj.receiver,
+        paramsObj.amount,
+        paramsObj.blockHash,
+        paramsObj.transactionHash,
+        paramsObj.logIndex,
+        paramsObj.chainId,
+      )
+      .call();
+  }
+
+  transactionWasProcessed(txId: string): Promise<boolean> {
+    return this.federationContract.methods.transactionWasProcessed(txId).call();
+  }
+
+  hasVoted(txId: string, from: string): Promise<boolean> {
+    return this.federationContract.methods.hasVoted(txId).call({ from });
+  }
+
+  getVoteTransactionABI(paramsObj: VoteTransactionParams): Promise<any> {
+    return this.federationContract.methods
+      .voteTransaction(
+        paramsObj.originalTokenAddress,
+        paramsObj.sender,
+        paramsObj.receiver,
+        paramsObj.amount,
+        paramsObj.blockHash,
+        paramsObj.transactionHash,
+        paramsObj.logIndex,
+        paramsObj.tokenType,
+        paramsObj.chainId,
+      )
+      .encodeABI();
+  }
+
+  getAddress(): string {
+    return this.federationContract.options.address;
+  }
+
+  getPastEvents(eventName: string, options: any): Promise<[any]> {
+    return this.federationContract.getPastEvents(eventName, options);
+  }
+
+  async emitHeartbeat(
+    txSender: { sendTransaction: (arg0: string, arg1: any, arg2: number, arg3: string) => any },
+    fedRskBlock: any,
+    fedEthBlock: any,
+    fedVersion: any,
+    nodeRskInfo: any,
+    nodeEthInfo: any,
+  ) {
+    const emitHeartbeat = await this.federationContract.methods.emitHeartbeat(
+      fedRskBlock,
+      fedEthBlock,
+      fedVersion,
+      nodeRskInfo,
+      nodeEthInfo,
+    );
+
+    const txData = emitHeartbeat.encodeABI();
+    await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+  }
+}
