@@ -132,7 +132,7 @@ function calculatePrefixesSuffixes(nodes) {
 function parseBoolean(val) {
     const falsy = /^(?:f(?:alse)?|no?|0+)$/i;
     return !falsy.test(val) && !!val;
-};
+}
 
 function checkHttpsOrLocalhost(url = '') {
     if (parseBoolean(process.env.BRIDGE_SKIP_HTTPS)) {
