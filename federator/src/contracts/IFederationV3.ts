@@ -1,4 +1,4 @@
-import { Config } from '../../config/configts';
+import { Config } from '../../config/types';
 
 export class IFederationV3 {
   private federationContract: any;

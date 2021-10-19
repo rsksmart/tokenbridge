@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config } from '../../config/configts';
+import { Config } from '../../config/types';
 
 import web3 from 'web3';
 import fs from 'fs';
