@@ -5,16 +5,15 @@ const BridgeInterface = require('./IBridge.js');
 const NftBridgeInterface = require('./IBridgeNft');
 const CustomError = require('../lib/CustomError');
 const utils = require('../lib/utils');
-const ContractFactory = require('./ContractFactory');
+import { ContractFactory } from "./ContractFactory";
 
-module.exports = class BridgeFactory extends ContractFactory {
-
-  constructor(config, logger, Web3) {
-    super(config, logger, Web3);
+export class BridgeFactory extends ContractFactory {
+  constructor(config, logger) {
+    super(config, logger);
   }
 
   async getVersion(bridgeContract) {
-    return utils.retry3Times(bridgeContract.methods.version().call)
+    return utils.retry3Times(bridgeContract.methods.version().call);
   }
 
   async createInstance(web3, address) {
@@ -39,7 +38,7 @@ module.exports = class BridgeFactory extends ContractFactory {
         this.mainWeb3,
         this.config.mainchain.bridge
       );
-    } catch(err) {
+    } catch (err) {
       throw new CustomError(`Exception creating Main Bridge Contract`, err);
     }
   }
