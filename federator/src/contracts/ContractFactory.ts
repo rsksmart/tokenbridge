@@ -6,8 +6,8 @@ import { Contract } from 'web3-eth-contract';
 export class ContractFactory {
   config: any;
   logger: any;
-  mainWeb3: any;
-  sideWeb3: any;
+  mainWeb3: Web3;
+  sideWeb3: Web3;
   contractsByAbi: Map<any, Contract>;
 
   constructor(config: Config, logger: any) {
@@ -19,7 +19,7 @@ export class ContractFactory {
   }
 
   // There should only be one address per abi - the address is only needed to create a new web3.eth.Contract object.
-  getContractByAbi(abi: AbiItem, address: string, web3: Web3): Contract {
+  getContractByAbi(abi: AbiItem[], address: string, web3: Web3): Contract {
     let contractForAbi = this.contractsByAbi.get(abi);
     if (!contractForAbi) {
       contractForAbi = new web3.eth.Contract(abi, address);
