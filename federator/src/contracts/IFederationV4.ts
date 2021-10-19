@@ -1,4 +1,5 @@
 import { Config } from '../../config/types';
+import { Contract, EventData } from 'web3-eth-contract';
 
 interface TransactionIdParams {
   originalTokenAddress: string;
@@ -16,10 +17,10 @@ interface VoteTransactionParams extends TransactionIdParams {
 }
 
 export class IFederationV4 {
-  private readonly federationContract: any;
+  private readonly federationContract: Contract;
   private readonly config: Config;
 
-  constructor(config: Config, fedContract: any) {
+  constructor(config: Config, fedContract: Contract) {
     this.federationContract = fedContract;
     this.config = config;
   }
@@ -79,7 +80,7 @@ export class IFederationV4 {
     return this.federationContract.options.address;
   }
 
-  getPastEvents(eventName: string, options: any): Promise<[any]> {
+  getPastEvents(eventName: string, options: any): Promise<EventData[]> {
     return this.federationContract.getPastEvents(eventName, options);
   }
 
