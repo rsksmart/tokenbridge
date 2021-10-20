@@ -26,15 +26,15 @@ To run the federator using Docker, go to the /federator/config folder and rename
 
 ```js
 module.exports = {
-    mainchain: require('./rsktestnet-kovan.json'),
-    sidechain: require('./kovan.json'),
-    runEvery: 1, // In minutes,
-    confirmations: 10,// Number of blocks before processing it,
-    privateKey: require('federator.key'),
-    storagePath: './db',
-    etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
-    runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
-    endpointsPort: 5000, // Server port health status endpoint listens on
+  mainchain: require('./rsktestnet-kovan.json'),
+  sidechain: require('./kovan.json'),
+  runEvery: 1, // In minutes,
+  confirmations: 10,// Number of blocks before processing it,
+  privateKey: require('federator.key'),
+  storagePath: './db',
+  etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
+  runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
+  endpointsPort: 5000, // Server port health status endpoint listens on
 }
 ```
 
@@ -44,13 +44,13 @@ Inside the .json files there is also the host to that network, for example this 
 
 ```json
 {
-    "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
-    "federation": "0x36c893a955399cf15a4a2fbef04c0e06d4d9b379",
-    "testToken": "0x5d248f520b023acb815edecd5000b98ef84cbf1b",
-    "multisig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
-    "allowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
-    "host": "<YOUR HOST URL AND PORT>",
-    "fromBlock": 434075
+  "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
+  "federation": "0x36c893a955399cf15a4a2fbef04c0e06d4d9b379",
+  "testToken": "0x5d248f520b023acb815edecd5000b98ef84cbf1b",
+  "multisig": "0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a",
+  "allowTokens": "0x952b706a9ab5fd2d3b36205648ed7852676afbe7",
+  "host": "<YOUR HOST URL AND PORT>",
+  "fromBlock": 434075
 }
 ```
 
@@ -94,11 +94,11 @@ Then run :
 
 ```sh
 docker run --rm \
-    --network host \
-    -v $PWD/federator/config:/app/federator/config \
-    -v $PWD/federator/db:/app/federator/db \
-    --name=fed-tokenbridge \
-    fed-tokenbridge:latest
+  --network host \
+  -v $PWD/federator/config:/app/federator/config \
+  -v $PWD/federator/db:/app/federator/db \
+  --name=fed-tokenbridge \
+  fed-tokenbridge:latest
 ```
 
 to start the image.
@@ -117,6 +117,12 @@ This endpoint is introduced, in order to better monitor health status on the Fed
 
   * **Code:** 200 <br />
     **Content:** `{ "status" : "ok" }`
+
+### Skip HTTPS check
+- As an developer you can set the variable `BRIDGE_SKIP_HTTPS` to skip the HTTPS check on the host url config
+```shell
+$~ export BRIDGE_SKIP_HTTPS true
+```
 
 # Datadog
 
