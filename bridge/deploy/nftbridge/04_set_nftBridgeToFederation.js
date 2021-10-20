@@ -17,7 +17,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const methodCallGetNftBridge = await federation.methods.bridgeNFT();
   const federationNftBridgeAddr = await methodCallGetNftBridge.call({ from: multiSigAddress });
 
-  if (federationNftBridgeAddr == nftBridgeProxyDeployment.address) {
+  if (federationNftBridgeAddr === nftBridgeProxyDeployment.address) {
     log(`Federation already have the correct address of nft bridge`);
     return;
   }
