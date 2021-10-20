@@ -10,7 +10,7 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
     const AllowTokens = await deployments.get('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, allowTokensProxyAddress);
     const currentAllowTokensVersion = allowTokens.methods.version().call();
-    if (currentAllowTokensVersion == ALLOW_TOKEN_LAST_VERSION) {
+    if (currentAllowTokensVersion === ALLOW_TOKEN_LAST_VERSION) {
       return;
     }
   }
