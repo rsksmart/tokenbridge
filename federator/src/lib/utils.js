@@ -129,13 +129,8 @@ function calculatePrefixesSuffixes(nodes) {
     return { prefixes: prefixes, suffixes: suffixes };
 }
 
-function parseBoolean(val) {
-    const falsy = /^(?:f(?:alse)?|no?|0+)$/i;
-    return !falsy.test(val) && !!val;
-}
-
 function checkHttpsOrLocalhost(url = '') {
-    if (parseBoolean(process.env.BRIDGE_SKIP_HTTPS)) {
+    if (process.env.BRIDGE_SKIP_HTTPS === 'true') {
         return true;
     }
     const isHttps = url.startsWith('https://');
