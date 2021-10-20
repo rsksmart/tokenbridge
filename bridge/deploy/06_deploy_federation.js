@@ -11,7 +11,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     const Federation = await deployments.get('Federation');
     const federation = new web3.eth.Contract(Federation.abi, federatorProxyAddress);
     const currentFederationVersion = federation.methods.version().call();
-    if (currentFederationVersion == FEDERATION_LAST_VERSION) {
+    if (currentFederationVersion === FEDERATION_LAST_VERSION) {
       return;
     }
   }
