@@ -13,6 +13,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
+  const nftBridgeProxyAddress = await address.getNftBridgeProxyAddress(hre) ?? bridgeProxyAddress;
   const federationConf = getFederationConf(deployer, network);
 
   const federationLogic = new web3.eth.Contract(Federation.abi, Federation.address);
@@ -20,7 +21,8 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     federationConf.members,
     federationConf.required,
     bridgeProxyAddress,
-    multiSigAddress
+    multiSigAddress,
+    nftBridgeProxyAddress, // change to nftBridgeProxyAddress if needed
   );
   methodCall.call({from: deployer});
 
