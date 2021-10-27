@@ -397,6 +397,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
@@ -410,6 +411,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -433,6 +435,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
                 let bridgeTransactionDataWasProcessed = await this.bridge.transactionsDataHashes(transactionHash);
@@ -458,6 +461,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -485,7 +489,15 @@ contract('Federation', async function (accounts) {
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
 
-                const bridgeTransactionId = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const bridgeTransactionId = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                );
                 transactionWasProcessed = await this.bridge.hasCrossed(bridgeTransactionId);
                 assert.equal(transactionWasProcessed, false);
             });
@@ -500,7 +512,8 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
@@ -514,6 +527,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -547,6 +561,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -561,6 +576,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -585,6 +601,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -598,7 +615,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                );
                 const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -616,6 +641,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -630,6 +656,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -654,6 +681,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
                 utils.checkRcpt(receipt);
@@ -667,7 +695,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
                 const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -687,6 +723,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
 
@@ -698,7 +735,8 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
 
                 let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
@@ -717,6 +755,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
 
@@ -729,7 +768,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
                 const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -750,6 +797,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
 
@@ -761,7 +809,8 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
 
                 let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
@@ -780,6 +829,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
 
@@ -792,7 +842,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
                 const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -812,6 +870,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
 
@@ -823,7 +882,8 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
 
                 let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
@@ -842,6 +902,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
 
@@ -854,7 +915,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
                 const bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -870,6 +939,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator3}
                 );
@@ -894,6 +964,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
 
@@ -905,7 +976,8 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
 
                 let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
@@ -923,6 +995,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
@@ -952,6 +1025,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator3}
                 );
 
@@ -964,7 +1038,15 @@ contract('Federation', async function (accounts) {
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
 
-                const expectedHash = await this.bridge.getTransactionDataHash(anAccount, amount, blockHash, transactionHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID);
+                const expectedHash = await this.bridge.getTransactionDataHash(
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
                 bridgeTransactionHash = await this.bridge.transactionsDataHashes(transactionHash);
                 assert.equal(bridgeTransactionHash, expectedHash);
 
@@ -987,6 +1069,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
@@ -1000,6 +1083,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -1018,6 +1102,7 @@ contract('Federation', async function (accounts) {
                     logIndex,
                     utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
@@ -1034,6 +1119,7 @@ contract('Federation', async function (accounts) {
                 logIndex,
                 utils.tokenType.NFT,
                 chains.HARDHAT_TEST_NET_CHAIN_ID,
+                chains.HARDHAT_TEST_NET_CHAIN_ID,
                 { from: federator1 }
               );
               utils.checkRcpt(receipt);
@@ -1048,6 +1134,7 @@ contract('Federation', async function (accounts) {
                   transactionHash,
                   logIndex,
                   utils.tokenType.NFT,
+                  chains.HARDHAT_TEST_NET_CHAIN_ID,
                   chains.HARDHAT_TEST_NET_CHAIN_ID,
                   { from: federator2 }
                 ),
@@ -1111,6 +1198,7 @@ contract('Federation', async function (accounts) {
                   blockHash,
                   transactionHash,
                   logIndex,
+                  chains.HARDHAT_TEST_NET_CHAIN_ID,
                   chains.HARDHAT_TEST_NET_CHAIN_ID
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -1125,6 +1213,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.NFT,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: federator1 }
                 );
@@ -1154,6 +1243,7 @@ contract('Federation', async function (accounts) {
                   transactionHash,
                   logIndex,
                   utils.tokenType.NFT,
+                  chains.HARDHAT_TEST_NET_CHAIN_ID,
                   chains.HARDHAT_TEST_NET_CHAIN_ID,
                   { from: federator2 }
                 );
