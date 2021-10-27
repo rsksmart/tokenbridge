@@ -33,7 +33,8 @@ interface IFederation {
     @param transactionHash The transaction in which the cross event occurred
     @param logIndex Index of the event in the logs
     @param tokenType Is the type of bridge to be used
-    @param chainId Is chainId to check of the correct chain
+		@param originChainId Is chainId of the original chain
+		@param destinationChainId Is chainId of the destination chain
   */
   function voteTransaction(
     address originalTokenAddress,
@@ -44,7 +45,8 @@ interface IFederation {
     bytes32 transactionHash,
     uint32 logIndex,
     TokenType tokenType,
-    uint256 chainId
+		uint256 originChainId,
+		uint256	destinationChainId
   ) external;
 
   /**
@@ -92,7 +94,8 @@ interface IFederation {
     uint256 amount,
     bytes32 blockHash,
     uint32 logIndex,
-    uint256 chainId
+		uint256 originChainId,
+		uint256	destinationChainId
   );
   event MemberAddition(address indexed member);
   event MemberRemoval(address indexed member);
@@ -109,7 +112,8 @@ interface IFederation {
     uint256 amount,
     bytes32 blockHash,
     uint32 logIndex,
-    uint256 chainId
+    uint256 originChainId,
+		uint256	destinationChainId
   );
   event HeartBeat(
     address indexed sender,
