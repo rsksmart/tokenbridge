@@ -47,7 +47,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_chainId",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_destinationChainId",
         "type": "uint256"
       }
     ],
@@ -133,7 +139,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "_chainId",
+        "name": "_destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_originChainId",
         "type": "uint256"
       }
     ],
@@ -176,7 +188,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
         "type": "uint256"
       }
     ],
@@ -472,7 +490,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_destinationChainId",
         "type": "uint256"
       }
     ],
@@ -574,6 +597,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IBridge.ClaimData",
@@ -620,6 +648,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IBridge.ClaimData",
@@ -640,11 +673,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "components": [
           {
@@ -671,6 +699,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IBridge.ClaimData",
@@ -767,7 +800,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
         "type": "uint256"
       }
     ],
@@ -907,6 +940,37 @@
     "inputs": [
       {
         "internalType": "address",
+        "name": "sideToken",
+        "type": "address"
+      }
+    ],
+    "name": "getOriginalTokenBySideToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IBridge.OriginalToken",
+        "name": "originalToken",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
         "name": "_to",
         "type": "address"
       },
@@ -932,7 +996,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "_chainId",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_destinationChainId",
         "type": "uint256"
       }
     ],
@@ -1073,6 +1142,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct IBridge.ClaimData",
@@ -1235,54 +1309,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "sideToken",
-        "type": "address"
-      }
-    ],
-    "name": "originalTokenAddressBySideTokenAddress",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "originalTokenAddressBySideTokenAddressByChain",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "",
         "type": "bytes32"
@@ -1294,6 +1320,30 @@
         "internalType": "address",
         "name": "",
         "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "name": "originalTokenBySideToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "tokenAddress",
+        "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1336,7 +1386,7 @@
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "destinationChainId",
         "type": "uint256"
       },
       {
@@ -1432,22 +1482,29 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "sideToken",
         "type": "address"
       },
       {
-        "internalType": "address",
+        "components": [
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IBridge.OriginalToken",
         "name": "originalToken",
-        "type": "address"
+        "type": "tuple"
       }
     ],
-    "name": "setOriginalTokenAddressBySideTokenAddressByChain",
+    "name": "setOriginalTokenBySideTokenByChain",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1514,7 +1571,7 @@
         "type": "address"
       }
     ],
-    "name": "sideTokenAddressByOriginalTokenAddress",
+    "name": "sideTokenByOriginalToken",
     "outputs": [
       {
         "internalType": "address",
@@ -1538,7 +1595,7 @@
         "type": "address"
       }
     ],
-    "name": "sideTokenAddressByOriginalTokenAddressByChain",
+    "name": "sideTokenByOriginalTokenByChain",
     "outputs": [
       {
         "internalType": "address",

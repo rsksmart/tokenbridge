@@ -20,7 +20,7 @@ const keccak256 = web3.utils.keccak256;
 
 async function getClaimDigest(
     bridge,
-    claim, //{address _to,uint256 _amount,bytes32 _transactionHash,address _relayer,uint256 _fee},
+    claim, //{address _to,uint256 _amount,bytes32 _transactionHash,uint256 originChainId,address _relayer,uint256 _fee},
     nonce,
     deadline
 ) {
@@ -33,8 +33,8 @@ async function getClaimDigest(
         {t:'bytes32', v:DOMAIN_SEPARATOR},
         {t:'bytes32', v:keccak256(
                 web3.eth.abi.encodeParameters(
-                    ['bytes32', 'address', 'uint256', 'bytes32', 'address', 'uint256', 'uint256', 'uint256'],
-                    [CLAIM_TYPEHASH, claim.to, claim.amount, claim.transactionHash, claim.relayer, claim.fee, nonce, deadline]
+                    ['bytes32', 'address', 'uint256', 'bytes32', 'uint256', 'address', 'uint256', 'uint256', 'uint256'],
+                    [CLAIM_TYPEHASH, claim.to, claim.amount, claim.transactionHash, claim.originChainId, claim.relayer, claim.fee, nonce, deadline]
                 )
             )
         }
@@ -407,7 +407,7 @@ contract('Bridge', async function (accounts) {
                 const result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -416,10 +416,10 @@ contract('Bridge', async function (accounts) {
                       "type": "address"
                     },
                     {
-                        "indexed": true,
-                        "name": "_from",
-                        "type": "address"
-                      },
+                      "indexed": true,
+                      "name": "_from",
+                      "type": "address"
+                    },
                     {
                       "indexed": true,
                       "name": "_to",
@@ -463,7 +463,7 @@ contract('Bridge', async function (accounts) {
                 const result = await mockContract.callTokensReceived(erc777.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -519,7 +519,7 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -579,7 +579,7 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256)');
+                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -943,6 +943,7 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     )
                     const receipt = await this.mirrorBridge.acceptTransfer(
                         this.token.address,
@@ -952,6 +953,7 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
@@ -1007,48 +1009,48 @@ contract('Bridge', async function (accounts) {
                 it('should fail accept transfer the same transaction', async function () {
                     await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const hasCrossed = await this.mirrorBridge.hasCrossed(this.txReceipt.tx);
                     assert.equal(hasCrossed, true);
 
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
 
                 });
 
                 it('should fail accept transfer  null token address', async function () {
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer("0x", anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
 
                 });
 
                 it('should fail null receiver address', async function () {
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, 0, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
 
                 });
 
                 it('should fail zero amount', async function () {
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, 0,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
 
                 });
 
                 it('should fail null blockhash', async function () {
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         "0x", this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
                 });
 
                 it('should fail null transaction hash', async function () {
                     await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, "0x",
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }));
                 });
             });
 
@@ -1062,6 +1064,7 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
@@ -1077,7 +1080,8 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
-                        chains.HARDHAT_TEST_NET_CHAIN_ID
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1089,7 +1093,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     );
@@ -1098,7 +1103,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1117,6 +1122,7 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
@@ -1129,7 +1135,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: tokenOwner }
                     );
@@ -1138,7 +1145,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1157,7 +1164,8 @@ contract('Bridge', async function (accounts) {
                                 amount: this.amount,
                                 blockHash: this.txReceipt.receipt.blockHash,
                                 transactionHash: this.txReceipt.tx,
-                                logIndex: this.txReceipt.receipt.logs[0].logIndex
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             { from: bridgeManager }
                         )
@@ -1172,7 +1180,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     ));
@@ -1185,7 +1194,8 @@ contract('Bridge', async function (accounts) {
                             amount: '1',
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     ));
@@ -1198,7 +1208,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: utils.getRandomHash(),
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     ));
@@ -1211,7 +1222,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: utils.getRandomHash(),
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     ));
@@ -1224,7 +1236,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: '11'
+                            logIndex: '11',
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: federation }
                     ));
@@ -1240,7 +1253,8 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
-                        chains.HARDHAT_TEST_NET_CHAIN_ID
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1252,7 +1266,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
@@ -1261,7 +1276,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1275,7 +1290,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     ));
@@ -1296,7 +1312,7 @@ contract('Bridge', async function (accounts) {
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
-                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(receipt);
 
                     receipt = await this.mirrorBridge.claim(
@@ -1305,19 +1321,20 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: txReceipt.receipt.blockHash,
                             transactionHash: txReceipt.tx,
-                            logIndex: txReceipt.receipt.logs[0].logIndex
+                            logIndex: txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
                     utils.checkRcpt(receipt);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    const originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
-                    assert.equal(originalTokenAddress, tokenWithDecimals.address);
+                    const originalToken = await this.mirrorBridge.getOriginalTokenBySideToken(sideTokenAddress);
+                    assert.equal(originalToken.tokenAddress, tokenWithDecimals.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance, 0);
@@ -1343,7 +1360,8 @@ contract('Bridge', async function (accounts) {
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
-                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(receipt);
 
                     receipt = await this.mirrorBridge.claim(
@@ -1352,19 +1370,20 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: txReceipt.receipt.blockHash,
                             transactionHash: txReceipt.tx,
-                            logIndex: txReceipt.receipt.logs[0].logIndex
+                            logIndex: txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
                     utils.checkRcpt(receipt);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    const originalTokenAddress = await this.mirrorBridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
-                    assert.equal(originalTokenAddress, tokenWithGranularity.address);
+                    const originalToken = await this.mirrorBridge.getOriginalTokenBySideToken(sideTokenAddress);
+                    assert.equal(originalToken.tokenAddress, tokenWithGranularity.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance, 0);
@@ -1391,12 +1410,13 @@ contract('Bridge', async function (accounts) {
                         this.gaslessTxHash,
                         this.gaslessLogIndex,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
                 });
 
                 it('should have CLAIM_TYPEHASH', async function() {
-                    const expectedTypeHash = keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
+                    const expectedTypeHash = keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,uint256 originChainId,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
                     const CLAIM_TYPEHASH = await this.mirrorBridge.CLAIM_TYPEHASH();
                     assert.equal(CLAIM_TYPEHASH, expectedTypeHash);
                 });
@@ -1431,6 +1451,7 @@ contract('Bridge', async function (accounts) {
                         this.gaslessBlockHash,
                         this.gaslessTxHash,
                         this.gaslessLogIndex,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
@@ -1449,22 +1470,23 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: relayer,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
-                      );
+                    );
 
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.mirrorBridge.claimGasless(
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.gaslessAmount,
                             blockHash: this.gaslessBlockHash,
                             transactionHash: this.gaslessTxHash,
-                            logIndex: this.gaslessLogIndex
+                            logIndex: this.gaslessLogIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         relayer,
                         fee,
@@ -1479,7 +1501,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.gaslessTxHash);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1504,7 +1526,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1514,13 +1537,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1546,7 +1569,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1556,13 +1580,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: anAccount,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1588,7 +1612,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1598,13 +1623,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.amount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1630,7 +1655,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1640,13 +1666,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             '100',
@@ -1672,7 +1698,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1682,13 +1709,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             anAccount,
                             fee,
@@ -1714,7 +1741,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1724,13 +1752,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1756,7 +1784,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
@@ -1766,13 +1795,13 @@ contract('Bridge', async function (accounts) {
 
                     await utils.expectThrow(
                         this.mirrorBridge.claimGasless(
-                            chains.HARDHAT_TEST_NET_CHAIN_ID,
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1796,10 +1825,19 @@ contract('Bridge', async function (accounts) {
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, tokenSymbol, tokenName, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(
+                    this.typeId,
+                    aToken.address,
+                    decimals,
+                    tokenSymbol,
+                    tokenName,
+                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
 
-                await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                const acceptTxReceipt = await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
+                    blockHash, txHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                utils.checkRcpt(acceptTxReceipt);
 
                 await this.mirrorBridge.claim(
                     {
@@ -1807,7 +1845,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     },
                     { from: anAccount }
                 );
@@ -1815,7 +1854,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN('33');
 
-                const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, aToken.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1825,7 +1864,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                const receipt = await this.mirrorBridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1846,10 +1885,17 @@ contract('Bridge', async function (accounts) {
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, "MAIN", "MAIN", chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(
+                    this.typeId,
+                    aToken.address,
+                    decimals,
+                    "MAIN", "MAIN",
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
 
                 await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1857,7 +1903,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1865,7 +1912,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1893,7 +1940,7 @@ contract('Bridge', async function (accounts) {
                 const logIndex = 1;
 
                 await this.mirrorBridge.acceptTransfer(this.wrbtc.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1901,7 +1948,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1909,7 +1957,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1937,11 +1985,12 @@ contract('Bridge', async function (accounts) {
                 // Transfer to Side  Token
                 await this.mirrorBridge.acceptTransfer(this.token.address, tokenOwner, anAccount, this.amount,
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                 this.amountToCrossBack = web3.utils.toWei('100');
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
-                this.sideTokenAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                this.sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
 
                 await this.mirrorBridge.claim(
                     {
@@ -1949,7 +1998,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: this.txReceipt.receipt.blockHash,
                         transactionHash: this.txReceipt.tx,
-                        logIndex: this.txReceipt.receipt.logs[0].logIndex
+                        logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                        originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1957,7 +2007,8 @@ contract('Bridge', async function (accounts) {
                 //Transfer Side WRBTC
                 await this.mirrorBridge.acceptTransfer(this.wrbtc.address, tokenOwner, anAccount, this.wrbtcAmount,
                     this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                    this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                    this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1965,13 +2016,14 @@ contract('Bridge', async function (accounts) {
                         amount: this.wrbtcAmount,
                         blockHash: this.txReceiptWrbtc.receipt.blockHash,
                         transactionHash: this.txReceiptWrbtc.tx,
-                        logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                        logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                        originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                     },
                     { from: anAccount }
                 );
 
                 this.wrbtcAmountToCrossBack = web3.utils.toWei('1');
-                this.sideWrbtcAddress = await this.mirrorBridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
+                this.sideWrbtcAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address);
             });
 
             describe('Should burn the side tokens when transfered to the bridge', function () {
@@ -2046,7 +2098,8 @@ contract('Bridge', async function (accounts) {
                 it('main Bridge should release the tokens', async function () {
                     let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, this.accountWallet.address, this.amountToCrossBack,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(tx);
 
                     await this.bridge.claim(
@@ -2055,7 +2108,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amountToCrossBack,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         { from: anAccount }
                     );
@@ -2069,7 +2123,8 @@ contract('Bridge', async function (accounts) {
                 it('main Bridge should release the network currency', async function () {
                     let tx = await this.bridge.acceptTransfer(this.wrbtc.address, anAccount, this.accountWallet.address, this.wrbtcAmountToCrossBack,
                         this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(tx);
 
                     await this.bridge.claim(
@@ -2078,7 +2133,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.wrbtcAmountToCrossBack,
                             blockHash: this.txReceiptWrbtc.receipt.blockHash,
                             transactionHash: this.txReceiptWrbtc.tx,
-                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         { from: anAccount }
                     );
@@ -2098,7 +2154,8 @@ contract('Bridge', async function (accounts) {
 
                     await this.bridge.acceptTransfer(this.token.address, anAccount, this.accountWallet.address, this.amountToCrossBack,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const digest = await getClaimDigest(
                         this.bridge,
@@ -2107,7 +2164,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amountToCrossBack,
                             transactionHash: this.txReceipt.tx,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         nonce,
                         deadline
@@ -2116,13 +2174,13 @@ contract('Bridge', async function (accounts) {
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.bridge.claimGasless(
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.amountToCrossBack,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         relayer,
                         fee,
@@ -2151,7 +2209,8 @@ contract('Bridge', async function (accounts) {
 
                     await this.bridge.acceptTransfer(this.wrbtc.address, anAccount, this.accountWallet.address, this.wrbtcAmountToCrossBack,
                         this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const digest = await getClaimDigest(
                         this.bridge,
@@ -2160,7 +2219,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.wrbtcAmountToCrossBack,
                             transactionHash: this.txReceiptWrbtc.tx,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         nonce,
                         deadline
@@ -2172,13 +2232,13 @@ contract('Bridge', async function (accounts) {
                     const originalRelayerBalance = await web3.eth.getBalance(relayer);
 
                     const receipt = await this.bridge.claimGasless(
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {
                             to: this.accountWallet.address,
                             amount: this.wrbtcAmountToCrossBack,
                             blockHash: this.txReceiptWrbtc.receipt.blockHash,
                             transactionHash: this.txReceiptWrbtc.tx,
-                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         relayer,
                         fee,
@@ -2327,7 +2387,7 @@ contract('Bridge', async function (accounts) {
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
-                const sideTokenAddress = await this.bridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const sideTokenSymbol = await sideToken.symbol();
                 assert.equal(sideTokenSymbol, 'eMAIN');
@@ -2338,8 +2398,8 @@ contract('Bridge', async function (accounts) {
                 const sideTokenGranularity = await sideToken.granularity();
                 assert.equal(sideTokenGranularity.toString(), '1000000000000');
 
-                const originalTokenAddress = await this.bridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
-                assert.equal(originalTokenAddress, this.token.address);
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
 
                 const result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
                 assert.equal(result.info.typeId.toString(), '0');
@@ -2452,11 +2512,11 @@ contract('Bridge', async function (accounts) {
                     { from: bridgeManager }
                 );
 
-                const sideTokenAddress = await this.bridge.sideTokenAddressByOriginalTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
 
-                const originalTokenAddress = await this.bridge.originalTokenAddressBySideTokenAddress(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
-                assert.equal(originalTokenAddress, this.token.address);
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
 
                 const balanceBeforeTransfer = await sideToken.balanceOf(anAccount);
                 const bridgeBalanceBeforeTransfer  = await sideToken.balanceOf(this.bridge.address);
@@ -2472,11 +2532,14 @@ contract('Bridge', async function (accounts) {
                     blockHash,
                     txHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 )
 
-                const receipt = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, amount,
-                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                const receipt = await this.bridge.acceptTransfer(
+                    this.token.address, anAccount, anAccount, amount,
+                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                 utils.checkRcpt(receipt);
 
 
