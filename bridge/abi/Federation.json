@@ -72,7 +72,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
         "type": "uint256"
       }
     ],
@@ -259,7 +265,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
         "type": "uint256"
       }
     ],
@@ -435,7 +447,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
         "type": "uint256"
       }
     ],
@@ -794,7 +811,12 @@
       },
       {
         "internalType": "uint256",
-        "name": "chainId",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
         "type": "uint256"
       }
     ],
