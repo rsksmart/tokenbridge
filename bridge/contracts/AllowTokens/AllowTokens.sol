@@ -16,21 +16,18 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 
 	address constant private NULL_ADDRESS = address(0);
 	uint256 constant public MAX_TYPES = 250;
-	mapping (address => TokenInfo) public deprecatedAllowedTokens; // use tokenInfoByTokenAddressByChain instead
+	mapping (address => TokenInfo) public allowedTokens;
 	mapping (uint256 => Limits) public typeLimits;
 	uint256 public smallAmountConfirmations;
 	uint256 public mediumAmountConfirmations;
 	uint256 public largeAmountConfirmations;
 	string[] public typeDescriptions;
 
-	// v2 multichain variables
-	mapping (uint256 => mapping (address => TokenInfo)) public tokenInfoByTokenAddressByChain;
-
-	event SetToken(uint256 chainId, address indexed _tokenAddress, uint256 _typeId);
-	event AllowedTokenRemoved(uint256 chainId, address indexed _tokenAddress);
+	event SetToken(address indexed _tokenAddress, uint256 _typeId);
+	event AllowedTokenRemoved(address indexed _tokenAddress);
 	event TokenTypeAdded(uint256 indexed _typeId, string _typeDescription);
 	event TypeLimitsChanged(uint256 indexed _typeId, Limits limits);
-	event UpdateTokensTransfered(uint256 chainId, address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
+	event UpdateTokensTransfered(address indexed _tokenAddress, uint256 _lastDay, uint256 _spentToday);
 	event ConfirmationsChanged(uint256 _smallAmountConfirmations, uint256 _mediumAmountConfirmations, uint256 _largeAmountConfirmations);
 
 	modifier notNull(address _address) {
@@ -57,29 +54,28 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		return "v2";
 	}
 
-	function tokenInfo(uint256 chainId, address tokenAddress) public view returns(TokenInfo memory) {
-		return tokenInfoByTokenAddressByChain[chainId][tokenAddress];
+	function tokenInfo(address tokenAddress) public view returns(TokenInfo memory) {
+		return allowedTokens[tokenAddress];
 	}
 
-	function setTokenInfoByTokenAddress(uint256 chainId, address tokenAddress, TokenInfo memory info) public {
+	function setTokenInfoByTokenAddress(address tokenAddress, TokenInfo memory info) public {
 		require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
-		tokenInfoByTokenAddressByChain[chainId][tokenAddress] = info;
+		allowedTokens[tokenAddress] = info;
 	}
 
 	function getInfoAndLimits(
-		uint256 chainId,
 		address tokenAddress
 	) public view override returns (
 		TokenInfo memory info,
 		Limits memory limit
 	) {
-		info = tokenInfo(chainId, tokenAddress);
+		info = tokenInfo(tokenAddress);
 		limit = typeLimits[info.typeId];
 		return (info, limit);
 	}
 
-	function calcMaxWithdraw(uint256 chainId, address token) public view override returns (uint256 maxWithdraw) {
-		(TokenInfo memory info, Limits memory limits) = getInfoAndLimits(chainId, token);
+	function calcMaxWithdraw(address token) public view override returns (uint256 maxWithdraw) {
+		(TokenInfo memory info, Limits memory limits) = getInfoAndLimits(token);
 		return _calcMaxWithdraw(info, limits);
 	}
 
@@ -98,9 +94,9 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		return maxWithdraw;
 	}
 
-	function updateTokenTransfer(uint256 chainId, address token, uint256 amount) override external onlyPrimary {
-		(TokenInfo memory info, Limits memory limit) = getInfoAndLimits(chainId, token);
-		require(isTokenAllowed(chainId, token), "AllowTokens: Not whitelisted");
+	function updateTokenTransfer(address token, uint256 amount) override external onlyPrimary {
+		(TokenInfo memory info, Limits memory limit) = getInfoAndLimits(token);
+		require(isTokenAllowed(token), "AllowTokens: Not whitelisted");
 		require(amount >= limit.min, "AllowTokens: Lower than limit");
 
 		// solium-disable-next-line security/no-block-members
@@ -112,9 +108,9 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		uint maxWithdraw = _calcMaxWithdraw(info, limit);
 		require(amount <= maxWithdraw, "AllowTokens: Exceeded limit");
 		info.spentToday = info.spentToday.add(amount);
-		setTokenInfoByTokenAddress(chainId, token, info);
+		setTokenInfoByTokenAddress(token, info);
 
-		emit UpdateTokensTransfered(chainId, token, info.lastDay, info.spentToday);
+		emit UpdateTokensTransfered(token, info.lastDay, info.spentToday);
 	}
 
 	function _addTokenType(string memory description, Limits memory limits) private returns(uint256 len) {
@@ -165,33 +161,33 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 		return descriptions;
 	}
 
-	function isTokenAllowed(uint256 chainId, address token) public view notNull(token) override returns (bool) {
-		return tokenInfo(chainId, token).allowed;
+	function isTokenAllowed(address token) public view notNull(token) override returns (bool) {
+		return tokenInfo(token).allowed;
 	}
 
-	function setToken(uint256 chainId, address token, uint256 typeId) override public notNull(token) {
+	function setToken(address token, uint256 typeId) override public notNull(token) {
 		require(isOwner() || _msgSender() == primary(), "AllowTokens: unauthorized sender");
 		require(typeId < typeDescriptions.length, "AllowTokens: typeId does not exist");
-		TokenInfo memory info = tokenInfo(chainId, token);
+		TokenInfo memory info = tokenInfo(token);
 		info.allowed = true;
 		info.typeId = typeId;
-		setTokenInfoByTokenAddress(chainId, token, info);
-		emit SetToken(chainId, token, typeId);
+		setTokenInfoByTokenAddress(token, info);
+		emit SetToken(token, typeId);
 	}
 
-	function setMultipleTokens(uint256 chainId, TokensAndType[] calldata tokensAndTypes) external onlyOwner {
+	function setMultipleTokens(TokensAndType[] calldata tokensAndTypes) external onlyOwner {
 		require(tokensAndTypes.length > 0, "AllowTokens: empty tokens");
 		for(uint256 i = 0; i < tokensAndTypes.length; i = i + 1) {
-			setToken(chainId, tokensAndTypes[i].token, tokensAndTypes[i].typeId);
+			setToken(tokensAndTypes[i].token, tokensAndTypes[i].typeId);
 		}
 	}
 
-	function removeAllowedToken(uint256 chainId, address token) external notNull(token) onlyOwner {
-		TokenInfo memory info = tokenInfo(chainId, token);
+	function removeAllowedToken(address token) external notNull(token) onlyOwner {
+		TokenInfo memory info = tokenInfo(token);
 		require(info.allowed, "AllowTokens: Not Allowed");
 		info.allowed = false;
-		setTokenInfoByTokenAddress(chainId, token, info);
-		emit AllowedTokenRemoved(chainId, token);
+		setTokenInfoByTokenAddress(token, info);
+		emit AllowedTokenRemoved(token);
 	}
 
 	function setConfirmations(
