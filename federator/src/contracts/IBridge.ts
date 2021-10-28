@@ -1,5 +1,9 @@
 import { Contract } from 'web3-eth-contract';
 
+interface mappedTokensParams {
+  originalTokenAddress: string;
+}
+
 export class IBridge {
   bridgeContract: Contract;
 
@@ -31,7 +35,7 @@ export class IBridge {
     return this.bridgeContract.methods.version();
   }
 
-  getMappedToken(originalTokenAddress: string) {
-    return this.bridgeContract.methods.mappedTokens(originalTokenAddress);
+  getMappedToken(paramsObj: mappedTokensParams) {
+    return this.bridgeContract.methods.mappedTokens(paramsObj.originalTokenAddress);
   }
 }
