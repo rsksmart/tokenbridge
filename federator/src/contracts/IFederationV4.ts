@@ -9,7 +9,8 @@ interface TransactionIdParams {
   blockHash: number;
   transactionHash: string;
   logIndex: string;
-  chainId: number;
+  originChainId: number;
+  destinationChainId: number;
 }
 
 interface VoteTransactionParams extends TransactionIdParams {
@@ -47,7 +48,8 @@ export class IFederationV4 {
         paramsObj.blockHash,
         paramsObj.transactionHash,
         paramsObj.logIndex,
-        paramsObj.chainId,
+        paramsObj.originChainId,
+        paramsObj.destinationChainId,
       )
       .call();
   }
@@ -71,7 +73,8 @@ export class IFederationV4 {
         paramsObj.transactionHash,
         paramsObj.logIndex,
         paramsObj.tokenType,
-        paramsObj.chainId,
+        paramsObj.originChainId,
+        paramsObj.destinationChainId,
       )
       .encodeABI();
   }
