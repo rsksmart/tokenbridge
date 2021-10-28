@@ -13,9 +13,10 @@ import { V1, V2, V3, V4 } from './Constants';
 import { Config } from '../../config/types';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
+import { Logger } from 'log4js';
 
 export class BridgeFactory extends ContractFactory {
-  constructor(config: Config, logger: any) {
+  constructor(config: Config, logger: Logger) {
     super(config, logger);
   }
 
@@ -26,9 +27,10 @@ export class BridgeFactory extends ContractFactory {
   async createInstance(web3: Web3, address: string) {
     let bridgeContract = this.getContractByAbi(abiBridgeV4 as AbiItem[], address, web3);
     const version = await this.getVersion(bridgeContract);
+    const chainId = await web3.eth.net.getId();
     switch (version) {
       case V4:
-        return new IBridgeV4(bridgeContract);
+        return new IBridgeV4(bridgeContract, chainId);
       case V3:
         bridgeContract = this.getContractByAbi(abiBridgeV3 as AbiItem[], address, web3);
         return new IBridge(bridgeContract);

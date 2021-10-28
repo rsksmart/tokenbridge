@@ -1,9 +1,17 @@
 import { Contract } from 'web3-eth-contract';
 
+interface sideTokenAddressByOriginalTokenInterface {
+  originalTokenAddress: string;
+  chainId: number;
+}
+
 export class IBridgeV4 {
   bridgeContract: Contract;
-  constructor(bridgeContract: Contract) {
+  chainId: number;
+
+  constructor(bridgeContract: Contract, chainId: number) {
     this.bridgeContract = bridgeContract;
+    this.chainId = chainId;
   }
 
   getFederation() {
@@ -30,7 +38,7 @@ export class IBridgeV4 {
     return this.bridgeContract.methods.version();
   }
 
-  getMappedToken(chainId: number, originalTokenAddress: string) {
-    return this.bridgeContract.methods.sideTokenAddressByOriginalTokenAddress(chainId, originalTokenAddress);
+  getMappedToken(paramsObj: sideTokenAddressByOriginalTokenInterface) {
+    return this.bridgeContract.methods.sideTokenByOriginalToken(paramsObj.chainId, paramsObj.originalTokenAddress);
   }
 }

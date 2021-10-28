@@ -52,18 +52,18 @@ export class IAllowTokensV1 {
     }
   }
 
-  async getLimits(tokenAddress) {
+  async getLimits(objParams: any) {
     try {
-      let result = this.mapTokenInfoAndLimits[tokenAddress];
+      let result = this.mapTokenInfoAndLimits[objParams.tokenAddress];
       if (!result) {
-        const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(tokenAddress).call();
+        const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(objParams.tokenAddress).call();
         result = {
           allowed: infoAndLimits.info.allowed,
           mediumAmount: infoAndLimits.limit.mediumAmount,
           largeAmount: infoAndLimits.limit.largeAmount,
         };
         if (result.allowed) {
-          this.mapTokenInfoAndLimits[tokenAddress] = result;
+          this.mapTokenInfoAndLimits[objParams.tokenAddress] = result;
         }
       }
       return result;
