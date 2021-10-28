@@ -2,15 +2,15 @@ import { Config } from '../../config/types';
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import { Contract } from 'web3-eth-contract';
-
+import { Logger } from 'log4js';
 export class ContractFactory {
   config: any;
-  logger: any;
+  logger: Logger;
   mainWeb3: Web3;
   sideWeb3: Web3;
-  contractsByAbi: Map<any, Contract>;
+  contractsByAbi: Map<AbiItem[], Contract>;
 
-  constructor(config: Config, logger: any) {
+  constructor(config: Config, logger: Logger) {
     this.config = config;
     this.logger = logger;
     this.mainWeb3 = new Web3(config.mainchain.host);
