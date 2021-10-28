@@ -50,7 +50,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     log(`MultiSig submitTransaction addTokenType in the AllowTokens`);
 
     const typeId = 0;
-    data = allowTokens.methods.setToken(network.config.network_id, MainToken.address, typeId).encodeABI();
+    data = allowTokens.methods.setToken(MainToken.address, typeId).encodeABI();
     await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, data).send({ from: deployer });
     log(`MultiSig submitTransaction setToken MainToken in the AllowTokens`);
     // Uncomment below lines to use multiple federators
