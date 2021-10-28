@@ -80,7 +80,7 @@ contract('Bridge', async function (accounts) {
             }]
         );
         this.typeId = 0;
-        await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, { from: bridgeManager });
+        await this.allowTokens.setToken(this.token.address, this.typeId, { from: bridgeManager });
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
         await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
@@ -251,7 +251,7 @@ contract('Bridge', async function (accounts) {
                 const amount = new BN(maxTokens).div(new BN((10**10).toString()));
                 let token = await AlternativeERC20Detailed.new("AlternativeERC20Detailed", utils.ascii_to_hexa('x'), '8', amount, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(token.address, this.typeId, { from: bridgeManager });
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
@@ -273,7 +273,7 @@ contract('Bridge', async function (accounts) {
                 const amount = new BN(minTokens).div(new BN((10**10).toString()));
                 let token = await AlternativeERC20Detailed.new("AlternativeERC20Detailed", utils.ascii_to_hexa('x'), '8', amount, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, token.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(token.address, this.typeId, { from: bridgeManager });
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
@@ -294,7 +294,7 @@ contract('Bridge', async function (accounts) {
                 const symbol = "ERC20";
                 let erc20Alternative = await AlternativeERC20Detailed.new("AlternativeERC20Detailed", utils.ascii_to_hexa(symbol), decimals, amount, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc20Alternative.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc20Alternative.address, this.typeId, { from: bridgeManager });
                 const originalTokenBalance = await erc20Alternative.balanceOf(tokenOwner);
                 let receipt = await erc20Alternative.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
@@ -324,7 +324,7 @@ contract('Bridge', async function (accounts) {
                 const symbol = await wrbtc.symbol();
 
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
 
                 receipt = await this.bridge.depositTo(chains.HARDHAT_TEST_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
@@ -347,7 +347,7 @@ contract('Bridge', async function (accounts) {
                 const amount = web3.utils.toWei('1');
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
                 await utils.expectThrow(this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount }));
             });
 
@@ -356,7 +356,7 @@ contract('Bridge', async function (accounts) {
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, wrbtc.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
                 receipt = await mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
@@ -371,7 +371,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '1000';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
 
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
@@ -400,7 +400,7 @@ contract('Bridge', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId.toString(), { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = anAccount.toLowerCase();
@@ -455,7 +455,7 @@ contract('Bridge', async function (accounts) {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
                 const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId.toString(), { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address);
                 await erc777.mint(mockContract.address, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(mockContract.address);
@@ -512,7 +512,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", { from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = '0x';
@@ -572,7 +572,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = tokenOwner.toLowerCase();
@@ -631,7 +631,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let userData = tokenOwner;
@@ -643,7 +643,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 let userData = tokenOwner;
                 await utils.expectThrow(this.bridge.tokensReceived(erc777.address, erc777.address, tokenOwner, amount, userData, '0x', { from: tokenOwner }));
@@ -654,7 +654,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 let userData = tokenOwner;
                 await utils.expectThrow(this.bridge.tokensReceived(erc777.address, this.allowTokens.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }));
@@ -665,7 +665,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 let userData = "0x";
                 await utils.expectThrow(this.bridge.tokensReceived(erc777.address, erc777.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }));
@@ -706,7 +706,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const feePercentageDivider = await this.bridge.feePercentageDivider();
                 const fees = amount.mul(payment).div(feePercentageDivider);
@@ -814,7 +814,7 @@ contract('Bridge', async function (accounts) {
 
             it('rejects to receive tokens over the daily limit 8 decimals', async function() {
                 const newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(newToken.address, this.typeId, { from: bridgeManager });
                 let limit = await this.allowTokens.typeLimits(this.typeId);
                 const maxTokensAllowed = limit.max;
                 const amount = BigInt(maxTokensAllowed) / BigInt(10**10);
@@ -831,17 +831,17 @@ contract('Bridge', async function (accounts) {
                 let limit = await this.allowTokens.typeLimits(this.typeId);
                 let maxTokensAllowed = limit.max;
                 let dailyLimit = limit.daily;
-                let maxWidthdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                let maxWidthdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
                     await this.bridge.receiveTokensTo(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
-                maxWidthdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                maxWidthdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), '0');
                 await utils.increaseTimestamp(web3, ONE_DAY+1);
-                maxWidthdraw = await this.allowTokens.calcMaxWithdraw(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                maxWidthdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), maxTokensAllowed.toString());
             });
 
@@ -871,7 +871,7 @@ contract('Bridge', async function (accounts) {
             // Set wrapped currency for main bridge
             this.wrbtc = await WRBTC.new({ from: tokenOwner });
             await this.bridge.setWrappedCurrency(this.wrbtc.address, { from: bridgeManager });
-            await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.wrbtc.address, this.typeId, { from: bridgeManager });
+            await this.allowTokens.setToken(this.wrbtc.address, this.typeId, { from: bridgeManager });
             // Deploy Mirror Bridge and necesary contracts
             this.mirrorAllowTokens = await AllowTokens.new();
             await this.mirrorAllowTokens.methods['initialize(address,address,uint256,uint256,uint256,(string,(uint256,uint256,uint256,uint256,uint256))[])'](
@@ -900,7 +900,7 @@ contract('Bridge', async function (accounts) {
             // Set mirror wrapped currency
             this.mirrorWrbtc = await WRBTC.new({ from: tokenOwner });
             await this.mirrorBridge.setWrappedCurrency(this.mirrorWrbtc.address, { from: bridgeManager });
-            await this.mirrorAllowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.mirrorWrbtc.address, this.typeId, { from: bridgeManager });
+            await this.mirrorAllowTokens.setToken(this.mirrorWrbtc.address, this.typeId, { from: bridgeManager });
             //Cross a token
             this.amount = web3.utils.toWei('1000');
             this.decimals = (await this.token.decimals()).toString();
@@ -2401,7 +2401,7 @@ contract('Bridge', async function (accounts) {
                 const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
                 assert.equal(originalToken.tokenAddress, this.token.address);
 
-                const result = await this.allowTokens.getInfoAndLimits(chains.HARDHAT_TEST_NET_CHAIN_ID, sideTokenAddress);
+                const result = await this.allowTokens.getInfoAndLimits(sideTokenAddress);
                 assert.equal(result.info.typeId.toString(), '0');
                 assert.equal(result.info.allowed, true);
 
@@ -2496,7 +2496,7 @@ contract('Bridge', async function (accounts) {
                 const granularity = '100';
                 let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
-                await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, erc777.address, this.typeId, { from: bridgeManager });
+                await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 await utils.expectThrow(erc777.send(this.bridge.address, amount, tokenOwner, { from: tokenOwner }));
             });

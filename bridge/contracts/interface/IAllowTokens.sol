@@ -31,9 +31,9 @@ interface IAllowTokens {
 
 	function version() external pure returns (string memory);
 
-	function getInfoAndLimits(uint256 chainId, address token) external view returns (TokenInfo memory info, Limits memory limit);
+	function getInfoAndLimits(address token) external view returns (TokenInfo memory info, Limits memory limit);
 
-	function calcMaxWithdraw(uint256 chainId, address token) external view returns (uint256 maxWithdraw);
+	function calcMaxWithdraw(address token) external view returns (uint256 maxWithdraw);
 
 	function getTypesLimits() external view returns(Limits[] memory limits);
 
@@ -41,11 +41,11 @@ interface IAllowTokens {
 
 	function getTypeDescriptions() external view returns(string[] memory descriptions);
 
-	function setToken(uint256 chainId, address token, uint256 typeId) external;
+	function setToken(address token, uint256 typeId) external;
 
 	function getConfirmations() external view returns (uint256 smallAmount, uint256 mediumAmount, uint256 largeAmount);
 
-	function isTokenAllowed(uint256 chainId, address token) external view returns (bool);
+	function isTokenAllowed(address token) external view returns (bool);
 
-	function updateTokenTransfer(uint256 chainId, address token, uint256 amount) external;
+	function updateTokenTransfer(address token, uint256 amount) external;
 }

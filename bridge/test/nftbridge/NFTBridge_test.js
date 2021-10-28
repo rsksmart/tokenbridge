@@ -65,7 +65,7 @@ contract("Bridge NFT", async function(accounts) {
     ]);
 
     this.typeId = 0;
-    await this.allowTokens.setToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address, this.typeId, {
+    await this.allowTokens.setToken(this.token.address, this.typeId, {
       from: bridgeManager,
     });
     this.mainChainSideTokenFactory = await SideNFTTokenFactory.new();
