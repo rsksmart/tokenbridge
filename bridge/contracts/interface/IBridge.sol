@@ -47,19 +47,6 @@ interface IBridge {
 	) external;
 
 	/**
-		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
-		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
-		*/
-	function tokensReceived (
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) external;
-
-	/**
 		* Accepts the transaction from the other chain that was voted and sent by the Federation contract
 		*/
 	function acceptTransfer(
