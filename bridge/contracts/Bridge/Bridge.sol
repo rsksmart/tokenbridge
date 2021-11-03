@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+// import "hardhat/console.sol";
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
@@ -497,48 +498,28 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		crossTokens(address(wrappedCurrency), sender, to, msg.value, "", chainId);
 	}
 
-	function tokensReceived(
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		bytes calldata
-	) external override(IBridge, IERC777Recipient) {
-		return _tokensReceived(operator, from, to, amount, userData, block.chainid);
-	}
-
-	function tokensReceived(
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) external override(IBridge) {
-		return _tokensReceived(operator, from, to, amount, userData, chainId);
-	}
-
 	/**
 		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
 		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
 		*/
-	function _tokensReceived(
+	function tokensReceived(
 		address operator,
 		address from,
 		address to,
 		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) public {
+		bytes calldata userData, // [address,uint256] user addrest receiver, destinationChainId || [uint256] same as from, destinationChainId
+		bytes calldata
+	) external override(IBridge, IERC777Recipient) {
 		//Hook from ERC777address
 		if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
 		require(to == address(this), "Bridge: Not to this address");
 		address tokenToUse = _msgSender();
 		require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-		require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
-		address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
-		crossTokens(tokenToUse, from, receiver, amount, userData, chainId);
+		require(userData.length >= 32, "Bridge: user data with at least the destinationChainId");
+		require(userData.length == 64 || !from.isContract(), "Bridge: Specify receiver address in data");
+		address receiver = userData.length == 32 ? from : LibUtils.toAddress(userData, 12);
+		uint256 destinationChainId = LibUtils.toUint256(userData, userData.length - 32);
+		crossTokens(tokenToUse, from, receiver, amount, userData, destinationChainId);
 	}
 
 	function crossTokens(
@@ -549,6 +530,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		bytes memory userData,
 		uint256 destinationChainId
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
+		require(block.chainid != destinationChainId, "Bridge: destination chain id equal current chain id");
 		setKnownTokenByChain(destinationChainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
@@ -575,8 +557,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 				to,
 				amountMinusFees,
 				userData,
-				destinationChainId,
-				block.chainid
+				block.chainid,
+				destinationChainId
 			);
 		} else {
 			emit Cross(
