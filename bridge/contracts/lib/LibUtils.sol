@@ -34,4 +34,37 @@ library LibUtils {
         }
     }
 
+    function toAddress(bytes memory _bytes, uint256 _start) internal pure returns (address) {
+        require(_bytes.length >= _start + 20, "LibUtils: toAddress_outOfBounds");
+        address tempAddress;
+
+        assembly {
+            tempAddress := div(mload(add(add(_bytes, 0x20), _start)), 0x1000000000000000000000000)
+        }
+
+        return tempAddress;
+    }
+
+    function toUint128(bytes memory _bytes, uint256 _start) internal pure returns (uint128) {
+        require(_bytes.length >= _start + 16, "LibUtils: toUint128_outOfBounds");
+        uint128 tempUint;
+
+        assembly {
+            tempUint := mload(add(add(_bytes, 0x10), _start))
+        }
+
+        return tempUint;
+    }
+
+    function toUint256(bytes memory _bytes, uint256 _start) internal pure returns (uint256) {
+		require(_bytes.length >= _start + 32, "LibUtils: toUint256_outOfBounds");
+		uint256 tempUint;
+
+        // solium-disable-next-line security/no-inline-assembly
+		assembly {
+			tempUint := mload(add(add(_bytes, 0x20), _start))
+		}
+
+		return tempUint;
+	}
 }
