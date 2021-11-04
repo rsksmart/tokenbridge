@@ -244,24 +244,26 @@ module.exports = class Federator {
 
         const originChainId = Number(originChainIdStr);
         const destinationChainId = Number(destinationChainIdStr);
-        const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+        const originBridge = await this.bridgeFactory.getMainBridgeContract();
         const sideTokenAddress = await utils.retry3Times(
-          mainBridge.getMappedToken({
+          originBridge.getMappedToken({
             originalTokenAddress: tokenAddress,
-            chainId: destinationChainId,
+            chainId: destinationChainIdStr,
           }).call
         );
+
         let allowed, mediumAmount, largeAmount;
         if (sideTokenAddress == utils.zeroAddress) {
           ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits(
             {
               tokenAddress: tokenAddress,
-              chainId: destinationChainId,
+              chainId: originChainId,
             }
           ));
           if (!allowed) {
             throw new Error(
-              `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}`
+              `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}
+               Bridge Contract Addr ${originBridge}`
             );
           }
         } else {
