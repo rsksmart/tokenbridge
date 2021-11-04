@@ -6,10 +6,10 @@ const log4js = require("log4js");
 // the following file should only be used for integration tests
 const config = require("../config/test.local.config.js");
 const logConfig = require("../config/log-config.json");
-const abiBridgeV3 = require("../../bridge/abi/BridgeV3.json");
+const abiBridge = require("../../bridge/abi/Bridge.json");
 const abiMainToken = require("../../bridge/abi/MainToken.json");
 const abiSideToken = require("../../bridge/abi/SideToken.json");
-const abiAllowTokensV1 = require("../../bridge/abi/AllowTokensV1.json");
+const abiAllowTokens = require("../../bridge/abi/AllowTokens.json");
 const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 
 //utils
@@ -19,7 +19,7 @@ const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
 const MSG_TOKEN_NOT_VOTED = "Token was not voted by federators";
 
-const sideTokenBytecode = fs.readFileSync(
+const destinationTokenBytecode = fs.readFileSync(
   `${__dirname}/sideTokenBytecode.txt`,
   "utf8"
 );
@@ -88,16 +88,16 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
 }
 
 async function run(
-  federatorsMainChain,
-  federatorsSideChain,
-  configMain,
-  configSide
+  originFederators,
+  destinationFederators,
+  originConfig,
+  destinationConfig
 ) {
   logger.info("Starting transfer from Mainchain to Sidechain");
   await transfer(
-    federatorsMainChain,
-    federatorsSideChain,
-    configMain,
+    originFederators,
+    destinationFederators,
+    originConfig,
     MAIN_CHAIN_LOGGER_NAME,
     SIDE_CHAIN_LOGGER_NAME
   );
@@ -105,9 +105,9 @@ async function run(
 
   logger.info("Starting transfer from Sidechain to Mainchain");
   await transfer(
-    federatorsSideChain,
-    federatorsMainChain,
-    configSide,
+    destinationFederators,
+    originFederators,
+    destinationConfig,
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
   );
@@ -182,36 +182,46 @@ async function sendFederatorTx(
 
 async function transferReceiveTokensOtherSide({
   destinationBridgeContract,
-  receiptSendTransaction,
-  userAddress,
+  destinationChainId,
+  originChainId,
+  originReceiptSendTransaction,
+  originUserAddress,
   amount,
   destinationTransactionSender,
   destinationBridgeAddress,
-  userPrivateKey,
+  originUserPrivateKey,
   destinationLoggerName,
   destinationTokenContract,
-  mainChainWeb3,
+  originChainWeb3,
 }) {
-  await checkTxDataHash(destinationBridgeContract, receiptSendTransaction);
-
-  await claimTokensFromDestinationBridge(
+  await checkTxDataHash(
     destinationBridgeContract,
-    userAddress,
+    originReceiptSendTransaction
+  );
+
+  logger.info("claimTokensFromDestinationBridge init");
+  await claimTokensFromDestinationBridge({
+    destinationBridgeContract,
+    originChainId,
+    originUserAddress,
     amount,
-    receiptSendTransaction,
+    originReceiptSendTransaction,
     destinationTransactionSender,
     destinationBridgeAddress,
-    userPrivateKey
-  );
+    originUserPrivateKey,
+  });
+  logger.info("claimTokensFromDestinationBridge finish");
 
   logger.debug("Check balance on the other side");
   await checkAddressBalance(
     destinationTokenContract,
-    userAddress,
+    originUserAddress,
     destinationLoggerName
   );
 
-  const crossCompletedBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  const crossCompletedBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
+  );
   logger.debug(
     "One way cross user balance (ETH or RBTC)",
     crossCompletedBalance
@@ -262,22 +272,26 @@ async function runFederators(federators) {
 
 async function transferBackTokens({
   destinationTokenContract,
-  userAddress,
+  originUserAddress,
   destinationTransactionSender,
   configChain,
   destinationBridgeAddress,
   amount,
+  originTokenAddress,
   destinationTokenAddress,
-  userPrivateKey,
-  sideMultiSigContract,
-  sideAllowTokensAddress,
-  federatorKeys,
+  originUserPrivateKey,
+  originMultiSigContract,
+  destinationMultiSigContract,
+  destinationAllowTokensAddress,
+  federatorPrivateKeys,
   destinationBridgeContract,
-  mainChainWeb3,
+  destinationChainId,
+  originChainId,
+  originChainWeb3,
   destinationFederators,
 }) {
   await destinationTransactionSender.sendTransaction(
-    userAddress,
+    originUserAddress,
     "",
     6000000,
     configChain.privateKey,
@@ -292,69 +306,82 @@ async function transferBackTokens({
     destinationTokenAddress,
     dataApproveAbi,
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Token transfer approved");
   const allowed = await destinationTokenContract.methods
-    .allowance(userAddress, destinationBridgeAddress)
+    .allowance(originUserAddress, destinationBridgeAddress)
     .call();
   logger.debug("Allowed to transfer ", allowed);
   logger.debug("Set side token limit");
 
   await sendFederatorTx(
     configChain.sidechain.multiSig,
-    sideMultiSigContract,
-    sideAllowTokensAddress,
+    destinationMultiSigContract,
+    destinationAllowTokensAddress,
     dataApproveAbi,
-    federatorKeys,
+    federatorPrivateKeys,
     destinationTransactionSender
   );
 
+  const sideTokenAddress = await destinationBridgeContract.methods
+    .sideTokenByOriginalToken(originChainId, originTokenAddress)
+    .call();
+
   logger.debug("Bridge side receiveTokens");
-  const receiptReceiveTokensTo = await callReceiveTokens(
-    destinationBridgeContract,
-    destinationTokenAddress,
-    userAddress,
-    amount,
-    destinationBridgeAddress,
-    destinationTransactionSender,
-    userPrivateKey
-  );
+  const destinationReceiptReceiveTokensTo = await callReceiveTokens({
+    bridgeContract: destinationBridgeContract,
+    chainId: originChainId,
+    tokenAddress: sideTokenAddress,
+    originUserAddress,
+    userAmount: amount,
+    bridgeAddress: destinationBridgeAddress,
+    transactionSender: destinationTransactionSender,
+    userPrivateKey: originUserPrivateKey,
+  });
   logger.debug("Bridge side receiveTokens completed");
   logger.debug("Starting federator processes");
   logger.debug("Fund federator wallets");
 
-  federatorKeys =
+  federatorPrivateKeys =
     sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
   await fundFederators(
     configChain.mainchain.host,
-    federatorKeys,
+    federatorPrivateKeys,
     configChain.mainchain.privateKey,
-    mainChainWeb3.utils.toWei("1")
+    originChainWeb3.utils.toWei("1")
   );
 
+  logger.warn(
+    "`------------- It will start the runFederators of the destinationFederators -------------`,"
+  );
   await runFederators(destinationFederators);
-  return receiptReceiveTokensTo;
+  return destinationReceiptReceiveTokensTo;
 }
 
-async function callReceiveTokens(
+async function callReceiveTokens({
   bridgeContract,
-  tokenAddr,
-  userAddress,
+  chainId,
+  tokenAddress,
+  originUserAddress,
   userAmount,
-  originBridgeAddress,
+  bridgeAddress,
   transactionSender,
-  userPrivateKey
-) {
+  userPrivateKey,
+}) {
   const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
-    tokenAddr,
-    userAddress,
+    chainId,
+    tokenAddress,
+    originUserAddress,
     userAmount
   );
-  await methodCallReceiveTokensTo.call({ from: userAddress });
+  const receipt = await methodCallReceiveTokensTo.call({
+    from: originUserAddress,
+  });
+  logger.warn("callReceiveTokens call receipt", receipt);
   return transactionSender.sendTransaction(
-    originBridgeAddress,
+    bridgeAddress,
     methodCallReceiveTokensTo.encodeABI(),
     0,
     userPrivateKey,
@@ -366,45 +393,52 @@ async function callAllReceiveTokens({
   userSmallAmount,
   userMediumAmount,
   userLargeAmount,
-  bridgeContract,
-  anotherTokenAddress,
-  userAddress,
+  destinationChainId,
+  originChainId,
+  originBridgeContract,
+  originAnotherTokenAddress,
+  originUserAddress,
   originBridgeAddress,
-  transactionSender,
-  userPrivateKey,
+  originTransactionSender,
+  originUserPrivateKey,
 }) {
+  logger.warn("callAllReceiveTokens callReceiveTokens small amount init");
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
-  const smallAmountReceipt = await callReceiveTokens(
-    bridgeContract,
-    anotherTokenAddress,
-    userAddress,
-    userSmallAmount,
-    originBridgeAddress,
-    transactionSender,
-    userPrivateKey
-  );
+  const smallAmountReceipt = await callReceiveTokens({
+    bridgeContract: originBridgeContract,
+    chainId: destinationChainId,
+    tokenAddress: originAnotherTokenAddress,
+    originUserAddress,
+    userAmount: userSmallAmount,
+    bridgeAddress: originBridgeAddress,
+    transactionSender: originTransactionSender,
+    userPrivateKey: originUserPrivateKey,
+  });
+  logger.warn("callAllReceiveTokens callReceiveTokens small amount finish");
 
   // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
-  const mediumAmountReceipt = await callReceiveTokens(
-    bridgeContract,
-    anotherTokenAddress,
-    userAddress,
-    userMediumAmount,
-    originBridgeAddress,
-    transactionSender,
-    userPrivateKey
-  );
+  const mediumAmountReceipt = await callReceiveTokens({
+    bridgeContract: originBridgeContract,
+    chainId: destinationChainId,
+    tokenAddress: originAnotherTokenAddress,
+    originUserAddress,
+    userAmount: userMediumAmount,
+    bridgeAddress: originBridgeAddress,
+    transactionSender: originTransactionSender,
+    userPrivateKey: originUserPrivateKey,
+  });
 
   // Cross AnotherToken (type id 0) Large Amount >= toWei('0.1')
-  const largeAmountReceipt = await callReceiveTokens(
-    bridgeContract,
-    anotherTokenAddress,
-    userAddress,
-    userLargeAmount,
-    originBridgeAddress,
-    transactionSender,
-    userPrivateKey
-  );
+  const largeAmountReceipt = await callReceiveTokens({
+    bridgeContract: originBridgeContract,
+    chainId: destinationChainId,
+    tokenAddress: originAnotherTokenAddress,
+    originUserAddress,
+    userAmount: userLargeAmount,
+    bridgeAddress: originBridgeAddress,
+    transactionSender: originTransactionSender,
+    userPrivateKey: originUserPrivateKey,
+  });
 
   return {
     smallAmountReceipt,
@@ -414,75 +448,82 @@ async function callAllReceiveTokens({
 }
 
 async function tranferCheckAmountsGetDestinationBalance({
-  allowTokensContract,
+  originAllowTokensContract,
   configChain,
-  multiSigContract,
-  allowTokensAddress,
+  originMultiSigContract,
+  originAllowTokensAddress,
   cowAddress,
-  mainChainWeb3,
-  anotherTokenContract,
-  userAddress,
+  originChainWeb3,
+  originAnotherTokenContract,
+  originUserAddress,
   amount,
-  transactionSender,
-  anotherTokenAddress,
-  userPrivateKey,
-  destTokenContract,
+  originTransactionSender,
+  originAnotherTokenAddress,
+  originUserPrivateKey,
+  destinationTokenContract,
   destinationLoggerName,
   destinationBridgeContract,
-  sideChainWeb3,
+  destinationChainId,
+  originChainId,
+  destinationChainWeb3,
 }) {
   logger.info(
     "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
   );
 
-  await allowTokensContract.methods
+  await originAllowTokensContract.methods
     .setConfirmations("100", "1000", "2000")
     .call({ from: configChain.mainchain.multiSig });
-  const dataTransferSetConfirmations = allowTokensContract.methods
+  const dataTransferSetConfirmations = originAllowTokensContract.methods
     .setConfirmations("100", "1000", "2000")
     .encodeABI();
 
-  const methodCallSetConfirmations = multiSigContract.methods.submitTransaction(
-    allowTokensAddress,
-    0,
-    dataTransferSetConfirmations
-  );
+  const methodCallSetConfirmations =
+    originMultiSigContract.methods.submitTransaction(
+      originAllowTokensAddress,
+      0,
+      dataTransferSetConfirmations
+    );
   await methodCallSetConfirmations.call({ from: cowAddress });
   await methodCallSetConfirmations.send({ from: cowAddress, gas: 500000 });
 
-  await utils.evm_mine(1, mainChainWeb3);
-  const confirmations = await allowTokensContract.methods
+  await utils.evm_mine(1, originChainWeb3);
+  const confirmations = await originAllowTokensContract.methods
     .getConfirmations()
     .call();
 
-  const dataMintAbi = anotherTokenContract.methods
-    .mint(userAddress, amount, "0x", "0x")
+  const dataMintAbi = originAnotherTokenContract.methods
+    .mint(originUserAddress, amount, "0x", "0x")
     .encodeABI();
-  await transactionSender.sendTransaction(
-    anotherTokenAddress,
+  await originTransactionSender.sendTransaction(
+    originAnotherTokenAddress,
     dataMintAbi,
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
-  const remainingUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  const remainingUserBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
+  );
   logger.debug(
     "user native token balance before crossing tokens:",
     remainingUserBalance
   );
 
-  const userBalanceAnotherToken = await anotherTokenContract.methods
-    .balanceOf(userAddress)
+  const userBalanceAnotherToken = await originAnotherTokenContract.methods
+    .balanceOf(originUserAddress)
     .call();
   logger.debug("user balance before crossing tokens:", userBalanceAnotherToken);
-  let balance = await destTokenContract.methods.balanceOf(userAddress).call();
+  let balance = await destinationTokenContract.methods
+    .balanceOf(originUserAddress)
+    .call();
   logger.info(
     `${destinationLoggerName} token balance before crossing`,
     balance
   );
 
   const anotherTokenOriginalAddr = await destinationBridgeContract.methods
-    .mappedTokens(anotherTokenAddress)
+    .sideTokenByOriginalToken(originChainId, originAnotherTokenAddress)
     .call();
   logger.info(
     `${destinationLoggerName} token address`,
@@ -494,128 +535,139 @@ async function tranferCheckAmountsGetDestinationBalance({
   }
 
   logger.debug("Check balance on the other side before crossing");
-  const destSideTokenContract = new sideChainWeb3.eth.Contract(
+  const destinationSideTokenContract = new destinationChainWeb3.eth.Contract(
     abiSideToken,
     anotherTokenOriginalAddr
   );
-  balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
+  balance = await destinationSideTokenContract.methods
+    .balanceOf(originUserAddress)
+    .call();
   logger.info(`${destinationLoggerName} token balance`, balance);
 
   return {
     confirmations,
-    destSideTokenContract,
+    destinationSideTokenContract,
     balance,
   };
 }
 
 async function tranferCheckAmounts({
-  allowTokensContract,
+  originAllowTokensContract,
   configChain,
-  multiSigContract,
-  allowTokensAddress,
+  originMultiSigContract,
+  originAllowTokensAddress,
   cowAddress,
-  mainChainWeb3,
-  anotherTokenContract,
-  userAddress,
+  originChainWeb3,
+  originAnotherTokenContract,
+  originUserAddress,
   amount,
-  transactionSender,
-  anotherTokenAddress,
-  userPrivateKey,
-  destTokenContract,
+  originTransactionSender,
+  originAnotherTokenAddress,
+  originUserPrivateKey,
+  destinationTokenContract,
   destinationLoggerName,
   destinationBridgeContract,
-  sideChainWeb3,
+  destinationChainId,
+  destinationChainWeb3,
   originBridgeAddress,
-  bridgeContract,
+  originBridgeContract,
+  originChainId,
   originFederators,
   destinationTransactionSender,
   destinationBridgeAddress,
 }) {
   const {
     confirmations,
+    destinationSideTokenContract,
     balance: destinationInitialUserBalance,
-    destSideTokenContract,
   } = await tranferCheckAmountsGetDestinationBalance({
-    allowTokensContract,
+    originAllowTokensContract,
     configChain,
-    multiSigContract,
-    allowTokensAddress,
+    originMultiSigContract,
+    originAllowTokensAddress,
     cowAddress,
-    mainChainWeb3,
-    anotherTokenContract,
-    userAddress,
+    originChainWeb3,
+    originAnotherTokenContract,
+    originUserAddress,
     amount,
-    transactionSender,
-    anotherTokenAddress,
-    userPrivateKey,
-    destTokenContract,
+    originTransactionSender,
+    originAnotherTokenAddress,
+    originUserPrivateKey,
+    destinationTokenContract,
     destinationLoggerName,
     destinationBridgeContract,
-    sideChainWeb3,
+    destinationChainId,
+    originChainId,
+    destinationChainWeb3,
   });
 
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
-  const userSmallAmount = mainChainWeb3.utils.toWei("0.0056");
-  const userMediumAmount = mainChainWeb3.utils.toWei("0.019"); // < toWei('0.1')
-  const userLargeAmount = mainChainWeb3.utils.toWei("1.32");
-  const userAppoveTotalAmount = mainChainWeb3.utils.toWei("10");
+  const userSmallAmount = originChainWeb3.utils.toWei("0.0056");
+  const userMediumAmount = originChainWeb3.utils.toWei("0.019"); // < toWei('0.1')
+  const userLargeAmount = originChainWeb3.utils.toWei("1.32");
+  const userAppoveTotalAmount = originChainWeb3.utils.toWei("10");
 
   logger.debug(
     "Send small amount, medium amount and large amount transactions"
   );
-  const methodCallApprove = anotherTokenContract.methods.approve(
+  const methodCallApprove = originAnotherTokenContract.methods.approve(
     originBridgeAddress,
     userAppoveTotalAmount
   );
-  await methodCallApprove.call({ from: userAddress });
-  await transactionSender.sendTransaction(
-    anotherTokenAddress,
+  await methodCallApprove.call({ from: originUserAddress });
+  await originTransactionSender.sendTransaction(
+    originAnotherTokenAddress,
     methodCallApprove.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
 
+  logger.debug("tranferCheckAmounts callAllReceiveTokens init");
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
   const { smallAmountReceipt, mediumAmountReceipt, largeAmountReceipt } =
     await callAllReceiveTokens({
       userSmallAmount,
       userMediumAmount,
       userLargeAmount,
-      bridgeContract,
-      anotherTokenAddress,
-      userAddress,
+      destinationChainId,
+      originChainId,
+      originBridgeContract,
+      originAnotherTokenAddress,
+      originUserAddress,
       originBridgeAddress,
-      transactionSender,
-      userPrivateKey,
+      originTransactionSender,
+      originUserPrivateKey,
     });
+  logger.debug("tranferCheckAmounts callAllReceiveTokens finish");
 
   logger.debug("Mine small amount confirmations blocks");
   const delta_1 = parseInt(confirmations.smallAmount);
-  await utils.evm_mine(delta_1, mainChainWeb3);
+  await utils.evm_mine(delta_1, originChainWeb3);
 
   await runFederators(originFederators);
   logger.debug("Claim small amounts");
   const methodCallClaim = destinationBridgeContract.methods.claim({
-    to: userAddress,
+    to: originUserAddress,
     amount: userSmallAmount,
     blockHash: smallAmountReceipt.blockHash,
     transactionHash: smallAmountReceipt.transactionHash,
     logIndex: smallAmountReceipt.logs[4].logIndex,
+    originChainId: originChainId,
   });
-  await methodCallClaim.call({ from: userAddress });
+  await methodCallClaim.call({ from: originUserAddress });
   await destinationTransactionSender.sendTransaction(
     destinationBridgeAddress,
     methodCallClaim.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Small amount claim completed");
 
   // check small amount txn went through
-  let balance = await destSideTokenContract.methods
-    .balanceOf(userAddress)
+  let balance = await destinationSideTokenContract.methods
+    .balanceOf(originUserAddress)
     .call();
   logger.info(
     `DESTINATION ${destinationLoggerName} token balance after ${delta_1} confirmations`,
@@ -633,29 +685,32 @@ async function tranferCheckAmounts({
 
   logger.debug("Mine medium amount confirmations blocks");
   const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
-  await utils.evm_mine(delta_2, mainChainWeb3);
+  await utils.evm_mine(delta_2, originChainWeb3);
 
   await runFederators(originFederators);
   logger.debug("Claim medium amounts");
   const callerClaim = destinationBridgeContract.methods.claim({
-    to: userAddress,
+    to: originUserAddress,
     amount: userMediumAmount,
     blockHash: mediumAmountReceipt.blockHash,
     transactionHash: mediumAmountReceipt.transactionHash,
     logIndex: mediumAmountReceipt.logs[4].logIndex,
+    originChainId: originChainId,
   });
-  await callerClaim.call({ from: userAddress });
+  await callerClaim.call({ from: originUserAddress });
   await destinationTransactionSender.sendTransaction(
     destinationBridgeAddress,
     callerClaim.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Medium amount claim completed");
 
   // check medium amount txn went through
-  balance = await destSideTokenContract.methods.balanceOf(userAddress).call();
+  balance = await destinationSideTokenContract.methods
+    .balanceOf(originUserAddress)
+    .call();
   logger.info(
     `DESTINATION ${destinationLoggerName} token balance after ${
       delta_1 + delta_2
@@ -676,25 +731,27 @@ async function tranferCheckAmounts({
 
   logger.debug("Mine large amount confirmations blocks");
   const delta_3 = parseInt(confirmations.largeAmount) - delta_2;
-  await utils.evm_mine(delta_3, mainChainWeb3);
+  await utils.evm_mine(delta_3, originChainWeb3);
 
   await runFederators(originFederators);
   const numberOfConfirmations = delta_1 + delta_2 + delta_3;
   await claimLargeAmounts({
     destinationBridgeContract,
-    userAddress,
+    destinationChainId,
+    originChainId,
+    userAddress: originUserAddress,
     userLargeAmount,
     userMediumAmount,
     userSmallAmount,
     largeAmountReceipt,
     destinationTransactionSender,
     destinationBridgeAddress,
-    userPrivateKey,
-    destSideTokenContract,
+    userPrivateKey: originUserPrivateKey,
+    destinationSideTokenContract,
     destinationLoggerName,
     numberOfConfirmations,
     destinationInitialUserBalance,
-    anotherTokenContract,
+    anotherTokenContract: originAnotherTokenContract,
   });
 
   return { confirmations };
@@ -702,6 +759,8 @@ async function tranferCheckAmounts({
 
 async function claimLargeAmounts({
   destinationBridgeContract,
+  destinationChainId,
+  originChainId,
   userAddress,
   userLargeAmount,
   userMediumAmount,
@@ -710,24 +769,25 @@ async function claimLargeAmounts({
   destinationTransactionSender,
   destinationBridgeAddress,
   userPrivateKey,
-  destSideTokenContract,
+  destinationSideTokenContract,
   destinationLoggerName,
   numberOfConfirmations,
   destinationInitialUserBalance,
   anotherTokenContract,
 }) {
   logger.debug("Claim large amounts");
-  const callerClaimDestination = destinationBridgeContract.methods.claim({
+  const destinationCallerClaim = destinationBridgeContract.methods.claim({
     to: userAddress,
     amount: userLargeAmount,
     blockHash: largeAmountReceipt.blockHash,
     transactionHash: largeAmountReceipt.transactionHash,
     logIndex: largeAmountReceipt.logs[4].logIndex,
+    originChainId: originChainId,
   });
-  await callerClaimDestination.call({ from: userAddress });
+  await destinationCallerClaim.call({ from: userAddress });
   await destinationTransactionSender.sendTransaction(
     destinationBridgeAddress,
-    callerClaimDestination.encodeABI(),
+    destinationCallerClaim.encodeABI(),
     0,
     userPrivateKey,
     true
@@ -735,12 +795,12 @@ async function claimLargeAmounts({
   logger.debug("Large amount claim completed");
 
   // check large amount txn went through
-  const destBalance = await destSideTokenContract.methods
+  const destinationBalance = await destinationSideTokenContract.methods
     .balanceOf(userAddress)
     .call();
   logger.info(
     `DESTINATION ${destinationLoggerName} token balance after ${numberOfConfirmations} confirmations`,
-    destBalance
+    destinationBalance
   );
 
   const expectedBalanceAll =
@@ -748,9 +808,9 @@ async function claimLargeAmounts({
     BigInt(userLargeAmount) +
     BigInt(userMediumAmount) +
     BigInt(userSmallAmount);
-  if (expectedBalanceAll !== BigInt(destBalance)) {
+  if (expectedBalanceAll !== BigInt(destinationBalance)) {
     logger.error(
-      `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destBalance}`
+      `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destinationBalance}`
     );
     process.exit(1);
   }
@@ -763,94 +823,104 @@ async function claimLargeAmounts({
 
 async function transferCheckErc777ReceiveTokensOtherSide({
   destinationBridgeContract,
-  userAddress,
+  originUserAddress,
   amount,
-  receiptSend,
+  originReceiptSend,
   destinationTransactionSender,
   destinationBridgeAddress,
-  userPrivateKey,
-  sideChainWeb3,
+  originUserPrivateKey,
+  destinationChainWeb3,
   destinationAnotherTokenAddress,
   destinationLoggerName,
-  mainChainWeb3,
-  waitBlocks,
+  originChainWeb3,
+  originWaitBlocks,
   destinationFederators,
-  bridgeContract,
+  originBridgeContract,
+  originChainId,
+  destinationChainId,
   originBridgeAddress,
   originTokenContract,
+  tokenContract,
 }) {
   logger.info(
     "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
   );
 
-  await claimTokensFromDestinationBridge(
+  await claimTokensFromDestinationBridge({
     destinationBridgeContract,
-    userAddress,
+    originUserAddress,
     amount,
-    receiptSend,
+    originReceiptSendTransaction: originReceiptSend,
     destinationTransactionSender,
     destinationBridgeAddress,
-    userPrivateKey
-  );
+    originUserPrivateKey,
+    originChainId,
+  });
 
-  const destTokenContract = new sideChainWeb3.eth.Contract(
+  const destTokenContract = new destinationChainWeb3.eth.Contract(
     abiSideToken,
     destinationAnotherTokenAddress
   );
-
   logger.debug("Check balance on the other side");
   await checkAddressBalance(
     destTokenContract,
-    userAddress,
+    originUserAddress,
     destinationLoggerName
   );
 
-  const crossUsrBalance = await mainChainWeb3.eth.getBalance(userAddress);
+  const crossUsrBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
+  );
   logger.debug("One way cross user balance", crossUsrBalance);
 
   logger.info(
     "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
   );
   const senderBalanceBeforeErc777 = await destTokenContract.methods
-    .balanceOf(userAddress)
+    .balanceOf(originUserAddress)
     .call();
 
   const methodSendCall = destTokenContract.methods.send(
     destinationBridgeAddress,
     amount,
-    "0x"
+    originChainWeb3.eth.abi.encodeParameters(["uint256"], [originChainId])
   );
-  methodSendCall.call({ from: userAddress });
+  methodSendCall.call({ from: originUserAddress });
   const receiptSendTx = await destinationTransactionSender.sendTransaction(
     destinationAnotherTokenAddress,
     methodSendCall.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
 
-  logger.debug(`Wait for ${waitBlocks} blocks`);
-  await utils.waitBlocks(sideChainWeb3, waitBlocks);
+  logger.debug(`Wait for ${originWaitBlocks} blocks`);
+  await utils.waitBlocks(destinationChainWeb3, originWaitBlocks);
 
+  logger.warn(
+    `------------- It will start the runFederators of the destinationFederators -------------`,
+    destinationFederators
+  );
   await runFederators(destinationFederators);
-  await checkTxDataHash(bridgeContract, receiptSendTx);
+  await checkTxDataHash(originBridgeContract, receiptSendTx);
 
   logger.info(
     "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
   );
-  const methodCallClaim = bridgeContract.methods.claim({
-    to: userAddress,
+  const methodCallClaim = originBridgeContract.methods.claim({
+    to: originUserAddress,
     amount: amount,
     blockHash: receiptSendTx.blockHash,
     transactionHash: receiptSendTx.transactionHash,
     logIndex: receiptSendTx.logs[5].logIndex,
+    originChainId: destinationChainId,
   });
-  await methodCallClaim.call({ from: userAddress });
+  await methodCallClaim.call({ from: originUserAddress });
   await destinationTransactionSender.sendTransaction(
     originBridgeAddress,
     methodCallClaim.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Destination Bridge claim completed");
@@ -860,7 +930,7 @@ async function transferCheckErc777ReceiveTokensOtherSide({
     originTokenContract,
     destTokenContract,
     originBridgeAddress,
-    userAddress
+    originUserAddress
   );
 
   if (senderBalanceBeforeErc777 === BigInt(senderBalanceAfterErc777)) {
@@ -870,27 +940,26 @@ async function transferCheckErc777ReceiveTokensOtherSide({
     process.exit(1);
   }
 
-  const crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
-    userAddress
+  const crossBackCompletedBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
   );
   logger.debug("Final user balance", crossBackCompletedBalance);
-
-  return {
-    destTokenContract,
-  };
 }
 
 async function transferCheckStartErc777({
-  mainChainWeb3,
+  originChainWeb3,
   userAddress,
   amount,
-  transactionSender,
+  originTransactionSender,
   userPrivateKey,
   configChain,
-  allowTokensContract,
+  originAllowTokensContract,
   federatorKeys,
   destinationBridgeContract,
-  sideMultiSigContract,
+  destinationChainId,
+  originChainId,
+  destinationMultiSigContract,
+  originMultiSigContract,
   destinationTransactionSender,
   destinationLoggerName,
   originBridgeAddress,
@@ -900,26 +969,28 @@ async function transferCheckStartErc777({
   logger.info(
     "------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------"
   );
-  const AnotherToken = new mainChainWeb3.eth.Contract(abiSideToken);
-  const knownAccount = (await mainChainWeb3.eth.getAccounts())[0];
+  const originAnotherToken = new originChainWeb3.eth.Contract(abiSideToken);
+  const knownAccount = (await originChainWeb3.eth.getAccounts())[0];
 
   logger.debug("Deploying another token contract");
-  const anotherTokenContract = await AnotherToken.deploy({
-    data: sideTokenBytecode,
-    arguments: ["MAIN", "MAIN", userAddress, "1"],
-  }).send({
-    from: knownAccount,
-    gas: 6700000,
-    gasPrice: 20000000000,
-  });
+  const originAnotherTokenContract = await originAnotherToken
+    .deploy({
+      data: destinationTokenBytecode,
+      arguments: ["MAIN", "MAIN", userAddress, "1"],
+    })
+    .send({
+      from: knownAccount,
+      gas: 6700000,
+      gasPrice: 20000000000,
+    });
   logger.debug("Token deployed");
   logger.debug("Minting new token");
-  const anotherTokenAddress = anotherTokenContract.options.address;
-  const dataMintAbi = anotherTokenContract.methods
+  const originAnotherTokenAddress = originAnotherTokenContract.options.address;
+  const dataMintAbi = originAnotherTokenContract.methods
     .mint(userAddress, amount, "0x", "0x")
     .encodeABI();
-  await transactionSender.sendTransaction(
-    anotherTokenAddress,
+  await originTransactionSender.sendTransaction(
+    originAnotherTokenAddress,
     dataMintAbi,
     0,
     userPrivateKey,
@@ -927,41 +998,44 @@ async function transferCheckStartErc777({
   );
 
   logger.debug("Adding new token to list of allowed on bridge");
-  const multiSigContract = new mainChainWeb3.eth.Contract(
-    abiMultiSig,
-    configChain.mainchain.multiSig
-  );
-  const allowTokensAddress = allowTokensContract.options.address;
-  const setTokenEncodedAbi = allowTokensContract.methods
-    .setToken(anotherTokenAddress, SIDE_TOKEN_TYPE_ID)
+  const originAllowTokensAddress = originAllowTokensContract.options.address;
+  const originSetTokenEncodedAbi = originAllowTokensContract.methods
+    .setToken(originAnotherTokenAddress, SIDE_TOKEN_TYPE_ID)
     .encodeABI();
 
   await sendFederatorTx(
     configChain.mainchain.multiSig,
-    multiSigContract,
-    allowTokensAddress,
-    setTokenEncodedAbi,
+    originMultiSigContract,
+    originAllowTokensAddress,
+    originSetTokenEncodedAbi,
     federatorKeys,
-    transactionSender
+    originTransactionSender
   );
 
   const destinationAnotherTokenAddress = await getDestinationTokenAddress(
     destinationBridgeContract,
-    anotherTokenAddress,
-    sideMultiSigContract,
+    originChainId,
+    originAnotherTokenAddress,
+    destinationMultiSigContract,
     destinationTransactionSender,
     configChain,
     destinationLoggerName
   );
 
-  const methodCallSend = anotherTokenContract.methods.send(
+  const methodCallSend = originAnotherTokenContract.methods.send(
     originBridgeAddress,
     amount,
-    "0x"
+    originChainWeb3.eth.abi.encodeParameters(
+      ["address", "uint256"],
+      [userAddress, destinationChainId]
+    )
   );
-  await methodCallSend.call({ from: userAddress });
-  const receiptSend = await transactionSender.sendTransaction(
-    anotherTokenAddress,
+  logger.warn("Calling bridge tokensReceived");
+  const receipt = await methodCallSend.call({ from: userAddress });
+  logger.debug("bridge tokensReceived receipt:", receipt);
+
+  const originReceiptSend = await originTransactionSender.sendTransaction(
+    originAnotherTokenAddress,
     methodCallSend.encodeABI(),
     0,
     userPrivateKey,
@@ -970,23 +1044,22 @@ async function transferCheckStartErc777({
   logger.debug("Call to transferAndCall completed");
 
   logger.debug(`Wait for ${waitBlocks} blocks`);
-  await utils.waitBlocks(mainChainWeb3, waitBlocks);
+  await utils.waitBlocks(originChainWeb3, waitBlocks);
 
   await runFederators(originFederators);
 
   return {
-    anotherTokenAddress,
-    anotherTokenContract,
-    allowTokensAddress,
-    multiSigContract,
+    originAnotherTokenAddress,
+    originAnotherTokenContract,
+    originAllowTokensAddress,
     destinationAnotherTokenAddress,
-    receiptSend,
+    originReceiptSend,
   };
 }
 
 async function transferCheckSendingTokens({
-  mainChainWeb3,
-  transactionSender,
+  originChainWeb3,
+  originTransactionSender,
   configChain,
   destinationTransactionSender,
   originLoggerName,
@@ -995,48 +1068,54 @@ async function transferCheckSendingTokens({
   amount,
   cowAddress,
   originBridgeAddress,
-  allowTokensContract,
-  sideChainWeb3,
+  originAllowTokensContract,
+  destinationChainWeb3,
+  destinationChainId,
+  originChainId,
 }) {
   logger.info("------------- SENDING THE TOKENS -----------------");
   logger.debug("Getting address from pk");
-  const userPrivateKey = mainChainWeb3.eth.accounts.create().privateKey;
-  const userAddress = await transactionSender.getAddress(userPrivateKey);
-  await transactionSender.sendTransaction(
-    userAddress,
+  const originUserPrivateKey = originChainWeb3.eth.accounts.create().privateKey;
+  const originUserAddress = await originTransactionSender.getAddress(
+    originUserPrivateKey
+  );
+  await originTransactionSender.sendTransaction(
+    originUserAddress,
     "",
-    mainChainWeb3.utils.toWei("1"),
+    originChainWeb3.utils.toWei("1"),
     configChain.privateKey
   );
   await destinationTransactionSender.sendTransaction(
-    userAddress,
+    originUserAddress,
     "",
-    mainChainWeb3.utils.toWei("1"),
+    originChainWeb3.utils.toWei("1"),
     configChain.privateKey,
     true
   );
   logger.info(
-    `${originLoggerName} token address ${originAddress} - User Address: ${userAddress}`
+    `${originLoggerName} token address ${originAddress} - User Address: ${originUserAddress}`
   );
 
-  const initialUserBalance = await mainChainWeb3.eth.getBalance(userAddress);
-  logger.debug("Initial user balance ", initialUserBalance);
+  const originInitialUserBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
+  );
+  logger.debug("Initial user balance ", originInitialUserBalance);
   await originTokenContract.methods
-    .transfer(userAddress, amount)
+    .transfer(originUserAddress, amount)
     .send({ from: cowAddress });
   const initialTokenBalance = await originTokenContract.methods
-    .balanceOf(userAddress)
+    .balanceOf(originUserAddress)
     .call();
   logger.debug("Initial token balance ", initialTokenBalance);
 
   logger.debug("Approving token transfer");
   await originTokenContract.methods
-    .transfer(userAddress, amount)
-    .call({ from: userAddress });
+    .transfer(originUserAddress, amount)
+    .call({ from: originUserAddress });
   const methodTransferData = originTokenContract.methods
-    .transfer(userAddress, amount)
+    .transfer(originUserAddress, amount)
     .encodeABI();
-  await transactionSender.sendTransaction(
+  await originTransactionSender.sendTransaction(
     originAddress,
     methodTransferData,
     0,
@@ -1045,151 +1124,162 @@ async function transferCheckSendingTokens({
   );
   await originTokenContract.methods
     .approve(originBridgeAddress, amount)
-    .call({ from: userAddress });
+    .call({ from: originUserAddress });
 
   const methodApproveData = originTokenContract.methods
     .approve(originBridgeAddress, amount)
     .encodeABI();
-  await transactionSender.sendTransaction(
+  await originTransactionSender.sendTransaction(
     originAddress,
     methodApproveData,
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Token transfer approved");
 
   logger.debug("Bridge receiveTokens (transferFrom)");
-  const bridgeContract = new mainChainWeb3.eth.Contract(
-    abiBridgeV3,
+  const originBridgeContract = new originChainWeb3.eth.Contract(
+    abiBridge,
     originBridgeAddress
   );
   logger.debug("Bridge addr", originBridgeAddress);
-  logger.debug("allowTokens addr", allowTokensContract.options.address);
+  logger.debug("allowTokens addr", originAllowTokensContract.options.address);
   logger.debug(
     "Bridge AllowTokensAddr",
-    await bridgeContract.methods.allowTokens().call()
+    await originBridgeContract.methods.allowTokens().call()
   );
   logger.debug(
     "allowTokens primary",
-    await allowTokensContract.methods.primary().call()
+    await originAllowTokensContract.methods.primary().call()
   );
   logger.debug(
     "allowTokens owner",
-    await allowTokensContract.methods.owner().call()
+    await originAllowTokensContract.methods.owner().call()
   );
-  logger.debug("accounts:", await mainChainWeb3.eth.getAccounts());
-  const methodCallReceiveTokensTo = bridgeContract.methods.receiveTokensTo(
-    originAddress,
-    userAddress,
-    amount
-  );
-  await methodCallReceiveTokensTo.call({ from: userAddress });
-  const receiptSendTransaction = await transactionSender.sendTransaction(
-    originBridgeAddress,
-    methodCallReceiveTokensTo.encodeABI(),
-    0,
-    userPrivateKey,
-    true
-  );
+  logger.debug("accounts:", await originChainWeb3.eth.getAccounts());
+  const originMethodCallReceiveTokensTo =
+    originBridgeContract.methods.receiveTokensTo(
+      destinationChainId,
+      originAddress,
+      originUserAddress,
+      amount
+    );
+  await originMethodCallReceiveTokensTo.call({ from: originUserAddress });
+  const originReceiptSendTransaction =
+    await originTransactionSender.sendTransaction(
+      originBridgeAddress,
+      originMethodCallReceiveTokensTo.encodeABI(),
+      0,
+      originUserPrivateKey,
+      true
+    );
   logger.debug("Bridge receivedTokens completed");
 
-  const waitBlocks = configChain.confirmations || 0;
-  logger.debug(`Wait for ${waitBlocks} blocks`);
-  await utils.waitBlocks(mainChainWeb3, waitBlocks);
+  const originWaitBlocks = configChain.confirmations || 0;
+  logger.debug(`Wait for ${originWaitBlocks} blocks`);
+  await utils.waitBlocks(originChainWeb3, originWaitBlocks);
 
   logger.debug("Starting federator processes");
 
   // Start origin federators with delay between them
   logger.debug("Fund federator wallets");
-  const federatorKeys =
+  const federatorPrivateKeys =
     mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
   await fundFederators(
     configChain.sidechain.host,
-    federatorKeys,
+    federatorPrivateKeys,
     configChain.sidechain.privateKey,
-    sideChainWeb3.utils.toWei("1")
+    destinationChainWeb3.utils.toWei("1")
   );
 
   return {
-    receiptSendTransaction,
-    userAddress,
-    userPrivateKey,
-    federatorKeys,
-    bridgeContract,
-    initialUserBalance,
-    waitBlocks,
+    originReceiptSendTransaction,
+    originUserAddress,
+    originUserPrivateKey,
+    federatorPrivateKeys,
+    originBridgeContract,
+    originInitialUserBalance,
+    originWaitBlocks,
   };
 }
 
 async function transferChecks({
-  mainChainWeb3,
-  transactionSender,
+  originChainWeb3,
+  originTransactionSender,
   configChain,
   destinationTransactionSender,
   originLoggerName,
-  originAddress,
+  originAddress: originTokenAddress,
   originTokenContract,
   amount,
   cowAddress,
   originBridgeAddress,
-  allowTokensContract,
-  sideChainWeb3,
+  originAllowTokensContract,
+  destinationChainWeb3,
   originFederators,
   destinationTokenAddress,
   destinationBridgeContract,
+  destinationChainId,
+  originChainId,
   destinationBridgeAddress,
   destinationLoggerName,
-  sideMultiSigContract,
-  sideAllowTokensAddress,
+  originMultiSigContract,
+  destinationMultiSigContract,
+  destinationAllowTokensAddress,
   destinationFederators,
 }) {
   const {
-    receiptSendTransaction,
-    userAddress,
-    userPrivateKey,
-    federatorKeys,
-    bridgeContract,
-    initialUserBalance,
-    waitBlocks,
+    originReceiptSendTransaction,
+    originUserAddress,
+    originUserPrivateKey,
+    federatorPrivateKeys,
+    originBridgeContract,
+    originInitialUserBalance,
+    originWaitBlocks,
   } = await transferCheckSendingTokens({
-    mainChainWeb3,
-    transactionSender,
+    originChainWeb3,
+    originTransactionSender,
     configChain,
     destinationTransactionSender,
     originLoggerName,
-    originAddress,
+    originAddress: originTokenAddress,
     originTokenContract,
     amount,
     cowAddress,
     originBridgeAddress,
-    allowTokensContract,
-    sideChainWeb3,
+    originAllowTokensContract,
+    destinationChainWeb3,
+    destinationChainId,
+    originChainId,
   });
   await runFederators(originFederators);
   logger.info(
     "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
   );
 
-  const destinationTokenContract = new sideChainWeb3.eth.Contract(
+  const destinationTokenContract = new destinationChainWeb3.eth.Contract(
     abiSideToken,
     destinationTokenAddress
   );
 
+  logger.info("transferReceiveTokensOtherSide init");
   await transferReceiveTokensOtherSide({
     destinationBridgeContract,
-    receiptSendTransaction,
-    userAddress,
+    destinationChainId,
+    originChainId,
+    originReceiptSendTransaction,
+    originUserAddress,
     amount,
     destinationTransactionSender,
     destinationBridgeAddress,
-    userPrivateKey,
+    originUserPrivateKey,
     destinationLoggerName,
     destinationTokenContract,
-    mainChainWeb3,
+    originChainWeb3,
   });
+  logger.info("transferReceiveTokensOtherSide finish");
 
-  // Transfer back
   logger.info("------------- TRANSFER BACK THE TOKENS -----------------");
   logger.debug("Getting initial balances before transfer");
   const {
@@ -1200,23 +1290,27 @@ async function transferChecks({
     originTokenContract,
     destinationTokenContract,
     originBridgeAddress,
-    userAddress
+    originUserAddress
   );
 
-  const receiptReceiveTokensTo = await transferBackTokens({
+  const destinationReceiptReceiveTokensTo = await transferBackTokens({
     destinationTokenContract,
-    userAddress,
+    originUserAddress,
     destinationTransactionSender,
     configChain,
     destinationBridgeAddress,
     amount,
+    originTokenAddress,
     destinationTokenAddress,
-    userPrivateKey,
-    sideMultiSigContract,
-    sideAllowTokensAddress,
-    federatorKeys,
+    originUserPrivateKey,
+    originMultiSigContract,
+    destinationMultiSigContract,
+    destinationAllowTokensAddress,
+    federatorPrivateKeys,
     destinationBridgeContract,
-    mainChainWeb3,
+    destinationChainId,
+    originChainId,
+    originChainWeb3,
     destinationFederators,
   });
 
@@ -1224,19 +1318,20 @@ async function transferChecks({
     "------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
   );
   logger.debug("Check balance on the starting side");
-  const methodCallClaim = bridgeContract.methods.claim({
-    to: userAddress,
+  const methodCallClaim = originBridgeContract.methods.claim({
+    to: originUserAddress,
     amount: amount,
-    blockHash: receiptReceiveTokensTo.blockHash,
-    transactionHash: receiptReceiveTokensTo.transactionHash,
-    logIndex: receiptReceiveTokensTo.logs[6].logIndex,
+    blockHash: destinationReceiptReceiveTokensTo.blockHash,
+    transactionHash: destinationReceiptReceiveTokensTo.transactionHash,
+    logIndex: destinationReceiptReceiveTokensTo.logs[6].logIndex,
+    originChainId: destinationChainId,
   });
-  await methodCallClaim.call({ from: userAddress });
-  await transactionSender.sendTransaction(
+  await methodCallClaim.call({ from: originUserAddress });
+  await originTransactionSender.sendTransaction(
     originBridgeAddress,
     methodCallClaim.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Bridge receivedTokens completed");
@@ -1250,7 +1345,7 @@ async function transferChecks({
     originTokenContract,
     destinationTokenContract,
     originBridgeAddress,
-    userAddress
+    originUserAddress
   );
 
   const expectedBalanceBridge = BigInt(bridgeBalanceBefore) - BigInt(amount);
@@ -1260,70 +1355,72 @@ async function transferChecks({
   const expectedBalanceSender = BigInt(senderBalanceBefore) - BigInt(amount);
   checkBalance(senderBalanceAfter, expectedBalanceSender);
 
-  const crossBackCompletedBalance = await mainChainWeb3.eth.getBalance(
-    userAddress
+  const crossBackCompletedBalance = await originChainWeb3.eth.getBalance(
+    originUserAddress
   );
   logger.debug("Final user balance", crossBackCompletedBalance);
   logger.debug(
     "Cost: ",
-    BigInt(initialUserBalance) - BigInt(crossBackCompletedBalance)
+    BigInt(originInitialUserBalance) - BigInt(crossBackCompletedBalance)
   );
 
   const {
-    anotherTokenAddress,
-    anotherTokenContract,
-    allowTokensAddress,
-    multiSigContract,
+    originAnotherTokenAddress,
+    originAnotherTokenContract,
+    originAllowTokensAddress,
     destinationAnotherTokenAddress,
-    receiptSend,
+    originReceiptSend,
   } = await transferCheckStartErc777({
-    mainChainWeb3,
-    userAddress,
+    originChainWeb3,
+    userAddress: originUserAddress,
     amount,
-    transactionSender,
-    userPrivateKey,
+    originTransactionSender,
+    userPrivateKey: originUserPrivateKey,
     configChain,
-    allowTokensContract,
-    federatorKeys,
+    originAllowTokensContract,
+    federatorKeys: federatorPrivateKeys,
     destinationBridgeContract,
-    sideMultiSigContract,
+    destinationChainId,
+    originChainId,
+    destinationMultiSigContract,
+    originMultiSigContract,
     destinationTransactionSender,
     destinationLoggerName,
     originBridgeAddress,
-    waitBlocks,
+    waitBlocks: originWaitBlocks,
     originFederators,
   });
 
-  const { destTokenContract } = await transferCheckErc777ReceiveTokensOtherSide(
-    {
-      destinationBridgeContract,
-      userAddress,
-      amount,
-      receiptSend,
-      destinationTransactionSender,
-      destinationBridgeAddress,
-      userPrivateKey,
-      sideChainWeb3,
-      destinationAnotherTokenAddress,
-      destinationLoggerName,
-      mainChainWeb3,
-      waitBlocks,
-      destinationFederators,
-      bridgeContract,
-      originBridgeAddress,
-      originTokenContract,
-    }
-  );
+  await transferCheckErc777ReceiveTokensOtherSide({
+    destinationBridgeContract,
+    originUserAddress,
+    amount,
+    originReceiptSend,
+    destinationTransactionSender,
+    destinationBridgeAddress,
+    originUserPrivateKey,
+    destinationChainWeb3,
+    destinationAnotherTokenAddress,
+    destinationLoggerName,
+    originChainWeb3,
+    originWaitBlocks,
+    destinationFederators,
+    originBridgeContract,
+    originChainId,
+    destinationChainId,
+    originBridgeAddress,
+    originTokenContract,
+    tokenContract: originTokenContract,
+  });
 
   return {
-    multiSigContract,
-    allowTokensAddress,
-    destTokenContract,
-    userAddress,
-    userPrivateKey,
-    anotherTokenContract,
-    anotherTokenAddress,
-    bridgeContract,
+    originAllowTokensAddress,
+    destinationTokenContract,
+    originUserAddress,
+    originUserPrivateKey,
+    originAnotherTokenContract,
+    originAnotherTokenAddress,
+    originBridgeContract,
   };
 }
 
@@ -1335,122 +1432,135 @@ async function transfer(
   destinationLoggerName
 ) {
   try {
-    const mainChainWeb3 = new Web3(configChain.mainchain.host);
-    const sideChainWeb3 = new Web3(configChain.sidechain.host);
+    const originChainWeb3 = new Web3(configChain.mainchain.host);
+    const originChainId = await originChainWeb3.eth.net.getId();
+    const destinationChainWeb3 = new Web3(configChain.sidechain.host);
+    const destinationChainId = await destinationChainWeb3.eth.net.getId();
     // Increase time in one day to reset all the Daily limits from AllowTokens
-    await utils.increaseTimestamp(mainChainWeb3, ONE_DAY_IN_SECONDS + 1);
-    await utils.increaseTimestamp(sideChainWeb3, ONE_DAY_IN_SECONDS + 1);
+    await utils.increaseTimestamp(originChainWeb3, ONE_DAY_IN_SECONDS + 1);
+    await utils.increaseTimestamp(destinationChainWeb3, ONE_DAY_IN_SECONDS + 1);
 
-    const originTokenContract = new mainChainWeb3.eth.Contract(
+    const originTokenContract = new originChainWeb3.eth.Contract(
       abiMainToken,
       configChain.mainchain.testToken
     );
-    const transactionSender = new TransactionSender(
-      mainChainWeb3,
+    const originTransactionSender = new TransactionSender(
+      originChainWeb3,
       logger,
       configChain
     );
     const destinationTransactionSender = new TransactionSender(
-      sideChainWeb3,
+      destinationChainWeb3,
       logger,
       configChain
     );
     const originBridgeAddress = configChain.mainchain.bridge;
-    const amount = mainChainWeb3.utils.toWei("10");
+    const originAmount10Wei = originChainWeb3.utils.toWei("10");
     const originAddress = originTokenContract.options.address;
-    const cowAddress = (await mainChainWeb3.eth.getAccounts())[0];
-    const allowTokensContract = new mainChainWeb3.eth.Contract(
-      abiAllowTokensV1,
+    const cowAddress = (await originChainWeb3.eth.getAccounts())[0];
+    const originAllowTokensContract = new originChainWeb3.eth.Contract(
+      abiAllowTokens,
       configChain.mainchain.allowTokens
     );
-    const sideMultiSigContract = new mainChainWeb3.eth.Contract(
+    const originMultiSigContract = new originChainWeb3.eth.Contract(
+      abiMultiSig,
+      configChain.mainchain.multiSig
+    );
+    const destinationMultiSigContract = new destinationChainWeb3.eth.Contract(
       abiMultiSig,
       configChain.sidechain.multiSig
     );
-    const sideAllowTokensAddress = configChain.sidechain.allowTokens;
+    const destinationAllowTokensAddress = configChain.sidechain.allowTokens;
     const destinationBridgeAddress = configChain.sidechain.bridge;
     logger.debug(
       `${destinationLoggerName} bridge address`,
       destinationBridgeAddress
     );
-    const destinationBridgeContract = new sideChainWeb3.eth.Contract(
-      abiBridgeV3,
+    const destinationBridgeContract = new destinationChainWeb3.eth.Contract(
+      abiBridge,
       destinationBridgeAddress
     );
 
     logger.debug("Get the destination token address");
     const destinationTokenAddress = await getDestinationTokenAddress(
       destinationBridgeContract,
+      originChainId,
       originAddress,
-      sideMultiSigContract,
+      destinationMultiSigContract,
       destinationTransactionSender,
       configChain,
       destinationLoggerName
     );
 
     const {
-      multiSigContract,
-      allowTokensAddress,
-      destTokenContract,
-      userAddress,
-      userPrivateKey,
-      anotherTokenContract,
-      anotherTokenAddress,
-      bridgeContract,
+      originAllowTokensAddress,
+      destinationTokenContract,
+      originUserAddress,
+      originUserPrivateKey,
+      originAnotherTokenContract,
+      originAnotherTokenAddress,
+      originBridgeContract,
     } = await transferChecks({
-      mainChainWeb3,
-      transactionSender,
+      originChainWeb3,
+      originTransactionSender,
       configChain,
       destinationTransactionSender,
       originLoggerName,
       originAddress,
       originTokenContract,
-      amount,
+      amount: originAmount10Wei,
       cowAddress,
       originBridgeAddress,
-      allowTokensContract,
-      sideChainWeb3,
+      originAllowTokensContract,
+      destinationChainWeb3,
       originFederators,
       destinationTokenAddress,
       destinationBridgeContract,
+      destinationChainId,
+      originChainId,
       destinationBridgeAddress,
       destinationLoggerName,
-      sideMultiSigContract,
-      sideAllowTokensAddress,
+      originMultiSigContract,
+      destinationMultiSigContract,
+      destinationAllowTokensAddress,
       destinationFederators,
     });
 
+    logger.debug("transfer tranferCheckAmounts init");
     const { confirmations } = await tranferCheckAmounts({
-      allowTokensContract,
+      originAllowTokensContract,
       configChain,
-      multiSigContract,
-      allowTokensAddress,
+      originMultiSigContract,
+      originAllowTokensAddress,
       cowAddress,
-      mainChainWeb3,
-      anotherTokenContract,
-      userAddress,
-      amount,
-      transactionSender,
-      anotherTokenAddress,
-      userPrivateKey,
-      destTokenContract,
+      originChainWeb3,
+      originAnotherTokenContract,
+      originUserAddress,
+      amount: originAmount10Wei,
+      originTransactionSender,
+      originAnotherTokenAddress,
+      originUserPrivateKey,
+      destinationTokenContract,
       destinationLoggerName,
       destinationBridgeContract,
-      sideChainWeb3,
+      destinationChainId,
+      destinationChainWeb3,
       originBridgeAddress,
-      bridgeContract,
+      originBridgeContract,
+      originChainId,
       originFederators,
       destinationTransactionSender,
       destinationBridgeAddress,
     });
+    logger.debug("transfer tranferCheckAmounts finish");
 
     await resetConfirmationsForFutureRuns(
-      allowTokensContract,
+      originAllowTokensContract,
       configChain,
-      multiSigContract,
-      allowTokensAddress,
+      originMultiSigContract,
+      originAllowTokensAddress,
       cowAddress,
-      mainChainWeb3,
+      originChainWeb3,
       confirmations
     );
   } catch (err) {
@@ -1461,38 +1571,44 @@ async function transfer(
 
 async function getDestinationTokenAddress(
   destinationBridgeContract,
-  originAddress,
-  sideMultiSigContract,
+  originChainId,
+  originAddressMainToken,
+  destinationMultiSigContract,
   destinationTransactionSender,
   chainConfig,
   destinationLoggerName
 ) {
   let destinationTokenAddress = await destinationBridgeContract.methods
-    .mappedTokens(originAddress)
+    .sideTokenByOriginalToken(originChainId, originAddressMainToken)
     .call();
+
+  logger.warn(
+    `destinationTokenAddress: ${destinationTokenAddress}\nchainIdMain: ${originChainId}\noriginAddressMain: ${originAddressMainToken}`
+  );
   if (destinationTokenAddress === utils.zeroAddress) {
     logger.info("Side Token does not exist yet, creating it");
     const data = destinationBridgeContract.methods
       .createSideToken(
         SIDE_TOKEN_TYPE_ID,
-        originAddress,
+        originAddressMainToken,
         SIDE_TOKEN_DECIMALS,
         SIDE_TOKEN_SYMBOL,
-        SIDE_TOKEN_NAME
+        SIDE_TOKEN_NAME,
+        originChainId
       )
       .encodeABI();
-    const multiSigData = sideMultiSigContract.methods
+    const destinationMultiSigData = destinationMultiSigContract.methods
       .submitTransaction(destinationBridgeContract.options.address, 0, data)
       .encodeABI();
     await destinationTransactionSender.sendTransaction(
       chainConfig.sidechain.multiSig,
-      multiSigData,
+      destinationMultiSigData,
       0,
       "",
       true
     );
     destinationTokenAddress = await destinationBridgeContract.methods
-      .mappedTokens(originAddress)
+      .sideTokenByOriginalToken(originChainId, originAddressMainToken)
       .call();
     if (destinationTokenAddress === utils.zeroAddress) {
       logger.error("Failed to create side token");
@@ -1506,59 +1622,81 @@ async function getDestinationTokenAddress(
   return destinationTokenAddress;
 }
 
-async function claimTokensFromDestinationBridge(
+async function claimTokensFromDestinationBridge({
   destinationBridgeContract,
-  userAddress,
+  originChainId,
+  originUserAddress,
   amount,
-  receipt,
+  originReceiptSendTransaction,
   destinationTransactionSender,
   destinationBridgeAddress,
-  userPrivateKey
-) {
-  const methodCallClaim = destinationBridgeContract.methods.claim({
-    to: userAddress,
+  originUserPrivateKey,
+}) {
+  console.log(
+    "claimTokensFromDestinationBridge originUserAddress",
+    originUserAddress
+  );
+  console.log("claimTokensFromDestinationBridge amount", amount);
+  console.log(
+    "claimTokensFromDestinationBridge blockHash",
+    originReceiptSendTransaction.blockHash
+  );
+  console.log(
+    "claimTokensFromDestinationBridge transactionHash",
+    originReceiptSendTransaction.transactionHash
+  );
+  console.log(
+    "claimTokensFromDestinationBridge logIndex",
+    originReceiptSendTransaction.logs[3].logIndex
+  );
+  console.log("claimTokensFromDestinationBridge originChainId", originChainId);
+  const destinationMethodCallClaim = destinationBridgeContract.methods.claim({
+    to: originUserAddress,
     amount: amount,
-    blockHash: receipt.blockHash,
-    transactionHash: receipt.transactionHash,
-    logIndex: receipt.logs[3].logIndex,
+    blockHash: originReceiptSendTransaction.blockHash,
+    transactionHash: originReceiptSendTransaction.transactionHash,
+    logIndex: originReceiptSendTransaction.logs[3].logIndex,
+    originChainId: originChainId,
   });
-  await methodCallClaim.call({ from: userAddress });
+  await destinationMethodCallClaim.call({ from: originUserAddress });
   await destinationTransactionSender.sendTransaction(
     destinationBridgeAddress,
-    methodCallClaim.encodeABI(),
+    destinationMethodCallClaim.encodeABI(),
     0,
-    userPrivateKey,
+    originUserPrivateKey,
     true
   );
   logger.debug("Destination Bridge claim completed");
-  return methodCallClaim;
+  return destinationMethodCallClaim;
 }
 
 async function resetConfirmationsForFutureRuns(
-  allowTokensContract,
+  originAllowTokensContract,
   chainConfig,
-  multiSigContract,
+  originMultiSigContract,
   allowTokensAddress,
   cowAddress,
-  mainChainWeb3,
+  originChainWeb3,
   confirmations
 ) {
-  await allowTokensContract.methods
+  await originAllowTokensContract.methods
     .setConfirmations("0", "0", "0")
     .call({ from: chainConfig.mainchain.multiSig });
-  const data = allowTokensContract.methods
+  const data = originAllowTokensContract.methods
     .setConfirmations("0", "0", "0")
     .encodeABI();
 
-  const methodCall = multiSigContract.methods.submitTransaction(
+  const methodCall = originMultiSigContract.methods.submitTransaction(
     allowTokensAddress,
     0,
     data
   );
   await methodCall.call({ from: cowAddress });
   await methodCall.send({ from: cowAddress, gas: 500000 });
-  await utils.evm_mine(1, mainChainWeb3);
-  confirmations = await allowTokensContract.methods.getConfirmations().call();
+  await utils.evm_mine(1, originChainWeb3);
+  confirmations = await originAllowTokensContract.methods
+    .getConfirmations()
+    .call();
   logger.debug(
     `reset confirmations: ${confirmations.smallAmount}, ${confirmations.mediumAmount}, ${confirmations.largeAmount}`
   );
