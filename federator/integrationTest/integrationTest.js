@@ -104,9 +104,11 @@ async function run(
   logger.info("Completed transfer from Mainchain to Sidechain");
 
   logger.info("Starting transfer from Sidechain to Mainchain");
+  const invertOriginFederators = destinationFederators;
+  const invertDestinationFederators = originFederators;
   await transfer(
-    destinationFederators,
-    originFederators,
+    invertOriginFederators,
+    invertDestinationFederators,
     destinationConfig,
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
