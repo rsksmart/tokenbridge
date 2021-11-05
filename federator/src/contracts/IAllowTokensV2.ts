@@ -1,7 +1,7 @@
 import CustomError from '../lib/CustomError';
 import { V2 } from './Constants';
 
-interface getLimitsParams {
+interface GetLimitsParams {
   tokenAddress: string;
 }
 
@@ -57,7 +57,7 @@ export class IAllowTokensV2 {
     }
   }
 
-  async getLimits(objParams: getLimitsParams) {
+  async getLimits(objParams: GetLimitsParams) {
     try {
       let result = this.mapTokenInfoAndLimits[objParams.tokenAddress];
       if (!result) {
