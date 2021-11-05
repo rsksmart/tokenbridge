@@ -130,6 +130,9 @@ function calculatePrefixesSuffixes(nodes) {
 }
 
 function checkHttpsOrLocalhost(url = '') {
+    if (process.env.BRIDGE_SKIP_HTTPS === 'true') {
+        return true;
+    }
     const isHttps = url.startsWith('https://');
     const isLocalhost = url.startsWith('http://127.0.0.1') ||
         url.startsWith('http://172.17.0.1') ||

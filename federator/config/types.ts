@@ -1,4 +1,13 @@
-import { ConfigChain } from './configChain';
+export class ConfigChain {
+  bridge: string;
+  nftBridge: string;
+  federation: string;
+  multiSig: string;
+  allowTokens: string;
+  testToken: string;
+  host: string;
+  fromBlock: number;
+}
 
 export class Config {
   mainchain: ConfigChain; //the json containing the smart contract addresses in rsk

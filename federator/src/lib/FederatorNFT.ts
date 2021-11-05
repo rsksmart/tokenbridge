@@ -1,12 +1,12 @@
 import { Logger } from 'log4js';
-import { Config } from '../../config/configts';
+import { Config } from '../../config/types';
 
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import CustomError from './CustomError';
-import BridgeFactory from '../contracts/BridgeFactory';
-import FederationFactory from '../contracts/FederationFactory';
+import { BridgeFactory } from '../contracts/BridgeFactory';
+import { FederationFactory } from '../contracts/FederationFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
 import { IFederationV3 } from '../contracts/IFederationV3';
@@ -37,8 +37,8 @@ export class FederatorNFT {
     this.sideWeb3 = new web3(config.sidechain.host);
 
     this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
-    this.bridgeFactory = new BridgeFactory(this.config, this.logger, web3);
-    this.federationFactory = new FederationFactory(this.config, this.logger, web3);
+    this.bridgeFactory = new BridgeFactory(this.config, this.logger);
+    this.federationFactory = new FederationFactory(this.config, this.logger);
     this.metricCollector = metricCollector;
   }
 
