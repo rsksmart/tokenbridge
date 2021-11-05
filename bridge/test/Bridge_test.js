@@ -358,7 +358,7 @@ contract('Bridge', async function (accounts) {
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                receipt = await mockContract.callDepositTo(anAccount, chains.ETHEREUM_MAIN_NET_CHAIN_ID, { from: tokenOwner, value: amount });
+                const receipt = await mockContract.callDepositTo(anAccount, chains.ETHEREUM_MAIN_NET_CHAIN_ID, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
@@ -1281,7 +1281,7 @@ contract('Bridge', async function (accounts) {
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
                     assert.equal(obtainedTransactionDataHash, transactionDataHash);
 
-                    receipt = await this.mirrorBridge.claim(
+                    const receipt = await this.mirrorBridge.claim(
                         {
                             to: anAccount,
                             amount: this.amount,
