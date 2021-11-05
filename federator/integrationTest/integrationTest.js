@@ -1694,11 +1694,11 @@ async function resetConfirmationsForFutureRuns(
   await methodCall.call({ from: cowAddress });
   await methodCall.send({ from: cowAddress, gas: 500000 });
   await utils.evm_mine(1, originChainWeb3);
-  confirmations = await originAllowTokensContract.methods
+  const allowTokensConfirmations = await originAllowTokensContract.methods
     .getConfirmations()
     .call();
   logger.debug(
-    `reset confirmations: ${confirmations.smallAmount}, ${confirmations.mediumAmount}, ${confirmations.largeAmount}`
+    `reset confirmations: ${allowTokensConfirmations.smallAmount}, ${allowTokensConfirmations.mediumAmount}, ${allowTokensConfirmations.largeAmount}`
   );
-  return { data, methodCall, confirmations };
+  return { data, methodCall, allowTokensConfirmations };
 }
