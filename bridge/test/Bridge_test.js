@@ -327,7 +327,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
 
-                receipt = await this.bridge.depositTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount });
+                const receipt = await this.bridge.depositTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
                 truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
