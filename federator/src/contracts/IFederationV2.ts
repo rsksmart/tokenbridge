@@ -1,28 +1,25 @@
 import { Config } from '../../config/types';
-import { Contract, EventData } from 'web3-eth-contract';
+import { Contract } from 'web3-eth-contract';
+import { V2 } from './Constants';
 
-export class IFederationV3 {
-  private readonly federationContract: Contract;
-  private config: Config;
+export class IFederationV2 {
+  federationContract: Contract;
+  config: Config;
 
   constructor(config: Config, fedContract: Contract) {
     this.federationContract = fedContract;
     this.config = config;
   }
 
-  getVersion(): string {
-    return 'v3';
+  getVersion() {
+    return V2;
   }
 
-  isMember(address: string): Promise<any> {
-    return this.federationContract.methods.isMember(address).call();
+  isMember(address: string) {
+    return this.federationContract.methods.isMember(address);
   }
 
-  setNFTBridge(address: string, from: string): Promise<any> {
-    return this.federationContract.methods.setNFTBridge(address).call({ from });
-  }
-
-  getTransactionId(paramsObj: any): Promise<any> {
+  getTransactionId(paramsObj: any) {
     return this.federationContract.methods
       .getTransactionId(
         paramsObj.originalTokenAddress,
@@ -36,15 +33,15 @@ export class IFederationV3 {
       .call();
   }
 
-  transactionWasProcessed(txId: string): Promise<boolean> {
+  transactionWasProcessed(txId: string) {
     return this.federationContract.methods.transactionWasProcessed(txId).call();
   }
 
-  hasVoted(txId: string, from: string): Promise<boolean> {
+  hasVoted(txId: string, from: string) {
     return this.federationContract.methods.hasVoted(txId).call({ from });
   }
 
-  getVoteTransactionABI(paramsObj: any): Promise<any> {
+  getVoteTransactionABI(paramsObj: any) {
     return this.federationContract.methods
       .voteTransaction(
         paramsObj.originalTokenAddress,
@@ -54,16 +51,15 @@ export class IFederationV3 {
         paramsObj.blockHash,
         paramsObj.transactionHash,
         paramsObj.logIndex,
-        paramsObj.tokenType,
       )
       .encodeABI();
   }
 
-  getAddress(): string {
+  getAddress() {
     return this.federationContract.options.address;
   }
 
-  getPastEvents(eventName: string, options: any): Promise<EventData[]> {
+  getPastEvents(eventName, options) {
     return this.federationContract.getPastEvents(eventName, options);
   }
 
@@ -71,19 +67,14 @@ export class IFederationV3 {
     txSender: any,
     fedRskBlock: any,
     fedEthBlock: any,
-    fedVersion: any,
+    fedVSN: any,
     nodeRskInfo: any,
     nodeEthInfo: any,
   ) {
-    const emitHeartbeat = await this.federationContract.methods.emitHeartbeat(
-      fedRskBlock,
-      fedEthBlock,
-      fedVersion,
-      nodeRskInfo,
-      nodeEthInfo,
-    );
+    const txData = await this.federationContract.methods
+      .emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo)
+      .encodeABI();
 
-    const txData = emitHeartbeat.encodeABI();
     await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
   }
 }

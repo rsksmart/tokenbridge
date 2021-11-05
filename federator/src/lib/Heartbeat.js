@@ -17,8 +17,8 @@ module.exports = class Heartbeat {
 
         this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
-        this.bridgeFactory = new BridgeFactory(this.config, this.logger, Web3);
-        this.federationFactory = new FederationFactory(this.config, this.logger, Web3);
+        this.bridgeFactory = new BridgeFactory.BridgeFactory(this.config, this.logger);
+        this.federationFactory = new FederationFactory.FederationFactory(this.config, this.logger);
         this.metricCollector = metricCollector;
     }
 
