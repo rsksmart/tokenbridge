@@ -50,6 +50,7 @@ contract('Bridge', async function (accounts) {
     const federation = accounts[5];
     const tokenName = 'MAIN';
     const tokenSymbol = 'MAIN';
+    const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
 
     before(async function () {
         await utils.saveState();
@@ -410,7 +411,6 @@ contract('Bridge', async function (accounts) {
                 const result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -471,7 +471,6 @@ contract('Bridge', async function (accounts) {
                 const result = await mockContract.callTokensReceived(erc777.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -530,7 +529,6 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -603,7 +601,6 @@ contract('Bridge', async function (accounts) {
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
@@ -710,7 +707,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
-                let receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
+                const receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await this.token.balanceOf(bridgeManager);
@@ -882,7 +879,7 @@ contract('Bridge', async function (accounts) {
                 await utils.increaseTimestamp(web3, ONE_DAY + 1);
 
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-                let receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner});
+                const receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner});
                 utils.checkRcpt(receipt);
             });
 
@@ -1440,7 +1437,8 @@ contract('Bridge', async function (accounts) {
                 });
 
                 it('should have CLAIM_TYPEHASH', async function() {
-                    const expectedTypeHash = keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,uint256 originChainId,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
+                    const expectedTypeHash =
+                        keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,uint256 originChainId,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
                     const CLAIM_TYPEHASH = await this.mirrorBridge.CLAIM_TYPEHASH();
                     assert.equal(CLAIM_TYPEHASH, expectedTypeHash);
                 });
@@ -2085,7 +2083,7 @@ contract('Bridge', async function (accounts) {
                         [tokenOwner.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
                     );
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
-                    let receipt = await sideToken.send(this.mirrorBridge.address, this.amountToCrossBack, userData, { from: anAccount });
+                    const receipt = await sideToken.send(this.mirrorBridge.address, this.amountToCrossBack, userData, { from: anAccount });
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
