@@ -41,7 +41,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	address internal federation;
 	uint256 internal feePercentage;
 	string public symbolPrefix;
-	// replaces uint256 internal _depprecatedLastDay;
+	// domainSeparator replaces uint256 internal _depprecatedLastDay;
 	bytes32 public domainSeparator;
 	uint256 internal _deprecatedSpentToday;
 
