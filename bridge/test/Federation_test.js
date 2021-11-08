@@ -1068,7 +1068,7 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -1083,7 +1083,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.COIN,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
                 );
@@ -1186,6 +1186,7 @@ contract('Federation', async function (accounts) {
                   this.NFTtoken.address,
                   anotherAccount,
                   tokenId,
+                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                   { from: deployer }
                 );
                 utils.checkRcpt(receipt);
@@ -1198,8 +1199,8 @@ contract('Federation', async function (accounts) {
                   blockHash,
                   transactionHash,
                   logIndex,
+                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                   chains.HARDHAT_TEST_NET_CHAIN_ID,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID
                 );
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
@@ -1213,7 +1214,7 @@ contract('Federation', async function (accounts) {
                     transactionHash,
                     logIndex,
                     utils.tokenType.NFT,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: federator1 }
                 );
@@ -1243,7 +1244,7 @@ contract('Federation', async function (accounts) {
                   transactionHash,
                   logIndex,
                   utils.tokenType.NFT,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID,
+                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                   chains.HARDHAT_TEST_NET_CHAIN_ID,
                   { from: federator2 }
                 );
