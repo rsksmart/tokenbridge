@@ -1,6 +1,10 @@
 import CustomError from '../lib/CustomError';
 import { V2 } from './Constants';
 
+interface GetLimitsParams {
+  tokenAddress: string;
+}
+
 export class IAllowTokensV2 {
   allowTokensContract: any;
   mapTokenInfoAndLimits: any;
@@ -53,18 +57,18 @@ export class IAllowTokensV2 {
     }
   }
 
-  async getLimits(tokenAddress: string, chainId: number) {
+  async getLimits(objParams: GetLimitsParams) {
     try {
-      let result = this.mapTokenInfoAndLimits[tokenAddress];
+      let result = this.mapTokenInfoAndLimits[objParams.tokenAddress];
       if (!result) {
-        const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(chainId, tokenAddress).call();
+        const infoAndLimits = await this.allowTokensContract.methods.getInfoAndLimits(objParams.tokenAddress).call();
         result = {
           allowed: infoAndLimits.info.allowed,
           mediumAmount: infoAndLimits.limit.mediumAmount,
           largeAmount: infoAndLimits.limit.largeAmount,
         };
         if (result.allowed) {
-          this.mapTokenInfoAndLimits[tokenAddress] = result;
+          this.mapTokenInfoAndLimits[objParams.tokenAddress] = result;
         }
       }
       return result;

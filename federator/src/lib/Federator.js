@@ -34,9 +34,18 @@ module.exports = class Federator {
     this.revertedTxnsPath = `${
       config.storagePath || __dirname
     }/revertedTxns.json`;
-    this.bridgeFactory = new BridgeFactory.BridgeFactory(this.config, this.logger);
-    this.federationFactory = new FederationFactory.FederationFactory(this.config, this.logger);
-    this.allowTokensFactory = new AllowTokensFactory.AllowTokensFactory(this.config, this.logger);
+    this.bridgeFactory = new BridgeFactory.BridgeFactory(
+      this.config,
+      this.logger
+    );
+    this.federationFactory = new FederationFactory.FederationFactory(
+      this.config,
+      this.logger
+    );
+    this.allowTokensFactory = new AllowTokensFactory.AllowTokensFactory(
+      this.config,
+      this.logger
+    );
     this.metricCollector = metricCollector;
   }
 
@@ -48,7 +57,7 @@ module.exports = class Federator {
   }
 
   async run() {
-    let retries = 3;
+    let retries = 1;
     const sleepAfterRetrie = 10_000;
     while (retries > 0) {
       try {
@@ -121,6 +130,8 @@ module.exports = class Federator {
           confirmations
         );
         let lastBlockProcessed = toBlock;
+
+        this.logger.debug("Started the second Log and Process", newToBlock);
         await this.getLogsAndProcess(
           lastBlockProcessed,
           newToBlock,
@@ -196,12 +207,14 @@ module.exports = class Federator {
       const federatorAddress = await this.transactionSender.getAddress(
         this.config.privateKey
       );
-      const fedContract =
+      const sideFedContract =
         await this.federationFactory.getSideFederationContract();
       const allowTokens =
         await this.allowTokensFactory.getMainAllowTokensContract();
 
-      const isMember = await typescriptUtils.retryNTimes(fedContract.isMember(federatorAddress));
+      const isMember = await typescriptUtils.retryNTimes(
+        sideFedContract.isMember(federatorAddress)
+      );
       if (!isMember) {
         throw new Error(
           `This Federator addr:${federatorAddress} is not part of the federation`
@@ -225,25 +238,40 @@ module.exports = class Federator {
           _decimals: decimals,
           _granularity: granularity,
           _typeId: typeId,
+          originChainId: originChainIdStr,
+          destinationChainId: destinationChainIdStr,
         } = log.returnValues;
 
-        const mainBridge = await this.bridgeFactory.getMainBridgeContract();
+        const originChainId = Number(originChainIdStr);
+        const destinationChainId = Number(destinationChainIdStr);
+        const originBridge = await this.bridgeFactory.getMainBridgeContract();
         const sideTokenAddress = await utils.retry3Times(
-          mainBridge.getMappedToken(tokenAddress).call
+          originBridge.getMappedToken({
+            originalTokenAddress: tokenAddress,
+            chainId: destinationChainIdStr,
+          }).call
         );
+
         let allowed, mediumAmount, largeAmount;
         if (sideTokenAddress == utils.zeroAddress) {
           ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits(
-            tokenAddress
+            {
+              tokenAddress: tokenAddress,
+              chainId: originChainId,
+            }
           ));
           if (!allowed) {
             throw new Error(
-              `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}`
+              `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}
+               Bridge Contract Addr ${originBridge}`
             );
           }
         } else {
           ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits(
-            sideTokenAddress
+            {
+              tokenAddress: sideTokenAddress,
+              chainId: originChainId,
+            }
           ));
           if (!allowed) {
             this.logger.error(
@@ -283,7 +311,7 @@ module.exports = class Federator {
         }
 
         const transactionId = await typescriptUtils.retryNTimes(
-          fedContract.getTransactionId({
+          sideFedContract.getTransactionId({
             originalTokenAddress: tokenAddress,
             sender: crossFrom,
             receiver,
@@ -295,21 +323,26 @@ module.exports = class Federator {
             decimals,
             granularity,
             typeId,
+            originChainId,
+            destinationChainId,
           })
         );
         this.logger.info("get transaction id:", transactionId);
 
         const wasProcessed = await typescriptUtils.retryNTimes(
-          fedContract.transactionWasProcessed(transactionId)
+          sideFedContract.transactionWasProcessed(transactionId)
         );
         if (!wasProcessed) {
-          const hasVoted = await fedContract.hasVoted(transactionId, federatorAddress);
+          const hasVoted = await sideFedContract.hasVoted(
+            transactionId,
+            federatorAddress
+          );
           if (!hasVoted) {
             this.logger.info(
               `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`
             );
             await this._voteTransaction(
-              fedContract,
+              sideFedContract,
               tokenAddress,
               crossFrom,
               receiver,
@@ -322,7 +355,9 @@ module.exports = class Federator {
               granularity,
               typeId,
               transactionId,
-              federatorAddress
+              federatorAddress,
+              originChainId,
+              destinationChainId
             );
           } else {
             this.logger.debug(
@@ -343,7 +378,7 @@ module.exports = class Federator {
   }
 
   async _voteTransaction(
-    fedContract,
+    sideFedContract,
     tokenAddress,
     sender,
     receiver,
@@ -356,7 +391,9 @@ module.exports = class Federator {
     granularity,
     typeId,
     txId,
-    federatorAddress
+    federatorAddress,
+    originChainId,
+    destinationChainId
   ) {
     try {
       txId = txId.toLowerCase();
@@ -364,7 +401,7 @@ module.exports = class Federator {
         `TransactionId ${txId} Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`
       );
 
-      const txData = await fedContract.getVoteTransactionABI({
+      const txDataAbi = await sideFedContract.getVoteTransactionABI({
         originalTokenAddress: tokenAddress,
         sender,
         receiver,
@@ -377,6 +414,8 @@ module.exports = class Federator {
         granularity,
         typeId,
         tokenType: utils.tokenType.COIN,
+        originChainId,
+        destinationChainId,
       });
 
       let revertedTxns = {};
@@ -399,12 +438,12 @@ module.exports = class Federator {
       }
 
       this.logger.info(
-        `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`,
+        `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`
       );
 
       const receipt = await this.transactionSender.sendTransaction(
-        fedContract.getAddress(),
-        txData,
+        sideFedContract.getAddress(),
+        txDataAbi,
         0,
         this.config.privateKey
       );
@@ -452,7 +491,7 @@ module.exports = class Federator {
       wasTransactionVoted,
       federatorAddress,
       federator.getVersion(),
-      await this.getCurrentChainId(),
+      await this.getCurrentChainId()
     );
   }
 

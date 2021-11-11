@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+// import "hardhat/console.sol";
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
@@ -64,14 +65,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	mapping (bytes32 => address) public originalTokenAddresses; // transactionHash => originalTokenAddress
 	mapping (bytes32 => address) public senderAddresses; // transactionHash => senderAddress
 
-	// keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
-	bytes32 public constant CLAIM_TYPEHASH = 0xf18ceda3f6355f78c234feba066041a50f6557bfb600201e2a71a89e2dd80433;
+	// keccak256("Claim(address to,uint256 amount,bytes32 transactionHash,uint256 originChainId,address relayer,uint256 fee,uint256 nonce,uint256 deadline)");
+	bytes32 public constant CLAIM_TYPEHASH = 0xaf3ac34fea9cc1b1def33a9bdc482d988feb61b5015ae4a55e2a62bb3600d54c;
 	mapping(address => uint) public nonces;
 
-	//Bridge_v4 variables multichain sideTokenAddressByOriginalTokenAddress
-	mapping (uint256 => mapping(address => address)) public sideTokenAddressByOriginalTokenAddressByChain; // chainId => OriginalToken => SideToken
-	mapping (uint256 => mapping(address => address)) public originalTokenAddressBySideTokenAddressByChain; // chainId => SideToken => OriginalToken
-	mapping (uint256 => mapping(address => bool)) public knownTokenByChain; // chainId => OriginalToken => true
+	//Bridge_v4 variables multichain
+	mapping (uint256 => mapping(address => address)) public sideTokenByOriginalTokenByChain; // chainId => OriginalToken Address => SideToken Address
+	mapping (address => OriginalToken) public originalTokenBySideToken; // SideTokenAddress => struct {}
+	mapping (uint256 => mapping(address => bool)) public knownTokenByChain; // chainId => OriginalToken Address => Know
 
 	event AllowTokensChanged(address _newAllowTokens);
 	event FederationChanged(address _newFederation);
@@ -124,47 +125,45 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return chainId == block.chainid;
 	}
 
-	function sideTokenAddressByOriginalTokenAddress(uint256 chainId, address originalToken) public view returns(address) {
-		// specification for retrocompatibility
-		if (isCurrentChainId(chainId)) {
-			address sideToken = deprecatedMappedTokens[originalToken];
-			if (sideToken != NULL_ADDRESS) {
-				return sideToken;
-			}
+	function sideTokenByOriginalToken(uint256 chainId, address originalToken) public view returns(address) {
+		address sideTokenAddr = sideTokenByOriginalTokenByChain[chainId][originalToken];
+
+		if (sideTokenAddr != NULL_ADDRESS) {
+			return sideTokenAddr;
 		}
 
-		return sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken];
+		// specification for retrocompatibility
+		return deprecatedMappedTokens[originalToken];
 	}
 
 	function setSideTokenByOriginalAddressByChain(uint256 chainId, address originalToken, address sideToken) public onlyOwner {
-		sideTokenAddressByOriginalTokenAddressByChain[chainId][originalToken] = sideToken;
+		sideTokenByOriginalTokenByChain[chainId][originalToken] = sideToken;
 	}
 
-	function originalTokenAddressBySideTokenAddress(uint256 chainId, address sideToken) public view returns(address) {
-		// specification for retrocompatibility
-		if (isCurrentChainId(chainId)) {
-			address originalToken = deprecatedOriginalTokens[sideToken];
-			if (originalToken != NULL_ADDRESS) {
-				return originalToken;
-			}
+	function getOriginalTokenBySideToken(address sideToken) public view returns(OriginalToken memory originalToken) {
+		originalToken = originalTokenBySideToken[sideToken];
+		if (originalToken.tokenAddress != NULL_ADDRESS) {
+			return originalToken;
 		}
 
-		return originalTokenAddressBySideTokenAddressByChain[chainId][sideToken];
+		// specification for retrocompatibility
+		originalToken.originChainId = 1; // ethereum main chain id
+		originalToken.tokenAddress = deprecatedOriginalTokens[sideToken];
+		return originalToken;
 	}
 
-	function setOriginalTokenAddressBySideTokenAddressByChain(uint256 chainId, address sideToken, address originalToken) public onlyOwner {
-		originalTokenAddressBySideTokenAddressByChain[chainId][sideToken] = originalToken;
+	function setOriginalTokenBySideTokenByChain(address sideToken, OriginalToken memory originalToken) public onlyOwner {
+		originalTokenBySideToken[sideToken] = originalToken;
 	}
 
 	function knownToken(uint256 chainId, address originalToken) public view returns(bool) {
-		// specification for retrocompatibility
-		if (isCurrentChainId(chainId)) {
-			bool knownTokenValue = deprecatedKnownTokens[originalToken];
-			if (knownTokenValue) {
-				return knownTokenValue;
-			}
+		bool knowToken = knownTokenByChain[chainId][originalToken];
+		if (knowToken) {
+			return knowToken;
 		}
-		return knownTokenByChain[chainId][originalToken];
+
+		// specification for retrocompatibility
+		return deprecatedKnownTokens[originalToken];
 	}
 
 	function setKnownTokenByChain(uint256 chainId, address originalToken, bool knownTokenValue) public {
@@ -179,11 +178,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		bytes32 _blockHash,
 		bytes32 _transactionHash,
 		uint32 _logIndex,
-		uint256 chainId
+		uint256 _originChainId,
+		uint256	_destinationChainId
 	) external whenNotPaused nonReentrant override {
 		require(_msgSender() == federation, "Bridge: Not Federation");
-		require(knownToken(chainId, _originalTokenAddress) ||
-			sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress) != NULL_ADDRESS,
+		require(knownToken(_originChainId, _originalTokenAddress) ||
+			sideTokenByOriginalToken(_originChainId, _originalTokenAddress) != NULL_ADDRESS,
 			"Bridge: Unknown token"
 		);
 		require(_to != NULL_ADDRESS, "Bridge: Null To");
@@ -206,7 +206,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_blockHash,
 			_transactionHash,
 			_logIndex,
-			chainId
+			_originChainId,
+			_destinationChainId
 		);
 		// Do not remove, claimed also has the previously processed using the older bridge version
 		// https://github.com/rsksmart/tokenbridge/blob/TOKENBRIDGE-1.2.0/bridge/contracts/Bridge.sol#L41
@@ -224,7 +225,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_amount,
 			_blockHash,
 			_logIndex,
-			chainId
+			_originChainId,
+			_destinationChainId
 		);
 	}
 
@@ -234,11 +236,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint8 _originalTokenDecimals,
 		string calldata _originalTokenSymbol,
 		string calldata _originalTokenName,
-		uint256 chainId
+		uint256 originChainId
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
 
-		address sideToken = sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress);
+		address sideToken = sideTokenByOriginalToken(originChainId, _originalTokenAddress);
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
 		uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
@@ -247,11 +249,15 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		// Create side token
 		sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
 
-		setSideTokenByOriginalAddressByChain(chainId, _originalTokenAddress, sideToken);
-		setOriginalTokenAddressBySideTokenAddressByChain(chainId, sideToken, _originalTokenAddress);
-		allowTokens.setToken(chainId, sideToken, _typeId);
+		setSideTokenByOriginalAddressByChain(originChainId, _originalTokenAddress, sideToken);
 
-		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity, chainId);
+		OriginalToken memory originalToken;
+		originalToken.originChainId = originChainId;
+		originalToken.tokenAddress = _originalTokenAddress;
+		setOriginalTokenBySideTokenByChain(sideToken, originalToken);
+		allowTokens.setToken(sideToken, _typeId);
+
+		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity, originChainId);
 	}
 
 	function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
@@ -259,8 +265,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_claimData,
 			_claimData.to,
 			payable(address(0)),
-			0,
-			block.chainid
+			0
 		);
 		return receivedAmount;
 	}
@@ -271,8 +276,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_claimData,
 			_msgSender(),
 			payable(address(0)),
-			0,
-			block.chainid
+			0
 		);
 		return receivedAmount;
 	}
@@ -291,6 +295,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 					_claimData.to,
 					_claimData.amount,
 					_claimData.transactionHash,
+					_claimData.originChainId,
 					_relayer,
 					_fee,
 					nonces[_claimData.to]++,
@@ -302,7 +307,6 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	// Inspired by https://github.com/dapphub/ds-dach/blob/master/src/dach.sol
 	function claimGasless(
-		uint256 chainId,
 		ClaimData calldata _claimData,
 		address payable _relayer,
 		uint256 _fee,
@@ -317,14 +321,12 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		address recoveredAddress = ecrecover(digest, _v, _r, _s);
 		require(_claimData.to != address(0) && recoveredAddress == _claimData.to, "Bridge: INVALID_SIGNATURE");
 
-		receivedAmount = _claim(
+		return _claim(
 			_claimData,
 			_claimData.to,
 			_relayer,
-			_fee,
-			chainId
+			_fee
 		);
-		return receivedAmount;
 	}
 
 	function isClaimed(bytes32 transactionDataHash, bytes32 transactionDataHashMultichain) public view returns(bool) {
@@ -347,8 +349,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		ClaimData calldata _claimData,
 		address payable _reciever,
 		address payable _relayer,
-		uint256 _fee,
-		uint256 chainId
+		uint256 _fee
 	) internal nonReentrant returns (uint256 receivedAmount) {
 		address originalTokenAddress = originalTokenAddresses[_claimData.transactionHash];
 		require(originalTokenAddress != NULL_ADDRESS, "Bridge: Tx not crossed");
@@ -359,32 +360,34 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_claimData.blockHash,
 			_claimData.transactionHash,
 			_claimData.logIndex,
-			chainId
+			_claimData.originChainId,
+			block.chainid
 		);
 
 		require(transactionsDataHashes[_claimData.transactionHash] == transactionDataHash, "Bridge: Wrong transactionDataHash");
 		require(!isClaimed(_claimData, transactionDataHash), "Bridge: Already claimed");
-
 		claimed[transactionDataHash] = true;
-		if (knownToken(chainId, originalTokenAddress)) {
-			receivedAmount =_claimCrossBackToToken(
-				originalTokenAddress,
-				_reciever,
-				_claimData.amount,
-				_relayer,
-				_fee
-			);
-		} else {
-			receivedAmount =_claimCrossToSideToken(
-				originalTokenAddress,
-				_reciever,
-				_claimData.amount,
-				_relayer,
-				_fee,
-				chainId
-			);
-		}
 
+		receivedAmount = _claimCross(
+			_claimData.originChainId,
+			originalTokenAddress,
+			_reciever,
+			_claimData.amount,
+			_relayer,
+			_fee
+		);
+
+		emitClaimed(_claimData, originalTokenAddress, _reciever, _relayer, _fee);
+		return receivedAmount;
+	}
+
+	function emitClaimed(
+		ClaimData calldata _claimData,
+		address originalTokenAddress,
+		address payable _reciever,
+		address payable _relayer,
+		uint256 _fee
+	) internal {
 		emit Claimed(
 			_claimData.transactionHash,
 			originalTokenAddress,
@@ -396,20 +399,46 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 			_reciever,
 			_relayer,
 			_fee,
-			chainId
+			_claimData.originChainId,
+			block.chainid
 		);
-		return receivedAmount;
+	}
+
+	function _claimCross(
+		uint256 chainId,
+		address originalTokenAddress,
+		address payable _reciever,
+		uint256 _amount,
+		address payable _relayer,
+		uint256 _fee
+	) internal returns (uint256) {
+		if (knownToken(chainId, originalTokenAddress)) {
+			return _claimCrossBackToToken(
+				originalTokenAddress,
+				_reciever,
+				_amount,
+				_relayer,
+				_fee
+			);
+		}
+
+		return _claimCrossToSideToken(
+			sideTokenByOriginalToken(chainId, originalTokenAddress),
+			_reciever,
+			_amount,
+			_relayer,
+			_fee
+		);
 	}
 
 	function _claimCrossToSideToken(
-		address _originalTokenAddress,
+		address sideToken,
 		address payable _receiver,
 		uint256 _amount,
 		address payable _relayer,
-		uint256 _fee,
-		uint256 chainId
+		uint256 _fee
 	) internal returns (uint256 receivedAmount) {
-		address sideToken = sideTokenAddressByOriginalTokenAddress(chainId, _originalTokenAddress);
+		require(sideToken != NULL_ADDRESS, "Bridge: side token is null");
 		uint256 granularity = IERC777(sideToken).granularity();
 		uint256 formattedAmount = _amount.mul(granularity);
 		require(_fee <= formattedAmount, "Bridge: fee too high");
@@ -452,11 +481,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		* ERC-20 tokens approve and transferFrom pattern
 		* See https://eips.ethereum.org/EIPS/eip-20#transferfrom
 		*/
-	function receiveTokensTo(uint256 chainId, address tokenToUse, address to, uint256 amount) external override {
+	function receiveTokensTo(uint256 destinationChainId, address tokenToUse, address to, uint256 amount) external override {
 		address sender = _msgSender();
 		//Transfer the tokens on IERC20, they should be already Approved for the bridge Address to use them
 		IERC20(tokenToUse).safeTransferFrom(sender, address(this), amount);
-		crossTokens(tokenToUse, sender, to, amount, "", chainId);
+		crossTokens(tokenToUse, sender, to, amount, "", destinationChainId);
 	}
 
 	/**
@@ -469,48 +498,28 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		crossTokens(address(wrappedCurrency), sender, to, msg.value, "", chainId);
 	}
 
-	function tokensReceived(
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		bytes calldata
-	) external override(IBridge, IERC777Recipient) {
-		return _tokensReceived(operator, from, to, amount, userData, block.chainid);
-	}
-
-	function tokensReceived(
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) external override(IBridge) {
-		return _tokensReceived(operator, from, to, amount, userData, chainId);
-	}
-
 	/**
 		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
 		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
 		*/
-	function _tokensReceived(
+	function tokensReceived(
 		address operator,
 		address from,
 		address to,
 		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) public {
+		bytes calldata userData, // [address,uint256] user addrest receiver, destinationChainId || [uint256] same as from, destinationChainId
+		bytes calldata
+	) external override(IBridge, IERC777Recipient) {
 		//Hook from ERC777address
 		if(operator == address(this)) return; // Avoid loop from bridge calling to ERC77transferFrom
 		require(to == address(this), "Bridge: Not to this address");
 		address tokenToUse = _msgSender();
 		require(ERC1820.getInterfaceImplementer(tokenToUse, _erc777Interface) != NULL_ADDRESS, "Bridge: Not ERC777 token");
-		require(userData.length != 0 || !from.isContract(), "Bridge: Specify receiver address in data");
-		address receiver = userData.length == 0 ? from : LibUtils.bytesToAddress(userData);
-		crossTokens(tokenToUse, from, receiver, amount, userData, chainId);
+		require(userData.length >= 32, "Bridge: user data with at least the destinationChainId");
+		require(userData.length == 64 || !from.isContract(), "Bridge: Specify receiver address in data");
+		address receiver = userData.length == 32 ? from : LibUtils.toAddress(userData, 12);
+		uint256 destinationChainId = LibUtils.toUint256(userData, userData.length - 32);
+		crossTokens(tokenToUse, from, receiver, amount, userData, destinationChainId);
 	}
 
 	function crossTokens(
@@ -519,9 +528,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		address to,
 		uint256 amount,
 		bytes memory userData,
-		uint256 chainId
+		uint256 destinationChainId
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
-		setKnownTokenByChain(chainId, tokenToUse, true);
+		require(block.chainid != destinationChainId, "Bridge: destination chain id equal current chain id");
+		setKnownTokenByChain(destinationChainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
 		uint8 decimals = LibUtils.getDecimals(tokenToUse);
@@ -531,28 +541,36 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		}
 		// We consider the amount before fees converted to 18 decimals to check the limits
 		// updateTokenTransfer revert if token not allowed
-		allowTokens.updateTokenTransfer(chainId, tokenToUse, formattedAmount);
-		address originalTokenAddress = tokenToUse;
+		allowTokens.updateTokenTransfer(tokenToUse, formattedAmount);
 
-		address sideTokenAddress = originalTokenAddressBySideTokenAddress(chainId, tokenToUse);
-		if (sideTokenAddress != NULL_ADDRESS) {
-			//Side Token Crossing
-			originalTokenAddress = sideTokenAddress;
+		OriginalToken memory sideToken = getOriginalTokenBySideToken(tokenToUse);
+		if (sideToken.tokenAddress != NULL_ADDRESS) {
+			// Side Token Crossing back
 			uint256 granularity = LibUtils.getGranularity(tokenToUse);
 			uint256 modulo = amountMinusFees.mod(granularity);
 			fee = fee.add(modulo);
 			amountMinusFees = amountMinusFees.sub(modulo);
 			IERC777(tokenToUse).burn(amountMinusFees, userData);
+			emit Cross(
+				sideToken.tokenAddress,
+				from,
+				to,
+				amountMinusFees,
+				userData,
+				block.chainid,
+				destinationChainId
+			);
+		} else {
+			emit Cross(
+				tokenToUse,
+				from,
+				to,
+				amountMinusFees,
+				userData,
+				block.chainid,
+				destinationChainId
+			);
 		}
-
-		emit Cross(
-			originalTokenAddress,
-			from,
-			to,
-			amountMinusFees,
-			userData,
-			chainId
-		);
 
 		if (fee > 0) {
 			//Send the payment to the MultiSig of the Federation
@@ -560,6 +578,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		}
 	}
 
+	// function for retrocompatibility
 	function getTransactionDataHash(
 		address _to,
 		uint256 _amount,
@@ -576,9 +595,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		bytes32 _blockHash,
 		bytes32 _transactionHash,
 		uint32 _logIndex,
-		uint256 _chainId
+		uint256 _originChainId,
+		uint256	_destinationChainId
 	) public pure override returns(bytes32) {
-		return keccak256(abi.encodePacked(_blockHash, _transactionHash, _to, _amount, _logIndex, _chainId));
+		return keccak256(abi.encodePacked(_blockHash, _transactionHash, _to, _amount, _logIndex, _originChainId, _destinationChainId));
 	}
 
 	function setFeePercentage(uint amount) external onlyOwner {

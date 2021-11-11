@@ -11,13 +11,18 @@ import utils from '../lib/utils';
 import { V2, V3, V4 } from './Constants';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
+import { Logger } from 'log4js';
+import { Config } from '../../config/types';
+import { Contract } from 'web3-eth-contract';
+import Web3 from 'web3';
 
 export class FederationFactory extends ContractFactory {
-  mainChainBridgeContract: any;
-  sideChainBridgeContract: any;
-  mainChainNftBridgeContract: any;
-  sideChainNftBridgeContract: any;
-  constructor(config, logger) {
+  mainChainBridgeContract: Contract;
+  sideChainBridgeContract: Contract;
+  mainChainNftBridgeContract: Contract;
+  sideChainNftBridgeContract: Contract;
+
+  constructor(config: Config, logger: Logger) {
     super(config, logger);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],
@@ -41,7 +46,7 @@ export class FederationFactory extends ContractFactory {
     }
   }
 
-  async createInstance(web3, address) {
+  async createInstance(web3: Web3, address: string) {
     let federationContract = this.getContractByAbi(abiFederationV4 as AbiItem[], address, web3);
     const version = await this.getVersion(federationContract);
 
@@ -59,7 +64,7 @@ export class FederationFactory extends ContractFactory {
     }
   }
 
-  async getVersion(federationContract) {
+  async getVersion(federationContract: Contract) {
     try {
       return await utils.retry3Times(federationContract.methods.version().call);
     } catch (err) {

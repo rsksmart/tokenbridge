@@ -13,15 +13,15 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const AllowTokensV1 = await deployments.get('AllowTokensV1');
+  const AllowTokens = await deployments.get('AllowTokens');
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
 
   const deployedJson = deployHelper.getDeployed(network.name);
   const typesInfo = chains.isMainnet(network) ? tokensTypesMainnet() : tokensTypesTestnet();
 
-  const allowTokensLogicV1 = new web3.eth.Contract(AllowTokensV1.abi, AllowTokensV1.address);
-  const methodCall = allowTokensLogicV1.methods.initialize(
+  const allowTokensLogic = new web3.eth.Contract(AllowTokens.abi, AllowTokens.address);
+  const methodCall = allowTokensLogic.methods.initialize(
     deployer,
     bridgeProxyAddress,
     deployedJson.smallAmountConfirmations ?? '0',
@@ -35,7 +35,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     from: deployer,
     contract: 'TransparentUpgradeableProxy',
     args: [
-      AllowTokensV1.address,
+      AllowTokens.address,
       proxyAdminAddress,
       methodCall.encodeABI()
     ],
@@ -48,7 +48,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'deploy_allow_tokens_proxy'; // id required to prevent reexecution
 module.exports.tags = ['AllowTokensProxy', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['ProxyAdmin', 'BridgeProxy', 'AllowTokensV1'];
+module.exports.dependencies = ['ProxyAdmin', 'BridgeProxy', 'AllowTokens'];
 
 function tokensTypesMainnet() {
   return [
