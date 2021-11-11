@@ -1,11 +1,12 @@
 import { Config } from '../../config/types';
 import { Contract, EventData } from 'web3-eth-contract';
+import { BN } from 'ethereumjs-util';
 
 interface TransactionIdParams {
   originalTokenAddress: string;
   sender: string;
   receiver: string;
-  amount: number;
+  amount: BN;
   blockHash: string;
   transactionHash: string;
   logIndex: number;
