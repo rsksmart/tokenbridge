@@ -109,7 +109,7 @@ export class FederationFactory extends ContractFactory {
   }
 
   createFederatorInstance(web3, address) {
-    const federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
-    return new IFederationV3(this.config, federationContract);
+    const federationContract = this.getContractByAbi(abiFederationV4 as AbiItem[], address, web3);
+    return new IFederationV4(this.config, federationContract);
   }
 }

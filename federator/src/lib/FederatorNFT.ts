@@ -9,9 +9,9 @@ import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
-import { IFederationV3 } from '../contracts/IFederationV3';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
+import { IFederationV4 } from '../contracts/IFederationV4';
 
 export class FederatorNFT {
   public logger: Logger;
@@ -22,7 +22,7 @@ export class FederatorNFT {
   public transactionSender: TransactionSender;
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
-  private federatorContract: import('../contracts/IFederationV3').IFederationV3;
+  private federatorContract: IFederationV4;
   private readonly metricCollector: MetricCollector;
   private chainId: number;
 
@@ -80,7 +80,7 @@ export class FederatorNFT {
    * get federator as singleton
    * @returns Federator Interface
    */
-  async getFederator(): Promise<import('../contracts/IFederationV3').IFederationV3> {
+  async getFederator(): Promise<IFederationV4> {
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }
@@ -126,7 +126,7 @@ export class FederatorNFT {
         }
 
         if (!fs.existsSync(this.config.storagePath)) {
-          await fs.mkdirSync(this.config.storagePath, {
+          fs.mkdirSync(this.config.storagePath, {
             recursive: true,
           });
         }
@@ -172,7 +172,7 @@ export class FederatorNFT {
   async getLogsAndProcess(fromBlock: number, toBlock: number, currentBlock: number): Promise<void> {
     if (fromBlock >= toBlock) return;
 
-    const mainBridge = await this.bridgeFactory.getMainNftBridgeContract();
+    const mainBridge = this.bridgeFactory.getMainNftBridgeContract();
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
@@ -201,7 +201,7 @@ export class FederatorNFT {
   async _processLogs(logs: any, currentBlock: number): Promise<boolean> {
     try {
       const federatorAddress = await this.transactionSender.getAddress(this.config.privateKey);
-      const fedContract: IFederationV3 = await this.getFederator();
+      const fedContract = await this.getFederator();
       const isMember: boolean = await typescriptUtils.retryNTimes(fedContract.isMember(federatorAddress));
       if (!isMember) {
         throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
@@ -212,7 +212,17 @@ export class FederatorNFT {
 
         const { blockHash, transactionHash, logIndex, blockNumber } = log;
 
-        const { _to: receiver, _from: sender, _tokenId: tokenId } = log.returnValues;
+        const {
+          _to: receiver,
+          _from: sender,
+          _tokenId: tokenIdStr,
+          _originChainId: originChainIdStr,
+          _destinationChainId: destinationChainIdStr,
+        } = log.returnValues;
+
+        const originChainId = Number(originChainIdStr);
+        const destinationChainId = Number(destinationChainIdStr);
+        const tokenId = Number(tokenIdStr);
 
         const originalTokenAddress = log.returnValues._originalTokenAddress.toLowerCase();
         const blocksConfirmed = currentBlock - blockNumber;
@@ -226,13 +236,15 @@ export class FederatorNFT {
 
         const transactionId = await typescriptUtils.retryNTimes(
           fedContract.getTransactionId({
-            originalTokenAddress: originalTokenAddress,
+            originalTokenAddress,
             sender,
             receiver,
             amount: tokenId,
             blockHash,
             transactionHash,
             logIndex,
+            originChainId,
+            destinationChainId,
           }),
         );
         this.logger.info('get transaction id:', transactionId);
@@ -270,6 +282,8 @@ export class FederatorNFT {
           log.logIndex,
           transactionId,
           federatorAddress,
+          originChainId,
+          destinationChainId,
         );
       }
 
@@ -289,6 +303,8 @@ export class FederatorNFT {
     logIndex: number,
     txId: string,
     federatorAddress: string,
+    originChainId: number,
+    destinationChainId: number,
   ): Promise<boolean> {
     try {
       txId = txId.toLowerCase();
@@ -306,6 +322,8 @@ export class FederatorNFT {
         transactionHash,
         logIndex,
         tokenType: utils.tokenType.NFT,
+        originChainId,
+        destinationChainId,
       });
 
       this.logger.debug(
@@ -326,10 +344,9 @@ export class FederatorNFT {
         federatorAddress,
       );
     } catch (err) {
-      throw new CustomError(
-        `Exception Voting tx:${transactionHash} block: ${blockHash} originalTokenAddress: ${originalTokenAddress}`,
-        err,
-      );
+      const msgError = `Exception Voting tx:${transactionHash} block: ${blockHash} originalTokenAddress: ${originalTokenAddress}`;
+      this.logger.error(msgError, err);
+      throw new CustomError(msgError, err);
     }
   }
 
