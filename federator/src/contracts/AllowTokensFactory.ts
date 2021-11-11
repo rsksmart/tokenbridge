@@ -10,7 +10,7 @@ import { Config } from '../../config/types';
 import { IAllowTokensV2 } from './IAllowTokensV2';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
-import { V0, V1, V2 } from './Constants';
+import { VERSIONS } from './Constants';
 import { Logger } from 'log4js';
 
 export class AllowTokensFactory extends ContractFactory {
@@ -32,7 +32,7 @@ export class AllowTokensFactory extends ContractFactory {
     try {
       return await utils.retry3Times(allowTokensContract.methods.version().call);
     } catch (err) {
-      return 'v0';
+      return VERSIONS.V0;
     }
   }
 
@@ -42,12 +42,12 @@ export class AllowTokensFactory extends ContractFactory {
     const chainId = await utils.retry3Times(web3.eth.net.getId);
 
     switch (version) {
-      case V2:
+      case VERSIONS.V2:
         return new IAllowTokensV2(allowTokensContract, chainId);
-      case V1:
+      case VERSIONS.V1:
         allowTokensContract = this.getContractByAbi(abiAllowTokensV1 as AbiItem[], address, web3);
         return new IAllowTokensV1(allowTokensContract);
-      case V0:
+      case VERSIONS.V0:
         allowTokensContract = this.getContractByAbi(abiAllowTokensV0 as AbiItem[], address, web3);
         return new IAllowTokensV0(allowTokensContract, chainId);
       default:
