@@ -893,11 +893,11 @@ contract("Bridge NFT", async function(accounts) {
       }
 
       async function claimTokenFromBridgeEnsuringEventEmission(bridge, to, from, tokenId, tokenAddress, blockHash,
-                                                                transactionHash, logIndex, originChainId) {
+                                                                nftTransactionHash, nftLogIndex, originChainId) {
         const receipt = await bridge.claim(
             {
               to: to, from: from, tokenId: tokenId, tokenAddress: tokenAddress,
-              blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex,
+              blockHash: blockHash, transactionHash: nftTransactionHash, logIndex: nftLogIndex,
               originChainId: originChainId,
             },
             {from: to}
@@ -905,13 +905,13 @@ contract("Bridge NFT", async function(accounts) {
 
         truffleAssert.eventEmitted(receipt, claimedNFTTokenEventType, (event) => {
           return (
-              event._transactionHash === transactionHash &&
+              event._transactionHash === nftTransactionHash &&
               event._originalTokenAddress === tokenAddress &&
               event._to === to &&
               event._sender === from &&
               event._tokenId.eq(new BN(tokenId)) &&
               event._blockHash === blockHash &&
-              event._logIndex.eq(new BN(logIndex)) &&
+              event._logIndex.eq(new BN(nftLogIndex)) &&
               event._receiver === to
           );
         });
