@@ -224,8 +224,10 @@ contract FederationV3 is Initializable, UpgradableOwnable, IFederationV3 {
         value,
         blockHash,
         transactionHash,
-        logIndex
-      );
+        logIndex,
+        block.chainid,
+        block.chainid
+      ); // TODO: remove the v3
       return;
     }
 

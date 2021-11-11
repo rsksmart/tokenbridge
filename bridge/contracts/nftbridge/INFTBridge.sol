@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface INFTBridge {
+
   struct NFTClaimData {
     address payable to;
     address from;
@@ -12,7 +13,13 @@ interface INFTBridge {
     bytes32 blockHash;
     bytes32 transactionHash;
     uint32 logIndex;
+    uint256 originChainId;
   }
+
+	struct OriginalNft {
+		address nftAddress;
+		uint256 originChainId;
+	}
 
   function version() external pure returns (string memory);
 
@@ -21,7 +28,8 @@ interface INFTBridge {
   function receiveTokensTo(
     address tokenAddress,
     address to,
-    uint256 tokenId
+    uint256 tokenId,
+    uint256 destinationChainId
   ) external payable;
 
   /**
@@ -34,7 +42,9 @@ interface INFTBridge {
     uint256 _tokenId,
     bytes32 _blockHash,
     bytes32 _transactionHash,
-    uint32 _logIndex
+    uint32 _logIndex,
+    uint256 _originChainId,
+	uint256	_destinationChainId
   ) external;
 
   /**
@@ -51,7 +61,9 @@ interface INFTBridge {
     address _tokenAddress,
     bytes32 _blockHash,
     bytes32 _transactionHash,
-    uint32 _logIndex
+    uint32 _logIndex,
+    uint256 _originChainId,
+		uint256	_destinationChainId
   ) external returns (bytes32);
 
   event Cross(
@@ -62,12 +74,15 @@ interface INFTBridge {
     bytes _userData,
     uint256 _totalSupply,
     uint256 _tokenId,
-    string _tokenURI
+    string _tokenURI,
+    uint256 _originChainId,
+	uint256 _destinationChainId
   );
   event NewSideNFTToken(
     address indexed _newSideNFTTokenAddress,
     address indexed _originalTokenAddress,
-    string _newSymbol
+    string _newSymbol,
+    uint256 originChainId
   );
   event AcceptedNFTCrossTransfer(
     bytes32 indexed _transactionHash,
@@ -76,7 +91,9 @@ interface INFTBridge {
     address _from,
     uint256 _tokenId,
     bytes32 _blockHash,
-    uint256 _logIndex
+    uint256 _logIndex,
+    uint256 _originChainId,
+	uint256	_destinationChainId
   );
   event FixedFeeNFTChanged(uint256 _amount);
   event ClaimedNFTToken(
@@ -87,6 +104,8 @@ interface INFTBridge {
     uint256 _tokenId,
     bytes32 _blockHash,
     uint256 _logIndex,
-    address _receiver
+    address _receiver,
+    uint256 _originChainId,
+	uint256	_destinationChainId
   );
 }

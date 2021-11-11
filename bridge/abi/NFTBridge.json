@@ -43,6 +43,18 @@
         "internalType": "uint256",
         "name": "_logIndex",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "AcceptedNFTCrossTransfer",
@@ -111,6 +123,18 @@
         "internalType": "address",
         "name": "_receiver",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "ClaimedNFTToken",
@@ -166,6 +190,18 @@
         "internalType": "string",
         "name": "_tokenURI",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "Cross",
@@ -217,6 +253,12 @@
         "internalType": "string",
         "name": "_newSymbol",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
       }
     ],
     "name": "NewSideNFTToken",
@@ -381,6 +423,16 @@
         "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "acceptTransfer",
@@ -491,6 +543,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct INFTBridge.NFTClaimData",
@@ -541,6 +598,11 @@
             "internalType": "uint32",
             "name": "logIndex",
             "type": "uint32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct INFTBridge.NFTClaimData",
@@ -598,6 +660,11 @@
         "internalType": "string",
         "name": "_contractURI",
         "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
       }
     ],
     "name": "createSideNFTToken",
@@ -626,6 +693,61 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sideToken",
+        "type": "address"
+      }
+    ],
+    "name": "getOriginalTokenBySideToken",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "nftAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct INFTBridge.OriginalNft",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      }
+    ],
+    "name": "getSideTokenByOriginalToken",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -691,6 +813,16 @@
         "internalType": "uint32",
         "name": "_logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "getTransactionDataHash",
@@ -798,12 +930,41 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      }
+    ],
+    "name": "isAddressFromCrossedOriginalToken",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "addressHasCrossed",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "isAddressFromCrossedOriginalToken",
+    "name": "isAddressFromCrossedOriginalTokenByChain",
     "outputs": [
       {
         "internalType": "bool",
@@ -901,12 +1062,17 @@
         "type": "address"
       }
     ],
-    "name": "originalTokenAddressBySideTokenAddress",
+    "name": "originalTokenBySideToken",
     "outputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "nftAddress",
         "type": "address"
+      },
+      {
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -961,6 +1127,11 @@
         "internalType": "uint256",
         "name": "tokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "receiveTokensTo",
@@ -986,11 +1157,87 @@
     "inputs": [
       {
         "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      },
+      {
+        "internalType": "bool",
+        "name": "addressHasCrossed",
+        "type": "bool"
+      }
+    ],
+    "name": "setAddressFromCrossedOriginalToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
         "name": "amount",
         "type": "uint256"
       }
     ],
     "name": "setFixedFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sideToken",
+        "type": "address"
+      },
+      {
+        "components": [
+          {
+            "internalType": "address",
+            "name": "nftAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "originChainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct INFTBridge.OriginalNft",
+        "name": "originalToken",
+        "type": "tuple"
+      }
+    ],
+    "name": "setOriginalTokenBySideToken",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "chainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "address",
+        "name": "originalToken",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "sideToken",
+        "type": "address"
+      }
+    ],
+    "name": "setSideTokenByOriginalToken",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1011,12 +1258,17 @@
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      },
+      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "sideTokenAddressByOriginalTokenAddress",
+    "name": "sideTokenByOriginalTokenByChain",
     "outputs": [
       {
         "internalType": "address",

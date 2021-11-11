@@ -3,6 +3,7 @@
 pragma solidity ^0.8.0;
 pragma abicoder v2;
 
+
 // Import base Initializable contract
 import "../zeppelin/upgradable/Initializable.sol";
 // Import interface and library from OpenZeppelin contracts
@@ -51,10 +52,11 @@ contract NFTBridge is
   uint256 internal fixedFee;
   string public symbolPrefix;
 
-  mapping(address => address) public sideTokenAddressByOriginalTokenAddress;
-  mapping(address => address) public originalTokenAddressBySideTokenAddress;
-  mapping(address => bool) public isAddressFromCrossedOriginalToken; // address => returns true if it's an original token address crossed previously (whether it comes from main or side chain)
+  mapping(uint256 => mapping(address => address)) public sideTokenByOriginalTokenByChain;
+  mapping(address => OriginalNft) public originalTokenBySideToken;
+  mapping(uint256 => mapping(address => bool)) public isAddressFromCrossedOriginalTokenByChain; // uint256 => address => returns true if it's an original token address crossed previously (whether it comes from main or side chain)
   mapping(bytes32 => bool) public claimed; // transactionDataHash => true // previously named processed
+
   IAllowTokens public allowTokens;
   ISideNFTTokenFactory public sideTokenFactory;
   bool public isUpgrading;
@@ -101,12 +103,14 @@ contract NFTBridge is
     uint256 _tokenId,
     bytes32 _blockHash,
     bytes32 _transactionHash,
-    uint32 _logIndex
+    uint32 _logIndex,
+    uint256 _originChainId,
+	uint256	_destinationChainId
   ) external whenNotPaused nonReentrant override {
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
-      isAddressFromCrossedOriginalToken[_tokenAddress] ||
-      sideTokenAddressByOriginalTokenAddress[_tokenAddress] != NULL_ADDRESS,
+      isAddressFromCrossedOriginalToken(_originChainId, _tokenAddress) ||
+      getSideTokenByOriginalToken(_originChainId, _tokenAddress) != NULL_ADDRESS,
       "NFTBridge: Unknown token"
     );
     require(_to != NULL_ADDRESS, "NFTBridge: Null To");
@@ -125,11 +129,13 @@ contract NFTBridge is
       _tokenAddress,
       _blockHash,
       _transactionHash,
-      _logIndex
+      _logIndex,
+      _originChainId,
+	_destinationChainId
     );
+
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
     require(!claimed[_transactionDataHash], "NFTBridge: Already claimed");
-
     transactionDataHashes[_transactionHash] = _transactionDataHash;
 //    tokenAddressByTransactionHash[_transactionHash] = _tokenAddress;
 //    senderAddresses[_transactionHash] = _from;
@@ -141,8 +147,34 @@ contract NFTBridge is
       _from,
       _tokenId,
       _blockHash,
-      _logIndex
+      _logIndex,
+      _originChainId,
+	_destinationChainId
     );
+  }
+
+  function getSideTokenByOriginalToken(uint256 chainId, address originalToken) public view returns(address) {
+    return sideTokenByOriginalTokenByChain[chainId][originalToken];
+  }
+
+  function setSideTokenByOriginalToken(uint256 chainId, address originalToken, address sideToken) public {
+    sideTokenByOriginalTokenByChain[chainId][originalToken] = sideToken;
+  }
+
+  function getOriginalTokenBySideToken(address sideToken) public view returns(OriginalNft memory) {
+    return originalTokenBySideToken[sideToken];
+  }
+
+  function setOriginalTokenBySideToken(address sideToken, OriginalNft memory originalToken) public {
+    originalTokenBySideToken[sideToken] = originalToken;
+  }
+
+  function isAddressFromCrossedOriginalToken(uint256 chainId, address originalToken) public view returns(bool addressHasCrossed) {
+    return isAddressFromCrossedOriginalTokenByChain[chainId][originalToken];
+  }
+
+  function setAddressFromCrossedOriginalToken(uint256 chainId, address originalToken, bool addressHasCrossed) public {
+    isAddressFromCrossedOriginalTokenByChain[chainId][originalToken] = addressHasCrossed;
   }
 
   function createSideNFTToken(
@@ -150,19 +182,25 @@ contract NFTBridge is
     string calldata _originalTokenSymbol,
     string calldata _originalTokenName,
     string calldata _baseURI,
-    string calldata _contractURI
+    string calldata _contractURI,
+    uint256 originChainId
   ) external onlyOwner {
     require(_originalTokenAddress != NULL_ADDRESS, "NFTBridge: Null original token address");
-    address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[_originalTokenAddress];
-    require(sideTokenAddress == NULL_ADDRESS, "NFTBridge: Side token already exists");
+
+    require(getSideTokenByOriginalToken(originChainId, _originalTokenAddress) == NULL_ADDRESS, "NFTBridge: Side token already exists");
     string memory sideTokenSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
     // Create side token
-    sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI, _contractURI);
+    address sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI, _contractURI);
 
-    sideTokenAddressByOriginalTokenAddress[_originalTokenAddress] = sideTokenAddress;
-    originalTokenAddressBySideTokenAddress[sideTokenAddress] = _originalTokenAddress;
-    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol);
+    setSideTokenByOriginalToken(originChainId, _originalTokenAddress, sideTokenAddress);
+
+    OriginalNft memory originalNft;
+    originalNft.originChainId = originChainId;
+    originalNft.nftAddress = _originalTokenAddress;
+    setOriginalTokenBySideToken(sideTokenAddress, originalNft);
+
+    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol, originChainId);
   }
 
   function claim(NFTClaimData calldata _claimData) external override {
@@ -188,8 +226,12 @@ contract NFTBridge is
       tokenAddress,
       _claimData.blockHash,
       _claimData.transactionHash,
-      _claimData.logIndex
+      _claimData.logIndex,
+      _claimData.originChainId,
+      block.chainid
     );
+
+
     require(
       transactionDataHashes[_claimData.transactionHash] == transactionDataHash,
       "NFTBridge: Wrong txDataHash"
@@ -197,11 +239,10 @@ contract NFTBridge is
     require(!claimed[transactionDataHash], "NFTBridge: Already claimed");
 
     claimed[transactionDataHash] = true;
-    bool isClaimBeingRequestedInMainChain = isAddressFromCrossedOriginalToken[tokenAddress];
-    if (isClaimBeingRequestedInMainChain) {
+    if (isAddressFromCrossedOriginalToken(_claimData.originChainId, tokenAddress)) {
       IERC721(tokenAddress).safeTransferFrom(address(this), _receiver, tokenId);
     } else {
-      address sideTokenAddress = sideTokenAddressByOriginalTokenAddress[tokenAddress];
+      address sideTokenAddress = getSideTokenByOriginalToken(_claimData.originChainId, tokenAddress);
       ISideNFTToken(sideTokenAddress).mint(_receiver, tokenId);
     }
 
@@ -213,7 +254,9 @@ contract NFTBridge is
       _claimData.tokenId,
       _claimData.blockHash,
       _claimData.logIndex,
-      _receiver
+      _receiver,
+      _claimData.originChainId,
+      block.chainid
     );
   }
 
@@ -233,14 +276,15 @@ contract NFTBridge is
   function receiveTokensTo(
     address tokenAddress,
     address to,
-    uint256 tokenId
+    uint256 tokenId,
+    uint256 destinationChainId
   ) public payable override {
     address tokenCreator = getTokenCreator(tokenAddress, tokenId);
     address payable sender = _msgSender();
     // Transfer the tokens on IERC721, they should be already Approved for the bridge Address to use them
     IERC721(tokenAddress).transferFrom(sender, address(this), tokenId);
 
-    crossTokens(tokenAddress, to, tokenCreator, "", tokenId);
+    crossTokens(tokenAddress, to, tokenCreator, "", tokenId, destinationChainId);
 
     if (fixedFee == 0) {
       return;
@@ -261,29 +305,45 @@ contract NFTBridge is
     address to,
     address tokenCreator,
     bytes memory userData,
-    uint256 tokenId
+    uint256 tokenId,
+    uint256 destinationChainId
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
-    isAddressFromCrossedOriginalToken[tokenAddress] = true;
+    require(block.chainid != destinationChainId, "NFTBridge: destination chain id equal current chain id");
+    setAddressFromCrossedOriginalToken(destinationChainId, tokenAddress, true);
 
     IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
     string memory tokenURI = metadataIERC.tokenURI(tokenId);
 
-    address originalTokenAddress = tokenAddress;
-    if (originalTokenAddressBySideTokenAddress[tokenAddress] != NULL_ADDRESS) {
-      originalTokenAddress = originalTokenAddressBySideTokenAddress[tokenAddress];
+    OriginalNft memory originalToken = getOriginalTokenBySideToken(tokenAddress);
+    if (originalToken.nftAddress != NULL_ADDRESS) {
       ERC721Burnable(tokenAddress).burn(tokenId);
+      emit Cross(
+        originalToken.nftAddress,
+        _msgSender(),
+        to,
+        tokenCreator,
+        userData,
+        enumerable.totalSupply(),
+        tokenId,
+        tokenURI,
+        block.chainid,
+				destinationChainId
+      );
+      return;
     }
 
     emit Cross(
-      originalTokenAddress,
+      tokenAddress,
       _msgSender(),
       to,
       tokenCreator,
       userData,
       enumerable.totalSupply(),
       tokenId,
-      tokenURI
+      tokenURI,
+      block.chainid,
+      destinationChainId
     );
   }
 
@@ -294,7 +354,9 @@ contract NFTBridge is
     address _tokenAddress,
     bytes32 _blockHash,
     bytes32 _transactionHash,
-    uint32 _logIndex
+    uint32 _logIndex,
+    uint256 _originChainId,
+	uint256	_destinationChainId
   ) public pure override returns (bytes32) {
     return keccak256(
       abi.encodePacked(
@@ -304,7 +366,9 @@ contract NFTBridge is
         _from,
         _tokenId,
         _tokenAddress,
-        _logIndex
+        _logIndex,
+        _originChainId,
+        _destinationChainId
       )
     );
   }
