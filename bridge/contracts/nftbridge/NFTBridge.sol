@@ -105,7 +105,7 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-		uint256	_destinationChainId
+	uint256	_destinationChainId
   ) external whenNotPaused nonReentrant override {
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     require(
@@ -131,7 +131,7 @@ contract NFTBridge is
       _transactionHash,
       _logIndex,
       _originChainId,
-		  _destinationChainId
+	_destinationChainId
     );
 
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
@@ -149,7 +149,7 @@ contract NFTBridge is
       _blockHash,
       _logIndex,
       _originChainId,
-		  _destinationChainId
+	_destinationChainId
     );
   }
 
@@ -356,7 +356,7 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-		uint256	_destinationChainId
+	uint256	_destinationChainId
   ) public pure override returns (bytes32) {
     return keccak256(
       abi.encodePacked(
