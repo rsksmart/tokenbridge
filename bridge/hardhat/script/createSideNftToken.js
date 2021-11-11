@@ -57,10 +57,10 @@ async function main() {
     });
     console.log("Transaction worked", receipt.transactionHash);
 
-    const sideTokenAddress = await nftBridge.methods.sideTokenAddressByOriginalTokenAddress(nftToken.originalTokenAddress).call({from: MultiSigWallet.address});
+    const sideTokenAddress = await nftBridge.methods.getSideTokenByOriginalToken(nftToken.originalTokenAddress).call({from: MultiSigWallet.address});
     console.log("Token address Mapped for", nftToken.name, ":", sideTokenAddress);
-    const originalTokenAddress = await nftBridge.methods.originalTokenAddressBySideTokenAddress(nftToken.originalTokenAddress).call({from: MultiSigWallet.address});
-    console.log("Token address Original for", nftToken.name, ":", originalTokenAddress);
+    const originalToken = await nftBridge.methods.getOriginalTokenBySideToken(nftToken.originalTokenAddress).call({from: MultiSigWallet.address});
+    console.log("Token address Original for", nftToken.name, ":", originalToken);
   }
 
   console.log("finish");
