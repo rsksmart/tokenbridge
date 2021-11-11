@@ -6,9 +6,9 @@ interface TransactionIdParams {
   sender: string;
   receiver: string;
   amount: number;
-  blockHash: number;
+  blockHash: string;
   transactionHash: string;
-  logIndex: string;
+  logIndex: number;
   originChainId: number;
   destinationChainId: number;
 }
