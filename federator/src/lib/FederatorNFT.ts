@@ -12,6 +12,7 @@ import * as typescriptUtils from './typescriptUtils';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
 import { IFederationV4 } from '../contracts/IFederationV4';
+import { BN } from 'ethereumjs-util';
 
 export class FederatorNFT {
   public logger: Logger;
@@ -222,7 +223,7 @@ export class FederatorNFT {
 
         const originChainId = Number(originChainIdStr);
         const destinationChainId = Number(destinationChainIdStr);
-        const tokenId = Number(tokenIdStr);
+        const tokenId = new BN(tokenIdStr);
 
         const originalTokenAddress = log.returnValues._originalTokenAddress.toLowerCase();
         const blocksConfirmed = currentBlock - blockNumber;
@@ -297,7 +298,7 @@ export class FederatorNFT {
     originalTokenAddress: string,
     sender: string,
     receiver: string,
-    tokenId: number,
+    tokenId: BN,
     blockHash: string,
     transactionHash: string,
     logIndex: number,
@@ -354,7 +355,7 @@ export class FederatorNFT {
     originalTokenAddress: string,
     sender: string,
     receiver: string,
-    tokenId: number,
+    tokenId: BN,
     blockHash: string,
     transactionHash: string,
     logIndex: number,
