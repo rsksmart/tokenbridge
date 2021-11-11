@@ -1,6 +1,6 @@
 import { Config } from '../../config/types';
 import { Contract } from 'web3-eth-contract';
-import { V2 } from './Constants';
+import { VERSIONS } from './Constants';
 
 export class IFederationV2 {
   federationContract: Contract;
@@ -12,7 +12,7 @@ export class IFederationV2 {
   }
 
   getVersion() {
-    return V2;
+    return VERSIONS.V2;
   }
 
   isMember(address: string) {

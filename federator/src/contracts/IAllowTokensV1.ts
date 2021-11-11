@@ -1,6 +1,6 @@
 import { Contract } from 'web3-eth-contract';
 import CustomError from '../lib/CustomError';
-import { V1 } from './Constants';
+import { VERSIONS } from './Constants';
 
 export class IAllowTokensV1 {
   allowTokensContract: Contract;
@@ -12,7 +12,7 @@ export class IAllowTokensV1 {
   }
 
   getVersion() {
-    return V1;
+    return VERSIONS.V1;
   }
 
   async getConfirmations() {

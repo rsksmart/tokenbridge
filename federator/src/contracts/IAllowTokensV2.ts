@@ -1,5 +1,5 @@
 import CustomError from '../lib/CustomError';
-import { V2 } from './Constants';
+import { VERSIONS } from './Constants';
 
 interface GetLimitsParams {
   tokenAddress: string;
@@ -17,7 +17,7 @@ export class IAllowTokensV2 {
   }
 
   getVersion() {
-    return V2;
+    return VERSIONS.V2;
   }
 
   async getConfirmations() {
