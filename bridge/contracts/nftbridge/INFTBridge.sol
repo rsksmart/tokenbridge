@@ -74,7 +74,9 @@ interface INFTBridge {
     bytes _userData,
     uint256 _totalSupply,
     uint256 _tokenId,
-    string _tokenURI
+    string _tokenURI,
+    uint256 _originChainId,
+		uint256 _destinationChainId
   );
   event NewSideNFTToken(
     address indexed _newSideNFTTokenAddress,
