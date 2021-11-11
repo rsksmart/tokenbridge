@@ -110,10 +110,12 @@ async function runNFT({
   );
   logger.info("[NFT] Completed transfer from Mainchain to Sidechain");
 
+  const invertOriginFederators = destinationFederators;
+  const invertDestinationFederators = originFederators;
   logger.info("[NFT] Starting transfer from Sidechain to Mainchain");
   await transferNFT(
-    destinationFederators,
-    originFederators,
+    invertOriginFederators,
+    invertDestinationFederators,
     destinationConfig,
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
@@ -320,7 +322,7 @@ async function getDestinationNFTTokenAddress({
     .call();
   if (destinationTokenAddress === utils.zeroAddress) {
     logger.info("Side NFT Token does not exist yet, creating it");
-    let bridgeAddress = await destinationNftBridgeContract.options.address;
+    const bridgeAddress = await destinationNftBridgeContract.options.address;
     const data = destinationNftBridgeContract.methods
       .createSideNFTToken(
         originAddress,
