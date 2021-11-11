@@ -93,7 +93,7 @@ interface INFTBridge {
     bytes32 _blockHash,
     uint256 _logIndex,
     uint256 _originChainId,
-		uint256	_destinationChainId
+	uint256	_destinationChainId
   );
   event FixedFeeNFTChanged(uint256 _amount);
   event ClaimedNFTToken(
