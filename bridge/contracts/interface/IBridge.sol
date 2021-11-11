@@ -10,6 +10,12 @@ interface IBridge {
 		bytes32 blockHash;
 		bytes32 transactionHash;
 		uint32 logIndex;
+		uint256 originChainId;
+	}
+
+	struct OriginalToken {
+		address tokenAddress;
+		uint256 originChainId;
 	}
 
 	function version() external pure returns (string memory);
@@ -41,19 +47,6 @@ interface IBridge {
 	) external;
 
 	/**
-		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
-		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
-		*/
-	function tokensReceived (
-		address operator,
-		address from,
-		address to,
-		uint amount,
-		bytes calldata userData,
-		uint256 chainId
-	) external;
-
-	/**
 		* Accepts the transaction from the other chain that was voted and sent by the Federation contract
 		*/
 	function acceptTransfer(
@@ -64,7 +57,8 @@ interface IBridge {
 		bytes32 _blockHash,
 		bytes32 _transactionHash,
 		uint32 _logIndex,
-		uint256 chainId
+		uint256 _originChainId,
+		uint256	_destinationChainId
 	) external;
 
 	/**
@@ -75,7 +69,6 @@ interface IBridge {
 	function claimFallback(ClaimData calldata _claimData) external returns (uint256 receivedAmount);
 
 	function claimGasless(
-		uint256 chainId,
 		ClaimData calldata _claimData,
 		address payable _relayer,
 		uint256 _fee,
@@ -100,7 +93,8 @@ interface IBridge {
 		bytes32 _blockHash,
 		bytes32 _transactionHash,
 		uint32 _logIndex,
-		uint256 _chainId
+		uint256 _originChainId,
+		uint256 _destinationChainId
 	) external returns(bytes32);
 
 	event Cross(
@@ -109,8 +103,10 @@ interface IBridge {
 		address indexed _to,
 		uint256 _amount,
 		bytes _userData,
-		uint256 chainId
+		uint256 originChainId,
+		uint256 destinationChainId
 	);
+
 	event NewSideToken(
 		address indexed _newSideTokenAddress,
 		address indexed _originalTokenAddress,
@@ -126,7 +122,8 @@ interface IBridge {
 		uint256 _amount,
 		bytes32 _blockHash,
 		uint256 _logIndex,
-		uint256 _chainId
+		uint256 _originChainId,
+		uint256	_destinationChainId
 	);
 	event FeePercentageChanged(uint256 _amount);
 	event Claimed(
@@ -140,6 +137,7 @@ interface IBridge {
 		address _reciever,
 		address _relayer,
 		uint256 _fee,
-		uint256 _chainId
+		uint256 _destinationChainId,
+		uint256 _originChainId
 	);
 }

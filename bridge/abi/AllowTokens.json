@@ -3,12 +3,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "indexed": true,
         "internalType": "address",
         "name": "_tokenAddress",
@@ -78,12 +72,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "indexed": true,
         "internalType": "address",
@@ -168,12 +156,6 @@
   {
     "anonymous": false,
     "inputs": [
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "indexed": true,
         "internalType": "address",
@@ -276,36 +258,12 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "token",
-        "type": "address"
-      }
-    ],
-    "name": "calcMaxWithdraw",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "maxWithdraw",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "",
         "type": "address"
       }
     ],
-    "name": "deprecatedAllowedTokens",
+    "name": "allowedTokens",
     "outputs": [
       {
         "internalType": "bool",
@@ -325,6 +283,25 @@
       {
         "internalType": "uint256",
         "name": "lastDay",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "token",
+        "type": "address"
+      }
+    ],
+    "name": "calcMaxWithdraw",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "maxWithdraw",
         "type": "uint256"
       }
     ],
@@ -356,11 +333,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "tokenAddress",
@@ -604,11 +576,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -680,11 +647,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -728,11 +690,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "components": [
           {
             "internalType": "address",
@@ -758,11 +715,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "token",
         "type": "address"
@@ -780,11 +732,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "tokenAddress",
@@ -884,11 +831,6 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
-      {
         "internalType": "address",
         "name": "tokenAddress",
         "type": "address"
@@ -922,45 +864,6 @@
         "internalType": "struct IAllowTokens.TokenInfo",
         "name": "",
         "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      },
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "tokenInfoByTokenAddressByChain",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "allowed",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "typeId",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "spentToday",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "lastDay",
-        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1052,11 +955,6 @@
   },
   {
     "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
-      },
       {
         "internalType": "address",
         "name": "token",

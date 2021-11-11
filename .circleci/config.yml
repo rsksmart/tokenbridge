@@ -9,9 +9,9 @@ jobs:
       # The first ganache-cli container is meant to simulate a main chain, and the second one for a side chain (integration testing only)
       - image: trufflesuite/ganache-cli
         # The gas limit is 6700000 to avoid trying to deploy a contract larger than expected
-        command: ganache-cli -i 5777 -l 6700000 -k istanbul
+        command: ganache-cli -i 5777 --chainId 5777 -l 6700000 -k istanbul
       - image: trufflesuite/ganache-cli
-        command: ganache-cli -i 5776 -p 8546 -l 6700000 -k istanbul
+        command: ganache-cli -i 5776 --chainId 5776 -p 8546 -l 6700000 -k istanbul
     steps:
       - checkout
       # Download and cache dependencies

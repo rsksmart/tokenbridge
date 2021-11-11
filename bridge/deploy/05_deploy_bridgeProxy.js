@@ -11,13 +11,13 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   }
 
   const prefixSymbol = chains.tokenSymbol(network);
-  const BridgeV3 = await deployments.get('BridgeV3');
+  const Bridge = await deployments.get('Bridge');
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const sideTokenFactoryAddress = await address.getSideTokenFactoryAddress(hre);
 
-  const bridgeV3 = new web3.eth.Contract(BridgeV3.abi, BridgeV3.address);
-  const methodCall = bridgeV3.methods.initialize(
+  const bridge = new web3.eth.Contract(Bridge.abi, Bridge.address);
+  const methodCall = bridge.methods.initialize(
     multiSigAddress,
     deployer,
     deployer,
@@ -29,7 +29,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const deployProxyResult = await deploy('BridgeProxy', {
     from: deployer,
     args: [
-      BridgeV3.address,
+      Bridge.address,
       proxyAdminAddress,
       methodCall.encodeABI()
     ],
@@ -42,4 +42,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'deploy_bridge_proxy'; // id required to prevent reexecution
 module.exports.tags = ['BridgeProxy', 'old', 'IntegrationTest'];
-module.exports.dependencies = ['BridgeV3', 'MultiSigWallet', 'ProxyAdmin', 'SideTokenFactory'];
+module.exports.dependencies = ['Bridge', 'MultiSigWallet', 'ProxyAdmin', 'SideTokenFactory'];
