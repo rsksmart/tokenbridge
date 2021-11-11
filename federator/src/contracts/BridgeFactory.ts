@@ -9,7 +9,7 @@ import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
-import { V1, V2, V3, V4 } from './Constants';
+import { VERSIONS } from './Constants';
 import { Config } from '../../config/types';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
@@ -29,13 +29,13 @@ export class BridgeFactory extends ContractFactory {
     const version = await this.getVersion(bridgeContract);
     const chainId = await web3.eth.net.getId();
     switch (version) {
-      case V4:
+      case VERSIONS.V4:
         return new IBridgeV4(bridgeContract, chainId);
-      case V3:
+      case VERSIONS.V3:
         bridgeContract = this.getContractByAbi(abiBridgeV3 as AbiItem[], address, web3);
         return new IBridge(bridgeContract);
-      case V2:
-      case V1:
+      case VERSIONS.V2:
+      case VERSIONS.V1:
         bridgeContract = this.getContractByAbi(abiBridgeV2 as AbiItem[], address, web3);
         return new IBridge(bridgeContract);
       default:
