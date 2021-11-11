@@ -256,7 +256,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 				originChainId,
 				destinationChainId
 			);
-			return;
 		}
 	}
 
@@ -281,7 +280,9 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         value,
         blockHash,
         transactionHash,
-        logIndex
+        logIndex,
+	originChainId,
+	destinationChainId
       );
       return;
     }

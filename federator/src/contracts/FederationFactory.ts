@@ -8,7 +8,7 @@ import { IFederationV3 } from './IFederationV3';
 import { IFederationV4 } from './IFederationV4';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
-import { V2, V3, V4 } from './Constants';
+import { VERSIONS } from './Constants';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { Logger } from 'log4js';
@@ -51,12 +51,12 @@ export class FederationFactory extends ContractFactory {
     const version = await this.getVersion(federationContract);
 
     switch (version) {
-      case V4:
+      case VERSIONS.V4:
         return new IFederationV4(this.config, federationContract);
-      case V3:
+      case VERSIONS.V3:
         federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
         return new IFederationV3(this.config, federationContract);
-      case V2:
+      case VERSIONS.V2:
         federationContract = this.getContractByAbi(abiFederationV2 as AbiItem[], address, web3);
         return new IFederationV2(this.config, federationContract);
       default:
@@ -109,7 +109,7 @@ export class FederationFactory extends ContractFactory {
   }
 
   createFederatorInstance(web3, address) {
-    const federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
-    return new IFederationV3(this.config, federationContract);
+    const federationContract = this.getContractByAbi(abiFederationV4 as AbiItem[], address, web3);
+    return new IFederationV4(this.config, federationContract);
   }
 }

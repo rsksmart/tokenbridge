@@ -241,7 +241,8 @@ contract("Bridge NFT", async function(accounts) {
           this.token.address,
           anAccount,
           defaultTokenId,
-          { from: tokenOwner }
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+          { from: tokenOwner },
         );
         utils.checkRcpt(receipt);
 
@@ -271,6 +272,7 @@ contract("Bridge NFT", async function(accounts) {
           this.token.address,
           anAccount,
           defaultTokenId,
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID,
           { from: tokenOwner }
         );
         utils.checkRcpt(receipt);
@@ -300,6 +302,7 @@ contract("Bridge NFT", async function(accounts) {
           this.token.address,
           anAccount,
           defaultTokenId,
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID,
           { from: tokenOwner }
         );
         utils.checkRcpt(receipt);
@@ -332,6 +335,7 @@ contract("Bridge NFT", async function(accounts) {
           this.token.address,
           anAccount,
           defaultTokenId,
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID,
           { from: tokenOwner }
         );
         utils.checkRcpt(receipt);
@@ -372,6 +376,7 @@ contract("Bridge NFT", async function(accounts) {
             this.token.address,
             anAccount,
             defaultTokenId,
+            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
             {
               from: tokenOwner,
               value: fixedFee,
@@ -414,6 +419,7 @@ contract("Bridge NFT", async function(accounts) {
             this.token.address,
             anAccount,
             defaultTokenId,
+            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
             {
               from: tokenOwner,
               value: fixedFee.add(new BN("10")),
@@ -453,6 +459,7 @@ contract("Bridge NFT", async function(accounts) {
             this.token.address,
             anAccount,
             defaultTokenId,
+            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
             {
               from: tokenOwner
             }
@@ -480,6 +487,7 @@ contract("Bridge NFT", async function(accounts) {
               this.token.address,
               anAccount,
               defaultTokenId,
+              chains.ETHEREUM_MAIN_NET_CHAIN_ID,
               {
                 from: tokenOwner,
                 value: fixedFee,
@@ -503,6 +511,7 @@ contract("Bridge NFT", async function(accounts) {
               this.token.address,
               anAccount,
               defaultTokenId,
+              chains.ETHEREUM_MAIN_NET_CHAIN_ID,
               {
                 from: tokenOwner,
                 value: fixedFee.sub(bigNumberOne),
@@ -531,7 +540,7 @@ contract("Bridge NFT", async function(accounts) {
 
       it("creates token correctly and emits expected event when inputs are correct", async function() {
         let receipt = await this.NFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+            tokenAddress, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
         );
 
         utils.checkRcpt(receipt);
@@ -553,21 +562,22 @@ contract("Bridge NFT", async function(accounts) {
         const newSideNFTTokenBaseURI = await newSideNFTToken.baseURI();
         assert.equal(baseURI, newSideNFTTokenBaseURI);
 
-        let sideTokenAddressMappedByBridge = await this.NFTBridge.sideTokenAddressByOriginalTokenAddress(
+        const sideTokenAddressMappedByBridge = await this.NFTBridge.getSideTokenByOriginalToken(
+          chains.HARDHAT_TEST_NET_CHAIN_ID,
           tokenAddress
         );
         assert.equal(newSideNFTTokenAddress, sideTokenAddressMappedByBridge);
 
-        let tokenAddressMappedByBridge = await this.NFTBridge.originalTokenAddressBySideTokenAddress(
+        const originalTokenAddressMappedByBridge = await this.NFTBridge.getOriginalTokenBySideToken(
           newSideNFTTokenAddress
         );
-        assert.equal(tokenAddress, tokenAddressMappedByBridge);
+        assert.equal(tokenAddress, originalTokenAddressMappedByBridge.nftAddress);
       });
 
       it("fails to create side NFT token if the original token address is a null address", async function() {
         await truffleAssert.fails(
             this.NFTBridge.createSideNFTToken(
-                utils.NULL_ADDRESS, symbol, name, baseURI, contractURI, {from: bridgeManager}
+                utils.NULL_ADDRESS, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
             ),
             truffleAssert.ErrorType.REVERT,
             "Bridge: Null original token address"
@@ -576,14 +586,14 @@ contract("Bridge NFT", async function(accounts) {
 
       it("fails to create side NFT token if side token address already exists", async function() {
         let receipt = await this.NFTBridge.createSideNFTToken(
-          tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+          tokenAddress, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
         );
 
         truffleAssert.eventEmitted(receipt, newSideNFTTokenEventType);
 
         await truffleAssert.fails(
           this.NFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+            tokenAddress, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
           ),
           truffleAssert.ErrorType.REVERT,
           "Bridge: Side token already exists"
@@ -593,7 +603,7 @@ contract("Bridge NFT", async function(accounts) {
       it("fails to create side NFT token if transaction sender is not bridge manager", async function() {
         await truffleAssert.fails(
           this.NFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, {from: anAccount}
+            tokenAddress, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: anAccount}
           ),
           truffleAssert.ErrorType.REVERT,
           "Ownable: caller is not the owner"
@@ -619,29 +629,33 @@ contract("Bridge NFT", async function(accounts) {
         contractURI = await this.token.contractURI();
         tokenAddress = this.token.address;
         let receipt = await this.NFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+          tokenAddress, symbol, name, baseURI, contractURI, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: bridgeManager}
         );
         utils.checkRcpt(receipt);
       });
 
       it("accepts transfer and emits event correctly", async function () {
-        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex);
+        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex,
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID);
       });
 
-      async function assertAcceptTransferSuccessfulResult(tokenAddress, tokenId, blockHash, transactionHash, logIndex) {
+      async function assertAcceptTransferSuccessfulResult(nftTokenAddress, nftTokenId, nftBlockHash, nftTransactionHash, nftLogIndex, originChainId, destinationChainId) {
         const receipt = await this.NFTBridge.acceptTransfer(
-            tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
-            {from: federation}
+          nftTokenAddress, anAccount, anotherAccount, nftTokenId, nftBlockHash, nftTransactionHash, nftLogIndex,
+          originChainId, destinationChainId,
+          {from: federation}
         );
         utils.checkRcpt(receipt);
 
         const expectedTransactionDataHash = await this.NFTBridge.getTransactionDataHash(
-            anotherAccount, anAccount, tokenId, tokenAddress, blockHash, transactionHash, logIndex
+          anotherAccount, anAccount, nftTokenId, nftTokenAddress, nftBlockHash, nftTransactionHash, nftLogIndex,
+          originChainId, destinationChainId
         );
 
-        let transactionDataHash = await this.NFTBridge.transactionDataHashes(transactionHash);
+        const transactionDataHash = await this.NFTBridge.transactionDataHashes(nftTransactionHash);
         assert.equal(expectedTransactionDataHash, transactionDataHash);
-        assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex);
+        assertAcceptedTransferEventOccurrence(receipt, nftTransactionHash, nftTokenAddress, nftTokenId,
+          nftBlockHash, nftLogIndex);
       }
 
       function assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex) {
@@ -662,6 +676,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.HARDHAT_TEST_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                 {from: anAccount}
             ),
             "NFTBridge: Not Federation"
@@ -673,6 +688,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 unknownTokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.HARDHAT_TEST_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Unknown token"
@@ -683,6 +699,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, utils.NULL_ADDRESS, tokenId, blockHash, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Null To"
@@ -693,6 +710,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, utils.NULL_ADDRESS, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Null From"
@@ -703,6 +721,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, utils.NULL_HASH, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Null BlockHash"
@@ -713,6 +732,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, utils.NULL_HASH, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Null TxHash"
@@ -720,10 +740,12 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("throws an error when transaction was already accepted", async function () {
-        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex);
+        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash,
+          logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID);
         await truffleAssert.fails(
             this.NFTBridge.acceptTransfer(
                 tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Already accepted"
@@ -752,7 +774,7 @@ contract("Bridge NFT", async function(accounts) {
 
         // Side NFT token contract is created.
         let receipt = await this.sideNFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, {from: bridgeManager}
+          tokenAddress, symbol, name, baseURI, contractURI, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: bridgeManager}
         );
         utils.checkRcpt(receipt);
         truffleAssert.eventEmitted(
@@ -777,15 +799,18 @@ contract("Bridge NFT", async function(accounts) {
 
         // Lock token into bridge.
         receipt = await this.NFTBridge.receiveTokensTo(
-            this.token.address, anotherAccount, tokenId, {from: anAccount}
+            this.token.address, anotherAccount, tokenId, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: anAccount}
         );
         utils.checkRcpt(receipt);
 
         // Simulate Federator calling Bridge to accept the transfer.
         receipt = await this.sideNFTBridge.acceptTransfer(
             tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+            chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
             {from: federation}
         );
+        console.log("blockHash before", blockHash);
+        console.log("transactionHash before", transactionHash);
         utils.checkRcpt(receipt);
         truffleAssert.eventEmitted(receipt, acceptedNFTCrossTransferEventType);
       });
@@ -794,7 +819,7 @@ contract("Bridge NFT", async function(accounts) {
           async function () {
             await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
             await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
-                tokenAddress, blockHash, transactionHash, logIndex);
+                tokenAddress, blockHash, transactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
             let sideToken = await IERC721.at(sideTokenAddress);
             await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken);
 
@@ -802,7 +827,8 @@ contract("Bridge NFT", async function(accounts) {
                 this.sideNFTBridge.claim(
                     {
                       to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
-                      blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+                      blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex,
+                      originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     },
                     {from: anotherAccount}
                 ),
@@ -819,7 +845,7 @@ contract("Bridge NFT", async function(accounts) {
         const receipt = await this.sideNFTBridge.claimFallback(
           {
             to: anotherAccount, from: anAccount, tokenId: tokenId, tokenAddress: tokenAddress,
-            blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+            blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex, originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
           },
           {from: anAccount}
         );
@@ -842,7 +868,7 @@ contract("Bridge NFT", async function(accounts) {
       it("should check if it was claimed successfully when calling hasBeenClaimed", async function () {
         await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
         await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
-            tokenAddress, blockHash, transactionHash, logIndex);
+            tokenAddress, blockHash, transactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
         const result = await this.sideNFTBridge.hasBeenClaimed(transactionHash);
         assert(result, "The token should have been claimed");
       });
@@ -850,7 +876,7 @@ contract("Bridge NFT", async function(accounts) {
       it("should check if it has crossed when calling hasCrossed", async function () {
         await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
         await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
-            tokenAddress, blockHash, transactionHash, logIndex);
+            tokenAddress, blockHash, transactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
         const result = await this.sideNFTBridge.hasCrossed(transactionHash);
         assert(result, "The token should have been crossed");
       });
@@ -867,24 +893,25 @@ contract("Bridge NFT", async function(accounts) {
       }
 
       async function claimTokenFromBridgeEnsuringEventEmission(bridge, to, from, tokenId, tokenAddress, blockHash,
-                                                                transactionHash, logIndex) {
+                                                                nftTransactionHash, nftLogIndex, originChainId) {
         const receipt = await bridge.claim(
             {
               to: to, from: from, tokenId: tokenId, tokenAddress: tokenAddress,
-              blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+              blockHash: blockHash, transactionHash: nftTransactionHash, logIndex: nftLogIndex,
+              originChainId: originChainId,
             },
             {from: to}
         );
 
         truffleAssert.eventEmitted(receipt, claimedNFTTokenEventType, (event) => {
           return (
-              event._transactionHash === transactionHash &&
+              event._transactionHash === nftTransactionHash &&
               event._originalTokenAddress === tokenAddress &&
               event._to === to &&
               event._sender === from &&
               event._tokenId.eq(new BN(tokenId)) &&
               event._blockHash === blockHash &&
-              event._logIndex.eq(new BN(logIndex)) &&
+              event._logIndex.eq(new BN(nftLogIndex)) &&
               event._receiver === to
           );
         });
@@ -911,7 +938,8 @@ contract("Bridge NFT", async function(accounts) {
             this.sideNFTBridge.claim(
                 {
                   to: anotherAccount, from: anAccount, tokenId: unexpectedTokenId, tokenAddress: tokenAddress,
-                  blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex
+                  blockHash: blockHash, transactionHash: transactionHash, logIndex: logIndex,
+                  originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                 },
                 {from: anotherAccount}
             ),
@@ -926,7 +954,7 @@ contract("Bridge NFT", async function(accounts) {
             // Side token is correctly claimed from side chain.
             await assertTokenIsLockedInBridge(this.NFTBridge.address, anotherAccount, this.token);
             await claimTokenFromBridgeEnsuringEventEmission(this.sideNFTBridge, anotherAccount, anAccount, tokenId,
-                tokenAddress, blockHash, transactionHash, logIndex);
+                tokenAddress, blockHash, transactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
             let sideToken = await IERC721.at(sideTokenAddress);
             await assertTokenHasBeenClaimed(this.sideNFTBridge.address, anotherAccount, sideToken);
 
@@ -937,7 +965,7 @@ contract("Bridge NFT", async function(accounts) {
 
             // Side token is burned.
             receipt = await this.sideNFTBridge.receiveTokensTo(
-                sideToken.address, anAccount, tokenId, {from: anotherAccount}
+                sideToken.address, anAccount, tokenId, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: anotherAccount}
             );
             const expectedTotalSupplyAfterBurn = 0;
             utils.checkRcpt(receipt);
@@ -958,7 +986,7 @@ contract("Bridge NFT", async function(accounts) {
             const crossBackTransactionHash = utils.getRandomHash();
             receipt = await this.NFTBridge.acceptTransfer(
                 tokenAddress, anotherAccount, anAccount, tokenId, crossBackBlockHash, crossBackTransactionHash,
-                logIndex, {from: federation}
+                logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: federation}
             );
             utils.checkRcpt(receipt);
             truffleAssert.eventEmitted(receipt, acceptedNFTCrossTransferEventType);
@@ -966,7 +994,7 @@ contract("Bridge NFT", async function(accounts) {
 
             // Original token is correctly claimed from main chain.
             await claimTokenFromBridgeEnsuringEventEmission(this.NFTBridge, anAccount, anotherAccount, tokenId, tokenAddress,
-                crossBackBlockHash, crossBackTransactionHash, logIndex);
+                crossBackBlockHash, crossBackTransactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
             await assertTokenHasBeenClaimed(this.NFTBridge.address, anAccount, this.token);
           });
 
