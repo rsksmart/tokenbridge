@@ -47,7 +47,7 @@ function getMainchainFederators(keys) {
   let federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      let federator = new FederatorNFT.FederatorNFT(
+      const federator = new FederatorNFT.FederatorNFT(
         {
           ...config,
           privateKey: key,
@@ -58,7 +58,7 @@ function getMainchainFederators(keys) {
       federators.push(federator);
     });
   } else {
-    let federator = new FederatorNFT.FederatorNFT(
+    const federator = new FederatorNFT.FederatorNFT(
       config,
       log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
     );
@@ -71,7 +71,7 @@ function getSidechainFederators(keys, sideConfig) {
   let federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      let federator = new FederatorNFT.FederatorNFT(
+      const federator = new FederatorNFT.FederatorNFT(
         {
           ...sideConfig,
           privateKey: key,
@@ -82,7 +82,7 @@ function getSidechainFederators(keys, sideConfig) {
       federators.push(federator);
     });
   } else {
-    let federator = new FederatorNFT.FederatorNFT(
+    const federator = new FederatorNFT.FederatorNFT(
       {
         ...sideConfig,
         storagePath: `${config.storagePath}/side-fed`,
@@ -95,16 +95,16 @@ function getSidechainFederators(keys, sideConfig) {
 }
 
 async function runNFT({
-  mainchainFederators,
-  sidechainFederators,
-  config,
-  sideConfig,
+  mainchainFederators: originFederators,
+  sidechainFederators: destinationFederators,
+  config: originConfig,
+  sideConfig: destinationConfig,
 }) {
   logger.info("[NFT] Starting transfer from Mainchain to Sidechain");
   await transferNFT(
-    mainchainFederators,
-    sidechainFederators,
-    config,
+    originFederators,
+    destinationFederators,
+    originConfig,
     MAIN_CHAIN_LOGGER_NAME,
     SIDE_CHAIN_LOGGER_NAME
   );
@@ -112,9 +112,9 @@ async function runNFT({
 
   logger.info("[NFT] Starting transfer from Sidechain to Mainchain");
   await transferNFT(
-    sidechainFederators,
-    mainchainFederators,
-    sideConfig,
+    destinationFederators,
+    originFederators,
+    destinationConfig,
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
   );
@@ -124,36 +124,36 @@ async function runNFT({
 async function transferNFT(
   originFederators,
   destinationFederators,
-  config,
+  fullConfig,
   originLoggerName,
   destinationLoggerName
 ) {
   try {
-    const originChainWeb3 = new Web3(config.mainchain.host);
+    const originChainWeb3 = new Web3(fullConfig.mainchain.host);
     const originChainId = await originChainWeb3.eth.net.getId();
-    const destinationChainWeb3 = new Web3(config.sidechain.host);
+    const destinationChainWeb3 = new Web3(fullConfig.sidechain.host);
     const destinationChainId = await destinationChainWeb3.eth.net.getId();
 
     const transactionSender = new TransactionSender(
       originChainWeb3,
       logger,
-      config
+      fullConfig
     );
     const destinationTransactionSender = new TransactionSender(
       destinationChainWeb3,
       logger,
-      config
+      fullConfig
     );
-    const originNftBridgeAddress = config.mainchain.nftBridge;
-    const destinationNftBridgeAddress = config.sidechain.nftBridge;
+    const originNftBridgeAddress = fullConfig.mainchain.nftBridge;
+    const destinationNftBridgeAddress = fullConfig.sidechain.nftBridge;
     const originTokenContract = new originChainWeb3.eth.Contract(
       abiNFTERC721TestToken,
-      config.mainchain.testTokenNft
+      fullConfig.mainchain.testTokenNft
     );
     const originTokenAddress = originTokenContract.options.address;
     const sideMultiSigContract = new originChainWeb3.eth.Contract(
       abiMultiSig,
-      config.sidechain.multiSig
+      fullConfig.sidechain.multiSig
     );
     const originNftBridgeContract = new originChainWeb3.eth.Contract(
       abiNFTBridge,
@@ -178,19 +178,19 @@ async function transferNFT(
     const tokenName = "The Drops";
     const tokenBaseURI = "ipfs:/";
     const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
-    const destinationTokenAddress = await getDestinationNFTTokenAddress(
+    const destinationTokenAddress = await getDestinationNFTTokenAddress({
       destinationNftBridgeContract,
-      originTokenAddress,
+      originAddress: originTokenAddress,
       originChainId,
       sideMultiSigContract,
       destinationTransactionSender,
-      config,
+      fullConfig,
       destinationLoggerName,
-      tokenSymbol,
-      tokenName,
-      tokenBaseURI,
-      tokenContractURI
-    );
+      symbol: tokenSymbol,
+      name: tokenName,
+      baseURI: tokenBaseURI,
+      contractURI: tokenContractURI,
+    });
     const sideTokenContract = new destinationChainWeb3.eth.Contract(
       abiSideNFTToken,
       destinationTokenAddress
@@ -204,13 +204,13 @@ async function transferNFT(
       userAddress,
       "",
       originChainWeb3.utils.toWei("1"),
-      config.privateKey
+      fullConfig.privateKey
     );
     await destinationTransactionSender.sendTransaction(
       userAddress,
       "",
       originChainWeb3.utils.toWei("1"),
-      config.privateKey,
+      fullConfig.privateKey,
       true
     );
     logger.info(
@@ -229,7 +229,7 @@ async function transferNFT(
       userAddress,
       tokenId,
       transactionSender,
-      config
+      fullConfig
     );
 
     expectedTokenAmount = 1;
@@ -248,7 +248,7 @@ async function transferNFT(
       userPrivateKey
     );
 
-    let receiveTokensToTxReceipt = await receiveTokensToMainChainBridge(
+    const receiveTokensToTxReceipt = await receiveTokensToMainChainBridge({
       originNftBridgeContract,
       originTokenAddress,
       destinationChainId,
@@ -256,11 +256,11 @@ async function transferNFT(
       tokenId,
       transactionSender,
       originNftBridgeAddress,
-      userPrivateKey
-    );
+      userPrivateKey,
+    });
 
     await startAndFundFederators(
-      config,
+      fullConfig,
       originChainWeb3,
       destinationChainWeb3,
       originFederators
@@ -272,7 +272,7 @@ async function transferNFT(
     );
     logger.info("Tokens were received in side chain Bridge");
 
-    await claimNftTokenInSideChain(
+    await claimNftTokenInSideChain({
       receiveTokensToTxReceipt,
       destinationNftBridgeContract,
       userAddress,
@@ -280,8 +280,8 @@ async function transferNFT(
       originTokenAddress,
       destinationTransactionSender,
       userPrivateKey,
-      originChainId
-    );
+      originChainId,
+    });
 
     expectedTokenAmount = 0;
     await assertNFTTokenBalanceForUserIsExpected(
@@ -302,26 +302,26 @@ async function transferNFT(
   }
 }
 
-async function getDestinationNFTTokenAddress(
-  destinationBridgeContract,
+async function getDestinationNFTTokenAddress({
+  destinationNftBridgeContract,
   originAddress,
   originChainId,
   sideMultiSigContract,
   destinationTransactionSender,
-  config,
+  fullConfig,
   destinationLoggerName,
   symbol,
   name,
   baseURI,
-  contractURI
-) {
-  let destinationTokenAddress = await destinationBridgeContract.methods
+  contractURI,
+}) {
+  let destinationTokenAddress = await destinationNftBridgeContract.methods
     .getSideTokenByOriginalToken(originChainId, originAddress)
     .call();
   if (destinationTokenAddress === utils.zeroAddress) {
     logger.info("Side NFT Token does not exist yet, creating it");
-    let bridgeAddress = await destinationBridgeContract.options.address;
-    const data = destinationBridgeContract.methods
+    let bridgeAddress = await destinationNftBridgeContract.options.address;
+    const data = destinationNftBridgeContract.methods
       .createSideNFTToken(
         originAddress,
         symbol,
@@ -335,13 +335,13 @@ async function getDestinationNFTTokenAddress(
       .submitTransaction(bridgeAddress, 0, data)
       .encodeABI();
     await destinationTransactionSender.sendTransaction(
-      config.sidechain.multiSig,
+      fullConfig.sidechain.multiSig,
       multiSigData,
       0,
       "",
       true
     );
-    destinationTokenAddress = await destinationBridgeContract.methods
+    destinationTokenAddress = await destinationNftBridgeContract.methods
       .getSideTokenByOriginalToken(originChainId, originAddress)
       .call();
     if (destinationTokenAddress === utils.zeroAddress) {
@@ -394,7 +394,7 @@ async function mintNFTTokenToUser(
   userAddress,
   tokenId,
   transactionSender,
-  config
+  fullConfig
 ) {
   const methodCall = tokenContract.methods.safeMint(userAddress, tokenId);
   await methodCall.call({ from: userAddress });
@@ -403,7 +403,7 @@ async function mintNFTTokenToUser(
     tokenContract.options.address,
     data,
     0,
-    config.privateKey,
+    fullConfig.privateKey,
     true
   );
 }
@@ -431,7 +431,7 @@ async function approveBridgeToMoveToken(
   );
 }
 
-async function receiveTokensToMainChainBridge(
+async function receiveTokensToMainChainBridge({
   originNftBridgeContract,
   originTokenAddress,
   destinationChainId,
@@ -439,8 +439,8 @@ async function receiveTokensToMainChainBridge(
   tokenId,
   transactionSender,
   originNftBridgeAddress,
-  userPrivateKey
-) {
+  userPrivateKey,
+}) {
   const methodCall = originNftBridgeContract.methods.receiveTokensTo(
     originTokenAddress,
     userAddress,
@@ -449,7 +449,7 @@ async function receiveTokensToMainChainBridge(
   );
   await methodCall.call({ from: userAddress });
   const data = methodCall.encodeABI();
-  return await transactionSender.sendTransaction(
+  return transactionSender.sendTransaction(
     originNftBridgeAddress,
     data,
     0,
@@ -459,12 +459,12 @@ async function receiveTokensToMainChainBridge(
 }
 
 async function startAndFundFederators(
-  config,
+  fullConfig,
   mainChainWeb3,
   sideChainWeb3,
   originFederators
 ) {
-  const waitBlocks = config.confirmations || 0;
+  const waitBlocks = fullConfig.confirmations || 0;
   logger.debug(`Wait for ${waitBlocks} blocks`);
   await utils.waitBlocks(mainChainWeb3, waitBlocks);
 
@@ -472,12 +472,12 @@ async function startAndFundFederators(
 
   // Start origin federators with delay between them.
   logger.debug("Fund federator wallets");
-  let federatorKeys =
-    mainKeys && mainKeys.length ? mainKeys : [config.privateKey];
+  const federatorKeys =
+    mainKeys && mainKeys.length ? mainKeys : [fullConfig.privateKey];
   await fundFederators(
-    config.sidechain.host,
+    fullConfig.sidechain.host,
     federatorKeys,
-    config.sidechain.privateKey,
+    fullConfig.sidechain.privateKey,
     sideChainWeb3.utils.toWei("1")
   );
 
@@ -488,7 +488,7 @@ async function startAndFundFederators(
   }, Promise.resolve());
 }
 
-async function claimNftTokenInSideChain(
+async function claimNftTokenInSideChain({
   receiveTokensToTxReceipt,
   destinationNftBridgeContract,
   userAddress,
@@ -496,8 +496,8 @@ async function claimNftTokenInSideChain(
   originTokenAddress,
   destinationTransactionSender,
   userPrivateKey,
-  originChainId
-) {
+  originChainId,
+}) {
   const acceptTransferEventDecodedLogs = abiDecoder.decodeLogs(
     receiveTokensToTxReceipt.logs
   );

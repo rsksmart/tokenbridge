@@ -562,13 +562,13 @@ contract("Bridge NFT", async function(accounts) {
         const newSideNFTTokenBaseURI = await newSideNFTToken.baseURI();
         assert.equal(baseURI, newSideNFTTokenBaseURI);
 
-        let sideTokenAddressMappedByBridge = await this.NFTBridge.getSideTokenByOriginalToken(
+        const sideTokenAddressMappedByBridge = await this.NFTBridge.getSideTokenByOriginalToken(
           chains.HARDHAT_TEST_NET_CHAIN_ID,
           tokenAddress
         );
         assert.equal(newSideNFTTokenAddress, sideTokenAddressMappedByBridge);
 
-        let originalTokenAddressMappedByBridge = await this.NFTBridge.getOriginalTokenBySideToken(
+        const originalTokenAddressMappedByBridge = await this.NFTBridge.getOriginalTokenBySideToken(
           newSideNFTTokenAddress
         );
         assert.equal(tokenAddress, originalTokenAddressMappedByBridge.nftAddress);
@@ -635,25 +635,27 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("accepts transfer and emits event correctly", async function () {
-        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID);
+        await assertAcceptTransferSuccessfulResult.call(this, tokenAddress, tokenId, blockHash, transactionHash, logIndex,
+          chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID);
       });
 
-      async function assertAcceptTransferSuccessfulResult(tokenAddress, tokenId, blockHash, transactionHash, logIndex, originChainId, destinationChainId) {
+      async function assertAcceptTransferSuccessfulResult(nftTokenAddress, nftTokenId, nftBlockHash, nftTransactionHash, nftLogIndex, originChainId, destinationChainId) {
         const receipt = await this.NFTBridge.acceptTransfer(
-            tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
-            originChainId, destinationChainId,
-            {from: federation}
+          nftTokenAddress, anAccount, anotherAccount, nftTokenId, nftBlockHash, nftTransactionHash, nftLogIndex,
+          originChainId, destinationChainId,
+          {from: federation}
         );
         utils.checkRcpt(receipt);
 
         const expectedTransactionDataHash = await this.NFTBridge.getTransactionDataHash(
-            anotherAccount, anAccount, tokenId, tokenAddress, blockHash, transactionHash, logIndex,
-            originChainId, destinationChainId
+          anotherAccount, anAccount, nftTokenId, nftTokenAddress, nftBlockHash, nftTransactionHash, nftLogIndex,
+          originChainId, destinationChainId
         );
 
-        let transactionDataHash = await this.NFTBridge.transactionDataHashes(transactionHash);
+        const transactionDataHash = await this.NFTBridge.transactionDataHashes(nftTransactionHash);
         assert.equal(expectedTransactionDataHash, transactionDataHash);
-        assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex);
+        assertAcceptedTransferEventOccurrence(receipt, nftTransactionHash, nftTokenAddress, nftTokenId,
+          nftBlockHash, nftLogIndex);
       }
 
       function assertAcceptedTransferEventOccurrence(receipt, transactionHash, tokenAddress, tokenId, blockHash, logIndex) {
