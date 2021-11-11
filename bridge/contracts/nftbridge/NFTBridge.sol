@@ -326,7 +326,9 @@ contract NFTBridge is
         userData,
         enumerable.totalSupply(),
         tokenId,
-        tokenURI
+        tokenURI,
+        block.chainid,
+				destinationChainId
       );
       return;
     }
@@ -339,7 +341,9 @@ contract NFTBridge is
       userData,
       enumerable.totalSupply(),
       tokenId,
-      tokenURI
+      tokenURI,
+      block.chainid,
+      destinationChainId
     );
   }
 
