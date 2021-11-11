@@ -44,7 +44,7 @@ interface INFTBridge {
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-		uint256	_destinationChainId
+	uint256	_destinationChainId
   ) external;
 
   /**
@@ -106,6 +106,6 @@ interface INFTBridge {
     uint256 _logIndex,
     address _receiver,
     uint256 _originChainId,
-		uint256	_destinationChainId
+	uint256	_destinationChainId
   );
 }
