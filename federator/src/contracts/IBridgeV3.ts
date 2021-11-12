@@ -5,7 +5,7 @@ interface SideTokenAddressByOriginalTokenInterface {
   chainId: number;
 }
 
-export class IBridgeV4 {
+export class IBridgeV3 {
   bridgeContract: Contract;
   chainId: number;
 
