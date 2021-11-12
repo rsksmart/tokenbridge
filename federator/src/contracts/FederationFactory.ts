@@ -1,11 +1,9 @@
 import abiFederationV2 from '../../../bridge/abi/FederationV2.json';
-import abiFederationV3 from '../../../bridge/abi/FederationV3.json';
-import abiFederationV4 from '../../../bridge/abi/Federation.json';
+import abiFederationV3 from '../../../bridge/abi/Federation.json';
 import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
 import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IFederationV2 } from './IFederationV2';
 import { IFederationV3 } from './IFederationV3';
-import { IFederationV4 } from './IFederationV4';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
 import { VERSIONS } from './Constants';
@@ -47,14 +45,11 @@ export class FederationFactory extends ContractFactory {
   }
 
   async createInstance(web3: Web3, address: string) {
-    let federationContract = this.getContractByAbi(abiFederationV4 as AbiItem[], address, web3);
+    let federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
     const version = await this.getVersion(federationContract);
 
     switch (version) {
-      case VERSIONS.V4:
-        return new IFederationV4(this.config, federationContract);
       case VERSIONS.V3:
-        federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
         return new IFederationV3(this.config, federationContract);
       case VERSIONS.V2:
         federationContract = this.getContractByAbi(abiFederationV2 as AbiItem[], address, web3);
@@ -109,7 +104,7 @@ export class FederationFactory extends ContractFactory {
   }
 
   createFederatorInstance(web3, address) {
-    const federationContract = this.getContractByAbi(abiFederationV4 as AbiItem[], address, web3);
-    return new IFederationV4(this.config, federationContract);
+    const federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
+    return new IFederationV3(this.config, federationContract);
   }
 }
