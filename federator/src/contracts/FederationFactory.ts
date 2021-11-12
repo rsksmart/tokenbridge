@@ -1,6 +1,6 @@
 import abiFederationV2 from '../../../bridge/abi/FederationV2.json';
 import abiFederationV3 from '../../../bridge/abi/Federation.json';
-import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
+import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IFederationV2 } from './IFederationV2';
 import { IFederationV3 } from './IFederationV3';
