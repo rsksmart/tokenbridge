@@ -11,7 +11,7 @@ const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
 const AllowTokensV0 = artifacts.require('./AllowTokensV0');
-const AllowTokensV1 = artifacts.require('./AllowTokensV1');
+const AllowTokensV1 = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
 const chains = require('../hardhat/helper/chains');
