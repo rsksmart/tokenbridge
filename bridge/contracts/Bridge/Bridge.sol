@@ -501,6 +501,13 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	/**
 		* ERC-777 tokensReceived hook allows to send tokens to a contract and notify it in a single transaction
 		* See https://eips.ethereum.org/EIPS/eip-777#motivation for details
+		* @param userData it can be 2 options in the first one you can send the receiver and the chain id of the destination
+		* const userData = web3.eth.abi.encodeParameters(
+    *   ["address", "uint256"],
+    *   [anAccount.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+    * );
+		* or you also can send only the destination chain id, and the receiver would be the same as the from parameter
+		* const userData = web3.eth.abi.encodeParameters(["uint256"], [chains.ETHEREUM_MAIN_NET_CHAIN_ID]);
 		*/
 	function tokensReceived(
 		address operator,
