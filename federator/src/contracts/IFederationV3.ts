@@ -1,6 +1,7 @@
 import { Config } from '../../config/types';
 import { Contract, EventData } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
+import { VERSIONS } from './Constants';
 
 interface TransactionIdParams {
   originalTokenAddress: string;
@@ -28,7 +29,7 @@ export class IFederationV3 {
   }
 
   getVersion(): string {
-    return 'v4';
+    return VERSIONS.V3;
   }
 
   isMember(address: string): Promise<any> {
