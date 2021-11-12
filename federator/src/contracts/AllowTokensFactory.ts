@@ -1,7 +1,7 @@
 import abiAllowTokensV0 from '../../../bridge/abi/AllowTokensV0.json';
 import abiAllowTokensV1 from '../../../bridge/abi/AllowTokensV1.json';
 import abiAllowTokensV2 from '../../../bridge/abi/AllowTokens.json';
-import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
+import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
 import CustomError from '../lib/CustomError';
