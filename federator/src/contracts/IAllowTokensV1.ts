@@ -2,13 +2,19 @@ import { Contract } from 'web3-eth-contract';
 import CustomError from '../lib/CustomError';
 import { VERSIONS } from './Constants';
 
+interface GetLimitsParams {
+  tokenAddress: string;
+}
+
 export class IAllowTokensV1 {
   allowTokensContract: Contract;
   mapTokenInfoAndLimits: any;
+  chainId: number;
 
-  constructor(allowTokensContract: Contract) {
+  constructor(allowTokensContract: Contract, chainId: number) {
     this.allowTokensContract = allowTokensContract;
     this.mapTokenInfoAndLimits = {};
+    this.chainId = chainId;
   }
 
   getVersion() {
@@ -52,7 +58,7 @@ export class IAllowTokensV1 {
     }
   }
 
-  async getLimits(objParams: any) {
+  async getLimits(objParams: GetLimitsParams) {
     try {
       let result = this.mapTokenInfoAndLimits[objParams.tokenAddress];
       if (!result) {
