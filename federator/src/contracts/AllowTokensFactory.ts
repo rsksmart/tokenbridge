@@ -1,13 +1,11 @@
 import abiAllowTokensV0 from '../../../bridge/abi/AllowTokensV0.json';
-import abiAllowTokensV1 from '../../../bridge/abi/AllowTokensV1.json';
-import abiAllowTokensV2 from '../../../bridge/abi/AllowTokens.json';
-import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
+import abiAllowTokensV1 from '../../../bridge/abi/AllowTokens.json';
+import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
 import { Config } from '../../config/types';
-import { IAllowTokensV2 } from './IAllowTokensV2';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';
@@ -37,16 +35,13 @@ export class AllowTokensFactory extends ContractFactory {
   }
 
   async createInstance(web3, address) {
-    let allowTokensContract = this.getContractByAbi(abiAllowTokensV2 as AbiItem[], address, web3);
+    let allowTokensContract = this.getContractByAbi(abiAllowTokensV1 as AbiItem[], address, web3);
     const version = await this.getVersion(allowTokensContract);
     const chainId = await utils.retry3Times(web3.eth.net.getId);
 
     switch (version) {
-      case VERSIONS.V2:
-        return new IAllowTokensV2(allowTokensContract, chainId);
       case VERSIONS.V1:
-        allowTokensContract = this.getContractByAbi(abiAllowTokensV1 as AbiItem[], address, web3);
-        return new IAllowTokensV1(allowTokensContract);
+        return new IAllowTokensV1(allowTokensContract, chainId);
       case VERSIONS.V0:
         allowTokensContract = this.getContractByAbi(abiAllowTokensV0 as AbiItem[], address, web3);
         return new IAllowTokensV0(allowTokensContract, chainId);

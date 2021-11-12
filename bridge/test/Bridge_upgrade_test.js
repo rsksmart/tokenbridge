@@ -1,6 +1,6 @@
 //Upgradable Contracts
 const BridgeV2 = artifacts.require('BridgeV2');
-const BridgeV3 = artifacts.require('BridgeV3');
+const BridgeV3 = artifacts.require('Bridge');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
@@ -11,9 +11,10 @@ const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
 const AllowTokensV0 = artifacts.require('./AllowTokensV0');
-const AllowTokensV1 = artifacts.require('./AllowTokensV1');
+const AllowTokensV1 = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
+const chains = require('../hardhat/helper/chains');
 const utils = require('./utils');
 const toWei = web3.utils.toWei;
 
@@ -253,13 +254,17 @@ contract('Bridge upgrade test', async (accounts) => {
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxyBridge.options.address, amount, { from: anAccount });
 
-                        const tx = await this.proxyBridge.methods.receiveTokensTo(this.token.address, anAccount, amount).send({ from: anAccount, gas: 200_000});
+                        const tx = await this.proxyBridge.methods.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            this.token.address, anAccount, amount).send({ from: anAccount, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         assert.equal(tx.events.Cross.event, 'Cross');
                         const balance = await this.token.balanceOf(this.proxyBridge.options.address);
                         assert.equal(balance, amount);
-                        const isKnownToken = await this.proxyBridge.methods.knownTokens(this.token.address).call();
+                        const isKnownToken = await this.proxyBridge.methods.knownToken(
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            this.token.address
+                        ).call();
                         assert.equal(isKnownToken, true);
                     });
 
@@ -269,16 +274,20 @@ contract('Bridge upgrade test', async (accounts) => {
                             this.token.address,
                             18,
                             'MAIN',
-                            'MAIN'
+                            'MAIN',
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         ).send({from: managerAddress, gas: 4_000_000});
 
-                        const sideTokenAddress = await this.proxyBridge.methods.mappedTokens(this.token.address).call();
+                        const sideTokenAddress = await this.proxyBridge.methods.sideTokenByOriginalToken(
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            this.token.address
+                        ).call();
                         let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
                         assert.equal(sideTokenSymbol, "rMAIN");
 
-                        const originalTokenAddress = await this.proxyBridge.methods.originalTokens(sideTokenAddress).call();
-                        assert.equal(originalTokenAddress, this.token.address);
+                        const originalToken = await this.proxyBridge.methods.getOriginalTokenBySideToken(sideTokenAddress).call();
+                        assert.equal(originalToken.tokenAddress, this.token.address);
 
                         const blockHash = utils.getRandomHash();
                         const txHash = utils.getRandomHash();
@@ -290,7 +299,9 @@ contract('Bridge upgrade test', async (accounts) => {
                             this.amount,
                             blockHash,
                             txHash,
-                            logIndex
+                            logIndex,
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            chains.HARDHAT_TEST_NET_CHAIN_ID
                         ).send({ from: federationAddress, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
@@ -300,7 +311,8 @@ contract('Bridge upgrade test', async (accounts) => {
                                 amount: this.amount,
                                 blockHash: blockHash,
                                 transactionHash: txHash,
-                                logIndex: logIndex
+                                logIndex: logIndex,
+                                originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                             }
                         ).send({ from: federationAddress, gas: 200_000 });
 
