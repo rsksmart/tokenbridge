@@ -1,9 +1,26 @@
 import { Config } from '../../config/types';
 import { Contract, EventData } from 'web3-eth-contract';
+import { BN } from 'ethereumjs-util';
+
+interface TransactionIdParams {
+  originalTokenAddress: string;
+  sender: string;
+  receiver: string;
+  amount: BN;
+  blockHash: string;
+  transactionHash: string;
+  logIndex: number;
+  originChainId: number;
+  destinationChainId: number;
+}
+
+interface VoteTransactionParams extends TransactionIdParams {
+  tokenType: number;
+}
 
 export class IFederationV3 {
   private readonly federationContract: Contract;
-  private config: Config;
+  private readonly config: Config;
 
   constructor(config: Config, fedContract: Contract) {
     this.federationContract = fedContract;
@@ -11,7 +28,7 @@ export class IFederationV3 {
   }
 
   getVersion(): string {
-    return 'v3';
+    return 'v4';
   }
 
   isMember(address: string): Promise<any> {
@@ -22,7 +39,7 @@ export class IFederationV3 {
     return this.federationContract.methods.setNFTBridge(address).call({ from });
   }
 
-  getTransactionId(paramsObj: any): Promise<any> {
+  getTransactionId(paramsObj: TransactionIdParams): Promise<any> {
     return this.federationContract.methods
       .getTransactionId(
         paramsObj.originalTokenAddress,
@@ -32,6 +49,8 @@ export class IFederationV3 {
         paramsObj.blockHash,
         paramsObj.transactionHash,
         paramsObj.logIndex,
+        paramsObj.originChainId,
+        paramsObj.destinationChainId,
       )
       .call();
   }
@@ -44,7 +63,7 @@ export class IFederationV3 {
     return this.federationContract.methods.hasVoted(txId).call({ from });
   }
 
-  getVoteTransactionABI(paramsObj: any): Promise<any> {
+  getVoteTransactionABI(paramsObj: VoteTransactionParams): Promise<any> {
     return this.federationContract.methods
       .voteTransaction(
         paramsObj.originalTokenAddress,
@@ -55,6 +74,8 @@ export class IFederationV3 {
         paramsObj.transactionHash,
         paramsObj.logIndex,
         paramsObj.tokenType,
+        paramsObj.originChainId,
+        paramsObj.destinationChainId,
       )
       .encodeABI();
   }
@@ -68,7 +89,7 @@ export class IFederationV3 {
   }
 
   async emitHeartbeat(
-    txSender: any,
+    txSender: { sendTransaction: (arg0: string, arg1: any, arg2: number, arg3: string) => any },
     fedRskBlock: any,
     fedEthBlock: any,
     fedVersion: any,

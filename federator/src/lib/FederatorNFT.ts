@@ -11,7 +11,7 @@ import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
-import { IFederationV4 } from '../contracts/IFederationV4';
+import { IFederationV3 } from '../contracts/IFederationV3';
 import { BN } from 'ethereumjs-util';
 
 export class FederatorNFT {
@@ -23,7 +23,7 @@ export class FederatorNFT {
   public transactionSender: TransactionSender;
   public bridgeFactory: BridgeFactory;
   public federationFactory: FederationFactory;
-  private federatorContract: IFederationV4;
+  private federatorContract: IFederationV3;
   private readonly metricCollector: MetricCollector;
   private chainId: number;
 
@@ -81,7 +81,7 @@ export class FederatorNFT {
    * get federator as singleton
    * @returns Federator Interface
    */
-  async getFederator(): Promise<IFederationV4> {
+  async getFederator(): Promise<IFederationV3> {
     if (this.federatorContract == null) {
       this.federatorContract = await this.federationFactory.getSideFederationNftContract();
     }

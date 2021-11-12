@@ -1,5 +1,5 @@
 const FederationV2 = artifacts.require('FederationV2');
-const FederationV3 = artifacts.require('FederationV3');
+const FederationV3 = artifacts.require('Federation');
 const FederationProxy = artifacts.require('FederationProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 const NftBridge = artifacts.require("NFTBridge");
