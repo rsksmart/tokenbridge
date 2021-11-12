@@ -119,7 +119,7 @@ contract('AllowTokens', async function (accounts) {
         describe('Tokens whitelist', async function () {
             it('should have correct version', async function () {
                 const version = await this.allowTokens.version();
-                assert.equal(version, 'v2');
+                assert.equal(version, 'v1');
             });
 
             it('fails isTokenAllowed if null address provided', async function() {

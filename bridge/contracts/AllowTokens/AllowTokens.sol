@@ -51,7 +51,7 @@ contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, I
 	}
 
 	function version() override external pure returns (string memory) {
-		return "v2";
+		return "v1";
 	}
 
 	function tokenInfo(address tokenAddress) public view returns(TokenInfo memory) {
