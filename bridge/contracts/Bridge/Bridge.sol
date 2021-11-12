@@ -442,7 +442,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 granularity = IERC777(sideToken).granularity();
 		uint256 formattedAmount = _amount.mul(granularity);
 		require(_fee <= formattedAmount, "Bridge: fee too high");
-		receivedAmount = formattedAmount - _fee;
+		receivedAmount = formattedAmount.sub(_fee);
 		ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
 		if (_fee > 0) {
 			ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
@@ -461,7 +461,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		//As side tokens are ERC777 they will always have 18 decimals
 		uint256 formattedAmount = _amount.div(uint256(10) ** (18 - decimals));
 		require(_fee <= formattedAmount, "Bridge: fee too high");
-		receivedAmount = formattedAmount - _fee;
+		receivedAmount = formattedAmount.sub(_fee);
 		if (address(wrappedCurrency) == _originalTokenAddress) {
 			wrappedCurrency.withdraw(formattedAmount);
 			_receiver.transfer(receivedAmount);
