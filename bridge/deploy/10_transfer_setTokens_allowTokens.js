@@ -71,7 +71,8 @@ async function setTokensRskTestnet(allowTokens, deployer) {
     {token: '0xed3334adb07a3a5947d268e5a8c67b84f5464963', typeId: '4'}, //rKovUSDC
     {token: '0x4cfE225cE54c6609a525768b13F7d87432358C57', typeId: '4'}, //rKovUSDT
     {token: '0x8bbbd80981fe76d44854d8df305e8985c19f0e78', typeId: '3'}, //rKovLINK
-    {token: '0xe95afdfec031f7b9cd942eb7e60f053fb605dfcd', typeId: '3'} //rKovsBUND
+    {token: '0xe95afdfec031f7b9cd942eb7e60f053fb605dfcd', typeId: '3'}, //rKovBUND
+    {token: '0xb8aE2CB769255359190fBcE89d3aD38687da5e65', typeId: '0'}, //rKovWBTC
   ]).send({from: deployer});
 }
 
@@ -87,6 +88,7 @@ async function setTokensKovan(allowTokens, deployer) {
     {token: '0x13512979ade267ab5100878e2e0f485b568328a4', typeId: '4'}, //USDT
     {token: '0xa36085F69e2889c224210F603D836748e7dC0088', typeId: '3'}, //LINK
     {token: '0x8d3e855f3f55109d473735ab76f753218400fe96', typeId: '3'}, //BUND
+    {token: '0xd1b98b6607330172f1d991521145a22bce793277', typeId: '0'}, //WBTC
     // SideToken
     {token: '0x69f6d4d4813f8e2e618dae7572e04b6d5329e207', typeId: '5'}, //eRIF
     {token: '0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa', typeId: '4'}, //eDOC
