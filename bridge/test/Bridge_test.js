@@ -94,7 +94,7 @@ contract('Bridge', async function (accounts) {
 
         it('should retrieve the version', async function () {
             const result = await this.bridge.version();
-            assert.equal(result, "v4");
+            assert.equal(result, "v3");
         });
 
         describe('owner', async function () {
