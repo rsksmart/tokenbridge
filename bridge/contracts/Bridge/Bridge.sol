@@ -104,7 +104,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function version() override external pure returns (string memory) {
-		return "v4";
+		return "v3";
 	}
 
 	function initDomainSeparator() public {

@@ -2,7 +2,7 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 //configurations
 const config = require('../config/config.js');
-const abiBridgeV3 = require('../../bridge/abi/BridgeV3.json');
+const abiBridgeV3 = require('../../bridge/abi/Bridge.json');
 const erc20TokenAbi = require('../../bridge/abi/IERC20.json');
 //utils
 const TransactionSender = require('../src/lib/TransactionSender.js');

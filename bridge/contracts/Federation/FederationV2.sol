@@ -7,13 +7,13 @@ pragma abicoder v2;
 import "../zeppelin/upgradable/Initializable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "../Bridge/IBridgeV3.sol";
+import "../Bridge/IBridgeV2.sol";
 
 contract FederationV2 is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    IBridgeV3 public bridge;
+    IBridgeV2 public bridge;
     address[] public members;
     uint public required;
 
@@ -92,7 +92,7 @@ contract FederationV2 is Initializable, UpgradableOwnable {
 
     function _setBridge(address _bridge) internal {
         require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
-        bridge = IBridgeV3(_bridge);
+        bridge = IBridgeV2(_bridge);
         emit BridgeChanged(_bridge);
     }
 
@@ -140,12 +140,14 @@ contract FederationV2 is Initializable, UpgradableOwnable {
             processed[transactionId] = true;
             bridge.acceptTransfer(
                 originalTokenAddress,
-                sender,
                 receiver,
                 amount,
+                "",
                 blockHash,
                 transactionHash,
-                logIndex
+                logIndex,
+                18,
+                3
             );
             emit Executed(
                 _msgSender(),
