@@ -71,7 +71,7 @@ contract('Bridge', async function (accounts) {
             '0',
             [{
                 description:'MAIN',
-                limits:{
+                limits: {
                     max:toWei('10000'),
                     min:toWei('1'),
                     daily:toWei('100000'),
