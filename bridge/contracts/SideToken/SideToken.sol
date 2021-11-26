@@ -9,7 +9,6 @@ import "../interface/ISideToken.sol";
 import "../lib/LibEIP712.sol";
 
 contract SideToken is ISideToken, ERC777 {
-    using Address for address;
     using SafeMath for uint256;
 
     address public minter;
