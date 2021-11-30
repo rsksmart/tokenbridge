@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network kovan bsctestnet rsktestnet rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet kovan bsctestnet rsktestnet rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
@@ -10,14 +10,20 @@ async function main() {
 
   const tokens = [
     {
-      name: 'BSC-Binance Token',
-      symbol: 'WBNB',
+      name: 'Side Ethereum Test BTC (WTBTC)',
+      symbol: 'RWTBTC',
       typeId: 1,
-      // originalTokenAddress: '0xa9f70D8c300B28DB2c94eD1690EA7c161a905B63', // rsktestnetbsc Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
-      originalTokenAddress: '0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4', // bsctestnet Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
-      // originalTokenAddress: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', // rsktestnetbsc originalTokens
-      // originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // bsctestnet originalTokens 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
+      originalTokenAddress: '0x4ccc35c8f2e780203c5dc4b605f495acea9255bc',
     },
+    // {
+    //   name: 'BSC-Binance Token',
+    //   symbol: 'WBNB',
+    //   typeId: 1,
+    //   // originalTokenAddress: '0xa9f70D8c300B28DB2c94eD1690EA7c161a905B63', // rsktestnetbsc Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
+    //   originalTokenAddress: '0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4', // bsctestnet Mapped Token 0x0A94c1A74cc54A7fA2cf6222bDFECBd59ce186B4
+    //   // originalTokenAddress: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', // rsktestnetbsc originalTokens
+    //   // originalTokenAddress: '0x50F2CD4e18428e1c8C73b7638d5DA32975663e16', // bsctestnet originalTokens 0xae13d989daC2f0dEbFf460aC112a837C89BAa7cd
+    // },
     // {
     //   name: 'BSC-Binance Token',
     //   symbol: 'WBNB',
