@@ -15,7 +15,7 @@ const MetricCollector = require('./lib/MetricCollector');
 
 const logger = log4js.getLogger('Federators');
 logger.info('RSK Host', config.mainchain.host);
-logger.info('ETH Host', config.sidechain.host);
+logger.info('Side Host', config.sidechain.host);
 
 // Status Server
 const StatusServer = require('./lib/Endpoints.js');
