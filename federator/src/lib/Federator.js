@@ -57,7 +57,7 @@ module.exports = class Federator {
   }
 
   async run() {
-    let retries = 1;
+    let retries = 3;
     const sleepAfterRetrie = 10_000;
     while (retries > 0) {
       try {
