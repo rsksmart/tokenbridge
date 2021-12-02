@@ -59,6 +59,27 @@ export default class Federator {
     return this.chainId;
   }
 
+  getFromBlock(): number {
+    let fromBlock: number = null;
+    try {
+      fromBlock = parseInt(fs.readFileSync(this.lastBlockPath, 'utf8'));
+    } catch (err) {
+      fromBlock = this.config.mainchain.fromBlock;
+    }
+    if (fromBlock < this.config.mainchain.fromBlock) {
+      fromBlock = this.config.mainchain.fromBlock;
+    }
+    return fromBlock;
+  }
+
+  checkStoragePath() {
+    if (!fs.existsSync(this.config.storagePath)) {
+      fs.mkdirSync(this.config.storagePath, {
+        recursive: true,
+      });
+    }
+  }
+
   async run(): Promise<boolean> {
     while (this.numberOfRetries > 0) {
       try {
@@ -98,20 +119,9 @@ export default class Federator {
           return false;
         }
 
-        if (!fs.existsSync(this.config.storagePath)) {
-          await fs.mkdirSync(this.config.storagePath, {
-            recursive: true,
-          });
-        }
-        let fromBlock = null;
-        try {
-          fromBlock = parseInt(fs.readFileSync(this.lastBlockPath, 'utf8'));
-        } catch (err) {
-          fromBlock = this.config.mainchain.fromBlock;
-        }
-        if (fromBlock < this.config.mainchain.fromBlock) {
-          fromBlock = this.config.mainchain.fromBlock;
-        }
+        this.checkStoragePath();
+
+        let fromBlock = this.getFromBlock();
         if (fromBlock >= toBlock && fromBlock >= newToBlock) {
           this.logger.warn(
             `Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
@@ -132,13 +142,17 @@ export default class Federator {
         this.logger.error(new Error('Exception Running Federator'), err);
         this.numberOfRetries--;
         this.logger.debug(`Runned ${this.config.federatorRetries - this.numberOfRetries} retrie`);
-        if (this.numberOfRetries < 0) {
-          process.exit(1);
-        }
+        this.checkRetries();
         await utils.sleep(this.config.mainchain.blockTimeMs);
       }
     }
     return true;
+  }
+
+  checkRetries() {
+    if (this.numberOfRetries < 0) {
+      process.exit(1);
+    }
   }
 
   resetRetries() {
