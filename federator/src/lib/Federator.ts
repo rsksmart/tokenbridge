@@ -88,12 +88,13 @@ export default class Federator {
     while (this.numberOfRetries > 0) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-        const chainId = await this.getCurrentChainId();
+        const currentChainId = await this.getCurrentChainId();
 
+        this.logger.trace(`Federator Run started currentBlock: ${currentBlock}, currentChainId: ${currentChainId}`);
         const isMainSyncing = await this.mainWeb3.eth.isSyncing();
         if (isMainSyncing !== false) {
           this.logger.warn(
-            `ChainId ${chainId} is Syncing, ${JSON.stringify(
+            `ChainId ${currentChainId} is Syncing, ${JSON.stringify(
               isMainSyncing,
             )}. Federator won't process requests till is synced`,
           );
@@ -111,13 +112,14 @@ export default class Federator {
           return false;
         }
 
-        this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
+        this.logger.debug(`Current Block ${currentBlock} ChainId ${currentChainId}`);
         const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
         const confirmations = await allowTokens.getConfirmations();
         const toBlock = currentBlock - confirmations.largeAmountConfirmations;
         const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
 
         this.logger.info('Running to Block', toBlock);
+        this.logger.info(`Confirmations ${confirmations}, newToBlock ${newToBlock}`);
 
         if (toBlock <= 0 && newToBlock <= 0) {
           return false;
@@ -128,7 +130,7 @@ export default class Federator {
         let fromBlock = this.getFromBlock();
         if (fromBlock >= toBlock && fromBlock >= newToBlock) {
           this.logger.warn(
-            `Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
+            `Current chain ${currentChainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
           );
           return false;
         }
@@ -163,8 +165,18 @@ export default class Federator {
     this.numberOfRetries = this.config.federatorRetries;
   }
 
-  async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall: boolean, confirmations) {
+  async getLogsAndProcess(
+    fromBlock: number,
+    toBlock: number,
+    currentBlock: number,
+    mediumAndSmall: boolean,
+    confirmations: { mediumAmountConfirmations: number; largeAmountConfirmations: number },
+  ) {
+    this.logger.trace(
+      `getLogsAndProcess started currentBlock: ${currentBlock}, fromBlock: ${fromBlock}, toBlock: ${toBlock}`,
+    );
     if (fromBlock >= toBlock) {
+      this.logger.debug('getLogsAndProcess fromBlock >= toBlock', fromBlock, toBlock);
       return;
     }
 
@@ -190,8 +202,8 @@ export default class Federator {
       }
 
       this.logger.info(`Found ${logs.length} logs`);
-      await this._processLogs(logs, currentBlock, medmiumAndSmall, confirmations);
-      if (!medmiumAndSmall) {
+      await this._processLogs(logs, currentBlock, mediumAndSmall, confirmations);
+      if (!mediumAndSmall) {
         this._saveProgress(this.lastBlockPath, toPagedBlock);
       }
       fromPageBlock = toPagedBlock + 1;
@@ -230,6 +242,7 @@ export default class Federator {
       originChainId: originChainIdStr,
       destinationChainId: destinationChainIdStr,
     } = log.returnValues;
+    this.logger.trace('log.returnValues', log.returnValues);
 
     const originChainId = Number(originChainIdStr);
     const destinationChainId = Number(destinationChainIdStr);
