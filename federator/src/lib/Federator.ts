@@ -11,6 +11,10 @@ import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
+import { IFederationV3 } from '../contracts/IFederationV3';
+import { IFederationV2 } from '../contracts/IFederationV2';
+import { IAllowTokensV0 } from '../contracts/IAllowTokensV0';
+import { IAllowTokensV1 } from '../contracts/IAllowTokensV1';
 
 export default class Federator {
   public logger: Logger;
@@ -159,7 +163,7 @@ export default class Federator {
     this.numberOfRetries = this.config.federatorRetries;
   }
 
-  async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, confirmations) {
+  async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall: boolean, confirmations) {
     if (fromBlock >= toBlock) {
       return;
     }
@@ -194,145 +198,173 @@ export default class Federator {
     }
   }
 
-  async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
+  async checkFederatorIsMember(sideFedContract: IFederationV3 | IFederationV2, federatorAddress: string) {
+    const isMember = await typescriptUtils.retryNTimes(sideFedContract.isMember(federatorAddress));
+    if (!isMember) {
+      throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
+    }
+  }
+
+  async processLog(
+    log: any,
+    confirmations: { largeAmountConfirmations: number; mediumAmountConfirmations: number },
+    sideFedContract: IFederationV3 | IFederationV2,
+    allowTokens: IAllowTokensV1 | IAllowTokensV0,
+    currentBlock: number,
+    federatorAddress: string,
+    mediumAndSmall: boolean,
+  ): Promise<boolean> {
+    this.logger.info('Processing event log:', log);
+
+    const { blockHash, transactionHash, logIndex, blockNumber } = log;
+
+    const {
+      _to: receiver,
+      _from: crossFrom,
+      _amount: amount,
+      _symbol: symbol,
+      _tokenAddress: tokenAddress,
+      _decimals: decimals,
+      _granularity: granularity,
+      _typeId: typeId,
+      originChainId: originChainIdStr,
+      destinationChainId: destinationChainIdStr,
+    } = log.returnValues;
+
+    const originChainId = Number(originChainIdStr);
+    const destinationChainId = Number(destinationChainIdStr);
+    const originBridge = await this.bridgeFactory.getMainBridgeContract();
+    const sideTokenAddress = await utils.retry3Times(
+      originBridge.getMappedToken({
+        originalTokenAddress: tokenAddress,
+        chainId: destinationChainIdStr,
+      }).call,
+    );
+
+    let allowed: number, mediumAmount: number, largeAmount: number;
+    if (sideTokenAddress === utils.zeroAddress) {
+      ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
+        tokenAddress: tokenAddress,
+      }));
+      if (!allowed) {
+        throw new Error(
+          `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}
+            Bridge Contract Addr ${originBridge}`,
+        );
+      }
+    } else {
+      ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
+        tokenAddress: sideTokenAddress,
+      }));
+      if (!allowed) {
+        this.logger.error(
+          `Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`,
+        );
+      }
+    }
+
+    const mediumAmountBN = web3.utils.toBN(mediumAmount);
+    const largeAmountBN = web3.utils.toBN(largeAmount);
+    const amountBN = web3.utils.toBN(amount);
+
+    if (mediumAndSmall) {
+      // At this point we're processing blocks newer than largeAmountConfirmations
+      // and older than smallAmountConfirmations
+      if (amountBN.gte(largeAmountBN)) {
+        const c = currentBlock - blockNumber;
+        const rC = confirmations.largeAmountConfirmations;
+        this.logger.debug(
+          `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+        );
+        return false;
+      }
+
+      if (amountBN.gte(mediumAmountBN) && currentBlock - blockNumber < confirmations.mediumAmountConfirmations) {
+        const c = currentBlock - blockNumber;
+        const rC = confirmations.mediumAmountConfirmations;
+        this.logger.debug(
+          `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+        );
+        return false;
+      }
+    }
+
+    const transactionId = await typescriptUtils.retryNTimes(
+      sideFedContract.getTransactionId({
+        originalTokenAddress: tokenAddress,
+        sender: crossFrom,
+        receiver,
+        amount,
+        blockHash,
+        transactionHash,
+        logIndex,
+        originChainId,
+        destinationChainId,
+      }),
+    );
+    this.logger.info('get transaction id:', transactionId);
+
+    const wasProcessed = await typescriptUtils.retryNTimes(sideFedContract.transactionWasProcessed(transactionId));
+    if (!wasProcessed) {
+      const hasVoted = await sideFedContract.hasVoted(transactionId, federatorAddress);
+      if (!hasVoted) {
+        this.logger.info(
+          `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`,
+        );
+        await this._voteTransaction({
+          sideFedContract,
+          tokenAddress,
+          sender: crossFrom,
+          receiver,
+          amount,
+          symbol,
+          blockHash: log.blockHash,
+          transactionHash: log.transactionHash,
+          logIndex: log.logIndex,
+          decimals,
+          granularity,
+          typeId,
+          txId: transactionId,
+          federatorAddress,
+          originChainId,
+          destinationChainId,
+        });
+      } else {
+        this.logger.debug(
+          `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`,
+        );
+      }
+    } else {
+      this.logger.debug(
+        `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`,
+      );
+    }
+    return true;
+  }
+
+  async _processLogs(
+    logs,
+    currentBlock,
+    mediumAndSmall,
+    confirmations: { mediumAmountConfirmations: number; largeAmountConfirmations: number },
+  ) {
     try {
       const federatorAddress = await this.transactionSender.getAddress(this.config.privateKey);
       const sideFedContract = await this.federationFactory.getSideFederationContract();
       const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
 
-      const isMember = await typescriptUtils.retryNTimes(sideFedContract.isMember(federatorAddress));
-      if (!isMember) {
-        throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
-      }
-
-      const { mediumAmountConfirmations, largeAmountConfirmations } = confirmations;
+      await this.checkFederatorIsMember(sideFedContract, federatorAddress);
 
       for (const log of logs) {
-        this.logger.info('Processing event log:', log);
-
-        const { blockHash, transactionHash, logIndex, blockNumber } = log;
-
-        const {
-          _to: receiver,
-          _from: crossFrom,
-          _amount: amount,
-          _symbol: symbol,
-          _tokenAddress: tokenAddress,
-          _decimals: decimals,
-          _granularity: granularity,
-          _typeId: typeId,
-          originChainId: originChainIdStr,
-          destinationChainId: destinationChainIdStr,
-        } = log.returnValues;
-
-        const originChainId = Number(originChainIdStr);
-        const destinationChainId = Number(destinationChainIdStr);
-        const originBridge = await this.bridgeFactory.getMainBridgeContract();
-        const sideTokenAddress = await utils.retry3Times(
-          originBridge.getMappedToken({
-            originalTokenAddress: tokenAddress,
-            chainId: destinationChainIdStr,
-          }).call,
+        await this.processLog(
+          log,
+          confirmations,
+          sideFedContract,
+          allowTokens,
+          currentBlock,
+          federatorAddress,
+          mediumAndSmall,
         );
-
-        let allowed, mediumAmount, largeAmount;
-        if (sideTokenAddress === utils.zeroAddress) {
-          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
-            tokenAddress: tokenAddress,
-          }));
-          if (!allowed) {
-            throw new Error(
-              `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}
-               Bridge Contract Addr ${originBridge}`,
-            );
-          }
-        } else {
-          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
-            tokenAddress: sideTokenAddress,
-          }));
-          if (!allowed) {
-            this.logger.error(
-              `Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`,
-            );
-          }
-        }
-
-        const mediumAmountBN = web3.utils.toBN(mediumAmount);
-        const largeAmountBN = web3.utils.toBN(largeAmount);
-        const amountBN = web3.utils.toBN(amount);
-
-        if (mediumAndSmall) {
-          // At this point we're processing blocks newer than largeAmountConfirmations
-          // and older than smallAmountConfirmations
-          if (amountBN.gte(largeAmountBN)) {
-            const c = currentBlock - blockNumber;
-            const rC = largeAmountConfirmations;
-            this.logger.debug(
-              `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
-            );
-            continue;
-          }
-
-          if (amountBN.gte(mediumAmountBN) && currentBlock - blockNumber < mediumAmountConfirmations) {
-            const c = currentBlock - blockNumber;
-            const rC = mediumAmountConfirmations;
-            this.logger.debug(
-              `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
-            );
-            continue;
-          }
-        }
-
-        const transactionId = await typescriptUtils.retryNTimes(
-          sideFedContract.getTransactionId({
-            originalTokenAddress: tokenAddress,
-            sender: crossFrom,
-            receiver,
-            amount,
-            blockHash,
-            transactionHash,
-            logIndex,
-            originChainId,
-            destinationChainId,
-          }),
-        );
-        this.logger.info('get transaction id:', transactionId);
-
-        const wasProcessed = await typescriptUtils.retryNTimes(sideFedContract.transactionWasProcessed(transactionId));
-        if (!wasProcessed) {
-          const hasVoted = await sideFedContract.hasVoted(transactionId, federatorAddress);
-          if (!hasVoted) {
-            this.logger.info(
-              `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`,
-            );
-            await this._voteTransaction({
-              sideFedContract,
-              tokenAddress,
-              sender: crossFrom,
-              receiver,
-              amount,
-              symbol,
-              blockHash: log.blockHash,
-              transactionHash: log.transactionHash,
-              logIndex: log.logIndex,
-              decimals,
-              granularity,
-              typeId,
-              txId: transactionId,
-              federatorAddress,
-              originChainId,
-              destinationChainId,
-            });
-          } else {
-            this.logger.debug(
-              `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`,
-            );
-          }
-        } else {
-          this.logger.debug(
-            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`,
-          );
-        }
       }
 
       return true;
