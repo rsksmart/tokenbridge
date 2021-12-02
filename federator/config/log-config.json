@@ -21,7 +21,7 @@
     "categories": {
         "default": {
             "appenders": ["file", "console"],
-            "level": "debug"
+            "level": "trace"
         },
         "HEARTBEAT": {
             "appenders": ["heartbeat", "console"],
