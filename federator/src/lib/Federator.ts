@@ -1,55 +1,55 @@
-const web3 = require("web3");
-const fs = require("fs");
-const TransactionSender = require("./TransactionSender");
-const CustomError = require("./CustomError");
-const BridgeFactory = require("../contracts/BridgeFactory");
-const FederationFactory = require("../contracts/FederationFactory");
-const AllowTokensFactory = require("../contracts/AllowTokensFactory");
-const utils = require("./utils");
-const metrics = require("./MetricCollector");
-const typescriptUtils = require("./typescriptUtils");
-module.exports = class Federator {
-  constructor(config, logger, metricCollector, Web3 = web3) {
+import { Logger } from 'log4js';
+import { Config } from './config';
+import { MetricCollector } from './MetricCollector';
+
+import web3 from 'web3';
+import fs from 'fs';
+import TransactionSender from './TransactionSender';
+import CustomError from './CustomError';
+import { BridgeFactory } from '../contracts/BridgeFactory';
+import { FederationFactory } from '../contracts/FederationFactory';
+import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
+import utils from './utils';
+import * as typescriptUtils from './typescriptUtils';
+
+export class Federator {
+  public logger: Logger;
+  public config: Config;
+  public mainWeb3: web3;
+  public sideWeb3: web3;
+  public sideFederationAddress: string = null;
+  public transactionSender: TransactionSender;
+  public lastBlockPath: string;
+  public revertedTxnsPath: string;
+  public bridgeFactory: BridgeFactory;
+  public federationFactory: FederationFactory;
+  public allowTokensFactory: AllowTokensFactory;
+  public metricCollector: MetricCollector;
+  public chainId: number;
+  public numberOfRetries: number;
+
+  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
 
-    if (
-      config.checkHttps &&
-      !utils.checkHttpsOrLocalhost(config.mainchain.host)
-    ) {
-      this.logger.info("Check of checkHttpsOrLocalhost failed");
-      throw new Error(
-        `Invalid host configuration, https or localhost required`
-      );
+    if (config.checkHttps && !utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+      this.logger.info('Check of checkHttpsOrLocalhost failed');
+      throw new Error(`Invalid host configuration, https or localhost required`);
     }
 
-    this.mainWeb3 = new Web3(config.mainchain.host);
-    this.sideWeb3 = new Web3(config.sidechain.host);
+    this.mainWeb3 = new web3(config.mainchain.host);
+    this.sideWeb3 = new web3(config.sidechain.host);
 
     this.sideFederationAddress = null;
 
-    this.transactionSender = new TransactionSender(
-      this.sideWeb3,
-      this.logger,
-      this.config
-    );
-    this.lastBlockPath = `${config.storagePath || __dirname}/lastBlock.txt`;
-    this.revertedTxnsPath = `${
-      config.storagePath || __dirname
-    }/revertedTxns.json`;
-    this.bridgeFactory = new BridgeFactory.BridgeFactory(
-      this.config,
-      this.logger
-    );
-    this.federationFactory = new FederationFactory.FederationFactory(
-      this.config,
-      this.logger
-    );
-    this.allowTokensFactory = new AllowTokensFactory.AllowTokensFactory(
-      this.config,
-      this.logger
-    );
+    this.transactionSender = new TransactionSender(this.sideWeb3, this.logger, this.config);
+    this.lastBlockPath = `${config.storagePath}/lastBlock.txt`;
+    this.revertedTxnsPath = `${config.storagePath}/revertedTxns.json`;
+    this.bridgeFactory = new BridgeFactory(this.config, this.logger);
+    this.federationFactory = new FederationFactory(this.config, this.logger);
+    this.allowTokensFactory = new AllowTokensFactory(this.config, this.logger);
     this.metricCollector = metricCollector;
+    this.numberOfRetries = config.federatorRetries;
   }
 
   async getCurrentChainId() {
@@ -60,19 +60,17 @@ module.exports = class Federator {
   }
 
   async run() {
-    let retries = 3;
-    const sleepAfterRetrie = 10_000;
-    while (retries > 0) {
+    while (this.numberOfRetries > 0) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-        const chainId = this.getCurrentChainId();
+        const chainId = await this.getCurrentChainId();
 
         const isMainSyncing = await this.mainWeb3.eth.isSyncing();
         if (isMainSyncing !== false) {
           this.logger.warn(
             `ChainId ${chainId} is Syncing, ${JSON.stringify(
-              isMainSyncing
-            )}. Federator won't process requests till is synced`
+              isMainSyncing,
+            )}. Federator won't process requests till is synced`,
           );
           return;
         }
@@ -82,21 +80,19 @@ module.exports = class Federator {
           const sideChainId = await this.sideWeb3.eth.net.getId();
           this.logger.warn(
             `ChainId ${sideChainId} is Syncing, ${JSON.stringify(
-              isSideSyncing
-            )}. Federator won't process requests till is synced`
+              isSideSyncing,
+            )}. Federator won't process requests till is synced`,
           );
           return;
         }
 
         this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
-        const allowTokens =
-          await this.allowTokensFactory.getMainAllowTokensContract();
+        const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
         const confirmations = await allowTokens.getConfirmations();
         const toBlock = currentBlock - confirmations.largeAmountConfirmations;
-        const newToBlock =
-          currentBlock - confirmations.smallAmountConfirmations;
+        const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
 
-        this.logger.info("Running to Block", toBlock);
+        this.logger.info('Running to Block', toBlock);
 
         if (toBlock <= 0 && newToBlock <= 0) {
           return false;
@@ -107,72 +103,55 @@ module.exports = class Federator {
             recursive: true,
           });
         }
-        let originalFromBlock = parseInt(this.config.mainchain.fromBlock) || 0;
         let fromBlock = null;
         try {
-          fromBlock = parseInt(fs.readFileSync(this.lastBlockPath, "utf8"));
+          fromBlock = parseInt(fs.readFileSync(this.lastBlockPath, 'utf8'));
         } catch (err) {
-          fromBlock = originalFromBlock;
+          fromBlock = this.config.mainchain.fromBlock;
         }
-        if (fromBlock < originalFromBlock) {
-          fromBlock = originalFromBlock;
+        if (fromBlock < this.config.mainchain.fromBlock) {
+          fromBlock = this.config.mainchain.fromBlock;
         }
         if (fromBlock >= toBlock && fromBlock >= newToBlock) {
           this.logger.warn(
-            `Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`
+            `Current chain ${chainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
           );
           return false;
         }
         fromBlock = fromBlock + 1;
-        this.logger.debug("Running from Block", fromBlock);
-        await this.getLogsAndProcess(
-          fromBlock,
-          toBlock,
-          currentBlock,
-          false,
-          confirmations
-        );
-        let lastBlockProcessed = toBlock;
+        this.logger.debug('Running from Block', fromBlock);
+        await this.getLogsAndProcess(fromBlock, toBlock, currentBlock, false, confirmations);
+        const lastBlockProcessed = toBlock;
 
-        this.logger.debug("Started the second Log and Process", newToBlock);
-        await this.getLogsAndProcess(
-          lastBlockProcessed,
-          newToBlock,
-          currentBlock,
-          true,
-          confirmations
-        );
+        this.logger.debug('Started the second Log and Process', newToBlock);
+        await this.getLogsAndProcess(lastBlockProcessed, newToBlock, currentBlock, true, confirmations);
 
+        this.resetRetries();
         return true;
       } catch (err) {
-        this.logger.error(new Error("Exception Running Federator"), err);
-        retries--;
-        this.logger.debug(`Runned ${3 - retries} retrie`);
-        if (retries > 0) {
-          await utils.sleep(sleepAfterRetrie);
-        } else {
+        this.logger.error(new Error('Exception Running Federator'), err);
+        this.numberOfRetries--;
+        this.logger.debug(`Runned ${this.config.federatorRetries - this.numberOfRetries} retrie`);
+        if (this.numberOfRetries < 0) {
           process.exit(1);
         }
+        await utils.sleep(this.config.mainchain.blockTimeMs);
       }
     }
   }
 
-  async getLogsAndProcess(
-    fromBlock,
-    toBlock,
-    currentBlock,
-    medmiumAndSmall,
-    confirmations
-  ) {
+  resetRetries() {
+    this.numberOfRetries = this.config.federatorRetries;
+  }
+
+  async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, confirmations) {
     if (fromBlock >= toBlock) return;
 
     const mainBridge = await this.bridgeFactory.getMainBridgeContract();
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
-    this.logger.debug(
-      `Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`
-    );
+    this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
 
     let fromPageBlock = fromBlock;
     for (let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
@@ -180,24 +159,17 @@ module.exports = class Federator {
       if (currentPage === numberOfPages) {
         toPagedBlock = toBlock;
       }
-      this.logger.debug(
-        `Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`
-      );
-      const logs = await mainBridge.getPastEvents("Cross", {
+      this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+      const logs = await mainBridge.getPastEvents('Cross', {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
       });
       if (!logs) {
-        throw new Error("Failed to obtain the logs");
+        throw new Error('Failed to obtain the logs');
       }
 
       this.logger.info(`Found ${logs.length} logs`);
-      await this._processLogs(
-        logs,
-        currentBlock,
-        medmiumAndSmall,
-        confirmations
-      );
+      await this._processLogs(logs, currentBlock, medmiumAndSmall, confirmations);
       if (!medmiumAndSmall) {
         this._saveProgress(this.lastBlockPath, toPagedBlock);
       }
@@ -207,28 +179,19 @@ module.exports = class Federator {
 
   async _processLogs(logs, currentBlock, mediumAndSmall, confirmations) {
     try {
-      const federatorAddress = await this.transactionSender.getAddress(
-        this.config.privateKey
-      );
-      const sideFedContract =
-        await this.federationFactory.getSideFederationContract();
-      const allowTokens =
-        await this.allowTokensFactory.getMainAllowTokensContract();
+      const federatorAddress = await this.transactionSender.getAddress(this.config.privateKey);
+      const sideFedContract = await this.federationFactory.getSideFederationContract();
+      const allowTokens = await this.allowTokensFactory.getMainAllowTokensContract();
 
-      const isMember = await typescriptUtils.retryNTimes(
-        sideFedContract.isMember(federatorAddress)
-      );
+      const isMember = await typescriptUtils.retryNTimes(sideFedContract.isMember(federatorAddress));
       if (!isMember) {
-        throw new Error(
-          `This Federator addr:${federatorAddress} is not part of the federation`
-        );
+        throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
       }
 
-      const { mediumAmountConfirmations, largeAmountConfirmations } =
-        confirmations;
+      const { mediumAmountConfirmations, largeAmountConfirmations } = confirmations;
 
-      for (let log of logs) {
-        this.logger.info("Processing event log:", log);
+      for (const log of logs) {
+        this.logger.info('Processing event log:', log);
 
         const { blockHash, transactionHash, logIndex, blockNumber } = log;
 
@@ -252,41 +215,34 @@ module.exports = class Federator {
           originBridge.getMappedToken({
             originalTokenAddress: tokenAddress,
             chainId: destinationChainIdStr,
-          }).call
+          }).call,
         );
 
         let allowed, mediumAmount, largeAmount;
         if (sideTokenAddress == utils.zeroAddress) {
-          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits(
-            {
-              tokenAddress: tokenAddress,
-              chainId: originChainId,
-            }
-          ));
+          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
+            tokenAddress: tokenAddress,
+          }));
           if (!allowed) {
             throw new Error(
               `Original Token not allowed nor side token Tx:${transactionHash} originalTokenAddress:${tokenAddress}
-               Bridge Contract Addr ${originBridge}`
+               Bridge Contract Addr ${originBridge}`,
             );
           }
         } else {
-          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits(
-            {
-              tokenAddress: sideTokenAddress,
-              chainId: originChainId,
-            }
-          ));
+          ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
+            tokenAddress: sideTokenAddress,
+          }));
           if (!allowed) {
             this.logger.error(
-              `Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`
+              `Side token:${sideTokenAddress} needs to be allowed Tx:${transactionHash} originalTokenAddress:${tokenAddress}`,
             );
           }
         }
 
-        const BN = this.mainWeb3.utils.BN;
-        const mediumAmountBN = new BN(mediumAmount);
-        const largeAmountBN = new BN(largeAmount);
-        const amountBN = new BN(amount);
+        const mediumAmountBN = web3.utils.toBN(mediumAmount);
+        const largeAmountBN = web3.utils.toBN(largeAmount);
+        const amountBN = web3.utils.toBN(amount);
 
         if (mediumAndSmall) {
           // At this point we're processing blocks newer than largeAmountConfirmations
@@ -295,19 +251,16 @@ module.exports = class Federator {
             const c = currentBlock - blockNumber;
             const rC = largeAmountConfirmations;
             this.logger.debug(
-              `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`
+              `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
             );
             continue;
           }
 
-          if (
-            amountBN.gte(mediumAmountBN) &&
-            currentBlock - blockNumber < mediumAmountConfirmations
-          ) {
+          if (amountBN.gte(mediumAmountBN) && currentBlock - blockNumber < mediumAmountConfirmations) {
             const c = currentBlock - blockNumber;
             const rC = mediumAmountConfirmations;
             this.logger.debug(
-              `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`
+              `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
             );
             continue;
           }
@@ -319,30 +272,21 @@ module.exports = class Federator {
             sender: crossFrom,
             receiver,
             amount,
-            symbol,
             blockHash,
             transactionHash,
             logIndex,
-            decimals,
-            granularity,
-            typeId,
             originChainId,
             destinationChainId,
-          })
+          }),
         );
-        this.logger.info("get transaction id:", transactionId);
+        this.logger.info('get transaction id:', transactionId);
 
-        const wasProcessed = await typescriptUtils.retryNTimes(
-          sideFedContract.transactionWasProcessed(transactionId)
-        );
+        const wasProcessed = await typescriptUtils.retryNTimes(sideFedContract.transactionWasProcessed(transactionId));
         if (!wasProcessed) {
-          const hasVoted = await sideFedContract.hasVoted(
-            transactionId,
-            federatorAddress
-          );
+          const hasVoted = await sideFedContract.hasVoted(transactionId, federatorAddress);
           if (!hasVoted) {
             this.logger.info(
-              `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`
+              `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`,
             );
             await this._voteTransaction(
               sideFedContract,
@@ -360,16 +304,16 @@ module.exports = class Federator {
               transactionId,
               federatorAddress,
               originChainId,
-              destinationChainId
+              destinationChainId,
             );
           } else {
             this.logger.debug(
-              `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`
+              `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`,
             );
           }
         } else {
           this.logger.debug(
-            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`
+            `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`,
           );
         }
       }
@@ -396,12 +340,12 @@ module.exports = class Federator {
     txId,
     federatorAddress,
     originChainId,
-    destinationChainId
+    destinationChainId,
   ) {
     try {
       txId = txId.toLowerCase();
       this.logger.info(
-        `TransactionId ${txId} Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`
+        `TransactionId ${txId} Voting Transfer ${amount} of originalTokenAddress:${tokenAddress} trough sidechain bridge ${this.config.sidechain.bridge} to receiver ${receiver}`,
       );
 
       const txDataAbi = await sideFedContract.getVoteTransactionABI({
@@ -423,38 +367,33 @@ module.exports = class Federator {
 
       let revertedTxns = {};
       if (fs.existsSync(this.revertedTxnsPath)) {
-        revertedTxns = JSON.parse(
-          fs.readFileSync(this.revertedTxnsPath, "utf8")
-        );
-        this.logger.info(
-          `read these transactions from reverted transactions file`,
-          revertedTxns
-        );
+        revertedTxns = JSON.parse(fs.readFileSync(this.revertedTxnsPath, 'utf8'));
+        this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
       }
 
       if (revertedTxns[txId]) {
         this.logger.info(
           `Skipping Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} since it's marked as reverted.`,
-          revertedTxns[txId]
+          revertedTxns[txId],
         );
         return false;
       }
 
       this.logger.info(
-        `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`
+        `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} was not reverted.`,
       );
 
       const receipt = await this.transactionSender.sendTransaction(
         sideFedContract.getAddress(),
         txDataAbi,
         0,
-        this.config.privateKey
+        this.config.privateKey,
       );
 
       if (receipt.status == false) {
         this.logger.info(
           `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} failed, check the receipt`,
-          receipt
+          receipt,
         );
 
         fs.writeFileSync(
@@ -473,7 +412,7 @@ module.exports = class Federator {
               decimals,
               granularity,
             },
-          })
+          }),
         );
       }
 
@@ -483,7 +422,7 @@ module.exports = class Federator {
     } catch (err) {
       throw new CustomError(
         `Exception Voting tx:${transactionHash} block: ${blockHash} originalTokenAddress: ${tokenAddress}`,
-        err
+        err,
       );
     }
   }
@@ -494,7 +433,7 @@ module.exports = class Federator {
       wasTransactionVoted,
       federatorAddress,
       federator.getVersion(),
-      await this.getCurrentChainId()
+      await this.getCurrentChainId(),
     );
   }
 
@@ -503,4 +442,4 @@ module.exports = class Federator {
       fs.writeFileSync(path, value.toString());
     }
   }
-};
+}

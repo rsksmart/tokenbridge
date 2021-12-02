@@ -27,7 +27,7 @@ export class Config {
     this.runEvery = jsonConfig.runEvery;
     this.confirmations = jsonConfig.confirmations;
     this.privateKey = jsonConfig.privateKey;
-    this.storagePath = jsonConfig.storagePath;
+    this.storagePath = jsonConfig.storagePath ?? __dirname;
     this.etherscanApiKey = jsonConfig.etherscanApiKey;
     this.runHeartbeatEvery = jsonConfig.runHeartbeatEvery;
     this.endpointsPort = jsonConfig.endpointsPort;
