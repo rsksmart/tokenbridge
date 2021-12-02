@@ -291,24 +291,24 @@ export default class Federator {
             this.logger.info(
               `Voting tx: ${log.transactionHash} block: ${log.blockHash} originalTokenAddress: ${tokenAddress}`,
             );
-            await this._voteTransaction(
+            await this._voteTransaction({
               sideFedContract,
               tokenAddress,
-              crossFrom,
+              sender: crossFrom,
               receiver,
               amount,
               symbol,
-              log.blockHash,
-              log.transactionHash,
-              log.logIndex,
+              blockHash: log.blockHash,
+              transactionHash: log.transactionHash,
+              logIndex: log.logIndex,
               decimals,
               granularity,
               typeId,
-              transactionId,
+              txId: transactionId,
               federatorAddress,
               originChainId,
               destinationChainId,
-            );
+            });
           } else {
             this.logger.debug(
               `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress}  has already been voted by us`,
@@ -327,7 +327,7 @@ export default class Federator {
     }
   }
 
-  async _voteTransaction(
+  async _voteTransaction({
     sideFedContract,
     tokenAddress,
     sender,
@@ -344,7 +344,7 @@ export default class Federator {
     federatorAddress,
     originChainId,
     destinationChainId,
-  ) {
+  }) {
     try {
       txId = txId.toLowerCase();
       this.logger.info(
