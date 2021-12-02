@@ -1,6 +1,18 @@
 const DEFAULT_BLOCK_TIME_MS = 15000;
 const DEFAULT_FROM_BLOCK = 0;
 
+export interface ConfigChainParams {
+  bridge: string;
+  federation: string;
+  multiSig: string;
+  allowTokens: string;
+  host: string;
+  nftBridge?: string;
+  testToken?: string;
+  fromBlock?: number;
+  blockTimeMs?: number;
+}
+
 export class ConfigChain {
   bridge: string;
   nftBridge: string;
@@ -12,29 +24,16 @@ export class ConfigChain {
   fromBlock: number;
   blockTimeMs: number;
 
-  constructor(chainConfig: {
-    bridge: string;
-    federation: string;
-    multiSig: string;
-    allowTokens: string;
-    host: string;
-    nftBridge?: string;
-    testToken?: string;
-    fromBlock?: number;
-    blockTimeMs?: number;
-  }) {
+  constructor(chainConfig: ConfigChainParams) {
     this.bridge = chainConfig.bridge;
-    this.nftBridge = chainConfig.nftBridge;
     this.federation = chainConfig.federation;
     this.multiSig = chainConfig.multiSig;
     this.allowTokens = chainConfig.allowTokens;
-    this.testToken = chainConfig.testToken;
     this.host = chainConfig.host;
-    this.fromBlock = chainConfig.fromBlock ?? DEFAULT_FROM_BLOCK;
-    this.blockTimeMs = chainConfig.blockTimeMs ?? DEFAULT_BLOCK_TIME_MS;
+    this.testToken = chainConfig?.testToken;
+    this.nftBridge = chainConfig?.nftBridge;
+    this.fromBlock = chainConfig?.fromBlock ?? DEFAULT_FROM_BLOCK;
+    this.blockTimeMs = chainConfig?.blockTimeMs ?? DEFAULT_BLOCK_TIME_MS;
   }
+
 }
-
-
-
-
