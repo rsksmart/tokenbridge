@@ -33,12 +33,12 @@ const heartbeat = new Heartbeat(
   log4js.getLogger("HEARTBEAT"),
   metricCollector
 );
-const mainFederator = new Federator.Federator(
+const mainFederator = new Federator.default(
   config,
   log4js.getLogger("MAIN-FEDERATOR"),
   metricCollector
 );
-const sideFederator = new Federator.Federator(
+const sideFederator = new Federator.default(
   {
     ...config,
     mainchain: config.sidechain,

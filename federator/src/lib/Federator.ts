@@ -12,7 +12,7 @@ import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
 
-export class Federator {
+export default class Federator {
   public logger: Logger;
   public config: Config;
   public mainWeb3: web3;
