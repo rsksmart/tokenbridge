@@ -2,10 +2,9 @@ const fs = require("fs");
 const Web3 = require("web3");
 const log4js = require("log4js");
 
-const jsonConfigTest = require("../config/test.local.config.js");
 //configurations
 // the following file should only be used for integration tests
-const config = require("../src/lib/config").Config.getInstance(jsonConfigTest);
+const config = require("../config/test.local.config.js");
 const logConfig = require("../config/log-config.json");
 const abiBridge = require("../../bridge/abi/Bridge.json");
 const abiMainToken = require("../../bridge/abi/MainToken.json");
