@@ -1,4 +1,4 @@
-const DEFAULT_BLOCK_TIME_MS = 3000;
+const DEFAULT_BLOCK_TIME_MS = 15000;
 const DEFAULT_FROM_BLOCK = 0;
 
 export class ConfigChain {
