@@ -303,7 +303,42 @@ export default class Federator {
       }),
     );
     this.logger.info('get transaction id:', transactionId);
+    await this.processTransaction({
+      log,
+      sideFedContract,
+      tokenAddress,
+      sender: crossFrom,
+      receiver,
+      amount,
+      symbol,
+      decimals,
+      granularity,
+      typeId,
+      txId: transactionId,
+      federatorAddress,
+      originChainId,
+      destinationChainId,
+    });
 
+    return true;
+  }
+
+  async processTransaction({
+    log,
+    sideFedContract,
+    tokenAddress,
+    sender: crossFrom,
+    receiver,
+    amount,
+    symbol,
+    decimals,
+    granularity,
+    typeId,
+    txId: transactionId,
+    federatorAddress,
+    originChainId,
+    destinationChainId,
+  }) {
     const wasProcessed = await typescriptUtils.retryNTimes(sideFedContract.transactionWasProcessed(transactionId));
     if (!wasProcessed) {
       const hasVoted = await sideFedContract.hasVoted(transactionId, federatorAddress);
@@ -339,7 +374,6 @@ export default class Federator {
         `Block: ${log.blockHash} Tx: ${log.transactionHash} originalTokenAddress: ${tokenAddress} was already processed`,
       );
     }
-    return true;
   }
 
   async _processLogs(
