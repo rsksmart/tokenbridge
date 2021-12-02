@@ -146,7 +146,9 @@ export default class Federator {
   }
 
   async getLogsAndProcess(fromBlock, toBlock, currentBlock, medmiumAndSmall, confirmations) {
-    if (fromBlock >= toBlock) return;
+    if (fromBlock >= toBlock) {
+      return;
+    }
 
     const mainBridge = await this.bridgeFactory.getMainBridgeContract();
 
@@ -220,7 +222,7 @@ export default class Federator {
         );
 
         let allowed, mediumAmount, largeAmount;
-        if (sideTokenAddress == utils.zeroAddress) {
+        if (sideTokenAddress === utils.zeroAddress) {
           ({ allowed, mediumAmount, largeAmount } = await allowTokens.getLimits({
             tokenAddress: tokenAddress,
           }));
@@ -391,7 +393,7 @@ export default class Federator {
         this.config.privateKey,
       );
 
-      if (receipt.status == false) {
+      if (!receipt.status) {
         this.logger.info(
           `Voting ${amount} of originalTokenAddress:${tokenAddress} TransactionId ${txId} failed, check the receipt`,
           receipt,
@@ -430,7 +432,7 @@ export default class Federator {
 
   async trackTransactionResultMetric(wasTransactionVoted, federatorAddress) {
     const federator = await this.federationFactory.getSideFederationContract();
-    await this.metricCollector?.trackERC20FederatorVotingResult(
+    this.metricCollector?.trackERC20FederatorVotingResult(
       wasTransactionVoted,
       federatorAddress,
       federator.getVersion(),
