@@ -59,7 +59,7 @@ export default class Federator {
     return this.chainId;
   }
 
-  async run() {
+  async run(): Promise<boolean> {
     while (this.numberOfRetries > 0) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
@@ -72,7 +72,7 @@ export default class Federator {
               isMainSyncing,
             )}. Federator won't process requests till is synced`,
           );
-          return;
+          return false;
         }
 
         const isSideSyncing = await this.sideWeb3.eth.isSyncing();
@@ -83,7 +83,7 @@ export default class Federator {
               isSideSyncing,
             )}. Federator won't process requests till is synced`,
           );
-          return;
+          return false;
         }
 
         this.logger.debug(`Current Block ${currentBlock} ChainId ${chainId}`);
@@ -138,6 +138,7 @@ export default class Federator {
         await utils.sleep(this.config.mainchain.blockTimeMs);
       }
     }
+    return true;
   }
 
   resetRetries() {
