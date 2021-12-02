@@ -1,8 +1,23 @@
-import { ConfigChain } from './configChain';
-import * as jsonConfig from '../../config/config';
-
+import { ConfigChain, ConfigChainParams } from './configChain';
+import * as jsonConfigDefault from '../../config/config';
 const DEFAULT_RETRIE_TIMES = 3;
 const DEFAULT_NFT_CONFIRMATION = 5;
+
+interface JsonConfigParams {
+  mainchain: ConfigChainParams;
+  sidechain: ConfigChainParams;
+  runEvery: number;
+  confirmations: number;
+  privateKey: string;
+  storagePath: string;
+  etherscanApiKey: string;
+  runHeartbeatEvery: number;
+  endpointsPort: number;
+  nftConfirmations?: number;
+  federatorRetries?: number;
+  useNft?: boolean;
+  checkHttps?: boolean;
+}
 
 export class Config {
   mainchain: ConfigChain; //the json containing the smart contract addresses in rsk
@@ -21,7 +36,7 @@ export class Config {
 
   private static instance: Config;
 
-  private constructor() {
+  private constructor(jsonConfig: JsonConfigParams) {
     this.mainchain = new ConfigChain(jsonConfig.mainchain);
     this.sidechain = new ConfigChain(jsonConfig.sidechain);
     this.runEvery = jsonConfig.runEvery;
@@ -37,9 +52,9 @@ export class Config {
     this.checkHttps = jsonConfig.checkHttps ?? true;
   }
 
-  public static getInstance(): Config {
+  public static getInstance(jsonConfig: JsonConfigParams = jsonConfigDefault): Config {
     if (!Config.instance) {
-      Config.instance = new Config();
+      Config.instance = new Config(jsonConfig);
     }
     return Config.instance;
   }
