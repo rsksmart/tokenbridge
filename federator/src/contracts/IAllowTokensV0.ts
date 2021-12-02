@@ -1,6 +1,12 @@
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
 
+export interface ConfirmationsReturn {
+  smallAmountConfirmations: number;
+  mediumAmountConfirmations: number;
+  largeAmountConfirmations: number;
+}
+
 export class IAllowTokensV0 {
   allowTokensContract: Contract;
   mapTokenInfoAndLimits: any;
