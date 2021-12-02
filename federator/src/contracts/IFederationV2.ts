@@ -1,4 +1,4 @@
-import { Config } from '../../config/types';
+import { Config } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
 

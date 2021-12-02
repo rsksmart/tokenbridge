@@ -5,7 +5,7 @@ import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
-import { Config } from '../../config/types';
+import { Config } from '../lib/config';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';

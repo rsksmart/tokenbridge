@@ -13,7 +13,10 @@ module.exports = class Federator {
     this.config = config;
     this.logger = logger;
 
-    if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+    if (
+      config.checkHttps &&
+      !utils.checkHttpsOrLocalhost(config.mainchain.host)
+    ) {
       this.logger.info("Check of checkHttpsOrLocalhost failed");
       throw new Error(
         `Invalid host configuration, https or localhost required`
