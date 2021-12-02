@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config } from '../../config/types';
+import { Config } from '../lib/config';
 
 import web3 from 'web3';
 import fs from 'fs';
@@ -30,7 +30,7 @@ export class FederatorNFT {
   constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
-    if (!utils.checkHttpsOrLocalhost(config.mainchain.host)) {
+    if (config.checkHttps && !utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       throw new Error(`Invalid host configuration, https or localhost required`);
     }
 
