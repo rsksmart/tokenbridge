@@ -1,4 +1,4 @@
-import { Config } from '../../config/types';
+import { Config } from '../lib/config';
 import { Contract, EventData } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
