@@ -9,4 +9,7 @@ module.exports = {
     etherscanApiKey: '',
     runHeartbeatEvery: 1, // In hours
     endpointsPort: 5000, // Server port
+    federatorRetries: 3,
+    checkHttps: false,
+    useNft: false,
 }
