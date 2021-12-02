@@ -28,7 +28,7 @@ describe('Federator module tests', () => {
     });
 
     it('Saves the progress in a file path', async () => {
-        let federator = new Federator(testConfig, logger, web3Mock);
+        let federator = new Federator.default(testConfig, logger, web3Mock);
 
         federator._saveProgress(testPath, 'test');
 
@@ -41,7 +41,7 @@ describe('Federator module tests', () => {
     it('Should no vote for empty log and receiver', async () => {
         eth.sendSignedTransaction = jest.fn().mockImplementation(() => { throw new Error("Some Error") });
 
-        let federator = new Federator(testConfig, logger, web3Mock);
+        let federator = new Federator.default(testConfig, logger, web3Mock);
         try{
             await federator._voteTransaction(null, null);
             expect(false).toBeTruthy();

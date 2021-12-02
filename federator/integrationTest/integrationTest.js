@@ -14,7 +14,7 @@ const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 
 //utils
 const TransactionSender = require("../src/lib/TransactionSender.js");
-const Federator = require("../src/lib/Federator.js");
+const Federator = require("../src/lib/Federator");
 const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
 const MSG_TOKEN_NOT_VOTED = "Token was not voted by federators";
@@ -61,7 +61,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
   const federators = [];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      const federator = new Federator(
+      const federator = new Federator.default(
         {
           ...configFile,
           privateKey: key,
@@ -75,7 +75,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
     });
   } else {
     federators.push(
-      new Federator(
+      new Federator.default(
         {
           ...configFile,
           storagePath: `${config.storagePath}/${storagePathPrefix}`,
