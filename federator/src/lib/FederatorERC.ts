@@ -350,7 +350,8 @@ export default class FederatorERC extends Federator {
       );
       if (!hasVoted) {
         this.logger.info(
-          `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash} originalTokenAddress: ${processTransactionParams.tokenAddress}`,
+          `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash}
+          originalTokenAddress: ${processTransactionParams.tokenAddress}`,
         );
         await this._voteTransaction({
           ...processTransactionParams,
@@ -360,12 +361,14 @@ export default class FederatorERC extends Federator {
         });
       } else {
         this.logger.debug(
-          `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash} originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
+          `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+          originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
         );
       }
     } else {
       this.logger.debug(
-        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash} originalTokenAddress: ${processTransactionParams.tokenAddress} was already processed`,
+        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+        originalTokenAddress: ${processTransactionParams.tokenAddress} was already processed`,
       );
     }
   }
@@ -398,7 +401,8 @@ export default class FederatorERC extends Federator {
     try {
       voteTransactionParams.transactionId = voteTransactionParams.transactionId.toLowerCase();
       this.logger.info(
-        `TransactionId ${voteTransactionParams.transactionId} Voting Transfer ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress} trough sidechain bridge ${voteTransactionParams.sideChainConfig.bridge} to receiver ${voteTransactionParams.receiver}`,
+        `TransactionId ${voteTransactionParams.transactionId} Voting Transfer ${voteTransactionParams.amount}
+        of originalTokenAddress:${voteTransactionParams.tokenAddress} trough sidechain bridge ${voteTransactionParams.sideChainConfig.bridge} to receiver ${voteTransactionParams.receiver}`,
       );
 
       const txDataAbi = await voteTransactionParams.sideFedContract.getVoteTransactionABI({
@@ -427,14 +431,16 @@ export default class FederatorERC extends Federator {
 
       if (revertedTxns[voteTransactionParams.transactionId]) {
         this.logger.info(
-          `Skipping Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress} TransactionId ${voteTransactionParams.transactionId} since it's marked as reverted.`,
+          `Skipping Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
+          TransactionId ${voteTransactionParams.transactionId} since it's marked as reverted.`,
           revertedTxns[voteTransactionParams.transactionId],
         );
         return false;
       }
 
       this.logger.info(
-        `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress} TransactionId ${voteTransactionParams.transactionId} was not reverted.`,
+        `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
+        TransactionId ${voteTransactionParams.transactionId} was not reverted.`,
       );
 
       const receipt = await voteTransactionParams.transactionSender.sendTransaction(
@@ -446,7 +452,8 @@ export default class FederatorERC extends Federator {
 
       if (!receipt.status) {
         this.logger.info(
-          `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress} TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
+          `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
+          TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
           receipt,
         );
 
