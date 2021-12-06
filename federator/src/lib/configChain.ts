@@ -1,3 +1,5 @@
+import Web3 from "web3";
+
 const DEFAULT_BLOCK_TIME_MS = 15000;
 const DEFAULT_FROM_BLOCK = 0;
 
@@ -34,6 +36,10 @@ export class ConfigChain {
     this.nftBridge = chainConfig?.nftBridge;
     this.fromBlock = chainConfig?.fromBlock ?? DEFAULT_FROM_BLOCK;
     this.blockTimeMs = chainConfig?.blockTimeMs ?? DEFAULT_BLOCK_TIME_MS;
+  }
+
+  public validateNft(): boolean {
+    return Web3.utils.isAddress(this.nftBridge);
   }
 
 }
