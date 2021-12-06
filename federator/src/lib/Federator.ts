@@ -124,6 +124,7 @@ export default abstract class Federator {
             return false;
           }
           this.resetRetries();
+          break;
         }
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
