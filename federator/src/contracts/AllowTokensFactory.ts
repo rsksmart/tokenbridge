@@ -5,25 +5,24 @@ import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
 import CustomError from '../lib/CustomError';
 import utils from '../lib/utils';
-import { Config } from '../lib/config';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';
 import { Logger } from 'log4js';
+import { ConfigChain } from '../lib/configChain';
+import { Config } from '../lib/config';
+import { IAllowTokens } from './IAllowTokens';
 
 export class AllowTokensFactory extends ContractFactory {
   mainChainBridgeContract: any;
   sideChainBridgeContract: any;
-  constructor(config: Config, logger: Logger) {
-    super(config, logger);
+  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+    super(config, logger, sideChain);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],
       this.config.mainchain.bridge,
     );
-    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(
-      abiBridgeV3 as AbiItem[],
-      this.config.sidechain.bridge,
-    );
+    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3 as AbiItem[], sideChain.bridge);
   }
 
   async getVersion(allowTokensContract) {
@@ -34,7 +33,7 @@ export class AllowTokensFactory extends ContractFactory {
     }
   }
 
-  async createInstance(web3, address) {
+  async createInstance(web3, address): Promise<IAllowTokens> {
     let allowTokensContract = this.getContractByAbi(abiAllowTokensV1 as AbiItem[], address, web3);
     const version = await this.getVersion(allowTokensContract);
     const chainId = await utils.retry3Times(web3.eth.net.getId);

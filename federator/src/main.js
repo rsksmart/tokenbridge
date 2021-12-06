@@ -8,66 +8,21 @@ log4js.configure(logConfig);
 
 // Services
 const Scheduler = require("./services/Scheduler.js");
-const Federator = require("./lib/Federator.js");
+const Federator = require("./lib/FederatorERC.js");
 const FederatorNFT = require("./lib/FederatorNFT");
 const Heartbeat = require("./lib/Heartbeat.js");
 const MetricCollector = require("./lib/MetricCollector");
-
-const logger = log4js.getLogger("Federators");
-logger.info("RSK Host", config.mainchain.host);
-logger.info("Side Host", config.sidechain.host);
-
 // Status Server
 const StatusServer = require("./lib/Endpoints.js");
+const logger = log4js.getLogger("Federators");
 StatusServer.init(logger);
 
 let metricCollector;
 try {
   metricCollector = new MetricCollector.MetricCollector();
 } catch (err) {
-  logger.error(`Error creating MetricCollector instance: ${err.stack}`);
+  logger.error(`Error creating MetricCollector instance:`, err);
 }
-
-const heartbeat = new Heartbeat(
-  config,
-  log4js.getLogger("HEARTBEAT"),
-  metricCollector
-);
-const mainFederator = new Federator.default(
-  config,
-  log4js.getLogger("MAIN-FEDERATOR"),
-  metricCollector
-);
-const sideFederator = new Federator.default(
-  {
-    ...config,
-    mainchain: config.sidechain,
-    sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/side-fed`,
-  },
-  log4js.getLogger("SIDE-FEDERATOR"),
-  metricCollector
-);
-
-const mainFederatorNFT = new FederatorNFT.FederatorNFT(
-  {
-    ...config,
-    storagePath: `${config.storagePath}/nft`,
-  },
-  log4js.getLogger("MAIN-NFT-FEDERATOR"),
-  metricCollector
-);
-
-const sideFederatorNFT = new FederatorNFT.FederatorNFT(
-  {
-    ...config,
-    mainchain: config.sidechain,
-    sidechain: config.mainchain,
-    storagePath: `${config.storagePath}/nft/side-fed`,
-  },
-  log4js.getLogger("SIDE-NFT-FEDERATOR"),
-  metricCollector
-);
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
 let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
@@ -76,19 +31,68 @@ scheduler.start().catch((err) => {
   logger.error("Unhandled Error on start()", err);
 });
 
+const mainFederatorNFT = new FederatorNFT.default(
+  {
+    ...config,
+    storagePath: `${config.storagePath}/nft`,
+  },
+  log4js.getLogger("MAIN-NFT-FEDERATOR"),
+  metricCollector
+);
+
 async function run() {
   try {
-    await runNftFederator();
-    await mainFederator.run();
-    await sideFederator.run();
-    await heartbeat.readLogs();
+    await runNftMainFederator();
+    await runErcMainFederator();
+
+    for (const sideChainConfig of config.sidechain) {
+      const heartbeat = new Heartbeat(
+        config,
+        log4js.getLogger("HEARTBEAT"),
+        metricCollector,
+        sideChainConfig,
+      );
+
+      await runNftSideFederators(sideChainConfig);
+      await runErcSideFederator(sideChainConfig);
+
+      await heartbeat.readLogs();
+      scheduleHeartbeatProcesses(heartbeat);
+    }
   } catch (err) {
     logger.error("Unhandled Error on run()", err);
     process.exit(1);
   }
 }
 
-async function runNftFederator() {
+const mainFederator = new Federator.default(
+  config,
+  log4js.getLogger("MAIN-FEDERATOR"),
+  metricCollector
+);
+
+async function runErcMainFederator() {
+  logger.info("RSK Host", config.mainchain.host);
+  await mainFederator.runAll();
+}
+
+async function runErcSideFederator(sideChainConfig) {
+  const sideFederator = new Federator.default(
+    {
+      ...config,
+      mainchain: sideChainConfig,
+      sidechain: [config.mainchain],
+      storagePath: `${config.storagePath}/side-fed`,
+    },
+    log4js.getLogger("SIDE-FEDERATOR"),
+    metricCollector
+  );
+
+  logger.info("Side Host", sideChainConfig.host);
+  await sideFederator.runAll();
+}
+
+async function runNftMainFederator() {
   if (!config.useNft) {
     return;
   }
@@ -97,17 +101,31 @@ async function runNftFederator() {
       "Main Federator NFT Bridge empty at config.mainchain.nftBridge"
     );
   }
-  await mainFederatorNFT.run();
-
-  if (config.sidechain.nftBridge == null) {
-    throw new CustomError(
-      "Side Federator NFT Bridge empty at config.sidechain.nftBridge"
-    );
-  }
-  await sideFederatorNFT.run();
+  await mainFederatorNFT.runAll();
 }
 
-async function scheduleHeartbeatProcesses() {
+async function runNftSideFederators(sideChainConfig) {
+  if (!config.useNft) {
+    return;
+  }
+
+  const sideFederatorNFT = new FederatorNFT.default(
+    {
+      ...config,
+      mainchain: sideChainConfig,
+      sidechain: [config.mainchain],
+      storagePath: `${config.storagePath}/nft/side-fed`,
+    },
+    log4js.getLogger("SIDE-NFT-FEDERATOR"),
+    metricCollector
+  );
+  if (sideChainConfig.nftBridge == null) {
+    throw new CustomError("Side Federator NFT Bridge empty at sideChainConfig");
+  }
+  await sideFederatorNFT.runAll();
+}
+
+async function scheduleHeartbeatProcesses(heartbeat) {
   const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval({
     host: config.mainchain.host,
     runHeartbeatEvery: config.runHeartbeatEvery,
@@ -129,7 +147,7 @@ async function scheduleHeartbeatProcesses() {
   });
 }
 
-scheduleHeartbeatProcesses();
+
 
 async function exitHandler() {
   process.exit(1);
