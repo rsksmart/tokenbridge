@@ -17,7 +17,6 @@ import { IAllowTokensV0 } from '../contracts/IAllowTokensV0';
 import { IAllowTokensV1 } from '../contracts/IAllowTokensV1';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
-import { Contract } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
 
 export default class FederatorERC extends Federator {

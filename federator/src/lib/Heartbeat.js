@@ -8,7 +8,7 @@ const utils = require('./utils');
 const scriptVersion = process.env.npm_package_version;
 
 module.exports = class Heartbeat {
-    constructor(config, logger, metricCollector, Web3 = web3, sideChainConfig) {
+    constructor(config, logger, metricCollector, sideChainConfig, Web3 = web3) {
         this.config = config;
         this.logger = logger;
 
