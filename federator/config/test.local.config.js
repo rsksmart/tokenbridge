@@ -11,5 +11,5 @@ module.exports = {
     endpointsPort: 5000, // Server port
     federatorRetries: 3,
     checkHttps: false,
-    useNft: false,
+    useNft: true,
 }
