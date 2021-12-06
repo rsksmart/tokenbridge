@@ -8,12 +8,12 @@ const utils = require('./utils');
 const scriptVersion = process.env.npm_package_version;
 
 module.exports = class Heartbeat {
-    constructor(config, logger, metricCollector, Web3 = web3) {
+    constructor(config, logger, metricCollector, sideChainConfig, Web3 = web3) {
         this.config = config;
         this.logger = logger;
 
         this.mainWeb3 = new Web3(config.mainchain.host);
-        this.sideWeb3 = new Web3(config.sidechain.host);
+        this.sideWeb3 = new Web3(sideChainConfig.host);
 
         this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
         this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;

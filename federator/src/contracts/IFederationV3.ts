@@ -2,8 +2,9 @@ import { Config } from '../lib/config';
 import { Contract, EventData } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
+import { IFederation } from './IFederation';
 
-interface TransactionIdParams {
+export interface TransactionIdParams {
   originalTokenAddress: string;
   sender: string;
   receiver: string;
@@ -15,13 +16,13 @@ interface TransactionIdParams {
   destinationChainId: number;
 }
 
-interface VoteTransactionParams extends TransactionIdParams {
+export interface VoteTransactionParams extends TransactionIdParams {
   tokenType: number;
 }
 
-export class IFederationV3 {
-  private readonly federationContract: Contract;
-  private readonly config: Config;
+export class IFederationV3 implements IFederation {
+  federationContract: Contract;
+  config: Config;
 
   constructor(config: Config, fedContract: Contract) {
     this.federationContract = fedContract;

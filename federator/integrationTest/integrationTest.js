@@ -14,7 +14,7 @@ const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 
 //utils
 const TransactionSender = require("../src/lib/TransactionSender.js");
-const Federator = require("../src/lib/Federator");
+const FederatorERC = require("../src/lib/FederatorERC");
 const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
 const MSG_TOKEN_NOT_VOTED = "Token was not voted by federators";
@@ -59,9 +59,10 @@ run(mainchainFederators, sidechainFederators, config, sideConfig);
 
 function getFederators(configFile, keys, storagePathPrefix = "fed") {
   const federators = [];
+  configFile.sidechain = [configFile.sidechain];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      const federator = new Federator.default(
+      const federator = new FederatorERC.default(
         {
           ...configFile,
           privateKey: key,
@@ -75,7 +76,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
     });
   } else {
     federators.push(
-      new Federator.default(
+      new FederatorERC.default(
         {
           ...configFile,
           storagePath: `${config.storagePath}/${storagePathPrefix}`,
@@ -84,6 +85,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
       )
     );
   }
+  configFile.sidechain = configFile.sidechain[0];
   return federators;
 }
 
@@ -267,7 +269,7 @@ async function getUsersBalances(
 async function runFederators(federators) {
   await federators.reduce(function (promise, item) {
     return promise.then(function () {
-      return item.run();
+      return item.runAll();
     });
   }, Promise.resolve());
 }
