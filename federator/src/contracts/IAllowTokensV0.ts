@@ -1,5 +1,8 @@
+import { BN } from 'ethereumjs-util';
+import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
+import { IAllowTokens } from './IAllowTokens';
 
 export interface ConfirmationsReturn {
   smallAmountConfirmations: number;
@@ -7,7 +10,7 @@ export interface ConfirmationsReturn {
   largeAmountConfirmations: number;
 }
 
-export class IAllowTokensV0 {
+export class IAllowTokensV0 implements IAllowTokens {
   allowTokensContract: Contract;
   mapTokenInfoAndLimits: any;
   chainId: any;
@@ -22,7 +25,7 @@ export class IAllowTokensV0 {
     return VERSIONS.V0;
   }
 
-  async getConfirmations() {
+  async getConfirmations(): Promise<ConfirmationsReturn> {
     let confirmations = 0; //for rsk regtest and ganache
     if (this.chainId === 31 || this.chainId === 42) {
       // rsk testnet and kovan

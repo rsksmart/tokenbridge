@@ -1,12 +1,15 @@
+import { BN } from 'ethereumjs-util';
 import { Contract } from 'web3-eth-contract';
 import CustomError from '../lib/CustomError';
 import { VERSIONS } from './Constants';
+import { IAllowTokens } from './IAllowTokens';
+import { ConfirmationsReturn } from './IAllowTokensV0';
 
-interface GetLimitsParams {
+export interface GetLimitsParams {
   tokenAddress: string;
 }
 
-export class IAllowTokensV1 {
+export class IAllowTokensV1 implements IAllowTokens {
   allowTokensContract: Contract;
   mapTokenInfoAndLimits: any;
   chainId: number;
@@ -21,7 +24,7 @@ export class IAllowTokensV1 {
     return VERSIONS.V1;
   }
 
-  async getConfirmations() {
+  async getConfirmations(): Promise<ConfirmationsReturn> {
     const promises = [];
     promises.push(this.getSmallAmountConfirmations());
     promises.push(this.getMediumAmountConfirmations());
@@ -34,7 +37,7 @@ export class IAllowTokensV1 {
     };
   }
 
-  async getSmallAmountConfirmations() {
+  async getSmallAmountConfirmations(): Promise<BN> {
     try {
       return this.allowTokensContract.methods.smallAmountConfirmations().call();
     } catch (err) {
@@ -42,7 +45,7 @@ export class IAllowTokensV1 {
     }
   }
 
-  async getMediumAmountConfirmations() {
+  async getMediumAmountConfirmations(): Promise<BN> {
     try {
       return this.allowTokensContract.methods.mediumAmountConfirmations().call();
     } catch (err) {
@@ -50,7 +53,7 @@ export class IAllowTokensV1 {
     }
   }
 
-  async getLargeAmountConfirmations() {
+  async getLargeAmountConfirmations(): Promise<BN> {
     try {
       return this.allowTokensContract.methods.largeAmountConfirmations().call();
     } catch (err) {

@@ -11,6 +11,7 @@ import { VERSIONS } from './Constants';
 import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
 import { Config } from '../lib/config';
+import { IAllowTokens } from './IAllowTokens';
 
 export class AllowTokensFactory extends ContractFactory {
   mainChainBridgeContract: any;
@@ -32,7 +33,7 @@ export class AllowTokensFactory extends ContractFactory {
     }
   }
 
-  async createInstance(web3, address) {
+  async createInstance(web3, address): Promise<IAllowTokens> {
     let allowTokensContract = this.getContractByAbi(abiAllowTokensV1 as AbiItem[], address, web3);
     const version = await this.getVersion(allowTokensContract);
     const chainId = await utils.retry3Times(web3.eth.net.getId);
