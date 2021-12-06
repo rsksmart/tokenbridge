@@ -402,7 +402,8 @@ export default class FederatorERC extends Federator {
       voteTransactionParams.transactionId = voteTransactionParams.transactionId.toLowerCase();
       this.logger.info(
         `TransactionId ${voteTransactionParams.transactionId} Voting Transfer ${voteTransactionParams.amount}
-        of originalTokenAddress:${voteTransactionParams.tokenAddress} trough sidechain bridge ${voteTransactionParams.sideChainConfig.bridge} to receiver ${voteTransactionParams.receiver}`,
+        of originalTokenAddress:${voteTransactionParams.tokenAddress} trough sidechain bridge
+        ${voteTransactionParams.sideChainConfig.bridge} to receiver ${voteTransactionParams.receiver}`,
       );
 
       const txDataAbi = await voteTransactionParams.sideFedContract.getVoteTransactionABI({
