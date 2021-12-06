@@ -35,7 +35,7 @@ const mainKeys = process.argv[2]
 const sideKeys = process.argv[3]
   ? process.argv[3].replace(/ /g, "").split(",")
   : [];
-const mainchainFederators = getMainchainFederators(mainKeys);
+const mainchainFederators = getMainchainFederators(mainKeys, config);
 const sidechainFederators = getSidechainFederators(sideKeys, sideConfig);
 const MAIN_CHAIN_LOGGER_NAME = "MAIN";
 const SIDE_CHAIN_LOGGER_NAME = "SIDE";
@@ -43,35 +43,39 @@ const NFT_FEDERATOR_LOGGER_CATEGORY = "NFT FEDERATOR";
 
 runNFT({ mainchainFederators, sidechainFederators, config, sideConfig });
 
-function getMainchainFederators(keys) {
-  let federators = [];
+function getMainchainFederators(keys, fedConfig) {
+  const federators = [];
+  fedConfig.sidechain = [fedConfig.sidechain];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      const federator = new FederatorNFT.FederatorNFT(
+      const federator = new FederatorNFT.default(
         {
-          ...config,
+          ...fedConfig,
           privateKey: key,
-          storagePath: `${config.storagePath}/nft-fed-${i + 1}`,
+          storagePath: `${fedConfig.storagePath}/nft-fed-${i + 1}`,
         },
         log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
       );
       federators.push(federator);
     });
   } else {
-    const federator = new FederatorNFT.FederatorNFT(
-      config,
-      log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
+    federators.push(
+      new FederatorNFT.default(
+        { ...fedConfig },
+        log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
+      )
     );
-    federators.push(federator);
   }
+  fedConfig.sidechain = fedConfig.sidechain[0];
   return federators;
 }
 
 function getSidechainFederators(keys, sideConfig) {
   let federators = [];
+  sideConfig.sidechain = [sideConfig.sidechain];
   if (keys && keys.length) {
     keys.forEach((key, i) => {
-      const federator = new FederatorNFT.FederatorNFT(
+      const federator = new FederatorNFT.default(
         {
           ...sideConfig,
           privateKey: key,
@@ -82,7 +86,7 @@ function getSidechainFederators(keys, sideConfig) {
       federators.push(federator);
     });
   } else {
-    const federator = new FederatorNFT.FederatorNFT(
+    const federator = new FederatorNFT.default(
       {
         ...sideConfig,
         storagePath: `${config.storagePath}/side-fed`,
@@ -91,6 +95,7 @@ function getSidechainFederators(keys, sideConfig) {
     );
     federators.push(federator);
   }
+  sideConfig.sidechain = sideConfig.sidechain[0];
   return federators;
 }
 
