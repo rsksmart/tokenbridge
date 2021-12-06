@@ -11,13 +11,11 @@ import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
 import utils from './utils';
 import * as typescriptUtils from './typescriptUtils';
-import { IFederationV3 } from '../contracts/IFederationV3';
-import { IFederationV2 } from '../contracts/IFederationV2';
-import { IAllowTokensV0 } from '../contracts/IAllowTokensV0';
-import { IAllowTokensV1 } from '../contracts/IAllowTokensV1';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
 import { BN } from 'ethereumjs-util';
+import { IFederation } from '../contracts/IFederation';
+import { IAllowTokens } from '../contracts/IAllowTokens';
 
 export default class FederatorERC extends Federator {
   constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
@@ -210,7 +208,7 @@ export default class FederatorERC extends Federator {
     }
   }
 
-  async checkFederatorIsMember(sideFedContract: IFederationV3 | IFederationV2, federatorAddress: string) {
+  async checkFederatorIsMember(sideFedContract: IFederation, federatorAddress: string) {
     const isMember = await typescriptUtils.retryNTimes(sideFedContract.isMember(federatorAddress));
     if (!isMember) {
       throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
@@ -236,8 +234,8 @@ export default class FederatorERC extends Federator {
     transactionSender: TransactionSender;
     log: any;
     confirmations: { largeAmountConfirmations: number; mediumAmountConfirmations: number };
-    sideFedContract: IFederationV3 | IFederationV2;
-    allowTokens: IAllowTokensV1 | IAllowTokensV0;
+    sideFedContract: IFederation;
+    allowTokens: IAllowTokens;
     currentBlock: number;
     federatorAddress: string;
     mediumAndSmall: boolean;
@@ -501,7 +499,7 @@ export default class FederatorERC extends Federator {
     sideChainId: number;
     mainChainId: number;
     transactionSender: TransactionSender;
-    sideFedContract: IFederationV3 | IFederationV2;
+    sideFedContract: IFederation;
     tokenAddress: string;
     sender: string;
     receiver: string;
@@ -602,7 +600,7 @@ export default class FederatorERC extends Federator {
     }
   }
 
-  async trackTransactionResultMetric(wasTransactionVoted, federatorAddress, federator: IFederationV3 | IFederationV2) {
+  async trackTransactionResultMetric(wasTransactionVoted, federatorAddress, federator: IFederation) {
     this.metricCollector?.trackERC20FederatorVotingResult(
       wasTransactionVoted,
       federatorAddress,

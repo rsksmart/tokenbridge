@@ -13,6 +13,7 @@ import * as typescriptUtils from './typescriptUtils';
 import { IFederationV3 } from '../contracts/IFederationV3';
 import { IFederationV2 } from '../contracts/IFederationV2';
 import { ConfigChain } from './configChain';
+import { IFederation } from '../contracts/IFederation';
 
 export default abstract class Federator {
   public logger: Logger;
@@ -120,11 +121,10 @@ export default abstract class Federator {
             bridgeFactory,
             federationFactory,
           });
-          if (!success) {
-            return false;
+          if (success) {
+            this.resetRetries();
+            break;
           }
-          this.resetRetries();
-          break;
         }
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
@@ -148,7 +148,7 @@ export default abstract class Federator {
     this.numberOfRetries = this.config.federatorRetries;
   }
 
-  async checkFederatorIsMember(sideFedContract: IFederationV3 | IFederationV2, federatorAddress: string) {
+  async checkFederatorIsMember(sideFedContract: IFederation, federatorAddress: string) {
     const isMember = await typescriptUtils.retryNTimes(sideFedContract.isMember(federatorAddress));
     if (!isMember) {
       throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
