@@ -14,6 +14,7 @@ import { Config } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
 import { ConfigChain } from '../lib/configChain';
+import { IFederation } from './IFederation';
 
 export class FederationFactory extends ContractFactory {
   mainChainBridgeContract: Contract;
@@ -37,7 +38,7 @@ export class FederationFactory extends ContractFactory {
     }
   }
 
-  async createInstance(web3: Web3, address: string) {
+  async createInstance(web3: Web3, address: string): Promise<IFederation> {
     let federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
     const version = await this.getVersion(federationContract);
 
