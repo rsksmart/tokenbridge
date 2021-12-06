@@ -1,5 +1,3 @@
-import { BN } from 'ethereumjs-util';
-import Web3 from 'web3';
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
 import { IAllowTokens } from './IAllowTokens';
