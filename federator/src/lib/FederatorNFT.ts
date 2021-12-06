@@ -16,7 +16,7 @@ import { ConfigChain } from './configChain';
 import Federator from './Federator';
 import { Config } from './config';
 
-export class FederatorNFT extends Federator {
+export default class FederatorNFT extends Federator {
   constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
@@ -111,6 +111,7 @@ export class FederatorNFT extends Federator {
       transactionSender,
       bridgeFactory,
       federationFactory,
+      sideChainConfig,
     });
     return true;
   }
@@ -138,6 +139,7 @@ export class FederatorNFT extends Federator {
     transactionSender,
     bridgeFactory,
     federationFactory,
+    sideChainConfig,
   }: {
     sideChainId: number;
     mainChainId: number;
@@ -147,6 +149,7 @@ export class FederatorNFT extends Federator {
     transactionSender: TransactionSender;
     bridgeFactory: BridgeFactory;
     federationFactory: FederationFactory;
+    sideChainConfig: ConfigChain;
   }): Promise<void> {
     if (fromBlock >= toBlock) {
       return;
@@ -171,7 +174,7 @@ export class FederatorNFT extends Federator {
       if (!logs) throw new Error('Failed to obtain the logs');
 
       this.logger.info(`Found ${logs.length} logs`);
-      await this._processLogs({ sideChainId, mainChainId, logs, currentBlock, transactionSender, federationFactory });
+      await this._processLogs({ sideChainId, mainChainId, logs, currentBlock, transactionSender, federationFactory, sideChainConfig });
       this._saveProgress(this.getLastBlockPath(sideChainId, mainChainId), toPagedBlock.toString());
       fromPageBlock = toPagedBlock + 1;
     }
@@ -184,6 +187,7 @@ export class FederatorNFT extends Federator {
     currentBlock,
     transactionSender,
     federationFactory,
+    sideChainConfig,
   }: {
     sideChainId: number;
     mainChainId: number;
@@ -191,6 +195,7 @@ export class FederatorNFT extends Federator {
     currentBlock: number;
     transactionSender: TransactionSender;
     federationFactory: FederationFactory;
+    sideChainConfig: ConfigChain;
   }): Promise<boolean> {
     try {
       const federatorAddress = await transactionSender.getAddress(this.config.privateKey);
@@ -282,6 +287,7 @@ export class FederatorNFT extends Federator {
           federationFactory,
           transactionSender,
           federatorContract,
+          sideChainConfig,
         });
       }
 
@@ -308,6 +314,7 @@ export class FederatorNFT extends Federator {
     federationFactory,
     transactionSender,
     federatorContract,
+    sideChainConfig,
   }: {
     sideChainId: number;
     mainChainId: number;
@@ -325,11 +332,12 @@ export class FederatorNFT extends Federator {
     federationFactory: FederationFactory;
     transactionSender: TransactionSender;
     federatorContract: IFederationV3;
+    sideChainConfig: ConfigChain;
   }): Promise<boolean> {
     try {
       txId = txId.toLowerCase();
       this.logger.info(
-        `Voting Transfer of token ${tokenId} of originalTokenAddress:${originalTokenAddress} through sidechain bridge ${this.sideChain.bridge} to receiver ${receiver}`,
+        `Voting Transfer of token ${tokenId} of originalTokenAddress:${originalTokenAddress} through sidechain bridge ${sideChainConfig.bridge} to receiver ${receiver}`,
       );
 
       const voteTransactionTxData = await federatorContract.getVoteTransactionABI({
