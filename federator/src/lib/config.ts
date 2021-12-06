@@ -5,7 +5,7 @@ const DEFAULT_NFT_CONFIRMATION = 5;
 
 interface JsonConfigParams {
   mainchain: ConfigChainParams;
-  sidechain: ConfigChainParams;
+  sidechain: ConfigChainParams | ConfigChainParams[];
   runEvery: number;
   confirmations: number;
   privateKey: string;
@@ -21,7 +21,7 @@ interface JsonConfigParams {
 
 export class Config {
   mainchain: ConfigChain; //the json containing the smart contract addresses in rsk
-  sidechain: ConfigChain; //the json containing the smart contract addresses in eth
+  sidechain: ConfigChain[]; //the json containing the smart contract addresses in eth
   runEvery: number; // In minutes,
   confirmations: number; // Number of blocks before processing it, if working with ganache set as 0
   privateKey: string; // private key of federator wallet
@@ -38,7 +38,7 @@ export class Config {
 
   private constructor(jsonConfig: JsonConfigParams) {
     this.mainchain = new ConfigChain(jsonConfig.mainchain);
-    this.sidechain = new ConfigChain(jsonConfig.sidechain);
+    this.sidechain = this.getConfigsAsArray(jsonConfig.sidechain);
     this.runEvery = jsonConfig.runEvery;
     this.confirmations = jsonConfig.confirmations;
     this.privateKey = jsonConfig.privateKey;
@@ -50,6 +50,13 @@ export class Config {
     this.federatorRetries = jsonConfig.federatorRetries ?? DEFAULT_RETRIE_TIMES;
     this.useNft = jsonConfig.useNft ?? false;
     this.checkHttps = jsonConfig.checkHttps ?? true;
+  }
+
+  private getConfigsAsArray(configs: ConfigChainParams | ConfigChainParams[]): ConfigChain[] {
+    if (!Array.isArray(configs)) {
+      return [new ConfigChain(configs)];
+    }
+    return configs.map((config) => new ConfigChain(config));
   }
 
   public static getInstance(jsonConfig: JsonConfigParams = jsonConfigDefault): Config {

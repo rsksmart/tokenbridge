@@ -485,7 +485,7 @@ async function startAndFundFederators(
 
   await originFederators.reduce(function (promise, item) {
     return promise.then(function () {
-      return item.run();
+      return item.runAll();
     });
   }, Promise.resolve());
 }

@@ -13,6 +13,7 @@ import { Logger } from 'log4js';
 import { Config } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
+import { ConfigChain } from '../lib/configChain';
 
 export class FederationFactory extends ContractFactory {
   mainChainBridgeContract: Contract;
@@ -20,27 +21,21 @@ export class FederationFactory extends ContractFactory {
   mainChainNftBridgeContract: Contract;
   sideChainNftBridgeContract: Contract;
 
-  constructor(config: Config, logger: Logger) {
-    super(config, logger);
+  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+    super(config, logger, sideChain);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],
       this.config.mainchain.bridge,
     );
-    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(
-      abiBridgeV3 as AbiItem[],
-      this.config.sidechain.bridge,
-    );
+    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3 as AbiItem[], sideChain.bridge);
     if (this.config.mainchain.nftBridge) {
       this.mainChainNftBridgeContract = new this.mainWeb3.eth.Contract(
         abiNftBridge as AbiItem[],
         this.config.mainchain.nftBridge,
       );
     }
-    if (this.config.sidechain.nftBridge) {
-      this.sideChainNftBridgeContract = new this.sideWeb3.eth.Contract(
-        abiNftBridge as AbiItem[],
-        this.config.sidechain.nftBridge,
-      );
+    if (sideChain.nftBridge) {
+      this.sideChainNftBridgeContract = new this.sideWeb3.eth.Contract(abiNftBridge as AbiItem[], sideChain.nftBridge);
     }
   }
 
