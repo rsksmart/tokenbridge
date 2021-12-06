@@ -28,13 +28,11 @@ export class FederationFactory extends ContractFactory {
       this.config.mainchain.bridge,
     );
     this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3 as AbiItem[], sideChain.bridge);
-    if (this.config.mainchain.nftBridge) {
+    if (this.config.useNft) {
       this.mainChainNftBridgeContract = new this.mainWeb3.eth.Contract(
         abiNftBridge as AbiItem[],
         this.config.mainchain.nftBridge,
       );
-    }
-    if (sideChain.nftBridge) {
       this.sideChainNftBridgeContract = new this.sideWeb3.eth.Contract(abiNftBridge as AbiItem[], sideChain.nftBridge);
     }
   }

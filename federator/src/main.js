@@ -31,7 +31,7 @@ scheduler.start().catch((err) => {
   logger.error("Unhandled Error on start()", err);
 });
 
-const mainFederatorNFT = new FederatorNFT.FederatorNFT(
+const mainFederatorNFT = new FederatorNFT.default(
   {
     ...config,
     storagePath: `${config.storagePath}/nft`,
@@ -50,7 +50,7 @@ async function run() {
         config,
         log4js.getLogger("HEARTBEAT"),
         metricCollector,
-        sideChainConfig
+        sideChainConfig,
       );
 
       await runNftSideFederators(sideChainConfig);
@@ -109,7 +109,7 @@ async function runNftSideFederators(sideChainConfig) {
     return;
   }
 
-  const sideFederatorNFT = new FederatorNFT.FederatorNFT(
+  const sideFederatorNFT = new FederatorNFT.default(
     {
       ...config,
       mainchain: sideChainConfig,
