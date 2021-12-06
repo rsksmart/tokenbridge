@@ -9,14 +9,15 @@ import utils from '../lib/utils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
 import { VERSIONS } from './Constants';
-import { Config } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
 import { Logger } from 'log4js';
+import { ConfigChain } from '../lib/configChain';
+import { Config } from '../lib/config';
 
 export class BridgeFactory extends ContractFactory {
-  constructor(config: Config, logger: Logger) {
-    super(config, logger);
+  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+    super(config, logger, sideChain);
   }
 
   async getVersion(bridgeContract: Contract) {
@@ -54,7 +55,7 @@ export class BridgeFactory extends ContractFactory {
 
   async getSideBridgeContract() {
     try {
-      return await this.createInstance(this.sideWeb3, this.config.sidechain.bridge);
+      return await this.createInstance(this.sideWeb3, this.sideChain.bridge);
     } catch (err) {
       throw new CustomError(`Exception creating Side Bridge Contract`, err);
     }
@@ -70,7 +71,7 @@ export class BridgeFactory extends ContractFactory {
 
   getSideNftBridgeContract() {
     try {
-      return this.createInstanceNft(this.sideWeb3, this.config.sidechain.nftBridge);
+      return this.createInstanceNft(this.sideWeb3, this.sideChain.nftBridge);
     } catch (err) {
       throw new CustomError(`Exception creating Side Bridge NFT Contract`, err);
     }

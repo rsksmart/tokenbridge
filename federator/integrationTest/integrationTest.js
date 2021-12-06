@@ -267,7 +267,7 @@ async function getUsersBalances(
 async function runFederators(federators) {
   await federators.reduce(function (promise, item) {
     return promise.then(function () {
-      return item.run();
+      return item.runAll();
     });
   }, Promise.resolve());
 }
