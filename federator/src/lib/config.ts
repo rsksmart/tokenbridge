@@ -1,5 +1,6 @@
 import { ConfigChain, ConfigChainParams } from './configChain';
 import * as jsonConfigDefault from '../../config/config';
+import CustomError from './CustomError';
 const DEFAULT_RETRIE_TIMES = 3;
 const DEFAULT_NFT_CONFIRMATION = 5;
 
@@ -50,6 +51,21 @@ export class Config {
     this.federatorRetries = jsonConfig.federatorRetries ?? DEFAULT_RETRIE_TIMES;
     this.useNft = jsonConfig.useNft ?? false;
     this.checkHttps = jsonConfig.checkHttps ?? true;
+    this.validateConfig();
+  }
+
+  public validateConfig() {
+    if (this.useNft) {
+      for (const configChain of this.getConfigs()) {
+        if (!configChain.validateNft()) {
+          throw new CustomError('Config is using nft, but some config chain didn`t set the nftBridge property');
+        }
+      }
+    }
+  }
+
+  public getConfigs(): ConfigChain[] {
+    return this.sidechain.concat(this.mainchain);
   }
 
   private getConfigsAsArray(configs: ConfigChainParams | ConfigChainParams[]): ConfigChain[] {

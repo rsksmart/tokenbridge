@@ -69,7 +69,6 @@ export default class FederatorNFT extends Federator {
 
     const isSideSyncing = await sideChainWeb3.eth.isSyncing();
     if (isSideSyncing !== false) {
-      const sideChainId = await sideChainWeb3.eth.net.getId();
       this.logger.warn(
         `ChainId ${sideChainId} is Syncing, ${JSON.stringify(
           isSideSyncing,
