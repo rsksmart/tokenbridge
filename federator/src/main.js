@@ -27,7 +27,7 @@ try {
 }
 
 let pollingInterval = config.runEvery * 1000 * 60; // Minutes
-let scheduler = new Scheduler(pollingInterval, logger, { run: () => run() });
+let scheduler = new Scheduler.default(pollingInterval, logger, { run: () => run() });
 
 scheduler.start().catch((err) => {
   logger.error("Unhandled Error on start()", err);
