@@ -4,7 +4,7 @@ import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IFederationV2 } from './IFederationV2';
 import { IFederationV3 } from './IFederationV3';
-import CustomError from '../lib/CustomError';
+import { CustomError } from '../lib/CustomError';
 import utils from '../lib/utils';
 import { VERSIONS } from './Constants';
 import { ContractFactory } from './ContractFactory';

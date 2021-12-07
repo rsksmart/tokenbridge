@@ -4,7 +4,7 @@ import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IBridge } from './IBridge';
 import { IBridgeV3 } from './IBridgeV3';
 import { IBridgeNft } from './IBridgeNft';
-import CustomError from '../lib/CustomError';
+import { CustomError } from '../lib/CustomError';
 import utils from '../lib/utils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
