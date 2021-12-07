@@ -1,6 +1,5 @@
 import { ConfigChain, ConfigChainParams } from './configChain';
 import * as jsonConfigDefault from '../../config/config';
-import CustomError from './CustomError';
 const DEFAULT_RETRIE_TIMES = 3;
 const DEFAULT_NFT_CONFIRMATION = 5;
 
@@ -58,7 +57,7 @@ export class Config {
     if (this.useNft) {
       for (const configChain of this.getConfigs()) {
         if (!configChain.validateNft()) {
-          throw new CustomError('Config is using nft, but some config chain didn`t set the nftBridge property');
+          throw new Error('Config is using nft, but some config chain didn`t set the nftBridge property');
         }
       }
     }
