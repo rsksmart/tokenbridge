@@ -13,7 +13,7 @@ const abiAllowTokens = require("../../bridge/abi/AllowTokens.json");
 const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 
 //utils
-const TransactionSender = require("../src/lib/TransactionSender.js");
+const TransactionSender = require("../src/lib/TransactionSender");
 const FederatorERC = require("../src/lib/FederatorERC");
 const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
@@ -1448,12 +1448,12 @@ async function transfer(
       abiMainToken,
       configChain.mainchain.testToken
     );
-    const originTransactionSender = new TransactionSender(
+    const originTransactionSender = new TransactionSender.default(
       originChainWeb3,
       logger,
       configChain
     );
-    const destinationTransactionSender = new TransactionSender(
+    const destinationTransactionSender = new TransactionSender.default(
       destinationChainWeb3,
       logger,
       configChain
