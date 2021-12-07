@@ -14,7 +14,7 @@ const abiAcceptedNFTCrossTransferEvent = abiNFTBridge.find(
 );
 abiDecoder.addABI([abiAcceptedNFTCrossTransferEvent]);
 
-const TransactionSender = require("../src/lib/TransactionSender.js");
+const TransactionSender = require("../src/lib/TransactionSender");
 const FederatorNFT = require("../src/lib/FederatorNFT.ts");
 const utils = require("../src/lib/utils.js");
 const fundFederators = require("./fundFederators");
@@ -141,12 +141,12 @@ async function transferNFT(
     const destinationChainWeb3 = new Web3(fullConfig.sidechain.host);
     const destinationChainId = await destinationChainWeb3.eth.net.getId();
 
-    const transactionSender = new TransactionSender(
+    const transactionSender = new TransactionSender.default(
       originChainWeb3,
       logger,
       fullConfig
     );
-    const destinationTransactionSender = new TransactionSender(
+    const destinationTransactionSender = new TransactionSender.default(
       destinationChainWeb3,
       logger,
       fullConfig
