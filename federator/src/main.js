@@ -10,7 +10,7 @@ log4js.configure(logConfig);
 const Scheduler = require("./services/Scheduler.js");
 const Federator = require("./lib/FederatorERC.js");
 const FederatorNFT = require("./lib/FederatorNFT");
-const Heartbeat = require("./lib/Heartbeat.js");
+const Heartbeat = require("./lib/Heartbeat");
 const MetricCollector = require("./lib/MetricCollector");
 // Status Server
 const StatusServer = require("./lib/Endpoints");
@@ -48,7 +48,7 @@ async function run() {
     await runErcMainFederator();
 
     for (const sideChainConfig of config.sidechain) {
-      const heartbeat = new Heartbeat(
+      const heartbeat = new Heartbeat.default(
         config,
         log4js.getLogger("HEARTBEAT"),
         metricCollector,
