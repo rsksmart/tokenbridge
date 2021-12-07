@@ -3,7 +3,7 @@ import abiAllowTokensV1 from '../../../bridge/abi/AllowTokens.json';
 import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
-import CustomError from '../lib/CustomError';
+import { CustomError } from '../lib/CustomError';
 import utils from '../lib/utils';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
