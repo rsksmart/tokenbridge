@@ -227,3 +227,5 @@ export class Heartbeat {
     }
   }
 }
+
+export default Heartbeat;
