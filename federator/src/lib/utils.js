@@ -24,8 +24,6 @@ const Web3 = require('web3');
         try {
             if (!config.isCb) {
                 return await fn.apply(null, args);
-            } else {
-                return await getPromise(fn, clone(args));
             }
         } catch (error) {
             if(retriesMax === i+1 || (error.hasOwnProperty('retryable') && !error.retryable)) throw error;
