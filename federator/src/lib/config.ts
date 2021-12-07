@@ -2,6 +2,7 @@ import { ConfigChain, ConfigChainParams } from './configChain';
 import * as jsonConfigDefault from '../../config/config';
 const DEFAULT_RETRIE_TIMES = 3;
 const DEFAULT_NFT_CONFIRMATION = 5;
+const DEFAULT_ENDPOINT_PORT = 5000;
 
 interface JsonConfigParams {
   mainchain: ConfigChainParams;
@@ -45,7 +46,7 @@ export class Config {
     this.storagePath = jsonConfig.storagePath ?? __dirname;
     this.etherscanApiKey = jsonConfig.etherscanApiKey;
     this.runHeartbeatEvery = jsonConfig.runHeartbeatEvery;
-    this.endpointsPort = jsonConfig.endpointsPort;
+    this.endpointsPort = jsonConfig.endpointsPort ?? DEFAULT_ENDPOINT_PORT;
     this.nftConfirmations = jsonConfig.nftConfirmations ?? DEFAULT_NFT_CONFIRMATION;
     this.federatorRetries = jsonConfig.federatorRetries ?? DEFAULT_RETRIE_TIMES;
     this.useNft = jsonConfig.useNft ?? false;
