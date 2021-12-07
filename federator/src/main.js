@@ -13,9 +13,11 @@ const FederatorNFT = require("./lib/FederatorNFT");
 const Heartbeat = require("./lib/Heartbeat.js");
 const MetricCollector = require("./lib/MetricCollector");
 // Status Server
-const StatusServer = require("./lib/Endpoints.js");
+const StatusServer = require("./lib/Endpoints");
 const logger = log4js.getLogger("Federators");
-StatusServer.init(logger);
+
+const endpoint = new StatusServer.Endpoint(logger);
+endpoint.init();
 
 let metricCollector;
 try {
