@@ -4,7 +4,7 @@ import { MetricCollector } from './MetricCollector';
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
-import CustomError from './CustomError';
+import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
