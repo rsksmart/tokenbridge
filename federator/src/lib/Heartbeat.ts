@@ -8,6 +8,7 @@ import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import * as utils from '../lib/utils';
+import { IFederation } from '../contracts/IFederation';
 const scriptVersion = process.env.npm_package_version;
 
 export class Heartbeat {
@@ -18,7 +19,7 @@ export class Heartbeat {
   transactionSender: any;
   lastBlockPath: string;
   bridgeFactory: any;
-  federationFactory: any;
+  federationFactory: FederationFactory;
   metricCollector: any;
 
   constructor(config: Config, logger, metricCollector, sideChainConfig: ConfigChain) {
@@ -87,6 +88,39 @@ export class Heartbeat {
     return parseInt(fromBlock);
   }
 
+  async handleReadLogsPage(
+    numberOfPages: number,
+    fromPageBlock: number,
+    recordsPerPage: number,
+    toBlock: number,
+    fedContract: IFederation,
+  ) {
+    for (let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
+      let toPagedBlock = fromPageBlock + recordsPerPage - 1;
+      if (currentPage === numberOfPages) {
+        toPagedBlock = toBlock;
+      }
+
+      this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+      const heartbeatLogs = await fedContract.getPastEvents('HeartBeat', {
+        fromBlock: fromPageBlock,
+        toBlock: toPagedBlock,
+      });
+
+      if (!heartbeatLogs) {
+        throw new Error('Failed to obtain HeartBeat logs');
+      }
+      await this._processHeartbeatLogs(heartbeatLogs, {
+        ethLastBlock: await this.sideWeb3.eth.getBlockNumber(),
+      });
+
+      this.logger.info(`Found ${heartbeatLogs.length} heartbeatLogs`);
+
+      this._saveProgress(this.lastBlockPath, toPagedBlock);
+      fromPageBlock = toPagedBlock + 1;
+    }
+  }
+
   async readLogs() {
     await this._checkIfRsk();
     let retries = 3;
@@ -119,42 +153,16 @@ export class Heartbeat {
         const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
         this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
 
-        let fromPageBlock = fromBlock;
-        for (let currentPage = 1; currentPage <= numberOfPages; currentPage++) {
-          let toPagedBlock = fromPageBlock + recordsPerPage - 1;
-          if (currentPage === numberOfPages) {
-            toPagedBlock = toBlock;
-          }
-
-          this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
-          const heartbeatLogs = await fedContract.getPastEvents('HeartBeat', {
-            fromBlock: fromPageBlock,
-            toBlock: toPagedBlock,
-          });
-
-          if (!heartbeatLogs) {
-            throw new Error('Failed to obtain HeartBeat logs');
-          }
-          await this._processHeartbeatLogs(heartbeatLogs, {
-            ethLastBlock: await this.sideWeb3.eth.getBlockNumber(),
-          });
-
-          this.logger.info(`Found ${heartbeatLogs.length} heartbeatLogs`);
-
-          this._saveProgress(this.lastBlockPath, toPagedBlock);
-          fromPageBlock = toPagedBlock + 1;
-        }
-
+        await this.handleReadLogsPage(numberOfPages, fromBlock, recordsPerPage, toBlock, fedContract);
         return true;
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
         retries--;
         this.logger.debug(`Run ${3 - retries} retrie`);
-        if (retries > 0) {
-          await utils.sleep(sleepAfterRetrie);
-        } else {
+        if (retries <= 0) {
           process.exit(1);
         }
+        await utils.sleep(sleepAfterRetrie);
       }
     }
     return false;
