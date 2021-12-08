@@ -8,7 +8,7 @@ import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
@@ -257,7 +257,7 @@ export default class FederatorERC extends Federator {
     );
 
     let allowed: number, mediumAmount: number, largeAmount: number;
-    if (sideTokenAddress === utils.zeroAddress) {
+    if (sideTokenAddress === utils.ZERO_ADDRESS) {
       ({ allowed, mediumAmount, largeAmount } = await processLogParams.allowTokens.getLimits({
         tokenAddress: tokenAddress,
       }));
