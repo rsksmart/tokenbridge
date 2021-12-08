@@ -34,9 +34,7 @@ export async function retry(
         return await fn(...args);
       }
     } catch (error) {
-      if (retriesMax === i + 1 || (Object.prototype.hasOwnProperty.call(error, 'retryable') && !error.retryable)) {
-        throw error;
-      }
+      checkRetriesMax(retriesMax, i, error);
 
       interval = exponential ? interval * factor : interval;
       // if interval is set to zero, do not use setTimeout, gain 1 event loop tick
@@ -45,7 +43,13 @@ export async function retry(
       }
     }
   }
-  return await fn(...args);
+  return fn(...args);
+}
+
+function checkRetriesMax(retriesMax: number, i: number, error: any) {
+  if (retriesMax === i + 1 || (Object.prototype.hasOwnProperty.call(error, 'retryable') && !error.retryable)) {
+    throw error;
+  }
 }
 
 export async function retry3Times(func, params = null) {
