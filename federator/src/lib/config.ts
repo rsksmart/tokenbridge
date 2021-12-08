@@ -4,7 +4,7 @@ const DEFAULT_RETRIE_TIMES = 3;
 const DEFAULT_NFT_CONFIRMATION = 5;
 const DEFAULT_ENDPOINT_PORT = 5000;
 
-interface JsonConfigParams {
+export interface JsonConfigParams {
   mainchain: ConfigChainParams;
   sidechain: ConfigChainParams | ConfigChainParams[];
   runEvery: number;
@@ -21,7 +21,7 @@ interface JsonConfigParams {
   explorer?: string;
 }
 
-export class Config {
+export class ConfigData {
   mainchain: ConfigChain; //the json containing the smart contract addresses in rsk
   sidechain: ConfigChain[]; //the json containing the smart contract addresses in eth
   runEvery: number; // In minutes,
@@ -36,10 +36,14 @@ export class Config {
   federatorRetries: number;
   checkHttps: boolean;
   explorer?: string;
+}
+
+export class Config extends ConfigData {
 
   private static instance: Config;
 
   private constructor(jsonConfig: JsonConfigParams) {
+    super();
     this.mainchain = new ConfigChain(jsonConfig.mainchain);
     this.sidechain = this.getConfigsAsArray(jsonConfig.sidechain);
     this.runEvery = jsonConfig.runEvery;
@@ -57,7 +61,7 @@ export class Config {
     this.validateConfig();
   }
 
-  public validateConfig() {
+  private validateConfig() {
     if (this.useNft) {
       for (const configChain of this.getConfigs()) {
         if (!configChain.validateNft()) {
@@ -67,7 +71,7 @@ export class Config {
     }
   }
 
-  public getConfigs(): ConfigChain[] {
+  private getConfigs(): ConfigChain[] {
     return this.sidechain.concat(this.mainchain);
   }
 
