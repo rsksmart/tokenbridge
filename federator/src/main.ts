@@ -151,15 +151,15 @@ export class Main {
 const main = new Main();
 main.run();
 
-// async function exitHandler() {
-//   process.exit(1);
-// }
-// // catches ctrl+c event
-// process.on('SIGINT', exitHandler);
+async function exitHandler() {
+  process.exit(1);
+}
+// catches ctrl+c event
+process.on('SIGINT', exitHandler);
 
-// // catches "kill pid" (for example: nodemon restart)
-// process.on('SIGUSR1', exitHandler);
-// process.on('SIGUSR2', exitHandler);
+// catches "kill pid" (for example: nodemon restart)
+process.on('SIGUSR1', exitHandler);
+process.on('SIGUSR2', exitHandler);
 
 // // export so we can test it
 // module.exports = { scheduler };

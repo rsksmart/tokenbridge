@@ -1,6 +1,5 @@
 import express from 'express';
-import { Router, Express } from 'express-serve-static-core';
-import { Config } from './config';
+import { Express, Router } from 'express';
 
 export class Endpoint {
   app: Express;
