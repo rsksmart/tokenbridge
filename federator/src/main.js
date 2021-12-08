@@ -3,7 +3,7 @@ const log4js = require("log4js");
 // Configurations
 const config = require("./lib/config").Config.getInstance();
 const logConfig = require("../config/log-config.json");
-const utils = require("./lib/utils.js");
+const utils = require("./lib/utils");
 log4js.configure(logConfig);
 
 // Services

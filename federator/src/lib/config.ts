@@ -18,6 +18,7 @@ interface JsonConfigParams {
   federatorRetries?: number;
   useNft?: boolean;
   checkHttps?: boolean;
+  explorer?: string;
 }
 
 export class Config {
@@ -34,6 +35,7 @@ export class Config {
   useNft: boolean;
   federatorRetries: number;
   checkHttps: boolean;
+  explorer?: string;
 
   private static instance: Config;
 
@@ -46,6 +48,7 @@ export class Config {
     this.storagePath = jsonConfig.storagePath ?? __dirname;
     this.etherscanApiKey = jsonConfig.etherscanApiKey;
     this.runHeartbeatEvery = jsonConfig.runHeartbeatEvery;
+    this.explorer = jsonConfig.explorer;
     this.endpointsPort = jsonConfig.endpointsPort ?? DEFAULT_ENDPOINT_PORT;
     this.nftConfirmations = jsonConfig.nftConfirmations ?? DEFAULT_NFT_CONFIRMATION;
     this.federatorRetries = jsonConfig.federatorRetries ?? DEFAULT_RETRIE_TIMES;

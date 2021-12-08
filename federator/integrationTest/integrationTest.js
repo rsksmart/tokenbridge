@@ -15,7 +15,7 @@ const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 //utils
 const TransactionSender = require("../src/lib/TransactionSender");
 const FederatorERC = require("../src/lib/FederatorERC");
-const utils = require("../src/lib/utils.js");
+const utils = require("../src/lib/utils");
 const fundFederators = require("./fundFederators");
 const MSG_TOKEN_NOT_VOTED = "Token was not voted by federators";
 
@@ -131,7 +131,7 @@ async function checkTxDataHash(bridgeContract, receipt) {
   const txDataHash = await bridgeContract.methods
     .transactionsDataHashes(receipt.transactionHash)
     .call();
-  if (txDataHash === utils.zeroHash) {
+  if (txDataHash === utils.ZERO_HASH) {
     logger.error(MSG_TOKEN_NOT_VOTED);
     process.exit(1);
   }
@@ -533,7 +533,7 @@ async function tranferCheckAmountsGetDestinationBalance({
     `${destinationLoggerName} token address`,
     anotherTokenOriginalAddr
   );
-  if (anotherTokenOriginalAddr === utils.zeroAddress) {
+  if (anotherTokenOriginalAddr === utils.ZERO_ADDRESS) {
     logger.error(MSG_TOKEN_NOT_VOTED);
     process.exit(1);
   }
@@ -1589,7 +1589,7 @@ async function getDestinationTokenAddress(
   logger.warn(
     `destinationTokenAddress: ${destinationTokenAddress}\nchainIdMain: ${originChainId}\noriginAddressMain: ${originAddressMainToken}`
   );
-  if (destinationTokenAddress === utils.zeroAddress) {
+  if (destinationTokenAddress === utils.ZERO_ADDRESS) {
     logger.info("Side Token does not exist yet, creating it");
     const data = destinationBridgeContract.methods
       .createSideToken(
@@ -1614,7 +1614,7 @@ async function getDestinationTokenAddress(
     destinationTokenAddress = await destinationBridgeContract.methods
       .sideTokenByOriginalToken(originChainId, originAddressMainToken)
       .call();
-    if (destinationTokenAddress === utils.zeroAddress) {
+    if (destinationTokenAddress === utils.ZERO_ADDRESS) {
       logger.error("Failed to create side token");
       process.exit(1);
     }

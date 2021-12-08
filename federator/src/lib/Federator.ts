@@ -8,7 +8,7 @@ import TransactionSender from './TransactionSender';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { IFederationV3 } from '../contracts/IFederationV3';
 import { IFederationV2 } from '../contracts/IFederationV2';
