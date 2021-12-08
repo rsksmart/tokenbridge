@@ -7,7 +7,7 @@ const config = require('../config/config.js');
 const logConfig = require('../config/log-config.json');
 
 //utils
-const Heartbeat = require('../src/lib/Heartbeat.js');
+const Heartbeat = require('../src/lib/Heartbeat');
 const fundFederators = require('./fundFederators');
 
 const logger = log4js.getLogger('HEARTBEAT');

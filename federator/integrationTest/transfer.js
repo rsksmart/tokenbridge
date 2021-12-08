@@ -5,8 +5,8 @@ const config = require('../config/config.js');
 const abiBridgeV3 = require('../../bridge/abi/Bridge.json');
 const erc20TokenAbi = require('../../bridge/abi/IERC20.json');
 //utils
-const TransactionSender = require('../src/lib/TransactionSender.js');
-const utils = require('../src/lib/utils.js');
+const TransactionSender = require('../src/lib/TransactionSender');
+const utils = require('../src/lib/utils');
 
 const logger = log4js.getLogger('test');
 logger.level = 'debug';
