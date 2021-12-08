@@ -1,9 +1,8 @@
 import express from 'express';
-import { Express, Router } from 'express';
 
 export class Endpoint {
-  app: Express;
-  router: Router;
+  app: express.Express;
+  router: express.Router;
   logger: any;
   port: number;
 
