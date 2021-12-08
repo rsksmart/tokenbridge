@@ -137,9 +137,7 @@ export function checkHttpsOrLocalhost(url = '') {
     return true;
   }
   const isHttps = url.startsWith('https://');
-  const isLocalhost =
-    url.startsWith('http://127.0.0.1') ||
-    url.startsWith('http://localhost');
+  const isLocalhost = url.startsWith('http://127.0.0.1') || url.startsWith('http://localhost');
 
   return isHttps || isLocalhost;
 }
