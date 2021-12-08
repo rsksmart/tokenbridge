@@ -1,6 +1,5 @@
 import * as ethUtils from 'ethereumjs-util';
 import Web3 from 'web3';
-import { Config } from './config';
 
 /**
  * Retry system with async / await
@@ -37,6 +36,7 @@ export async function retry(fn, args = [], config: any = {}) {
       }
     }
   }
+  return;
 }
 
 export async function retry3Times(func, params = null) {
@@ -109,7 +109,9 @@ export function calculatePrefixesSuffixes(nodes) {
   }
 
   for (let k = 0, l = nodes.length; k < l; k++) {
-    if (k + 1 < l && nodes[k + 1].indexOf(nodes[k]) >= 0) continue;
+    if (k + 1 < l && nodes[k + 1].indexOf(nodes[k]) >= 0) {
+      continue;
+    }
 
     ns.push(nodes[k]);
   }
@@ -149,8 +151,7 @@ export function checkIfItsInRSK(chainId = -1) {
 export async function getHeartbeatPollingInterval({ host, runHeartbeatEvery = 1 }) {
   const web3 = new Web3(host);
   const chainId = await web3.eth.net.getId();
-  const pollingInterval = [30, 31].includes(chainId) ? 1000 * 60 * 60 : runHeartbeatEvery * 1000 * 60;
-  return pollingInterval;
+  return [30, 31].includes(chainId) ? 1000 * 60 * 60 : runHeartbeatEvery * 1000 * 60;
 }
 
 export async function asyncMine(anotherWeb3Instance = null) {
