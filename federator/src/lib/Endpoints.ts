@@ -8,9 +8,9 @@ export class Endpoint {
   logger: any;
   port: number;
 
-  constructor(_logger) {
+  constructor(_logger, port: number) {
     this.logger = _logger;
-    this.port = Config.getInstance().endpointsPort;
+    this.port = port;
   }
 
   logCall(req, res, next) {
