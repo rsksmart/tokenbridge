@@ -60,7 +60,7 @@ export async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function waitForReceipt(txHash) {
+export async function waitForReceipt(txHash, explorerUrl = '') {
   let timeElapsed = 0;
   const interval = 10000;
   return new Promise((resolve, reject) => {
@@ -74,9 +74,7 @@ export async function waitForReceipt(txHash) {
       }
       if (timeElapsed > 120_000) {
         reject(
-          `Operation took too long <a target="_blank" href="${
-            Config.getInstance().explorer
-          }/tx/${txHash}">check Tx on the explorer</a>`,
+          `Operation took too long <a target="_blank" href="${explorerUrl}/tx/${txHash}">check Tx on the explorer</a>`,
         );
       }
     }, interval);
