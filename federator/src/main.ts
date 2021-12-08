@@ -20,7 +20,8 @@ export class Main {
 
   constructor() {
     this.logger = log4js.getLogger('Federators');
-    this.endpoint = new Endpoint(this.logger);
+    this.config = Config.getInstance();
+    this.endpoint = new Endpoint(this.logger, this.config.endpointsPort);
     this.endpoint.init();
     let metricCollector;
     try {
@@ -28,7 +29,6 @@ export class Main {
     } catch (error) {
       this.logger.error(`Error creating MetricCollector instance:`, error);
     }
-    this.config = Config.getInstance();
 
     const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
     const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
