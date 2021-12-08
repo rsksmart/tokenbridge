@@ -64,6 +64,29 @@ export class Heartbeat {
     return false;
   }
 
+  checkStoragePath() {
+    if (!fs.existsSync(this.config.storagePath)) {
+      fs.mkdirSync(this.config.storagePath, {
+        recursive: true,
+      });
+    }
+  }
+
+  getFromBlock(): number {
+    const originalFromBlock = this.config.mainchain.fromBlock;
+    let fromBlock = null;
+    try {
+      fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
+    } catch (err) {
+      fromBlock = originalFromBlock;
+    }
+
+    if (fromBlock < originalFromBlock) {
+      return originalFromBlock;
+    }
+    return parseInt(fromBlock);
+  }
+
   async readLogs() {
     await this._checkIfRsk();
     let retries = 3;
@@ -80,28 +103,16 @@ export class Heartbeat {
           return false;
         }
 
-        if (!fs.existsSync(this.config.storagePath)) {
-          await fs.mkdirSync(this.config.storagePath, {
-            recursive: true,
-          });
-        }
-        const originalFromBlock = this.config.mainchain.fromBlock || 0;
-        let fromBlock = null;
-        try {
-          fromBlock = fs.readFileSync(this.lastBlockPath, 'utf8');
-        } catch (err) {
-          fromBlock = originalFromBlock;
-        }
-        if (fromBlock < originalFromBlock) {
-          fromBlock = originalFromBlock;
-        }
+        this.checkStoragePath();
+        let fromBlock = this.getFromBlock();
+
         if (fromBlock >= toBlock) {
           this.logger.warn(
             `Current chain Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
           );
           return false;
         }
-        fromBlock = parseInt(fromBlock) + 1;
+        fromBlock = fromBlock + 1;
         this.logger.debug('Running from Block', fromBlock);
 
         const recordsPerPage = 1000;
@@ -121,7 +132,9 @@ export class Heartbeat {
             toBlock: toPagedBlock,
           });
 
-          if (!heartbeatLogs) throw new Error('Failed to obtain HeartBeat logs');
+          if (!heartbeatLogs) {
+            throw new Error('Failed to obtain HeartBeat logs');
+          }
           await this._processHeartbeatLogs(heartbeatLogs, {
             ethLastBlock: await this.sideWeb3.eth.getBlockNumber(),
           });
@@ -144,6 +157,7 @@ export class Heartbeat {
         }
       }
     }
+    return false;
   }
 
   async _processHeartbeatLogs(logs, { ethLastBlock }) {
@@ -182,7 +196,9 @@ export class Heartbeat {
       const fedContract = await this.federationFactory.getMainFederationContract();
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const isMember = await fedContract.isMember(from);
-      if (!isMember) throw new Error(`This Federator addr:${from} is not part of the federation`);
+      if (!isMember) {
+        throw new Error(`This Federator addr:${from} is not part of the federation`);
+      }
 
       this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
       await fedContract.emitHeartbeat(
