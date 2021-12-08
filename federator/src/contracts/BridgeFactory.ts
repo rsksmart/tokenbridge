@@ -5,7 +5,7 @@ import { IBridge } from './IBridge';
 import { IBridgeV3 } from './IBridgeV3';
 import { IBridgeNft } from './IBridgeNft';
 import { CustomError } from '../lib/CustomError';
-import utils from '../lib/utils';
+import * as utils from '../lib/utils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
 import { VERSIONS } from './Constants';
