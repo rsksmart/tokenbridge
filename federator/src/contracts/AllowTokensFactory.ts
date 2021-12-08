@@ -3,20 +3,20 @@ import abiAllowTokensV1 from '../../../bridge/abi/AllowTokens.json';
 import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
-import CustomError from '../lib/CustomError';
-import utils from '../lib/utils';
+import { CustomError } from '../lib/CustomError';
+import * as utils from '../lib/utils';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';
 import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 import { IAllowTokens } from './IAllowTokens';
 
 export class AllowTokensFactory extends ContractFactory {
   mainChainBridgeContract: any;
   sideChainBridgeContract: any;
-  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
     super(config, logger, sideChain);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],

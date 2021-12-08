@@ -1,4 +1,4 @@
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 import { Contract, EventData } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
@@ -22,9 +22,9 @@ export interface VoteTransactionParams extends TransactionIdParams {
 
 export class IFederationV3 implements IFederation {
   federationContract: Contract;
-  config: Config;
+  config: ConfigData;
 
-  constructor(config: Config, fedContract: Contract) {
+  constructor(config: ConfigData, fedContract: Contract) {
     this.federationContract = fedContract;
     this.config = config;
   }

@@ -14,9 +14,9 @@ const abiAcceptedNFTCrossTransferEvent = abiNFTBridge.find(
 );
 abiDecoder.addABI([abiAcceptedNFTCrossTransferEvent]);
 
-const TransactionSender = require("../src/lib/TransactionSender.js");
+const TransactionSender = require("../src/lib/TransactionSender");
 const FederatorNFT = require("../src/lib/FederatorNFT.ts");
-const utils = require("../src/lib/utils.js");
+const utils = require("../src/lib/utils");
 const fundFederators = require("./fundFederators");
 const logger = log4js.getLogger("test");
 log4js.configure(logConfig);
@@ -141,12 +141,12 @@ async function transferNFT(
     const destinationChainWeb3 = new Web3(fullConfig.sidechain.host);
     const destinationChainId = await destinationChainWeb3.eth.net.getId();
 
-    const transactionSender = new TransactionSender(
+    const transactionSender = new TransactionSender.default(
       originChainWeb3,
       logger,
       fullConfig
     );
-    const destinationTransactionSender = new TransactionSender(
+    const destinationTransactionSender = new TransactionSender.default(
       destinationChainWeb3,
       logger,
       fullConfig
@@ -325,7 +325,7 @@ async function getDestinationNFTTokenAddress({
   let destinationTokenAddress = await destinationNftBridgeContract.methods
     .getSideTokenByOriginalToken(originChainId, originAddress)
     .call();
-  if (destinationTokenAddress === utils.zeroAddress) {
+  if (destinationTokenAddress === utils.ZERO_ADDRESS) {
     logger.info("Side NFT Token does not exist yet, creating it");
     const bridgeAddress = await destinationNftBridgeContract.options.address;
     const data = destinationNftBridgeContract.methods
@@ -351,7 +351,7 @@ async function getDestinationNFTTokenAddress({
     destinationTokenAddress = await destinationNftBridgeContract.methods
       .getSideTokenByOriginalToken(originChainId, originAddress)
       .call();
-    if (destinationTokenAddress === utils.zeroAddress) {
+    if (destinationTokenAddress === utils.ZERO_ADDRESS) {
       logger.error("Failed to create side NFT token");
       process.exit(1);
     }
@@ -370,7 +370,7 @@ async function assertThatNftTokensCrossedToBridge(
   const txDataHash = await nftBridgeContract.methods
     .hasCrossed(transactionHash)
     .call();
-  if (txDataHash === utils.zeroHash) {
+  if (txDataHash === utils.ZERO_HASH) {
     logger.error("Token was not voted by federators");
     process.exit(1);
   }

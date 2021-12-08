@@ -4,8 +4,8 @@ import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IBridge } from './IBridge';
 import { IBridgeV3 } from './IBridgeV3';
 import { IBridgeNft } from './IBridgeNft';
-import CustomError from '../lib/CustomError';
-import utils from '../lib/utils';
+import { CustomError } from '../lib/CustomError';
+import * as utils from '../lib/utils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
 import { VERSIONS } from './Constants';
@@ -13,10 +13,10 @@ import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
 import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 
 export class BridgeFactory extends ContractFactory {
-  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
     super(config, logger, sideChain);
   }
 

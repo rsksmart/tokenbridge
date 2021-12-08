@@ -1,10 +1,10 @@
 import { Contract, EventData } from 'web3-eth-contract';
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 import { TransactionIdParams, VoteTransactionParams } from './IFederationV3';
 
 export interface IFederation {
   federationContract: Contract;
-  config: Config;
+  config: ConfigData;
 
   getVersion(): string;
 
