@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config } from './config';
+import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 import web3 from 'web3';
 import fs from 'fs';
@@ -65,7 +65,7 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 }
 
 export default class FederatorERC extends Federator {
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 

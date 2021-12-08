@@ -1,13 +1,13 @@
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
 import { IFederation } from './IFederation';
 
 export class IFederationV2 implements IFederation {
   federationContract: Contract;
-  config: Config;
+  config: ConfigData;
 
-  constructor(config: Config, fedContract: Contract) {
+  constructor(config: ConfigData, fedContract: Contract) {
     this.federationContract = fedContract;
     this.config = config;
   }
