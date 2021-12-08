@@ -17,7 +17,9 @@ export class Scheduler {
 
   async start() {
     this.logger.info(`start scheduler service polling every ${this.pollingInterval}(ms)`);
-    if (this.running) throw new Error('scheduler service already started');
+    if (this.running) {
+      throw new Error('scheduler service already started');
+    }
     this.running = true;
     await this.poll();
   }
