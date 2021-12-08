@@ -8,7 +8,7 @@ import TransactionSender from './TransactionSender';
 import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 const scriptVersion = process.env.npm_package_version;
 
 export class Heartbeat {
