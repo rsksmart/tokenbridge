@@ -1,4 +1,1 @@
-
-export class Logs {
-
-}
+export class Logs {}

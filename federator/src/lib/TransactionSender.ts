@@ -61,7 +61,7 @@ export class TransactionSender {
     const chainId = await this.getChainId();
     const gasPrice = parseInt(await this.client.eth.getGasPrice());
     const useGasPrice = gasPrice <= 1 ? 1 : Math.round(gasPrice * 1.5);
-    if (chainId == 1) {
+    if (chainId === 1) {
       const data = {
         module: 'gastracker',
         action: 'gasoracle',
@@ -110,7 +110,7 @@ export class TransactionSender {
   }
 
   async getChainId() {
-    if (this.chainId == undefined) {
+    if (this.chainId === undefined) {
       this.chainId = parseInt(await this.client.eth.net.getId());
     }
     return this.chainId;
@@ -118,7 +118,7 @@ export class TransactionSender {
 
   async isRsk() {
     const chainId = await this.getChainId();
-    return chainId == chains.RSK_TEST_NET_CHAIN_ID || chainId == chains.RSK_MAIN_NET_CHAIN_ID;
+    return chainId === chains.RSK_TEST_NET_CHAIN_ID || chainId === chains.RSK_MAIN_NET_CHAIN_ID;
   }
 
   async createRawTransaction(from, to, data, value) {
@@ -170,9 +170,11 @@ export class TransactionSender {
 
   async useEtherscanApi(data) {
     const chainId = await this.getChainId();
-    if (chainId != 1 && chainId != 42) throw new Error(`ChainId:${chainId} can't use Etherescan API`);
+    if (chainId !== 1 && chainId !== 42) {
+      throw new Error(`ChainId:${chainId} can't use Etherescan API`);
+    }
 
-    const url = chainId == 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
+    const url = chainId === 1 ? 'https://api.etherscan.io/api' : 'https://api-kovan.etherscan.io/api';
 
     const params = new URLSearchParams();
     params.append('apikey', this.etherscanApiKey);
@@ -187,7 +189,7 @@ export class TransactionSender {
     };
     const response = await axios.post(url, params, config);
 
-    if (response.data.status == 0) {
+    if (response.data.status === 0) {
       throw new Error(
         `Etherscan API:${url} data:${JSON.stringify(data)} message:${response.data.message} result:${
           response.data.result
@@ -210,15 +212,15 @@ export class TransactionSender {
         const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
         receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
           txHash = hash;
-          if (chainId == 1) {
+          if (chainId === 1) {
             // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
             // see  https://github.com/ethereum/go-ethereum/issues/22308
-            const data = {
+            const dataProxy = {
               module: 'proxy',
               action: 'eth_sendRawTransaction',
               hex: serializedTx,
             };
-            await this.useEtherscanApi(data);
+            await this.useEtherscanApi(dataProxy);
           }
         });
       } else {
@@ -229,7 +231,7 @@ export class TransactionSender {
         receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', (hash) => (txHash = hash));
       }
 
-      if (receipt.status == 1) {
+      if (receipt.status === 1) {
         this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
       } else {
         this.logger.error('Transaction Receipt Status Failed', receipt);
@@ -239,7 +241,9 @@ export class TransactionSender {
       return receipt;
     } catch (err) {
       this.logger.error('Error in sendTransaction', err, `transactionHash:${txHash} to:${to} data:${data}`);
-      if (throwOnError) throw new CustomError('Error in sendTransaction', err);
+      if (throwOnError) {
+        throw new CustomError('Error in sendTransaction', err);
+      }
 
       if (err.message.indexOf('it might still be mined') > 0) {
         this.logger
