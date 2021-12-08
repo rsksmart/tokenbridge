@@ -36,7 +36,7 @@ function getHeartbeats(keys, config) {
             heartbeats.push(heartbeat);
         });
     } else {
-        let heartbeat = new Heartbeat.({
+        let heartbeat = new Heartbeat({
             ...config,
         }, log4js.getLogger('HEARTBEAT'));
         heartbeats.push(heartbeat);
