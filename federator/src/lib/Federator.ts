@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config, ConfigData } from './config';
+import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 
 import web3 from 'web3';
@@ -7,11 +7,8 @@ import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
-import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
 import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
-import { IFederationV3 } from '../contracts/IFederationV3';
-import { IFederationV2 } from '../contracts/IFederationV2';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
 
