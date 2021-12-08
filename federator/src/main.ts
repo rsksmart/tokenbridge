@@ -160,6 +160,3 @@ process.on('SIGINT', exitHandler);
 // catches "kill pid" (for example: nodemon restart)
 process.on('SIGUSR1', exitHandler);
 process.on('SIGUSR2', exitHandler);
-
-// // export so we can test it
-// module.exports = { scheduler };
