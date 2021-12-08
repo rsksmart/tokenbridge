@@ -1,14 +1,14 @@
 import { Logger } from 'log4js';
-import { Config } from './config';
+import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
-import CustomError from './CustomError';
+import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
@@ -65,7 +65,7 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 }
 
 export default class FederatorERC extends Federator {
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
@@ -257,7 +257,7 @@ export default class FederatorERC extends Federator {
     );
 
     let allowed: number, mediumAmount: number, largeAmount: number;
-    if (sideTokenAddress === utils.zeroAddress) {
+    if (sideTokenAddress === utils.ZERO_ADDRESS) {
       ({ allowed, mediumAmount, largeAmount } = await processLogParams.allowTokens.getLimits({
         tokenAddress: tokenAddress,
       }));

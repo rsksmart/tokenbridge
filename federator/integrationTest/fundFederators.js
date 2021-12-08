@@ -2,7 +2,7 @@ const Web3 = require('web3');
 const log4js = require('log4js');
 
 const logConfig = require('../config/log-config.json');
-const TransactionSender = require('../src/lib/TransactionSender.js');
+const TransactionSender = require('../src/lib/TransactionSender');
 
 const logger = log4js.getLogger('Fund Federators');
 log4js.configure(logConfig);
@@ -28,7 +28,7 @@ if (scriptPath.indexOf('fundFederators') !== -1) {
 
 async function fundFederators(host, keys, privateKey, amount) {
     const web3 = new Web3(host);
-    const transactionSender = new TransactionSender(web3, logger, {});
+    const transactionSender = new TransactionSender.default(web3, logger, {});
 
     for (let i = 0; i < keys.length; i++) {
         try {

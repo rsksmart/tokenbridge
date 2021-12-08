@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config } from './config';
+import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 
 import web3 from 'web3';
@@ -7,24 +7,21 @@ import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
-import { AllowTokensFactory } from '../contracts/AllowTokensFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
-import { IFederationV3 } from '../contracts/IFederationV3';
-import { IFederationV2 } from '../contracts/IFederationV2';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
 
 export default abstract class Federator {
   public logger: Logger;
-  public config: Config;
+  public config: ConfigData;
   public metricCollector: MetricCollector;
   public chainId: number;
   public sideChain: ConfigChain;
   public web3ByHost: Map<string, web3>;
   private numberOfRetries: number;
 
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
 

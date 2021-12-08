@@ -3,10 +3,10 @@ import { Logger } from 'log4js';
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
-import CustomError from './CustomError';
+import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
@@ -14,10 +14,10 @@ import { IFederationV3 } from '../contracts/IFederationV3';
 import { BN } from 'ethereumjs-util';
 import { ConfigChain } from './configChain';
 import Federator from './Federator';
-import { Config } from './config';
+import { ConfigData } from './config';
 
 export default class FederatorNFT extends Federator {
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
