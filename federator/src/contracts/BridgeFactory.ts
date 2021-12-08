@@ -13,10 +13,10 @@ import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
 import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
-import { Config } from '../lib/config';
+import { ConfigData } from '../lib/config';
 
 export class BridgeFactory extends ContractFactory {
-  constructor(config: Config, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
     super(config, logger, sideChain);
   }
 

@@ -14,10 +14,10 @@ import { IFederationV3 } from '../contracts/IFederationV3';
 import { BN } from 'ethereumjs-util';
 import { ConfigChain } from './configChain';
 import Federator from './Federator';
-import { Config } from './config';
+import { ConfigData } from './config';
 
 export default class FederatorNFT extends Federator {
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
