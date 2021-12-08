@@ -1,6 +1,6 @@
 import Tx from 'ethereumjs-tx';
 import * as ethUtils from 'ethereumjs-util';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import fs from 'fs';
 import axios from 'axios';
 

@@ -6,7 +6,7 @@ import TransactionSender from './TransactionSender';
 import { CustomError } from './CustomError';
 import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
-import utils from './utils';
+import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
