@@ -13,11 +13,20 @@ import Web3 from 'web3';
  * @property {Number} config.factor: interval incrementation factor
  * @property {Number} config.isCb: is fn a callback style export function ?
  */
-export async function retry(fn, args = [], config: any = {}) {
-  const retriesMax = config.retriesMax || 3;
-  let interval = config.interval || 0;
-  const exponential = config.exponential || true;
-  const factor = config.factor || 2;
+export async function retry(
+  fn,
+  args = [],
+  config: any = {
+    retriesMax: 3,
+    interval: 0,
+    exponential: true,
+    factor: 2,
+  },
+) {
+  const retriesMax = config.retriesMax;
+  let interval = config.interval;
+  const exponential = config.exponential;
+  const factor = config.factor;
 
   for (let i = 0; i < retriesMax; i++) {
     try {
@@ -36,7 +45,7 @@ export async function retry(fn, args = [], config: any = {}) {
       }
     }
   }
-  return;
+  return await fn(...args);
 }
 
 export async function retry3Times(func, params = null) {
@@ -86,7 +95,7 @@ export function hexStringToBuffer(hexString) {
 }
 
 export function stripHexPrefix(str) {
-  return str.indexOf('0x') == 0 ? str.slice(2) : str;
+  return str.indexOf('0x') === 0 ? str.slice(2) : str;
 }
 
 export function privateToAddress(privateKey) {
