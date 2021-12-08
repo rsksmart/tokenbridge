@@ -212,3 +212,9 @@ export const tokenType = {
   COIN: 0,
   NFT: 1,
 };
+
+export function clone(instance: any): any {
+  const copy = new (instance.constructor as { new (): any })();
+  Object.assign(copy, instance);
+  return copy;
+}
