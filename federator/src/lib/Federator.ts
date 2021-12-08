@@ -1,5 +1,5 @@
 import { Logger } from 'log4js';
-import { Config } from './config';
+import { Config, ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 
 import web3 from 'web3';
@@ -17,14 +17,14 @@ import { IFederation } from '../contracts/IFederation';
 
 export default abstract class Federator {
   public logger: Logger;
-  public config: Config;
+  public config: ConfigData;
   public metricCollector: MetricCollector;
   public chainId: number;
   public sideChain: ConfigChain;
   public web3ByHost: Map<string, web3>;
   private numberOfRetries: number;
 
-  constructor(config: Config, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
 
