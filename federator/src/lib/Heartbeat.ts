@@ -2,7 +2,6 @@ import Web3 from 'web3';
 import { Config } from './config';
 import { ConfigChain } from './configChain';
 
-import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import { CustomError } from './CustomError';
@@ -22,7 +21,7 @@ export class Heartbeat {
   federationFactory: any;
   metricCollector: any;
 
-  constructor(config: Config, logger, metricCollector, sideChainConfig: ConfigChain, Web3 = web3) {
+  constructor(config: Config, logger, metricCollector, sideChainConfig: ConfigChain) {
     this.config = config;
     this.logger = logger;
 
@@ -37,7 +36,7 @@ export class Heartbeat {
     this.federationFactory = new FederationFactory(this.config, this.logger, sideChainConfig);
   }
 
-  async run() {
+  async run(): Promise<boolean> {
     await this._checkIfRsk();
     let retries = 3;
     const sleepAfterRetryMs = 3000;
@@ -62,6 +61,7 @@ export class Heartbeat {
         }
       }
     }
+    return false;
   }
 
   async readLogs() {
