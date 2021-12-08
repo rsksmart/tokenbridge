@@ -1,4 +1,4 @@
-import Web3 from "web3";
+import Web3 from 'web3';
 
 const DEFAULT_BLOCK_TIME_MS = 15000;
 const DEFAULT_FROM_BLOCK = 0;
@@ -41,5 +41,4 @@ export class ConfigChain {
   public validateNft(): boolean {
     return Web3.utils.isAddress(this.nftBridge);
   }
-
 }
