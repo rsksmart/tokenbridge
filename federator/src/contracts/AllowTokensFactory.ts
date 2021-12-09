@@ -8,15 +8,15 @@ import * as utils from '../lib/utils';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';
-import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
 import { ConfigData } from '../lib/config';
 import { IAllowTokens } from './IAllowTokens';
+import { LogWrapper } from '../lib/logWrapper';
 
 export class AllowTokensFactory extends ContractFactory {
   mainChainBridgeContract: any;
   sideChainBridgeContract: any;
-  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: LogWrapper, sideChain: ConfigChain) {
     super(config, logger, sideChain);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],
