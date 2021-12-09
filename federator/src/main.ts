@@ -1,4 +1,3 @@
-import log4js from 'log4js';
 import { Config } from './lib/config';
 import logConfig from '../config/log-config.json';
 import * as utils from './lib/utils';
@@ -47,7 +46,6 @@ export class Main {
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
       this.metricCollector,
     );
-    log4js.configure(logConfig);
     this.mainFederatorNFT = new FederatorNFT(
       {
         ...this.config,
