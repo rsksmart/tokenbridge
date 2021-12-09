@@ -18,7 +18,10 @@ const TransactionSender = require("../src/lib/TransactionSender");
 const FederatorNFT = require("../src/lib/FederatorNFT.ts");
 const utils = require("../src/lib/utils");
 const fundFederators = require("./fundFederators");
-const logger = log4js.getLogger("test");
+const logs = require("../src/lib/logs");
+const logger = logs.Logs.getInstance().getLogger(
+  logs.LOGGER_CATEGORY_TEST_INTEGRATION
+);
 log4js.configure(logConfig);
 logger.info("----------- Transfer Test ---------------------");
 logger.info("Mainchain Host", config.mainchain.host);
@@ -39,13 +42,15 @@ const mainchainFederators = getMainchainFederators(mainKeys, config);
 const sidechainFederators = getSidechainFederators(sideKeys, sideConfig);
 const MAIN_CHAIN_LOGGER_NAME = "MAIN";
 const SIDE_CHAIN_LOGGER_NAME = "SIDE";
-const NFT_FEDERATOR_LOGGER_CATEGORY = "NFT FEDERATOR";
 
 runNFT({ mainchainFederators, sidechainFederators, config, sideConfig });
 
 function getMainchainFederators(keys, fedConfig) {
   const federators = [];
   fedConfig.sidechain = [fedConfig.sidechain];
+  const logWrapperFederator = logs.Logs.getInstance().getLogger(
+    logs.LOGGER_CATEGORY_TEST_FEDERATOR_NFT
+  );
   if (keys && keys.length) {
     keys.forEach((key, i) => {
       const federator = new FederatorNFT.default(
@@ -54,16 +59,13 @@ function getMainchainFederators(keys, fedConfig) {
           privateKey: key,
           storagePath: `${fedConfig.storagePath}/nft-fed-${i + 1}`,
         },
-        log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
+        logWrapperFederator
       );
       federators.push(federator);
     });
   } else {
     federators.push(
-      new FederatorNFT.default(
-        { ...fedConfig },
-        log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
-      )
+      new FederatorNFT.default({ ...fedConfig }, logWrapperFederator)
     );
   }
   fedConfig.sidechain = fedConfig.sidechain[0];
@@ -73,6 +75,9 @@ function getMainchainFederators(keys, fedConfig) {
 function getSidechainFederators(keys, sideConfig) {
   let federators = [];
   sideConfig.sidechain = [sideConfig.sidechain];
+  const logWrapperFederator = logs.Logs.getInstance().getLogger(
+    logs.LOGGER_CATEGORY_TEST_FEDERATOR_NFT
+  );
   if (keys && keys.length) {
     keys.forEach((key, i) => {
       const federator = new FederatorNFT.default(
@@ -81,7 +86,7 @@ function getSidechainFederators(keys, sideConfig) {
           privateKey: key,
           storagePath: `${config.storagePath}/nft-side-fed-${i + 1}`,
         },
-        log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
+        logWrapperFederator
       );
       federators.push(federator);
     });
@@ -91,7 +96,7 @@ function getSidechainFederators(keys, sideConfig) {
         ...sideConfig,
         storagePath: `${config.storagePath}/side-fed`,
       },
-      log4js.getLogger(NFT_FEDERATOR_LOGGER_CATEGORY)
+      logWrapperFederator
     );
     federators.push(federator);
   }

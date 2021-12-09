@@ -9,9 +9,19 @@ import Heartbeat from './lib/Heartbeat';
 import { MetricCollector } from './lib/MetricCollector';
 import { Endpoint } from './lib/Endpoints';
 import { ConfigChain } from './lib/configChain';
+import { LogWrapper } from './lib/logWrapper';
+import {
+  Logs,
+  LOGGER_CATEGORY_FEDERATOR,
+  LOGGER_CATEGORY_FEDERATOR_MAIN,
+  LOGGER_CATEGORY_FEDERATOR_NFT_MAIN,
+  LOGGER_CATEGORY_FEDERATOR_SIDE,
+  LOGGER_CATEGORY_FEDERATOR_NFT_SIDE,
+  LOGGER_CATEGORY_HEARTBEAT,
+} from './lib/logs';
 
 export class Main {
-  logger: any;
+  logger: LogWrapper;
   endpoint: any;
   metricCollector: any;
   mainFederator: Federator;
@@ -19,7 +29,7 @@ export class Main {
   config: Config;
 
   constructor() {
-    this.logger = log4js.getLogger('Federators');
+    this.logger = Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR);
     this.config = Config.getInstance();
     this.endpoint = new Endpoint(this.logger, this.config.endpointsPort);
     this.endpoint.init();
@@ -32,14 +42,18 @@ export class Main {
 
     const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
     const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
-    this.mainFederator = new Federator(this.config, log4js.getLogger('MAIN-FEDERATOR'), this.metricCollector);
+    this.mainFederator = new Federator(
+      this.config,
+      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
+      this.metricCollector,
+    );
     log4js.configure(logConfig);
     this.mainFederatorNFT = new FederatorNFT(
       {
         ...this.config,
         storagePath: `${this.config.storagePath}/nft`,
       },
-      log4js.getLogger('MAIN-NFT-FEDERATOR'),
+      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_MAIN),
       metricCollector,
     );
 
@@ -56,7 +70,7 @@ export class Main {
       for (const sideChainConfig of this.config.sidechain) {
         const heartbeat = new Heartbeat(
           this.config,
-          log4js.getLogger('HEARTBEAT'),
+          Logs.getInstance().getLogger(LOGGER_CATEGORY_HEARTBEAT),
           this.metricCollector,
           sideChainConfig,
         );
@@ -86,7 +100,7 @@ export class Main {
         sidechain: [this.config.mainchain],
         storagePath: `${this.config.storagePath}/side-fed`,
       },
-      log4js.getLogger('SIDE-FEDERATOR'),
+      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_SIDE),
       this.metricCollector,
     );
 
@@ -116,7 +130,7 @@ export class Main {
         sidechain: [this.config.mainchain],
         storagePath: `${this.config.storagePath}/nft/side-fed`,
       },
-      log4js.getLogger('SIDE-NFT-FEDERATOR'),
+      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_SIDE),
       this.metricCollector,
     );
     if (sideChainConfig.nftBridge == null) {
