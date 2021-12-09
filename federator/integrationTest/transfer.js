@@ -1,5 +1,4 @@
 const Web3 = require("web3");
-const log4js = require("log4js");
 //configurations
 const config = require("../config/config.js");
 const abiBridgeV3 = require("../../bridge/abi/Bridge.json");
@@ -32,16 +31,11 @@ async function run() {
     const transactionSender = new TransactionSender(rskWeb3, logger, config);
 
     const bridgeAddress = config.mainchain.bridge;
-    let amount = rskWeb3.utils.toWei("1");
+    const amount = rskWeb3.utils.toWei("1");
     const senderAddress = await transactionSender.getAddress(config.privateKey);
     const mainTokenAddress = mainTokenContract.options.address;
     logger.info(
-      "Main token addres" +
-        mainTokenAddress +
-        "Sender Address:" +
-        senderAddress +
-        " Bridge Address:" +
-        bridgeAddress
+      `Main token addres${mainTokenAddress}Sender Address:${senderAddress} Bridge Address:${bridgeAddress}`
     );
 
     logger.debug("approve token transfer");
@@ -85,11 +79,11 @@ async function run() {
     logger.info("side token address", sideTokenAddress);
 
     logger.debug("check balance on the other side");
-    let sideTokenContract = new ethWeb3.eth.Contract(
+    const sideTokenContract = new ethWeb3.eth.Contract(
       erc20TokenAbi,
       sideTokenAddress
     );
-    let balance = await sideTokenContract.methods
+    const balance = await sideTokenContract.methods
       .balanceOf(senderAddress)
       .call();
     logger.info("side token balance", balance);
