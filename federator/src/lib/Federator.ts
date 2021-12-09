@@ -1,4 +1,3 @@
-import { Logger } from 'log4js';
 import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 
@@ -11,9 +10,10 @@ import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
+import { LogWrapper } from './logWrapper';
 
 export default abstract class Federator {
-  public logger: Logger;
+  public logger: LogWrapper;
   public config: ConfigData;
   public metricCollector: MetricCollector;
   public chainId: number;
@@ -21,7 +21,7 @@ export default abstract class Federator {
   public web3ByHost: Map<string, web3>;
   private numberOfRetries: number;
 
-  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
 

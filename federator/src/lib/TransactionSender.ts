@@ -231,11 +231,11 @@ export class TransactionSender {
         receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', (hash) => (txHash = hash));
       }
 
-      if (receipt.status === 1) {
+      if (receipt.status) {
         this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
       } else {
         this.logger.error('Transaction Receipt Status Failed', receipt);
-        this.logger.error('RawTx that failed', rawTx);
+        this.logger.error('RawTx that failed Status', rawTx);
       }
 
       return receipt;
@@ -252,7 +252,7 @@ export class TransactionSender {
         fs.appendFileSync(this.manuallyCheck, `transactionHash:${txHash} to:${to} data:${data}\n`);
       } else {
         this.logger.error('Transaction Hash Failed', txHash, err);
-        this.logger.error('RawTx that failed', rawTx);
+        this.logger.error('RawTx that failed Catch', rawTx);
       }
       return { transactionHash: txHash, status: false };
     }
