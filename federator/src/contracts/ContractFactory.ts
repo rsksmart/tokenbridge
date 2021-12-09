@@ -1,18 +1,18 @@
 import Web3 from 'web3';
 import { AbiItem } from 'web3-utils';
 import { Contract } from 'web3-eth-contract';
-import { Logger } from 'log4js';
 import { ConfigChain } from '../lib/configChain';
 import { ConfigData } from '../lib/config';
+import { LogWrapper } from '../lib/logWrapper';
 export class ContractFactory {
   config: ConfigData;
   sideChain: ConfigChain;
-  logger: Logger;
+  logger: LogWrapper;
   mainWeb3: Web3;
   sideWeb3: Web3;
   contractsByAbi: Map<AbiItem[], Contract>;
 
-  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: LogWrapper, sideChain: ConfigChain) {
     this.config = config;
     this.sideChain = sideChain;
     this.logger = logger;
