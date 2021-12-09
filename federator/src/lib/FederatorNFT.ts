@@ -15,9 +15,10 @@ import { BN } from 'ethereumjs-util';
 import { ConfigChain } from './configChain';
 import Federator from './Federator';
 import { ConfigData } from './config';
+import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
-  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
