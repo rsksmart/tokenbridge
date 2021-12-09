@@ -1,5 +1,3 @@
-import { Logger } from 'log4js';
-
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';

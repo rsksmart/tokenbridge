@@ -9,7 +9,6 @@ import * as utils from '../lib/utils';
 import { VERSIONS } from './Constants';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
-import { Logger } from 'log4js';
 import { ConfigData } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
