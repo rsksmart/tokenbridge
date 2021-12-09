@@ -1,8 +1,6 @@
 const Web3 = require("web3");
-const log4js = require("log4js");
 const web3Utils = Web3.utils;
 const config = require("../config/test.local.config.js");
-const logConfig = require("../config/log-config.json");
 
 const abiMultiSig = require("../../bridge/abi/MultiSigWallet.json");
 const abiNFTBridge = require("../../bridge/abi/NFTBridge.json");
@@ -22,7 +20,6 @@ const logs = require("../src/lib/logs");
 const logger = logs.Logs.getInstance().getLogger(
   logs.LOGGER_CATEGORY_TEST_INTEGRATION
 );
-log4js.configure(logConfig);
 logger.info("----------- Transfer Test ---------------------");
 logger.info("Mainchain Host", config.mainchain.host);
 logger.info("Sidechain Host", config.sidechain.host);

@@ -15,8 +15,8 @@ export const LOGGER_CATEGORY_FEDERATOR_NFT_SIDE = 'SIDE-NFT-FEDERATOR';
 const LOGGER_CATEGORY_DEFAULT = 'default';
 
 export class Logs {
-  private logMap: Map<string, LogWrapper>;
-  private globalContext: Map<string, any>;
+  private readonly logMap: Map<string, LogWrapper>;
+  private readonly globalContext: Map<string, any>;
   private currentLogger: LogWrapper;
   private static instance: Logs;
 
@@ -60,7 +60,7 @@ export class Logs {
   }
 
   getLogger(key: string): LogWrapper {
-    if (this.currentLogger.key == key) {
+    if (this.currentLogger.key === key) {
       return this.currentLogger;
     }
 
