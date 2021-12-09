@@ -1,10 +1,8 @@
 const fs = require('fs');
 const Web3 = require('web3');
-const log4js = require('log4js');
 
 //configurations
 const config = require('../config/config.js');
-const logConfig = require('../config/log-config.json');
 
 //utils
 const Heartbeat = require('../src/lib/Heartbeat');
@@ -13,7 +11,6 @@ const logs = require("../src/lib/logs");
 const logWrapper = logs.Logs.getInstance().getLogger(
   logs.LOGGER_CATEGORY_HEARTBEAT
 );
-log4js.configure(logConfig);
 logWrapper.info('----------- Emit Heartbeat Test ---------------------');
 logWrapper.info('MainChain Host', config.mainchain.host);
 
