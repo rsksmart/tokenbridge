@@ -9,11 +9,13 @@ const logConfig = require('../config/log-config.json');
 //utils
 const Heartbeat = require('../src/lib/Heartbeat');
 const fundFederators = require('./fundFederators');
-
-const logger = log4js.getLogger('HEARTBEAT');
+const logs = require("../src/lib/logs");
+const logWrapper = logs.Logs.getInstance().getLogger(
+  logs.LOGGER_CATEGORY_HEARTBEAT
+);
 log4js.configure(logConfig);
-logger.info('----------- Emit Heartbeat Test ---------------------');
-logger.info('MainChain Host', config.mainchain.host);
+logWrapper.info('----------- Emit Heartbeat Test ---------------------');
+logWrapper.info('MainChain Host', config.mainchain.host);
 
 const keys = process.argv[2] ? process.argv[2].replace(/ /g, '').split(',') : [];
 
@@ -31,26 +33,25 @@ function getHeartbeats(keys, config) {
             let heartbeat = new Heartbeat({
                 ...config,
                 privateKey: key,
-            },
-            log4js.getLogger('HEARTBEAT'));
+            }, logWrapper);
             heartbeats.push(heartbeat);
         });
     } else {
         let heartbeat = new Heartbeat({
             ...config,
-        }, log4js.getLogger('HEARTBEAT'));
+        }, logWrapper);
         heartbeats.push(heartbeat);
     }
     return heartbeats;
 }
 
 async function run({ heartbeats, config }) {
-    logger.info('Starting emiting & listening to Heartbeats from main chain');
+    logWrapper.info('Starting emiting & listening to Heartbeats from main chain');
     await emitAndListenToHeartbeats(
       heartbeats,
       config
     );
-    logger.info('Completed emiting & listening to Heartbeats from main chain');
+    logWrapper.info('Completed emiting & listening to Heartbeats from main chain');
 }
 
 async function emitAndListenToHeartbeats(
@@ -59,10 +60,10 @@ async function emitAndListenToHeartbeats(
 ) {
   try {
 
-    logger.debug('Starting heartbeat processes');
+    logWrapper.debug('Starting heartbeat processes');
 
     // Start MAIN hearbeats with delay between them
-    logger.debug('Fund heartbeats wallets');
+    logWrapper.debug('Fund heartbeats wallets');
     let heartbeatKeys = keys && keys.length ? keys : [config.privateKey];
     await fundFederators(config.mainchain.host, heartbeatKeys, config.mainchain.privateKey, Web3.utils.toWei('1'));
 
@@ -70,7 +71,7 @@ async function emitAndListenToHeartbeats(
         return promise.then(function() { return item.run(); })
     }, Promise.resolve());
 
-    logger.debug('Starting federator processes');
+    logWrapper.debug('Starting federator processes');
 
     // Start readLogs processes...
     await heartbeats.reduce(function(promise, item) {
@@ -84,14 +85,14 @@ async function emitAndListenToHeartbeats(
     );
 
     if(logFileContent.indexOf('HeartBeat') > -1) {
-        logger.info('HeartBeat Event detected on Log File');
+        logWrapper.info('HeartBeat Event detected on Log File');
     } else {
-        logger.error('HeartBeat Event NOT detected on Log File');
+        logWrapper.error('HeartBeat Event NOT detected on Log File');
         process.exit(1);
     }
 
     } catch(err) {
-        logger.error('Unhandled error:', err.stack);
+        logWrapper.error('Unhandled error:', err.stack);
         process.exit(1);
     }
 }
