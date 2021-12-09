@@ -1,4 +1,3 @@
-import { Logger } from 'log4js';
 import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 import web3 from 'web3';
@@ -15,6 +14,7 @@ import { ConfigChain } from './configChain';
 import { BN } from 'ethereumjs-util';
 import { IFederation } from '../contracts/IFederation';
 import { IAllowTokens } from '../contracts/IAllowTokens';
+import { LogWrapper } from './logWrapper';
 
 export interface BaseLogsParams {
   sideChainId: number;
@@ -65,7 +65,7 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 }
 
 export default class FederatorERC extends Federator {
-  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
@@ -98,6 +98,8 @@ export default class FederatorERC extends Federator {
     const currentBlock = await this.getMainChainWeb3().eth.getBlockNumber();
     const mainChainId = await this.getCurrentChainId();
     const sideChainId = await this.getChainId(sideChainWeb3);
+    this.logger.upsertContext('Main Chain ID', mainChainId);
+    this.logger.upsertContext('Side Chain ID', sideChainId);
     const allowTokensFactory = new AllowTokensFactory(this.config, this.logger, sideChainConfig);
 
     this.logger.trace(`Federator Run started currentBlock: ${currentBlock}, currentChainId: ${mainChainId}`);
@@ -128,7 +130,7 @@ export default class FederatorERC extends Federator {
     const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
 
     this.logger.info('Running to Block', toBlock);
-    this.logger.info(`Confirmations ${confirmations}, newToBlock ${newToBlock}`);
+    this.logger.info(`Confirmations Large: ${confirmations.largeAmountConfirmations}, newToBlock ${newToBlock}`);
 
     if (toBlock <= 0 && newToBlock <= 0) {
       return false;
@@ -186,7 +188,7 @@ export default class FederatorERC extends Federator {
       this.logger.debug('getLogsAndProcess fromBlock >= toBlock', getLogParams.fromBlock, getLogParams.toBlock);
       return;
     }
-
+    this.logger.upsertContext('Current Block', getLogParams.currentBlock);
     const mainBridge = await getLogParams.bridgeFactory.getMainBridgeContract();
 
     const recordsPerPage = 1000;
@@ -200,6 +202,8 @@ export default class FederatorERC extends Federator {
         toPagedBlock = getLogParams.toBlock;
       }
       this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+      this.logger.upsertContext('fromBlock', fromPageBlock);
+      this.logger.upsertContext('toBlock', toPagedBlock);
       const logs = await mainBridge.getPastEvents('Cross', {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
@@ -248,6 +252,13 @@ export default class FederatorERC extends Federator {
 
     const originChainId = Number(originChainIdStr);
     const destinationChainId = Number(destinationChainIdStr);
+
+    this.logger.upsertContext('originChainId', originChainId);
+    this.logger.upsertContext('destinationChainId', destinationChainId);
+    this.logger.upsertContext('transactionHash', transactionHash);
+    this.logger.upsertContext('tokenAddress', tokenAddress);
+
+
     const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
     const sideTokenAddress = await utils.retry3Times(
       originBridge.getMappedToken({

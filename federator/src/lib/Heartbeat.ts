@@ -9,11 +9,12 @@ import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import * as utils from '../lib/utils';
 import { IFederation } from '../contracts/IFederation';
+import { LogWrapper } from './logWrapper';
 const scriptVersion = process.env.npm_package_version;
 
 export class Heartbeat {
   config: Config;
-  logger: any;
+  logger: LogWrapper;
   mainWeb3: Web3;
   sideWeb3: Web3;
   transactionSender: any;
@@ -22,7 +23,7 @@ export class Heartbeat {
   federationFactory: FederationFactory;
   metricCollector: any;
 
-  constructor(config: Config, logger, metricCollector, sideChainConfig: ConfigChain) {
+  constructor(config: Config, logger: LogWrapper, metricCollector, sideChainConfig: ConfigChain) {
     this.config = config;
     this.logger = logger;
 

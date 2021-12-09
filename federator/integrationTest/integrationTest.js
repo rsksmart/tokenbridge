@@ -1,11 +1,9 @@
 const fs = require("fs");
 const Web3 = require("web3");
-const log4js = require("log4js");
 
 //configurations
 // the following file should only be used for integration tests
 const config = require("../config/test.local.config.js");
-const logConfig = require("../config/log-config.json");
 const abiBridge = require("../../bridge/abi/Bridge.json");
 const abiMainToken = require("../../bridge/abi/MainToken.json");
 const abiSideToken = require("../../bridge/abi/SideToken.json");
@@ -23,12 +21,13 @@ const destinationTokenBytecode = fs.readFileSync(
   `${__dirname}/sideTokenBytecode.txt`,
   "utf8"
 );
-
-const logger = log4js.getLogger("test");
-log4js.configure(logConfig);
-logger.info("----------- Transfer Test ---------------------");
-logger.info("Mainchain Host", config.mainchain.host);
-logger.info("Sidechain Host", config.sidechain.host);
+const logs = require("../src/lib/logs");
+const logWrapper = logs.Logs.getInstance().getLogger(
+  logs.LOGGER_CATEGORY_TEST_INTEGRATION
+);
+logWrapper.info("----------- Transfer Test ---------------------");
+logWrapper.info("Mainchain Host", config.mainchain.host);
+logWrapper.info("Sidechain Host", config.sidechain.host);
 
 const sideConfig = {
   ...config,
@@ -60,6 +59,9 @@ run(mainchainFederators, sidechainFederators, config, sideConfig);
 function getFederators(configFile, keys, storagePathPrefix = "fed") {
   const federators = [];
   configFile.sidechain = [configFile.sidechain];
+  const logWrapperFederator = logs.Logs.getInstance().getLogger(
+    logs.LOGGER_CATEGORY_TEST_FEDERATOR
+  );
   if (keys && keys.length) {
     keys.forEach((key, i) => {
       const federator = new FederatorERC.default(
@@ -70,7 +72,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
             i + 1
           }`,
         },
-        log4js.getLogger("FEDERATOR")
+        logWrapperFederator
       );
       federators.push(federator);
     });
@@ -81,7 +83,7 @@ function getFederators(configFile, keys, storagePathPrefix = "fed") {
           ...configFile,
           storagePath: `${config.storagePath}/${storagePathPrefix}`,
         },
-        log4js.getLogger("FEDERATOR")
+        logWrapperFederator
       )
     );
   }
@@ -95,7 +97,7 @@ async function run(
   originConfig,
   destinationConfig
 ) {
-  logger.info("Starting transfer from Mainchain to Sidechain");
+  logWrapper.info("Starting transfer from Mainchain to Sidechain");
   await transfer(
     originFederators,
     destinationFederators,
@@ -103,9 +105,9 @@ async function run(
     MAIN_CHAIN_LOGGER_NAME,
     SIDE_CHAIN_LOGGER_NAME
   );
-  logger.info("Completed transfer from Mainchain to Sidechain");
+  logWrapper.info("Completed transfer from Mainchain to Sidechain");
 
-  logger.info("Starting transfer from Sidechain to Mainchain");
+  logWrapper.info("Starting transfer from Sidechain to Mainchain");
   const invertOriginFederators = destinationFederators;
   const invertDestinationFederators = originFederators;
   await transfer(
@@ -115,14 +117,14 @@ async function run(
     SIDE_CHAIN_LOGGER_NAME,
     MAIN_CHAIN_LOGGER_NAME
   );
-  logger.info("Completed transfer from Sidechain to Mainchain");
+  logWrapper.info("Completed transfer from Sidechain to Mainchain");
 }
 
 async function checkAddressBalance(tokenContract, userAddress, loggerName) {
   const balance = await tokenContract.methods.balanceOf(userAddress).call();
-  logger.info(`${loggerName} token balance`, balance);
+  logWrapper.info(`${loggerName} token balance`, balance);
   if (balance.toString() === "0") {
-    logger.error("Token was not claimed");
+    logWrapper.error("Token was not claimed");
     process.exit(1);
   }
 }
@@ -132,7 +134,7 @@ async function checkTxDataHash(bridgeContract, receipt) {
     .transactionsDataHashes(receipt.transactionHash)
     .call();
   if (txDataHash === utils.ZERO_HASH) {
-    logger.error(MSG_TOKEN_NOT_VOTED);
+    logWrapper.error(MSG_TOKEN_NOT_VOTED);
     process.exit(1);
   }
 }
@@ -203,7 +205,7 @@ async function transferReceiveTokensOtherSide({
     originReceiptSendTransaction
   );
 
-  logger.info("claimTokensFromDestinationBridge init");
+  logWrapper.info("claimTokensFromDestinationBridge init");
   await claimTokensFromDestinationBridge({
     destinationBridgeContract,
     originChainId,
@@ -214,9 +216,9 @@ async function transferReceiveTokensOtherSide({
     destinationBridgeAddress,
     originUserPrivateKey,
   });
-  logger.info("claimTokensFromDestinationBridge finish");
+  logWrapper.info("claimTokensFromDestinationBridge finish");
 
-  logger.debug("Check balance on the other side");
+  logWrapper.debug("Check balance on the other side");
   await checkAddressBalance(
     destinationTokenContract,
     originUserAddress,
@@ -226,7 +228,7 @@ async function transferReceiveTokensOtherSide({
   const crossCompletedBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug(
+  logWrapper.debug(
     "One way cross user balance (ETH or RBTC)",
     crossCompletedBalance
   );
@@ -234,7 +236,7 @@ async function transferReceiveTokensOtherSide({
 
 function checkBalance(currentBalance, expectedBalance) {
   if (expectedBalance !== BigInt(currentBalance)) {
-    logger.error(
+    logWrapper.error(
       `Wrong balance. Expected ${expectedBalance} but got ${currentBalance}`
     );
     process.exit(1);
@@ -256,7 +258,7 @@ async function getUsersBalances(
   const senderBalance = await destinationTokenContract.methods
     .balanceOf(userAddress)
     .call();
-  logger.debug(
+  logWrapper.debug(
     `bridge balance:${bridgeBalance}, receiver balance:${receiverBalance}, sender balance:${senderBalance} `
   );
   return {
@@ -302,7 +304,7 @@ async function transferBackTokens({
     true
   );
 
-  logger.debug("Approving token transfer on destination");
+  logWrapper.debug("Approving token transfer on destination");
   const dataApproveAbi = destinationTokenContract.methods
     .approve(destinationBridgeAddress, amount)
     .encodeABI();
@@ -313,12 +315,12 @@ async function transferBackTokens({
     originUserPrivateKey,
     true
   );
-  logger.debug("Token transfer approved");
+  logWrapper.debug("Token transfer approved");
   const allowed = await destinationTokenContract.methods
     .allowance(originUserAddress, destinationBridgeAddress)
     .call();
-  logger.debug("Allowed to transfer ", allowed);
-  logger.debug("Set side token limit");
+  logWrapper.debug("Allowed to transfer ", allowed);
+  logWrapper.debug("Set side token limit");
 
   await sendFederatorTx(
     configChain.sidechain.multiSig,
@@ -333,7 +335,7 @@ async function transferBackTokens({
     .sideTokenByOriginalToken(originChainId, originTokenAddress)
     .call();
 
-  logger.debug("Bridge side receiveTokens");
+  logWrapper.debug("Bridge side receiveTokens");
   const destinationReceiptReceiveTokensTo = await callReceiveTokens({
     bridgeContract: destinationBridgeContract,
     chainId: originChainId,
@@ -344,9 +346,9 @@ async function transferBackTokens({
     transactionSender: destinationTransactionSender,
     userPrivateKey: originUserPrivateKey,
   });
-  logger.debug("Bridge side receiveTokens completed");
-  logger.debug("Starting federator processes");
-  logger.debug("Fund federator wallets");
+  logWrapper.debug("Bridge side receiveTokens completed");
+  logWrapper.debug("Starting federator processes");
+  logWrapper.debug("Fund federator wallets");
 
   federatorPrivateKeys =
     sideKeys && sideKeys.length ? sideKeys : [configChain.privateKey];
@@ -357,7 +359,7 @@ async function transferBackTokens({
     originChainWeb3.utils.toWei("1")
   );
 
-  logger.warn(
+  logWrapper.warn(
     "`------------- It will start the runFederators of the destinationFederators -------------`,"
   );
   await runFederators(destinationFederators);
@@ -383,7 +385,7 @@ async function callReceiveTokens({
   const receipt = await methodCallReceiveTokensTo.call({
     from: originUserAddress,
   });
-  logger.warn("callReceiveTokens call receipt", receipt);
+  logWrapper.warn("callReceiveTokens call receipt", receipt);
   return transactionSender.sendTransaction(
     bridgeAddress,
     methodCallReceiveTokensTo.encodeABI(),
@@ -406,7 +408,7 @@ async function callAllReceiveTokens({
   originTransactionSender,
   originUserPrivateKey,
 }) {
-  logger.warn("callAllReceiveTokens callReceiveTokens small amount init");
+  logWrapper.warn("callAllReceiveTokens callReceiveTokens small amount init");
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
   const smallAmountReceipt = await callReceiveTokens({
     bridgeContract: originBridgeContract,
@@ -418,7 +420,7 @@ async function callAllReceiveTokens({
     transactionSender: originTransactionSender,
     userPrivateKey: originUserPrivateKey,
   });
-  logger.warn("callAllReceiveTokens callReceiveTokens small amount finish");
+  logWrapper.warn("callAllReceiveTokens callReceiveTokens small amount finish");
 
   // Cross AnotherToken (type id 0) Medium Amount >= toWei('0.01') && < toWei('0.1')
   const mediumAmountReceipt = await callReceiveTokens({
@@ -471,7 +473,7 @@ async function tranferCheckAmountsGetDestinationBalance({
   originChainId,
   destinationChainWeb3,
 }) {
-  logger.info(
+  logWrapper.info(
     "------------- SMALL, MEDIUM and LARGE amounts are processed after required confirmations  -----------------"
   );
 
@@ -509,7 +511,7 @@ async function tranferCheckAmountsGetDestinationBalance({
   const remainingUserBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug(
+  logWrapper.debug(
     "user native token balance before crossing tokens:",
     remainingUserBalance
   );
@@ -517,11 +519,14 @@ async function tranferCheckAmountsGetDestinationBalance({
   const userBalanceAnotherToken = await originAnotherTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.debug("user balance before crossing tokens:", userBalanceAnotherToken);
+  logWrapper.debug(
+    "user balance before crossing tokens:",
+    userBalanceAnotherToken
+  );
   let balance = await destinationTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.info(
+  logWrapper.info(
     `${destinationLoggerName} token balance before crossing`,
     balance
   );
@@ -529,16 +534,16 @@ async function tranferCheckAmountsGetDestinationBalance({
   const anotherTokenOriginalAddr = await destinationBridgeContract.methods
     .sideTokenByOriginalToken(originChainId, originAnotherTokenAddress)
     .call();
-  logger.info(
+  logWrapper.info(
     `${destinationLoggerName} token address`,
     anotherTokenOriginalAddr
   );
   if (anotherTokenOriginalAddr === utils.ZERO_ADDRESS) {
-    logger.error(MSG_TOKEN_NOT_VOTED);
+    logWrapper.error(MSG_TOKEN_NOT_VOTED);
     process.exit(1);
   }
 
-  logger.debug("Check balance on the other side before crossing");
+  logWrapper.debug("Check balance on the other side before crossing");
   const destinationSideTokenContract = new destinationChainWeb3.eth.Contract(
     abiSideToken,
     anotherTokenOriginalAddr
@@ -546,7 +551,7 @@ async function tranferCheckAmountsGetDestinationBalance({
   balance = await destinationSideTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.info(`${destinationLoggerName} token balance`, balance);
+  logWrapper.info(`${destinationLoggerName} token balance`, balance);
 
   return {
     confirmations,
@@ -611,7 +616,7 @@ async function tranferCheckAmounts({
   const userLargeAmount = originChainWeb3.utils.toWei("1.32");
   const userAppoveTotalAmount = originChainWeb3.utils.toWei("10");
 
-  logger.debug(
+  logWrapper.debug(
     "Send small amount, medium amount and large amount transactions"
   );
   const methodCallApprove = originAnotherTokenContract.methods.approve(
@@ -627,7 +632,7 @@ async function tranferCheckAmounts({
     true
   );
 
-  logger.debug("tranferCheckAmounts callAllReceiveTokens init");
+  logWrapper.debug("tranferCheckAmounts callAllReceiveTokens init");
   // Cross AnotherToken (type id 0) Small Amount < toWei('0.01')
   const { smallAmountReceipt, mediumAmountReceipt, largeAmountReceipt } =
     await callAllReceiveTokens({
@@ -643,14 +648,14 @@ async function tranferCheckAmounts({
       originTransactionSender,
       originUserPrivateKey,
     });
-  logger.debug("tranferCheckAmounts callAllReceiveTokens finish");
+  logWrapper.debug("tranferCheckAmounts callAllReceiveTokens finish");
 
-  logger.debug("Mine small amount confirmations blocks");
+  logWrapper.debug("Mine small amount confirmations blocks");
   const delta_1 = parseInt(confirmations.smallAmount);
   await utils.evm_mine(delta_1, originChainWeb3);
 
   await runFederators(originFederators);
-  logger.debug("Claim small amounts");
+  logWrapper.debug("Claim small amounts");
   const methodCallClaim = destinationBridgeContract.methods.claim({
     to: originUserAddress,
     amount: userSmallAmount,
@@ -667,13 +672,13 @@ async function tranferCheckAmounts({
     originUserPrivateKey,
     true
   );
-  logger.debug("Small amount claim completed");
+  logWrapper.debug("Small amount claim completed");
 
   // check small amount txn went through
   let balance = await destinationSideTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.info(
+  logWrapper.info(
     `DESTINATION ${destinationLoggerName} token balance after ${delta_1} confirmations`,
     balance
   );
@@ -681,18 +686,18 @@ async function tranferCheckAmounts({
   const expectedBalanceUser =
     BigInt(destinationInitialUserBalance) + BigInt(userSmallAmount);
   if (expectedBalanceUser !== BigInt(balance)) {
-    logger.error(
+    logWrapper.error(
       `userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUser} but got ${balance}`
     );
     process.exit(1);
   }
 
-  logger.debug("Mine medium amount confirmations blocks");
+  logWrapper.debug("Mine medium amount confirmations blocks");
   const delta_2 = parseInt(confirmations.mediumAmount) - delta_1;
   await utils.evm_mine(delta_2, originChainWeb3);
 
   await runFederators(originFederators);
-  logger.debug("Claim medium amounts");
+  logWrapper.debug("Claim medium amounts");
   const callerClaim = destinationBridgeContract.methods.claim({
     to: originUserAddress,
     amount: userMediumAmount,
@@ -709,13 +714,13 @@ async function tranferCheckAmounts({
     originUserPrivateKey,
     true
   );
-  logger.debug("Medium amount claim completed");
+  logWrapper.debug("Medium amount claim completed");
 
   // check medium amount txn went through
   balance = await destinationSideTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.info(
+  logWrapper.info(
     `DESTINATION ${destinationLoggerName} token balance after ${
       delta_1 + delta_2
     } confirmations`,
@@ -727,13 +732,13 @@ async function tranferCheckAmounts({
     BigInt(userMediumAmount) +
     BigInt(userSmallAmount);
   if (expectedBalanceUsers !== BigInt(balance)) {
-    logger.error(
+    logWrapper.error(
       `userMediumAmount + userSmallAmount. Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceUsers} but got ${balance}`
     );
     process.exit(1);
   }
 
-  logger.debug("Mine large amount confirmations blocks");
+  logWrapper.debug("Mine large amount confirmations blocks");
   const delta_3 = parseInt(confirmations.largeAmount) - delta_2;
   await utils.evm_mine(delta_3, originChainWeb3);
 
@@ -779,7 +784,7 @@ async function claimLargeAmounts({
   destinationInitialUserBalance,
   anotherTokenContract,
 }) {
-  logger.debug("Claim large amounts");
+  logWrapper.debug("Claim large amounts");
   const destinationCallerClaim = destinationBridgeContract.methods.claim({
     to: userAddress,
     amount: userLargeAmount,
@@ -796,13 +801,13 @@ async function claimLargeAmounts({
     userPrivateKey,
     true
   );
-  logger.debug("Large amount claim completed");
+  logWrapper.debug("Large amount claim completed");
 
   // check large amount txn went through
   const destinationBalance = await destinationSideTokenContract.methods
     .balanceOf(userAddress)
     .call();
-  logger.info(
+  logWrapper.info(
     `DESTINATION ${destinationLoggerName} token balance after ${numberOfConfirmations} confirmations`,
     destinationBalance
   );
@@ -813,13 +818,13 @@ async function claimLargeAmounts({
     BigInt(userMediumAmount) +
     BigInt(userSmallAmount);
   if (expectedBalanceAll !== BigInt(destinationBalance)) {
-    logger.error(
+    logWrapper.error(
       `Wrong AnotherToken ${destinationLoggerName} User balance. Expected ${expectedBalanceAll} but got ${destinationBalance}`
     );
     process.exit(1);
   }
 
-  logger.debug(
+  logWrapper.debug(
     "ORIGIN user balance after crossing:",
     await anotherTokenContract.methods.balanceOf(userAddress).call()
   );
@@ -846,7 +851,7 @@ async function transferCheckErc777ReceiveTokensOtherSide({
   originTokenContract,
   tokenContract,
 }) {
-  logger.info(
+  logWrapper.info(
     "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
   );
 
@@ -865,7 +870,7 @@ async function transferCheckErc777ReceiveTokensOtherSide({
     abiSideToken,
     destinationAnotherTokenAddress
   );
-  logger.debug("Check balance on the other side");
+  logWrapper.debug("Check balance on the other side");
   await checkAddressBalance(
     destTokenContract,
     originUserAddress,
@@ -875,9 +880,9 @@ async function transferCheckErc777ReceiveTokensOtherSide({
   const crossUsrBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug("One way cross user balance", crossUsrBalance);
+  logWrapper.debug("One way cross user balance", crossUsrBalance);
 
-  logger.info(
+  logWrapper.info(
     "------------- CONTRACT ERC777 TEST TRANSFER BACK THE TOKENS -----------------"
   );
   const senderBalanceBeforeErc777 = await destTokenContract.methods
@@ -898,17 +903,17 @@ async function transferCheckErc777ReceiveTokensOtherSide({
     true
   );
 
-  logger.debug(`Wait for ${originWaitBlocks} blocks`);
+  logWrapper.debug(`Wait for ${originWaitBlocks} blocks`);
   await utils.waitBlocks(destinationChainWeb3, originWaitBlocks);
 
-  logger.warn(
+  logWrapper.warn(
     `------------- It will start the runFederators of the destinationFederators -------------`,
     destinationFederators
   );
   await runFederators(destinationFederators);
   await checkTxDataHash(originBridgeContract, receiptSendTx);
 
-  logger.info(
+  logWrapper.info(
     "------------- CONTRACT ERC777 TEST RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
   );
   const methodCallClaim = originBridgeContract.methods.claim({
@@ -927,8 +932,8 @@ async function transferCheckErc777ReceiveTokensOtherSide({
     originUserPrivateKey,
     true
   );
-  logger.debug("Destination Bridge claim completed");
-  logger.debug("Getting final balances");
+  logWrapper.debug("Destination Bridge claim completed");
+  logWrapper.debug("Getting final balances");
 
   const { senderBalance: senderBalanceAfterErc777 } = await getUsersBalances(
     originTokenContract,
@@ -938,7 +943,7 @@ async function transferCheckErc777ReceiveTokensOtherSide({
   );
 
   if (senderBalanceBeforeErc777 === BigInt(senderBalanceAfterErc777)) {
-    logger.error(
+    logWrapper.error(
       `Wrong Sender balance. Expected Sender balance to change but got ${senderBalanceAfterErc777}`
     );
     process.exit(1);
@@ -947,7 +952,7 @@ async function transferCheckErc777ReceiveTokensOtherSide({
   const crossBackCompletedBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug("Final user balance", crossBackCompletedBalance);
+  logWrapper.debug("Final user balance", crossBackCompletedBalance);
 }
 
 async function transferCheckStartErc777({
@@ -970,13 +975,13 @@ async function transferCheckStartErc777({
   waitBlocks,
   originFederators,
 }) {
-  logger.info(
+  logWrapper.info(
     "------------- START CONTRACT ERC777 TEST TOKEN SEND TEST -----------------"
   );
   const originAnotherToken = new originChainWeb3.eth.Contract(abiSideToken);
   const knownAccount = (await originChainWeb3.eth.getAccounts())[0];
 
-  logger.debug("Deploying another token contract");
+  logWrapper.debug("Deploying another token contract");
   const originAnotherTokenContract = await originAnotherToken
     .deploy({
       data: destinationTokenBytecode,
@@ -987,8 +992,8 @@ async function transferCheckStartErc777({
       gas: 6700000,
       gasPrice: 20000000000,
     });
-  logger.debug("Token deployed");
-  logger.debug("Minting new token");
+  logWrapper.debug("Token deployed");
+  logWrapper.debug("Minting new token");
   const originAnotherTokenAddress = originAnotherTokenContract.options.address;
   const dataMintAbi = originAnotherTokenContract.methods
     .mint(userAddress, amount, "0x", "0x")
@@ -1001,7 +1006,7 @@ async function transferCheckStartErc777({
     true
   );
 
-  logger.debug("Adding new token to list of allowed on bridge");
+  logWrapper.debug("Adding new token to list of allowed on bridge");
   const originAllowTokensAddress = originAllowTokensContract.options.address;
   const originSetTokenEncodedAbi = originAllowTokensContract.methods
     .setToken(originAnotherTokenAddress, SIDE_TOKEN_TYPE_ID)
@@ -1034,9 +1039,9 @@ async function transferCheckStartErc777({
       [userAddress, destinationChainId]
     )
   );
-  logger.warn("Calling bridge tokensReceived");
+  logWrapper.warn("Calling bridge tokensReceived");
   const receipt = await methodCallSend.call({ from: userAddress });
-  logger.debug("bridge tokensReceived receipt:", receipt);
+  logWrapper.debug("bridge tokensReceived receipt:", receipt);
 
   const originReceiptSend = await originTransactionSender.sendTransaction(
     originAnotherTokenAddress,
@@ -1045,9 +1050,9 @@ async function transferCheckStartErc777({
     userPrivateKey,
     true
   );
-  logger.debug("Call to transferAndCall completed");
+  logWrapper.debug("Call to transferAndCall completed");
 
-  logger.debug(`Wait for ${waitBlocks} blocks`);
+  logWrapper.debug(`Wait for ${waitBlocks} blocks`);
   await utils.waitBlocks(originChainWeb3, waitBlocks);
 
   await runFederators(originFederators);
@@ -1077,8 +1082,8 @@ async function transferCheckSendingTokens({
   destinationChainId,
   originChainId,
 }) {
-  logger.info("------------- SENDING THE TOKENS -----------------");
-  logger.debug("Getting address from pk");
+  logWrapper.info("------------- SENDING THE TOKENS -----------------");
+  logWrapper.debug("Getting address from pk");
   const originUserPrivateKey = originChainWeb3.eth.accounts.create().privateKey;
   const originUserAddress = await originTransactionSender.getAddress(
     originUserPrivateKey
@@ -1096,23 +1101,23 @@ async function transferCheckSendingTokens({
     configChain.privateKey,
     true
   );
-  logger.info(
+  logWrapper.info(
     `${originLoggerName} token address ${originAddress} - User Address: ${originUserAddress}`
   );
 
   const originInitialUserBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug("Initial user balance ", originInitialUserBalance);
+  logWrapper.debug("Initial user balance ", originInitialUserBalance);
   await originTokenContract.methods
     .transfer(originUserAddress, amount)
     .send({ from: cowAddress });
   const initialTokenBalance = await originTokenContract.methods
     .balanceOf(originUserAddress)
     .call();
-  logger.debug("Initial token balance ", initialTokenBalance);
+  logWrapper.debug("Initial token balance ", initialTokenBalance);
 
-  logger.debug("Approving token transfer");
+  logWrapper.debug("Approving token transfer");
   await originTokenContract.methods
     .transfer(originUserAddress, amount)
     .call({ from: originUserAddress });
@@ -1140,28 +1145,31 @@ async function transferCheckSendingTokens({
     originUserPrivateKey,
     true
   );
-  logger.debug("Token transfer approved");
+  logWrapper.debug("Token transfer approved");
 
-  logger.debug("Bridge receiveTokens (transferFrom)");
+  logWrapper.debug("Bridge receiveTokens (transferFrom)");
   const originBridgeContract = new originChainWeb3.eth.Contract(
     abiBridge,
     originBridgeAddress
   );
-  logger.debug("Bridge addr", originBridgeAddress);
-  logger.debug("allowTokens addr", originAllowTokensContract.options.address);
-  logger.debug(
+  logWrapper.debug("Bridge addr", originBridgeAddress);
+  logWrapper.debug(
+    "allowTokens addr",
+    originAllowTokensContract.options.address
+  );
+  logWrapper.debug(
     "Bridge AllowTokensAddr",
     await originBridgeContract.methods.allowTokens().call()
   );
-  logger.debug(
+  logWrapper.debug(
     "allowTokens primary",
     await originAllowTokensContract.methods.primary().call()
   );
-  logger.debug(
+  logWrapper.debug(
     "allowTokens owner",
     await originAllowTokensContract.methods.owner().call()
   );
-  logger.debug("accounts:", await originChainWeb3.eth.getAccounts());
+  logWrapper.debug("accounts:", await originChainWeb3.eth.getAccounts());
   const originMethodCallReceiveTokensTo =
     originBridgeContract.methods.receiveTokensTo(
       destinationChainId,
@@ -1178,16 +1186,16 @@ async function transferCheckSendingTokens({
       originUserPrivateKey,
       true
     );
-  logger.debug("Bridge receivedTokens completed");
+  logWrapper.debug("Bridge receivedTokens completed");
 
   const originWaitBlocks = configChain.confirmations || 0;
-  logger.debug(`Wait for ${originWaitBlocks} blocks`);
+  logWrapper.debug(`Wait for ${originWaitBlocks} blocks`);
   await utils.waitBlocks(originChainWeb3, originWaitBlocks);
 
-  logger.debug("Starting federator processes");
+  logWrapper.debug("Starting federator processes");
 
   // Start origin federators with delay between them
-  logger.debug("Fund federator wallets");
+  logWrapper.debug("Fund federator wallets");
   const federatorPrivateKeys =
     mainKeys && mainKeys.length ? mainKeys : [configChain.privateKey];
   await fundFederators(
@@ -1258,7 +1266,7 @@ async function transferChecks({
     originChainId,
   });
   await runFederators(originFederators);
-  logger.info(
+  logWrapper.info(
     "------------- RECEIVE THE TOKENS ON THE OTHER SIDE -----------------"
   );
 
@@ -1267,7 +1275,7 @@ async function transferChecks({
     destinationTokenAddress
   );
 
-  logger.info("transferReceiveTokensOtherSide init");
+  logWrapper.info("transferReceiveTokensOtherSide init");
   await transferReceiveTokensOtherSide({
     destinationBridgeContract,
     destinationChainId,
@@ -1282,10 +1290,10 @@ async function transferChecks({
     destinationTokenContract,
     originChainWeb3,
   });
-  logger.info("transferReceiveTokensOtherSide finish");
+  logWrapper.info("transferReceiveTokensOtherSide finish");
 
-  logger.info("------------- TRANSFER BACK THE TOKENS -----------------");
-  logger.debug("Getting initial balances before transfer");
+  logWrapper.info("------------- TRANSFER BACK THE TOKENS -----------------");
+  logWrapper.debug("Getting initial balances before transfer");
   const {
     bridgeBalance: bridgeBalanceBefore,
     receiverBalance: receiverBalanceBefore,
@@ -1318,10 +1326,10 @@ async function transferChecks({
     destinationFederators,
   });
 
-  logger.info(
+  logWrapper.info(
     "------------- RECEIVE THE TOKENS ON THE STARTING SIDE -----------------"
   );
-  logger.debug("Check balance on the starting side");
+  logWrapper.debug("Check balance on the starting side");
   const methodCallClaim = originBridgeContract.methods.claim({
     to: originUserAddress,
     amount: amount,
@@ -1338,9 +1346,9 @@ async function transferChecks({
     originUserPrivateKey,
     true
   );
-  logger.debug("Bridge receivedTokens completed");
+  logWrapper.debug("Bridge receivedTokens completed");
 
-  logger.debug("Getting final balances");
+  logWrapper.debug("Getting final balances");
   const {
     bridgeBalance: bridgeBalanceAfter,
     receiverBalance: receiverBalanceAfter,
@@ -1362,8 +1370,8 @@ async function transferChecks({
   const crossBackCompletedBalance = await originChainWeb3.eth.getBalance(
     originUserAddress
   );
-  logger.debug("Final user balance", crossBackCompletedBalance);
-  logger.debug(
+  logWrapper.debug("Final user balance", crossBackCompletedBalance);
+  logWrapper.debug(
     "Cost: ",
     BigInt(originInitialUserBalance) - BigInt(crossBackCompletedBalance)
   );
@@ -1450,12 +1458,12 @@ async function transfer(
     );
     const originTransactionSender = new TransactionSender.default(
       originChainWeb3,
-      logger,
+      logWrapper,
       configChain
     );
     const destinationTransactionSender = new TransactionSender.default(
       destinationChainWeb3,
-      logger,
+      logWrapper,
       configChain
     );
     const originBridgeAddress = configChain.mainchain.bridge;
@@ -1476,7 +1484,7 @@ async function transfer(
     );
     const destinationAllowTokensAddress = configChain.sidechain.allowTokens;
     const destinationBridgeAddress = configChain.sidechain.bridge;
-    logger.debug(
+    logWrapper.debug(
       `${destinationLoggerName} bridge address`,
       destinationBridgeAddress
     );
@@ -1485,7 +1493,7 @@ async function transfer(
       destinationBridgeAddress
     );
 
-    logger.debug("Get the destination token address");
+    logWrapper.debug("Get the destination token address");
     const destinationTokenAddress = await getDestinationTokenAddress(
       destinationBridgeContract,
       originChainId,
@@ -1530,7 +1538,7 @@ async function transfer(
       destinationFederators,
     });
 
-    logger.debug("transfer tranferCheckAmounts init");
+    logWrapper.debug("transfer tranferCheckAmounts init");
     const { confirmations } = await tranferCheckAmounts({
       originAllowTokensContract,
       configChain,
@@ -1556,7 +1564,7 @@ async function transfer(
       destinationTransactionSender,
       destinationBridgeAddress,
     });
-    logger.debug("transfer tranferCheckAmounts finish");
+    logWrapper.debug("transfer tranferCheckAmounts finish");
 
     await resetConfirmationsForFutureRuns(
       originAllowTokensContract,
@@ -1568,7 +1576,7 @@ async function transfer(
       confirmations
     );
   } catch (err) {
-    logger.error("Unhandled error:", err.stack);
+    logWrapper.error("Unhandled error:", err.stack);
     process.exit(1);
   }
 }
@@ -1586,11 +1594,11 @@ async function getDestinationTokenAddress(
     .sideTokenByOriginalToken(originChainId, originAddressMainToken)
     .call();
 
-  logger.warn(
+  logWrapper.warn(
     `destinationTokenAddress: ${destinationTokenAddress}\nchainIdMain: ${originChainId}\noriginAddressMain: ${originAddressMainToken}`
   );
   if (destinationTokenAddress === utils.ZERO_ADDRESS) {
-    logger.info("Side Token does not exist yet, creating it");
+    logWrapper.info("Side Token does not exist yet, creating it");
     const data = destinationBridgeContract.methods
       .createSideToken(
         SIDE_TOKEN_TYPE_ID,
@@ -1615,11 +1623,11 @@ async function getDestinationTokenAddress(
       .sideTokenByOriginalToken(originChainId, originAddressMainToken)
       .call();
     if (destinationTokenAddress === utils.ZERO_ADDRESS) {
-      logger.error("Failed to create side token");
+      logWrapper.error("Failed to create side token");
       process.exit(1);
     }
   }
-  logger.info(
+  logWrapper.info(
     `${destinationLoggerName} token address`,
     destinationTokenAddress
   );
@@ -1670,7 +1678,7 @@ async function claimTokensFromDestinationBridge({
     originUserPrivateKey,
     true
   );
-  logger.debug("Destination Bridge claim completed");
+  logWrapper.debug("Destination Bridge claim completed");
   return destinationMethodCallClaim;
 }
 
@@ -1701,7 +1709,7 @@ async function resetConfirmationsForFutureRuns(
   const allowTokensConfirmations = await originAllowTokensContract.methods
     .getConfirmations()
     .call();
-  logger.debug(
+  logWrapper.debug(
     `reset confirmations: ${allowTokensConfirmations.smallAmount}, ${allowTokensConfirmations.mediumAmount}, ${allowTokensConfirmations.largeAmount}`
   );
   return { data, methodCall, allowTokensConfirmations };
