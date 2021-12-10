@@ -103,10 +103,16 @@ export default abstract class Federator {
     federationFactory: FederationFactory;
   }): Promise<boolean>;
 
+  getCurrentRetrie(): number {
+    return this.config.federatorRetries - this.numberOfRetries;
+  }
+
   async runAll(): Promise<boolean> {
     for (const sideChainConfig of this.config.sidechain) {
+      this.resetRetries();
       const sideChainWeb3 = this.getWeb3(sideChainConfig.host);
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);
+      this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
         while (this.numberOfRetries > 0) {
           const bridgeFactory = new BridgeFactory(this.config, this.logger, sideChainConfig);
@@ -126,7 +132,7 @@ export default abstract class Federator {
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
         this.numberOfRetries--;
-        this.logger.debug(`Runned ${this.config.federatorRetries - this.numberOfRetries} retrie`);
+        this.logger.debug(`Runned ${this.getCurrentRetrie()} retrie`);
         this.checkRetries();
         await utils.sleep(this.config.mainchain.blockTimeMs);
       }
