@@ -1,5 +1,3 @@
-import { Logger } from 'log4js';
-
 import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
@@ -15,9 +13,10 @@ import { BN } from 'ethereumjs-util';
 import { ConfigChain } from './configChain';
 import Federator from './Federator';
 import { ConfigData } from './config';
+import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
-  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     super(config, logger, metricCollector);
   }
 
