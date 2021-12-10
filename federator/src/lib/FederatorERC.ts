@@ -256,6 +256,8 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('originChainId', originChainId);
     this.logger.upsertContext('destinationChainId', destinationChainId);
     this.logger.upsertContext('transactionHash', transactionHash);
+    this.logger.upsertContext('blockHash', blockHash);
+    this.logger.upsertContext('blockNumber', blockNumber);
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
 
