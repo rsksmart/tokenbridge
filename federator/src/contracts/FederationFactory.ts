@@ -9,12 +9,12 @@ import * as utils from '../lib/utils';
 import { VERSIONS } from './Constants';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
-import { Logger } from 'log4js';
 import { ConfigData } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import Web3 from 'web3';
 import { ConfigChain } from '../lib/configChain';
 import { IFederation } from './IFederation';
+import { LogWrapper } from '../lib/logWrapper';
 
 export class FederationFactory extends ContractFactory {
   mainChainBridgeContract: Contract;
@@ -22,7 +22,7 @@ export class FederationFactory extends ContractFactory {
   mainChainNftBridgeContract: Contract;
   sideChainNftBridgeContract: Contract;
 
-  constructor(config: ConfigData, logger: Logger, sideChain: ConfigChain) {
+  constructor(config: ConfigData, logger: LogWrapper, sideChain: ConfigChain) {
     super(config, logger, sideChain);
     this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
       abiBridgeV3 as AbiItem[],

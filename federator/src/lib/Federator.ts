@@ -1,4 +1,3 @@
-import { Logger } from 'log4js';
 import { ConfigData } from './config';
 import { MetricCollector } from './MetricCollector';
 
@@ -11,9 +10,10 @@ import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
+import { LogWrapper } from './logWrapper';
 
 export default abstract class Federator {
-  public logger: Logger;
+  public logger: LogWrapper;
   public config: ConfigData;
   public metricCollector: MetricCollector;
   public chainId: number;
@@ -21,7 +21,7 @@ export default abstract class Federator {
   public web3ByHost: Map<string, web3>;
   private numberOfRetries: number;
 
-  constructor(config: ConfigData, logger: Logger, metricCollector: MetricCollector) {
+  constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
 
@@ -103,10 +103,16 @@ export default abstract class Federator {
     federationFactory: FederationFactory;
   }): Promise<boolean>;
 
+  getCurrentRetrie(): number {
+    return this.config.federatorRetries - this.numberOfRetries;
+  }
+
   async runAll(): Promise<boolean> {
     for (const sideChainConfig of this.config.sidechain) {
+      this.resetRetries();
       const sideChainWeb3 = this.getWeb3(sideChainConfig.host);
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);
+      this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
         while (this.numberOfRetries > 0) {
           const bridgeFactory = new BridgeFactory(this.config, this.logger, sideChainConfig);
@@ -126,7 +132,7 @@ export default abstract class Federator {
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
         this.numberOfRetries--;
-        this.logger.debug(`Runned ${this.config.federatorRetries - this.numberOfRetries} retrie`);
+        this.logger.debug(`Runned ${this.getCurrentRetrie()} retrie`);
         this.checkRetries();
         await utils.sleep(this.config.mainchain.blockTimeMs);
       }
