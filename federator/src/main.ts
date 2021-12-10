@@ -1,5 +1,4 @@
 import { Config } from './lib/config';
-import logConfig from '../config/log-config.json';
 import * as utils from './lib/utils';
 import Scheduler from './services/Scheduler';
 import Federator from './lib/FederatorERC';
