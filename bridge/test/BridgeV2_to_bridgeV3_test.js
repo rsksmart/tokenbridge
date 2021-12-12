@@ -5,6 +5,7 @@ const SideTokenFactory = artifacts.require('SideTokenFactory');
 const Federation = artifacts.require('Federation');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const AllowTokens = artifacts.require('AllowTokens');
+const UtilsV1 = artifacts.require('UtilsV1');
 const utils = require("./utils");
 
 contract('Bridge Multichain Deploy Check', async function (accounts) {
@@ -18,9 +19,12 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
   const symbolPrefix = 'bd';
 
   beforeEach(async function() {
-    this.allowTokens = await AllowTokens.new();
-    this.bridgeV3 = await BridgeV3.new();
+    // this.allowTokens = await AllowTokens.new();
+    // this.bridgeV3 = await BridgeV3.new();
+    const utilsV1 = await UtilsV1.new();
+    BridgeV2.link(utilsV1);
     this.bridgeV2 = await BridgeV2.new();
+
     // this.nftBridge = await NftBridge.new();
     // this.federator = await Federation.new();
     // this.proxyAdmin = await ProxyAdmin.new();
