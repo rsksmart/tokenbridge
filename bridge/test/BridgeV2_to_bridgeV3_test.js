@@ -25,7 +25,7 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
     BridgeV2.link(utilsV1);
     this.bridgeV2 = await BridgeV2.new();
 
-    // this.nftBridge = await NftBridge.new();
+    this.nftBridge = await NftBridge.new();
     // this.federator = await Federation.new();
     // this.proxyAdmin = await ProxyAdmin.new();
     // this.sideTokenFactory = await SideTokenFactory.new();
