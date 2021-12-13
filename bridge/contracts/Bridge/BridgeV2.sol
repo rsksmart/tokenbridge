@@ -184,7 +184,7 @@ contract BridgeV2 is Initializable, IBridgeV2, IERC777Recipient, UpgradablePausa
             fee = fee.add(modulo);
             amountMinusFees = amountMinusFees.sub(modulo);
         }
-        if(fee > 0) {
+        if (fee > 0) {
             IERC20(tokenToUse).safeTransfer(owner(), fee);
         }
         if (isASideToken) {
