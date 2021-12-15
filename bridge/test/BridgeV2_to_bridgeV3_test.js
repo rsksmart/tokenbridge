@@ -28,9 +28,12 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
   const tokenName = 'MAIN';
   const tokenSymbol = 'MAIN';
 
-  beforeEach(async function() {
+  before(async function() {
     const utilsV1 = await UtilsV1.new();
     BridgeV2.link(utilsV1);
+  });
+
+  beforeEach(async function() {
     this.bridgeV2 = await BridgeV2.new();
     this.bridgeV3 = await BridgeV3.new();
     this.allowTokens = await AllowTokens.new();
@@ -68,7 +71,7 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
 
   describe('Upgrate from BridgeV2 to BridgeV3', async function () {
     it('should update the contract version from v2 to v3', async function () {
-      const initializeDataBridgeV2 = await this.bridgeV2.contract.methods.initialize(bridgeManager, this.federator.address, this.allowTokensV0.address, this.sideTokenFactory.address, symbolPrefix).encodeABI();
+      const initializeDataBridgeV2 = await this.bridgeV2.contract.methods.initialize(bridgeManager, this.federationV2.address, this.allowTokensV0.address, this.sideTokenFactory.address, symbolPrefix).encodeABI();
       const bridgeProxy = await BridgeProxy.new(this.bridgeV2.address, this.proxyAdmin.address, initializeDataBridgeV2);
       const bridgeV2Implementation = new web3.eth.Contract(this.bridgeV2.abi, bridgeProxy.address);
 
