@@ -25,7 +25,7 @@ Or you can use a wallet with the abi of the contracts. See the ['interaction gui
 
 ## Contracts deployed on RSK, Ethereum, RSK Testnet and Kovan
 
-Here are the ['addresses'](./docs/ContractAdddresses.md) of the deployed contracts in the different networks.
+Here are the ['addresses'](./docs/ContractAddresses.md) of the deployed contracts in the different networks.
 
 ## Report Security Vulnerabilities
 
