@@ -327,7 +327,7 @@ contract("Bridge NFT", async function(accounts) {
         await mintAndApprove(this.token, this.NFTBridge.address);
         totalSupply++;
 
-        const receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
+        let receipt = await this.token.setTokenURI(defaultTokenId, defaultTokenURI);
         utils.checkRcpt(receipt);
 
         receipt = await this.NFTBridge.receiveTokensTo(

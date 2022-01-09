@@ -643,12 +643,12 @@
       },
       {
         "internalType": "string",
-        "name": "_originalTokenSymbol",
+        "name": "_tokenSymbol",
         "type": "string"
       },
       {
         "internalType": "string",
-        "name": "_originalTokenName",
+        "name": "_tokenName",
         "type": "string"
       },
       {
@@ -875,6 +875,26 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      }
+    ],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "address",
@@ -894,31 +914,6 @@
       {
         "internalType": "address",
         "name": "_sideTokenFactory",
-        "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "_symbolPrefix",
-        "type": "string"
-      }
-    ],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "initialize",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "sender",
         "type": "address"
       }
     ],
@@ -1287,19 +1282,6 @@
         "internalType": "contract ISideNFTTokenFactory",
         "name": "",
         "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "symbolPrefix",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "",
-        "type": "string"
       }
     ],
     "stateMutability": "view",
