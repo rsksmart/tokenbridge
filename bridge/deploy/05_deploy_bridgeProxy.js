@@ -10,7 +10,6 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const prefixSymbol = chains.tokenSymbol(network);
   const Bridge = await deployments.get('Bridge');
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
@@ -21,8 +20,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     multiSigAddress,
     deployer,
     deployer,
-    sideTokenFactoryAddress,
-    prefixSymbol
+    sideTokenFactoryAddress
   );
   await methodCall.call({ from: deployer })
 

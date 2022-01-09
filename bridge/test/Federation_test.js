@@ -340,7 +340,6 @@ contract('Federation', async function (accounts) {
         describe('Transactions', async function() {
             const originalTokenAddress = utils.getRandomAddress();
             const amount = web3.utils.toWei('10');
-            const symbol = 'e';
             const blockHash = utils.getRandomHash();
             const transactionHash = utils.getRandomHash();
             const logIndex = new BN(1);
@@ -370,8 +369,8 @@ contract('Federation', async function (accounts) {
                 await this.allowTokens.setToken(originalTokenAddress, typeId);
                 this.sideTokenFactory = await SideTokenFactory.new();
                 this.bridge = await Bridge.new();
-                await this.bridge.methods['initialize(address,address,address,address,string)'](deployer, this.federators.address,
-                    this.allowTokens.address, this.sideTokenFactory.address, symbol);
+                await this.bridge.methods['initialize(address,address,address,address)'](deployer, this.federators.address,
+                    this.allowTokens.address, this.sideTokenFactory.address);
                     await this.sideTokenFactory.transferPrimary(this.bridge.address);
                 await this.allowTokens.transferPrimary(this.bridge.address);
                 await this.federators.setBridge(this.bridge.address);
@@ -1153,13 +1152,12 @@ contract('Federation', async function (accounts) {
               beforeEach(async function () {
                 this.NFTBridge = await NftBridge.new();
                 await this.NFTBridge.methods[
-                  "initialize(address,address,address,address,string)"
+                  "initialize(address,address,address,address)"
                 ](
                   deployer,
                   this.federators.address,
                   this.allowTokens.address,
-                  this.sideTokenFactory.address,
-                  symbol
+                  this.sideTokenFactory.address
                 );
 
                 this.NFTtoken = await NFTERC721TestToken.new(tokenName, tokenSymbol, {
