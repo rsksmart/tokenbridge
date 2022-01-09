@@ -1,7 +1,8 @@
 const address = require('../hardhat/helper/address');
+const chains = require("../hardhat/helper/chains");
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
-  const {deployments} = hre;
+  const {deployments, network} = hre;
   const {deployer} = await getNamedAccounts();
   const {deploy, log} = deployments;
   const BRIDGE_LAST_VERSION = 'v4'
@@ -23,6 +24,14 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 
   if (deployResult.newlyDeployed) {
     log(`Contract Bridge deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: [],
+      });
+    }
   }
 };
 module.exports.id = 'deploy_bridge'; // id required to prevent reexecution
