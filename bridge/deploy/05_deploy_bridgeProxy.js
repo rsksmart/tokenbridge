@@ -24,17 +24,27 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   );
   await methodCall.call({ from: deployer })
 
+  const constructorArguments = [
+    Bridge.address,
+    proxyAdminAddress,
+    methodCall.encodeABI()
+  ];
+
   const deployProxyResult = await deploy('BridgeProxy', {
     from: deployer,
-    args: [
-      Bridge.address,
-      proxyAdminAddress,
-      methodCall.encodeABI()
-    ],
+    args: constructorArguments,
     log: true,
   });
   if (deployProxyResult.newlyDeployed) {
     log(`Contract BridgeProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: constructorArguments,
+      });
+    }
   }
 
 };

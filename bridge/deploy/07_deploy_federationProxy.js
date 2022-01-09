@@ -26,18 +26,28 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   );
   methodCall.call({from: deployer});
 
+  const constructorArguments = [
+    Federation.address,
+    proxyAdminAddress,
+    methodCall.encodeABI()
+  ];
+
   const deployProxyResult = await deploy('FederationProxy', {
     from: deployer,
     contract: 'TransparentUpgradeableProxy',
-    args: [
-      Federation.address,
-      proxyAdminAddress,
-      methodCall.encodeABI()
-    ],
+    args: constructorArguments,
     log: true
   });
   if (deployProxyResult.newlyDeployed) {
     log(`Contract FederationProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: constructorArguments,
+      });
+    }
   }
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
