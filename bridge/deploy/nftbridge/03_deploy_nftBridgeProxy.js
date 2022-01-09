@@ -9,8 +9,6 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer} = await getNamedAccounts();
   const {deploy, log, execute} = deployments
 
-  const prefixSymbol = chains.tokenSymbol(network);
-
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
@@ -22,8 +20,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     multiSigAddress,
     federatorProxyAddress,
     utils.NULL_ADDRESS,
-    SideNFTTokenFactory.address,
-    prefixSymbol
+    SideNFTTokenFactory.address
   );
   await methodCall.call({ from: deployer }) // call to check if anything is broken
 

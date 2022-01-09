@@ -50,7 +50,6 @@ contract NFTBridge is
 
   address payable internal federation;
   uint256 internal fixedFee;
-  string public symbolPrefix;
 
   mapping(uint256 => mapping(address => address)) public sideTokenByOriginalTokenByChain;
   mapping(address => OriginalNft) public originalTokenBySideToken;
@@ -71,12 +70,10 @@ contract NFTBridge is
     address _manager,
     address payable _federation,
     address _allowTokens,
-    address _sideTokenFactory,
-    string memory _symbolPrefix
+    address _sideTokenFactory
   ) public initializer {
     UpgradableOwnable.initialize(_manager);
     UpgradablePausable.__Pausable_init(_manager);
-    symbolPrefix = _symbolPrefix;
     allowTokens = IAllowTokens(_allowTokens);
     sideTokenFactory = ISideNFTTokenFactory(_sideTokenFactory);
     federation = _federation;
@@ -179,8 +176,8 @@ contract NFTBridge is
 
   function createSideNFTToken(
     address _originalTokenAddress,
-    string calldata _originalTokenSymbol,
-    string calldata _originalTokenName,
+    string calldata _tokenSymbol,
+    string calldata _tokenName,
     string calldata _baseURI,
     string calldata _contractURI,
     uint256 originChainId
@@ -188,10 +185,9 @@ contract NFTBridge is
     require(_originalTokenAddress != NULL_ADDRESS, "NFTBridge: Null original token address");
 
     require(getSideTokenByOriginalToken(originChainId, _originalTokenAddress) == NULL_ADDRESS, "NFTBridge: Side token already exists");
-    string memory sideTokenSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
     // Create side token
-    address sideTokenAddress = sideTokenFactory.createSideNFTToken(_originalTokenName, sideTokenSymbol, _baseURI, _contractURI);
+    address sideTokenAddress = sideTokenFactory.createSideNFTToken(_tokenName, _tokenSymbol, _baseURI, _contractURI);
 
     setSideTokenByOriginalToken(originChainId, _originalTokenAddress, sideTokenAddress);
 
@@ -200,7 +196,7 @@ contract NFTBridge is
     originalNft.nftAddress = _originalTokenAddress;
     setOriginalTokenBySideToken(sideTokenAddress, originalNft);
 
-    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, sideTokenSymbol, originChainId);
+    emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, _tokenSymbol, originChainId);
   }
 
   function claim(NFTClaimData calldata _claimData) external override {

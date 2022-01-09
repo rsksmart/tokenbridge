@@ -254,7 +254,7 @@ export class TransactionSender {
         this.logger.error('Transaction Hash Failed', txHash, err);
         this.logger.error('RawTx that failed Catch', rawTx);
       }
-      return { transactionHash: txHash, status: false };
+      return { transactionHash: txHash, status: false, error: err };
     }
   }
 }

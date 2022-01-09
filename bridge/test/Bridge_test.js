@@ -84,8 +84,8 @@ contract('Bridge', async function (accounts) {
         await this.allowTokens.setToken(this.token.address, this.typeId, { from: bridgeManager });
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
-            federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
+        await this.bridge.methods['initialize(address,address,address,address)'](bridgeManager,
+            federation, this.allowTokens.address, this.sideTokenFactory.address);
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
         await this.allowTokens.transferPrimary(this.bridge.address, { from: bridgeOwner });
     });
@@ -914,8 +914,8 @@ contract('Bridge', async function (accounts) {
             );
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
-                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address)'](bridgeManager,
+                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
             await this.mirrorAllowTokens.transferPrimary(this.mirrorBridge.address);
             // Set mirror wrapped currency
@@ -1325,8 +1325,8 @@ contract('Bridge', async function (accounts) {
                         this.typeId,
                         tokenWithDecimals.address,
                         decimals,
-                        "MAIN",
-                        "MAIN",
+                        "rMAIN",
+                        "MAIN on RSK",
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     );
@@ -1373,8 +1373,8 @@ contract('Bridge', async function (accounts) {
                         this.typeId,
                         tokenWithGranularity.address,
                         18,
-                        "MAIN",
-                        "MAIN",
+                        "rMAIN",
+                        "MAIN on RSK",
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
                     );
@@ -2408,8 +2408,8 @@ contract('Bridge', async function (accounts) {
                     0,
                     this.token.address,
                     6,
-                    'MAIN',
-                    'MAIN',
+                    'eMAIN',
+                    'MAIN on Ethereum',
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
