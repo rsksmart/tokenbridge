@@ -5,7 +5,9 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, wrappedCurrency, bridgeProxy} = await getNamedAccounts();
   const {log} = deployments;
 
-  if (bridgeProxy) return;
+  if (bridgeProxy) {
+    return;
+  }
 
   const Bridge = await deployments.get('Bridge');
   const BridgeProxy = await deployments.get('BridgeProxy');
