@@ -25,7 +25,7 @@ contract('SideToken', async function (accounts) {
     describe('constructor', async function () {
 
         it('should create side token', async function () {
-            let token = await SideToken.new("SIDE", "SIDE", tokenCreator, 1);
+            const token = await SideToken.new("SIDE", "SIDE", tokenCreator, 1);
             assert.isNotEmpty(token.address)
         });
         it('should fail empty minter address', async function () {

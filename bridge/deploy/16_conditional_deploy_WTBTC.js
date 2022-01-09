@@ -2,7 +2,9 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   const {deployer} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (network.live) return;
+  if (network.live) {
+    return;
+  }
 
   const initialSupply =  web3.utils.toWei('15000000000000000000000'); // value in wei
 

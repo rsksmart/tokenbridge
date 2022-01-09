@@ -75,9 +75,9 @@ contract('SideTokenFactory', async function (accounts) {
         await this.sideTokenFactory.transferPrimary(anAccount);
         assert.equal(await this.sideTokenFactory.primary(), anAccount);
 
-        let receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1, { from: anAccount });
-        let sideTokenAddress = receipt.logs[0].args[0];
-        let sideToken = await SideToken.at(sideTokenAddress);
+        const receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1, { from: anAccount });
+        const sideTokenAddress = receipt.logs[0].args[0];
+        const sideToken = await SideToken.at(sideTokenAddress);
 
         const minter = await sideToken.minter();
         assert.equal(minter, anAccount);
