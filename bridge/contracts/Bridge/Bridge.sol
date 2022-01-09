@@ -234,11 +234,11 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint8 _originalTokenDecimals,
 		string calldata _tokenSymbol,
 		string calldata _tokenName,
-		uint256 originChainId
+		uint256 _originChainId
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
 
-		address sideToken = sideTokenByOriginalToken(originChainId, _originalTokenAddress);
+		address sideToken = sideTokenByOriginalToken(_originChainId, _originalTokenAddress);
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
 		uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
@@ -246,15 +246,15 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		// Create side token
 		sideToken = sideTokenFactory.createSideToken(_tokenName, _tokenSymbol, granularity);
 
-		setSideTokenByOriginalAddressByChain(originChainId, _originalTokenAddress, sideToken);
+		setSideTokenByOriginalAddressByChain(_originChainId, _originalTokenAddress, sideToken);
 
 		OriginalToken memory originalToken;
-		originalToken.originChainId = originChainId;
+		originalToken.originChainId = _originChainId;
 		originalToken.tokenAddress = _originalTokenAddress;
 		setOriginalTokenBySideTokenByChain(sideToken, originalToken);
 		allowTokens.setToken(sideToken, _typeId);
 
-		emit NewSideToken(sideToken, _originalTokenAddress, _tokenSymbol, granularity, originChainId);
+		emit NewSideToken(sideToken, _originalTokenAddress, _tokenSymbol, granularity, _originChainId);
 	}
 
 	function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
