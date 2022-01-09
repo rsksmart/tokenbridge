@@ -754,6 +754,7 @@ contract("Bridge NFT", async function(accounts) {
     });
 
     describe("claim", async function () {
+      let symbol;
       let tokenAddress;
       let name;
       let baseURI;
