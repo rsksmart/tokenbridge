@@ -20,7 +20,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 
 	/**
 		@notice The minimum amount of votes to approve a transaction
-		@dev It should have more members than the required amount
+		@dev It should have at least the required amount of members
 		*/
 	uint public required;
 
@@ -45,7 +45,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 			(address) members => (bool) voted
 		)
 		@notice Votes by members by the transaction ID
-		@dev usually the members should approve the transaction by 50% + 1
+		@dev the members should approve the transaction by 50% + 1
 		*/
 	mapping (bytes32 => mapping (address => bool)) public votes;
 

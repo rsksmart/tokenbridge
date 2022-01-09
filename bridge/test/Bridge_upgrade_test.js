@@ -273,8 +273,8 @@ contract('Bridge upgrade test', async (accounts) => {
                             this.typeId,
                             this.token.address,
                             18,
-                            'MAIN',
-                            'MAIN',
+                            'rMAIN',
+                            'MAIN on RSK',
                             chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         ).send({from: managerAddress, gas: 4_000_000});
 

@@ -40,7 +40,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	address internal federation;
 	uint256 internal feePercentage;
-	string public symbolPrefix;
+	string public deprecatedSymbolPrefix;
 	// domainSeparator replaces uint256 internal _depprecatedLastDay;
 	bytes32 public domainSeparator;
 	uint256 internal _deprecatedSpentToday;
@@ -58,7 +58,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	bool public isUpgrading;
 	// Percentage with up to 2 decimals
 	uint256 constant public feePercentageDivider = 10000; // solhint-disable-line const-name-snakecase
-	//Bridge_v3 variables
+	//Bridge_v2 variables
 	bytes32 constant internal _erc777Interface = keccak256("ERC777Token"); // solhint-disable-line const-name-snakecase
 	IWrapped public wrappedCurrency;
 	mapping (bytes32 => bytes32) public transactionsDataHashes; // transactionHash => transactionDataHash
@@ -69,7 +69,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	bytes32 public constant CLAIM_TYPEHASH = 0xaf3ac34fea9cc1b1def33a9bdc482d988feb61b5015ae4a55e2a62bb3600d54c;
 	mapping(address => uint) public nonces;
 
-	//Bridge_v4 variables multichain
+	//Bridge_v3 variables multichain
 	mapping (uint256 => mapping(address => address)) public sideTokenByOriginalTokenByChain; // chainId => OriginalToken Address => SideToken Address
 	mapping (address => OriginalToken) public originalTokenBySideToken; // SideTokenAddress => struct {}
 	mapping (uint256 => mapping(address => bool)) public knownTokenByChain; // chainId => OriginalToken Address => Know
@@ -84,12 +84,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		address _manager,
 		address _federation,
 		address _allowTokens,
-		address _sideTokenFactory,
-		string memory _symbolPrefix
+		address _sideTokenFactory
 	) public initializer {
 		UpgradableOwnable.initialize(_manager);
 		UpgradablePausable.__Pausable_init(_manager);
-		symbolPrefix = _symbolPrefix;
 		allowTokens = IAllowTokens(_allowTokens);
 		sideTokenFactory = ISideTokenFactory(_sideTokenFactory);
 		federation = _federation;
@@ -234,8 +232,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 _typeId,
 		address _originalTokenAddress,
 		uint8 _originalTokenDecimals,
-		string calldata _originalTokenSymbol,
-		string calldata _originalTokenName,
+		string calldata _tokenSymbol,
+		string calldata _tokenName,
 		uint256 originChainId
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
@@ -244,10 +242,9 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
 		uint256 granularity = LibUtils.decimalsToGranularity(_originalTokenDecimals);
-		string memory newSymbol = string(abi.encodePacked(symbolPrefix, _originalTokenSymbol));
 
 		// Create side token
-		sideToken = sideTokenFactory.createSideToken(_originalTokenName, newSymbol, granularity);
+		sideToken = sideTokenFactory.createSideToken(_tokenName, _tokenSymbol, granularity);
 
 		setSideTokenByOriginalAddressByChain(originChainId, _originalTokenAddress, sideToken);
 
@@ -257,7 +254,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		setOriginalTokenBySideTokenByChain(sideToken, originalToken);
 		allowTokens.setToken(sideToken, _typeId);
 
-		emit NewSideToken(sideToken, _originalTokenAddress, newSymbol, granularity, originChainId);
+		emit NewSideToken(sideToken, _originalTokenAddress, _tokenSymbol, granularity, originChainId);
 	}
 
 	function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {

@@ -1,7 +1,7 @@
 {
   "name": "bridge",
   "private": true,
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Token Bridge Contracts",
   "scripts": {
     "preinstall": "npx npm-force-resolutions",
@@ -10,13 +10,11 @@
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solhint  \"contracts/**/*.sol\"",
     "compile": "npx hardhat compile --show-stack-traces",
-    "migrate": "rm -rf ./build && npx truffle migrate --reset",
     "test": "npx hardhat test --show-stack-traces",
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "deploy": "npx hardhat deploy --show-stack-traces --network",
     "deployIntegrationTag": "npx hardhat deploy --tags IntegrationTest,IntegrationTestNft --show-stack-traces --network",
-    "deployIntegrationTest": "npm run deploy rskregtest && npm run deploy development",
     "deployLocalIntegrationTest": "npm run deployIntegrationTag development && npm run deployIntegrationTag mirrorDevelopment",
     "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest",
     "verifyDeployments": "python hardhat/script/verify.py -n"
@@ -30,7 +28,7 @@
   ],
   "author": "IOVLabs",
   "engines": {
-    "node": ">=16"
+    "node": "16"
   },
   "dependencies": {
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
@@ -38,54 +36,24 @@
     "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
     "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
     "@truffle/compile-common": "^0.7.15",
-    "@truffle/hdwallet-provider": "^1.4.0",
     "chalk": "^4.1.0",
-    "hardhat": "^2.4.1",
-    "hardhat-contract-sizer": "^2.0.3",
-    "hardhat-deploy": "^0.8.11",
-<<<<<<< HEAD
-    "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
-    "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
-=======
->>>>>>> 3d87dd0 (update cross event var names)
-    "hardhat-gas-reporter": "^1.0.4",
-    "npm-force-resolutions": "0.0.3",
-    "resolve": "^1.13.0",
+    "hardhat": "^2.8.2",
+    "hardhat-contract-sizer": "^2.3.0",
+    "hardhat-deploy": "^0.9.24",
+    "hardhat-gas-reporter": "^1.0.6",
+    "npm-force-resolutions": "0.0.10",
+    "resolve": "^1.21.0",
     "solhint": "^3.3.6",
     "solidity-coverage": "^0.7.16",
-    "table": "^6.0.3",
-    "truffle": "^5.3.9",
-    "truffle-assertions": "^0.9.2",
-    "truffle-plugin-verify": "^0.5.9"
+    "truffle-assertions": "^0.9.2"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
-    "axios": ">=0.21.1",
     "coveralls": "^3.1.1",
-    "css-what": ">=5.0.1",
-    "elliptic": ">=6.5.4",
     "ethereum-waffle": "^3.4.0",
-    "glob-parent": ">=5.1.2",
     "hardhat-abi-exporter": "^2.2.1",
-    "node-fetch": ">=2.6.1",
-<<<<<<< HEAD
     "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.17",
-    "web3": ">=1.0.0",
-=======
->>>>>>> 3d87dd0 (update cross event var names)
-    "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.17",
-    "web3": ">=1.0.0",
-    "y18n": ">=5.0.5"
-  },
-  "resolutions": {
-    "css-what": ">=5.0.1",
-    "glob-parent": ">=5.1.2",
-    "elliptic": ">=6.5.4",
-    "y18n": ">=5.0.5",
-    "node-fetch": ">=2.6.1",
-    "axios": ">=0.21.1"
+    "prettier-plugin-solidity": "^1.0.0-beta.17"
   },
   "prettier": {
     "parser": "json5",
