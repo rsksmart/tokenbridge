@@ -107,33 +107,33 @@ module.exports = {
       },
       tags: ['staging'],
     },
-    // RSK
-    rsktestnetbsc: {
-      live: true,
-      url: 'https://public-node.testnet.rsk.co',
-      blockGasLimit: 6800000,
-      gasPrice: 68000000, // 0.06 gwei
-      network_id: chains.RSK_TEST_NET_CHAIN_ID,
-      token_symbol: 'b',
-      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
-      accounts: {
-        mnemonic: MNEMONIC,
-      },
-      tags: ['staging'],
-    },
-    rsktestnetrinkeby: {
-      live: true,
-      url: 'https://public-node.testnet.rsk.co',
-      blockGasLimit: 6800000,
-      gasPrice: 68000000, // 0.06 gwei
-      network_id: chains.RSK_TEST_NET_CHAIN_ID,
-      token_symbol: 'rRin',
-      hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
-      accounts: {
-        mnemonic: MNEMONIC,
-      },
-      tags: ['staging'],
-    },
+    // // RSK -> Previous to multichain bridge
+    // rsktestnetbsc: {
+    //   live: true,
+    //   url: 'https://public-node.testnet.rsk.co',
+    //   blockGasLimit: 6800000,
+    //   gasPrice: 68000000, // 0.06 gwei
+    //   network_id: chains.RSK_TEST_NET_CHAIN_ID,
+    //   token_symbol: 'b',
+    //   hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
+    //   accounts: {
+    //     mnemonic: MNEMONIC,
+    //   },
+    //   tags: ['staging'],
+    // },
+    // rsktestnetrinkeby: {
+    //   live: true,
+    //   url: 'https://public-node.testnet.rsk.co',
+    //   blockGasLimit: 6800000,
+    //   gasPrice: 68000000, // 0.06 gwei
+    //   network_id: chains.RSK_TEST_NET_CHAIN_ID,
+    //   token_symbol: 'rRin',
+    //   hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
+    //   accounts: {
+    //     mnemonic: MNEMONIC,
+    //   },
+    //   tags: ['staging'],
+    // },
     rskmainnet: {
       live: true,
       url: 'https://public-node.rsk.co',

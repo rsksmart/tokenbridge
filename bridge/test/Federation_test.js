@@ -119,10 +119,10 @@ contract('Federation', async function (accounts) {
             });
 
             it('should set NFT bridge correctly', async function() {
-                let receipt = await this.federators.setNFTBridge(bridgeNFT);
+                const receipt = await this.federators.setNFTBridge(bridgeNFT);
                 utils.checkRcpt(receipt)
 
-                let _bridgeNFT = await this.federators.bridgeNFT();
+                const _bridgeNFT = await this.federators.bridgeNFT();
                 assert.equal(_bridgeNFT.toLowerCase(), bridgeNFT.toLowerCase());
 
                 truffleAssert.eventEmitted(receipt, 'NFTBridgeChanged', (ev) => {
@@ -1108,7 +1108,7 @@ contract('Federation', async function (accounts) {
             });
 
             it('should fail since NFT bridge address is random', async function() {
-              let receipt = await this.federators.voteTransaction(
+              const receipt = await this.federators.voteTransaction(
                 originalTokenAddress,
                 anAccount,
                 anotherAccount,
@@ -1189,7 +1189,7 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let transactionId = await this.federators.getTransactionId(
+                const transactionId = await this.federators.getTransactionId(
                   this.NFTtoken.address,
                   anAccount,
                   anotherAccount,

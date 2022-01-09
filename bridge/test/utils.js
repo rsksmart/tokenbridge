@@ -160,7 +160,9 @@ function calculatePrefixesSuffixes(nodes) {
   }
 
   for (let k = 0, l = nodes.length; k < l; k++) {
-    if (k + 1 < l && nodes[k + 1].indexOf(nodes[k]) >= 0) continue;
+    if (k + 1 < l && nodes[k + 1].indexOf(nodes[k]) >= 0) {
+      continue;
+    }
 
     ns.push(nodes[k]);
   }

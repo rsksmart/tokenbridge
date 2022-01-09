@@ -2,7 +2,9 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const {deployer} = await getNamedAccounts()
     const {deploy, log} = deployments
 
-    if (network.live) return;
+    if (network.live) {
+      return;
+    }
 
     const deployResult = await deploy('MainToken', {
       from: deployer,

@@ -5,7 +5,9 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, allowTokensProxy} = await getNamedAccounts()
   const {log} = deployments
 
-  if (allowTokensProxy) return
+  if (allowTokensProxy) {
+    return;
+  }
 
   const Bridge = await deployments.get('Bridge');
   const MultiSigWallet = await deployments.get('MultiSigWallet');

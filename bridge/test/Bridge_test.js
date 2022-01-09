@@ -2630,9 +2630,9 @@ contract('Bridge', async function (accounts) {
         });
 
         it('should be successful', async function () {
-            let newAddress = utils.getRandomAddress();
+            const newAddress = utils.getRandomAddress();
             await this.bridge.changeSideTokenFactory(newAddress, { from: bridgeManager });
-            let result = await this.bridge.sideTokenFactory();
+            const result = await this.bridge.sideTokenFactory();
             assert.equal(result.toLowerCase(), newAddress.toLowerCase());
         });
     });
