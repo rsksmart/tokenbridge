@@ -1,6 +1,8 @@
 const address = require('../hardhat/helper/address');
+const chains = require('../hardhat/helper/chains');
 
-module.exports = async function({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
+module.exports = async function(hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
   const {deployer} = await getNamedAccounts();
   const {deploy, log} = deployments;
   const ALLOW_TOKEN_LAST_VERSION = 'v2'
@@ -22,6 +24,14 @@ module.exports = async function({getNamedAccounts, deployments}) { // HardhatRun
 
   if (deployResult.newlyDeployed) {
     log(`Contract AllowTokens deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: [],
+      });
+    }
   }
 };
 module.exports.id = 'deploy_allow_tokens'; // id required to prevent reexecution

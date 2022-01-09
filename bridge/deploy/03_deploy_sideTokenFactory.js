@@ -1,4 +1,7 @@
-module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRuntimeEnvironment
+const chains = require("../hardhat/helper/chains");
+
+module.exports = async function (hre) { // HardhatRuntimeEnvironment
+  const {getNamedAccounts, deployments, network} = hre;
   const {deployer, bridgeProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
@@ -14,6 +17,14 @@ module.exports = async function ({getNamedAccounts, deployments}) { // HardhatRu
 
   if (deployResult.newlyDeployed) {
     log(`Contract SideTokenFactory deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: [],
+      });
+    }
   }
 };
 module.exports.id = 'deploy_sideTokenFactory'; // id required to prevent reexecution
