@@ -24,19 +24,29 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   );
   await methodCall.call({ from: deployer }) // call to check if anything is broken
 
+  const constructorArguments = [
+    NFTBridge.address,
+    proxyAdminAddress,
+    methodCall.encodeABI()
+  ];
+
   const deployProxyResult = await deploy(nftBridgeProxyName, {
     from: deployer,
     contract: 'TransparentUpgradeableProxy',
-    args: [
-      NFTBridge.address,
-      proxyAdminAddress,
-      methodCall.encodeABI()
-    ],
+    args: constructorArguments,
     log: true,
   });
 
   if (deployProxyResult.newlyDeployed) {
     log(`Contract ${nftBridgeProxyName} deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: constructorArguments,
+      });
+    }
   }
 
   // TODO: add NFTBridgeProxy addresses to hardhat config once it's deployed - and use it here.
