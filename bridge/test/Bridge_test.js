@@ -51,6 +51,8 @@ contract('Bridge', async function (accounts) {
     const tokenName = 'MAIN';
     const tokenSymbol = 'MAIN';
     const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
+    // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
+    const chainId = await web3.eth.getChainId();
 
     before(async function () {
         await utils.saveState();
@@ -437,6 +439,16 @@ contract('Bridge', async function (accounts) {
                       "indexed": false,
                       "name": "_userData",
                       "type": "bytes"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
                     }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
@@ -445,6 +457,8 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, anAccount);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
@@ -497,6 +511,16 @@ contract('Bridge', async function (accounts) {
                       "indexed": false,
                       "name": "_userData",
                       "type": "bytes"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
                     }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
@@ -505,6 +529,8 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, anAccount);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(mockContract.address);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
@@ -558,14 +584,14 @@ contract('Bridge', async function (accounts) {
                     },
                     {
                       "indexed": false,
-                      "name": "originChainId",
+                      "name": "_originChainId",
                       "type": "uint256"
                     },
                     {
                       "indexed": false,
-                      "name": "destinationChainId",
+                      "name": "_destinationChainId",
                       "type": "uint256"
-                    },
+                    }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
@@ -573,6 +599,8 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
@@ -627,6 +655,16 @@ contract('Bridge', async function (accounts) {
                       "indexed": false,
                       "name": "_userData",
                       "type": "bytes"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_originChainId",
+                      "type": "uint256"
+                    },
+                    {
+                      "indexed": false,
+                      "name": "_destinationChainId",
+                      "type": "uint256"
                     }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
@@ -635,6 +673,8 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount.sub(fees).toString());
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount).toString());
@@ -1444,9 +1484,6 @@ contract('Bridge', async function (accounts) {
                 });
 
                 it('should have domainSeparator', async function() {
-                    // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
-                    const chainId = await web3.eth.getChainId();
-
                     const expectedTypeHash = keccak256(
                         web3.eth.abi.encodeParameters(
                             ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],

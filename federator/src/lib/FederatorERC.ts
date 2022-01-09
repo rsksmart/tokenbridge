@@ -245,8 +245,8 @@ export default class FederatorERC extends Federator {
       _decimals: decimals,
       _granularity: granularity,
       _typeId: typeId,
-      originChainId: originChainIdStr,
-      destinationChainId: destinationChainIdStr,
+      _originChainId: originChainIdStr,
+      _destinationChainId: destinationChainIdStr,
     } = processLogParams.log.returnValues;
     this.logger.trace('log.returnValues', processLogParams.log.returnValues);
 
