@@ -11,7 +11,7 @@ contract("SideNFTToken", async function(accounts) {
 
   describe("constructor", async function() {
     it("should create side token", async function() {
-      let token = await SideToken.new(
+      const token = await SideToken.new(
         tokenName,
         tokenSymbol,
         tokenCreator,
