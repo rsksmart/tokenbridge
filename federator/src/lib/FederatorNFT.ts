@@ -169,7 +169,9 @@ export default class FederatorNFT extends Federator {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
       });
-      if (!logs) throw new Error('Failed to obtain the logs');
+      if (!logs) {
+        throw new Error('Failed to obtain the logs');
+      }
 
       this.logger.info(`Found ${logs.length} logs`);
       await this._processLogs({

@@ -70,7 +70,7 @@ function getMainchainFederators(keys, fedConfig) {
 }
 
 function getSidechainFederators(keys, sideConfig) {
-  let federators = [];
+  const federators = [];
   sideConfig.sidechain = [sideConfig.sidechain];
   const logWrapperFederator = logs.Logs.getInstance().getLogger(
     logs.LOGGER_CATEGORY_TEST_FEDERATOR_NFT
@@ -180,7 +180,7 @@ async function transferNFT(
     logger.debug("Get the destination token address");
 
     // Pick token id to mint according to total supply, to be able to run the test N times without redeploying the contracts.
-    let tokenSupply = await originTokenContract.methods.totalSupply().call();
+    const tokenSupply = await originTokenContract.methods.totalSupply().call();
     const tokenId = parseInt(tokenSupply);
 
     const tokenSymbol = "drop";

@@ -4,7 +4,9 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   const {deployer, multiSig} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (multiSig) return;
+  if (multiSig) {
+    return;
+  }
 
   const deployResult = await deploy('MultiSigWallet', {
     from: deployer,
