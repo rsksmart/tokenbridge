@@ -23,7 +23,6 @@ contract("Bridge NFT", async function(accounts) {
   const tokenSymbol = "drop";
   const tokenBaseURI = "ipfs:/";
   const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
-  const sideTokenSymbolPrefix = "e";
   const newSideNFTTokenEventType = "NewSideNFTToken";
   const defaultTokenId = 9;
   const defaultTokenURI = "/ipfs/QmYBX4nZfrHMPFUD9CJcq82Pexp8bpgtf89QBwRNtDQihS";
@@ -74,23 +73,21 @@ contract("Bridge NFT", async function(accounts) {
     this.sideChainSideTokenFactory = await SideNFTTokenFactory.new();
 
     await this.NFTBridge.methods[
-      "initialize(address,address,address,address,string)"
+      "initialize(address,address,address,address)"
     ](
       bridgeManager,
       federation,
       this.allowTokens.address,
-      this.mainChainSideTokenFactory.address,
-      sideTokenSymbolPrefix
+      this.mainChainSideTokenFactory.address
     );
 
     await this.sideNFTBridge.methods[
-        "initialize(address,address,address,address,string)"
+        "initialize(address,address,address,address)"
         ](
         bridgeManager,
         federation,
         this.allowTokens.address,
-        this.sideChainSideTokenFactory.address,
-        sideTokenSymbolPrefix
+        this.sideChainSideTokenFactory.address
     );
 
     await this.mainChainSideTokenFactory.transferPrimary(this.NFTBridge.address);
@@ -539,8 +536,9 @@ contract("Bridge NFT", async function(accounts) {
       });
 
       it("creates token correctly and emits expected event when inputs are correct", async function() {
+        const newTokenSymbol = `r${tokenSymbol}`
         let receipt = await this.NFTBridge.createSideNFTToken(
-            tokenAddress, symbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
+            tokenAddress, newTokenSymbol, name, baseURI, contractURI, chains.HARDHAT_TEST_NET_CHAIN_ID, {from: bridgeManager}
         );
 
         utils.checkRcpt(receipt);
@@ -552,7 +550,7 @@ contract("Bridge NFT", async function(accounts) {
             newSideNFTTokenAddress = event._newSideNFTTokenAddress;
             return (
               event._originalTokenAddress === tokenAddress &&
-              event._newSymbol === `${sideTokenSymbolPrefix}${tokenSymbol}`
+              event._newSymbol === newTokenSymbol
             );
           }
         );
@@ -772,9 +770,11 @@ contract("Bridge NFT", async function(accounts) {
         contractURI = await this.token.contractURI();
         tokenAddress = this.token.address;
 
+        const newTokenSymbol = `r${tokenSymbol}`
+
         // Side NFT token contract is created.
         let receipt = await this.sideNFTBridge.createSideNFTToken(
-          tokenAddress, symbol, name, baseURI, contractURI, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: bridgeManager}
+          tokenAddress, newTokenSymbol, name, baseURI, contractURI, chains.ETHEREUM_MAIN_NET_CHAIN_ID, {from: bridgeManager}
         );
         utils.checkRcpt(receipt);
         truffleAssert.eventEmitted(
@@ -784,7 +784,7 @@ contract("Bridge NFT", async function(accounts) {
               sideTokenAddress = event._newSideNFTTokenAddress;
               return (
                   event._originalTokenAddress === tokenAddress &&
-                  event._newSymbol === `${sideTokenSymbolPrefix}${tokenSymbol}`
+                  event._newSymbol === newTokenSymbol
               );
             }
         );

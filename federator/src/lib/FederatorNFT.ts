@@ -447,6 +447,7 @@ export default class FederatorNFT extends Federator {
             blockHash,
             transactionHash,
             logIndex,
+            error: receipt.error,
           },
         }),
       );
