@@ -8,7 +8,9 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   // if we have the bridge proxy address
   // doesn't need to deploy a new SideTokenFactory
   // because most probably the sideTokenFactory already exists
-  if (bridgeProxy) return;
+  if (bridgeProxy) {
+    return;
+  }
 
   const deployResult = await deploy('SideTokenFactory', {
     from: deployer,
