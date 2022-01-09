@@ -100,15 +100,15 @@ contract("SideNFTTokenFactory", async function(accounts) {
     await this.sideNFTTokenFactory.transferPrimary(anAccount);
     assert.equal(await this.sideNFTTokenFactory.primary(), anAccount);
 
-    let receipt = await this.sideNFTTokenFactory.createSideNFTToken(
+    const receipt = await this.sideNFTTokenFactory.createSideNFTToken(
       tokenName,
       tokenSymbol,
       tokenBaseURI,
       tokenContractURI,
       { from: anAccount }
     );
-    let sideTokenAddress = receipt.logs[0].args[0];
-    let sideToken = await SideNFTToken.at(sideTokenAddress);
+    const sideTokenAddress = receipt.logs[0].args[0];
+    const sideToken = await SideNFTToken.at(sideTokenAddress);
 
     const minter = await sideToken.minter();
     assert.equal(minter, anAccount);
