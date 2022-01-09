@@ -172,7 +172,15 @@ export default class FederatorNFT extends Federator {
       if (!logs) throw new Error('Failed to obtain the logs');
 
       this.logger.info(`Found ${logs.length} logs`);
-      await this._processLogs({ sideChainId, mainChainId, logs, currentBlock, transactionSender, federationFactory, sideChainConfig });
+      await this._processLogs({
+        sideChainId,
+        mainChainId,
+        logs,
+        currentBlock,
+        transactionSender,
+        federationFactory,
+        sideChainConfig,
+      });
       this._saveProgress(this.getLastBlockPath(sideChainId, mainChainId), toPagedBlock.toString());
       fromPageBlock = toPagedBlock + 1;
     }

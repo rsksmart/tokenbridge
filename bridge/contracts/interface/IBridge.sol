@@ -91,7 +91,7 @@ interface IBridge {
 		uint8 _originalTokenDecimals,
 		string calldata _originalTokenSymbol,
 		string calldata _originalTokenName,
-		uint256 chainId
+		uint256 _chainId
 	) external;
 
 	function getTransactionDataHash(
@@ -110,8 +110,8 @@ interface IBridge {
 		address indexed _to,
 		uint256 _amount,
 		bytes _userData,
-		uint256 originChainId,
-		uint256 destinationChainId
+		uint256 _originChainId,
+		uint256 _destinationChainId
 	);
 
 	event NewSideToken(
@@ -119,7 +119,7 @@ interface IBridge {
 		address indexed _originalTokenAddress,
 		string _newSymbol,
 		uint256 _granularity,
-		uint256 chainId
+		uint256 _chainId
 	);
 	event AcceptedCrossTransfer(
 		bytes32 indexed _transactionHash,
