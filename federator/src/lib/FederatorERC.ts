@@ -486,6 +486,7 @@ export default class FederatorERC extends Federator {
               logIndex: voteTransactionParams.logIndex,
               decimals: voteTransactionParams.decimals,
               granularity: voteTransactionParams.granularity,
+              error: receipt.error,
             },
           }),
         );

@@ -21,7 +21,7 @@ const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
  */
 module.exports = {
   solidity: {
-    version: '0.8.0',
+    version: '0.8.9', // Max Supported by hardhat https://hardhat.org/reference/solidity-support.html
     settings: {
       evmVersion: 'istanbul',
       optimizer: {
