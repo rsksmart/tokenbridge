@@ -5,7 +5,7 @@ const chains = require('../hardhat/helper/chains');
 const address = require('../hardhat/helper/address');
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
-  const {getNamedAccounts, deployments} = hre;
+  const {getNamedAccounts, deployments, network} = hre;
   const {deployer, allowTokensProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
@@ -31,19 +31,29 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   );
   methodCall.call({from: deployer});
 
+  const constructorArguments = [
+    AllowTokens.address,
+    proxyAdminAddress,
+    methodCall.encodeABI()
+  ];
+
   const deployResultProxy = await deploy('AllowTokensProxy', {
     from: deployer,
     contract: 'TransparentUpgradeableProxy',
-    args: [
-      AllowTokens.address,
-      proxyAdminAddress,
-      methodCall.encodeABI()
-    ],
+    args: constructorArguments,
     log: true
   });
 
   if (deployResultProxy.newlyDeployed) {
     log(`Contract AllowTokensProxy deployed at ${deployResultProxy.address} using ${deployResultProxy.receipt.gasUsed.toString()} gas`);
+
+    if(network.live && !chains.isRSK(network.config.network_id)) {
+      log(`Startig Verification of ${deployResult.address}`);
+      await hre.run("verify:verify", {
+        address: deployResult.address,
+        constructorArguments: constructorArguments,
+      });
+    }
   }
 };
 module.exports.id = 'deploy_allow_tokens_proxy'; // id required to prevent reexecution
