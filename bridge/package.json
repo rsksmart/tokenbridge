@@ -52,7 +52,15 @@
     "ethereum-waffle": "^3.4.0",
     "hardhat-abi-exporter": "^2.2.1",
     "prettier": "^2.3.2",
-    "prettier-plugin-solidity": "^1.0.0-beta.17"
+    "prettier-plugin-solidity": "^1.0.0-beta.17",
+    "axios": "^0.21.2",
+    "tar": ">=4.4.18",
+    "colors": "1.4.0"
+  },
+  "resolutions": {
+    "axios": "^0.21.2",
+    "tar": ">=4.4.18",
+    "colors": "^1.4.0"
   },
   "prettier": {
     "parser": "json5",

@@ -180,6 +180,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256	_destinationChainId
 	) external whenNotPaused nonReentrant override {
 		require(_msgSender() == federation, "Bridge: Not Federation");
+		checkChainId(_originChainId);
+		checkChainId(_destinationChainId);
 		require(knownToken(_originChainId, _originalTokenAddress) ||
 			sideTokenByOriginalToken(_originChainId, _originalTokenAddress) != NULL_ADDRESS,
 			"Bridge: Unknown token"
@@ -228,6 +230,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		);
 	}
 
+	function checkChainId(uint256 chainId) internal pure {
+		require(chainId > 0, "Bridge: ChainId is 0");
+	}
+
 	function createSideToken(
 		uint256 _typeId,
 		address _originalTokenAddress,
@@ -237,7 +243,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 _originChainId
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
-
+		checkChainId(_originChainId);
 		address sideToken = sideTokenByOriginalToken(_originChainId, _originalTokenAddress);
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
@@ -409,6 +415,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		address payable _relayer,
 		uint256 _fee
 	) internal returns (uint256) {
+		checkChainId(chainId);
 		if (knownToken(chainId, originalTokenAddress)) {
 			return _claimCrossBackToToken(
 				originalTokenAddress,
@@ -535,6 +542,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 destinationChainId
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
 		require(block.chainid != destinationChainId, "Bridge: destination chain id equal current chain id");
+		checkChainId(destinationChainId);
 		setKnownTokenByChain(destinationChainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
