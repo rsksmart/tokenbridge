@@ -4,7 +4,6 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
-const chains = require('../hardhat/helper/chains');
 const truffleAssert = require('truffle-assertions');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
