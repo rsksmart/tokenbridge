@@ -119,8 +119,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		_;
 	}
 
-	function isCurrentChainId(uint256 chainId) private view returns(bool) {
-		return chainId == block.chainid;
+	function shouldBeCurrentChainId(uint256 chainId) internal view {
+		require(chainId == block.chainid, "Bridge: Not block.chainid");
 	}
 
 	function sideTokenByOriginalToken(uint256 chainId, address originalToken) public view returns(address) {
@@ -180,6 +180,8 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256	_destinationChainId
 	) external whenNotPaused nonReentrant override {
 		require(_msgSender() == federation, "Bridge: Not Federation");
+		checkChainId(_originChainId);
+		shouldBeCurrentChainId(_destinationChainId);
 		require(knownToken(_originChainId, _originalTokenAddress) ||
 			sideTokenByOriginalToken(_originChainId, _originalTokenAddress) != NULL_ADDRESS,
 			"Bridge: Unknown token"
@@ -228,6 +230,10 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		);
 	}
 
+	function checkChainId(uint256 chainId) internal pure {
+		require(chainId > 0, "Bridge: ChainId is 0");
+	}
+
 	function createSideToken(
 		uint256 _typeId,
 		address _originalTokenAddress,
@@ -237,7 +243,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 _originChainId
 	) external onlyOwner override {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
-
+		checkChainId(_originChainId);
 		address sideToken = sideTokenByOriginalToken(_originChainId, _originalTokenAddress);
 		require(sideToken == NULL_ADDRESS, "Bridge: Already exists");
 
@@ -380,14 +386,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 
 	function emitClaimed(
 		ClaimData calldata _claimData,
-		address originalTokenAddress,
+		address _originalTokenAddress,
 		address payable _reciever,
 		address payable _relayer,
 		uint256 _fee
 	) internal {
 		emit Claimed(
 			_claimData.transactionHash,
-			originalTokenAddress,
+			_originalTokenAddress,
 			_claimData.to,
 			senderAddresses[_claimData.transactionHash],
 			_claimData.amount,
@@ -402,16 +408,17 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function _claimCross(
-		uint256 chainId,
-		address originalTokenAddress,
+		uint256 _originalChainId,
+		address _originalTokenAddress,
 		address payable _reciever,
 		uint256 _amount,
 		address payable _relayer,
 		uint256 _fee
 	) internal returns (uint256) {
-		if (knownToken(chainId, originalTokenAddress)) {
+		checkChainId(_originalChainId);
+		if (knownToken(_originalChainId, _originalTokenAddress)) {
 			return _claimCrossBackToToken(
-				originalTokenAddress,
+				_originalTokenAddress,
 				_reciever,
 				_amount,
 				_relayer,
@@ -420,7 +427,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		}
 
 		return _claimCrossToSideToken(
-			sideTokenByOriginalToken(chainId, originalTokenAddress),
+			sideTokenByOriginalToken(_originalChainId, _originalTokenAddress),
 			_reciever,
 			_amount,
 			_relayer,
@@ -429,20 +436,20 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function _claimCrossToSideToken(
-		address sideToken,
+		address _sideToken,
 		address payable _receiver,
 		uint256 _amount,
 		address payable _relayer,
 		uint256 _fee
 	) internal returns (uint256 receivedAmount) {
-		require(sideToken != NULL_ADDRESS, "Bridge: side token is null");
-		uint256 granularity = IERC777(sideToken).granularity();
+		require(_sideToken != NULL_ADDRESS, "Bridge: side token is null");
+		uint256 granularity = IERC777(_sideToken).granularity();
 		uint256 formattedAmount = _amount.mul(granularity);
 		require(_fee <= formattedAmount, "Bridge: fee too high");
 		receivedAmount = formattedAmount.sub(_fee);
-		ISideToken(sideToken).mint(_receiver, receivedAmount, "", "");
+		ISideToken(_sideToken).mint(_receiver, receivedAmount, "", "");
 		if (_fee > 0) {
-			ISideToken(sideToken).mint(_relayer, _fee, "", "relayer fee");
+			ISideToken(_sideToken).mint(_relayer, _fee, "", "relayer fee");
 		}
 		return receivedAmount;
 	}
@@ -535,6 +542,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		uint256 destinationChainId
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
 		require(block.chainid != destinationChainId, "Bridge: destination chain id equal current chain id");
+		checkChainId(destinationChainId);
 		setKnownTokenByChain(destinationChainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
