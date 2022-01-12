@@ -118,11 +118,11 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
 		*/
 	function setNFTBridge(address _bridgeNFT) external onlyOwner override {
+		require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
 		_setNFTBridge(_bridgeNFT);
 	}
 
 	function _setNFTBridge(address _bridgeNFT) internal {
-		require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
 		bridgeNFT = INFTBridge(_bridgeNFT);
 		emit NFTBridgeChanged(_bridgeNFT);
 	}
@@ -158,6 +158,10 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		return votes[transactionIdMultichain][_msgSender()] || votes[transactionId][_msgSender()];
 	}
 
+	function shouldBeCurrentChainId(uint256 chainId) internal view {
+		require(chainId == block.chainid, "Federation: Not block.chainid");
+	}
+
 	/**
 		@notice Vote in a transaction, if it has enough votes it accepts the transfer
 		@param originalTokenAddress The address of the token in the origin (main) chain
@@ -183,6 +187,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		uint256 originChainId,
 		uint256	destinationChainId
 	) external onlyMember override {
+		shouldBeCurrentChainId(destinationChainId);
 		bytes32 transactionId = keccak256(
 			abi.encodePacked(
 				originalTokenAddress,
