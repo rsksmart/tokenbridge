@@ -14,6 +14,7 @@ const AllowTokensV0 = artifacts.require('./AllowTokensV0');
 const AllowTokensV1 = artifacts.require('./AllowTokens');
 const MainToken = artifacts.require('./MainToken');
 
+const truffleAssertions = require('truffle-assertions');
 const chains = require('../hardhat/helper/chains');
 const utils = require('./utils');
 const toWei = web3.utils.toWei;
@@ -178,7 +179,10 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(owner, 0);
 
                     const bridgeLogic = await BridgeV3.new();
-                    await utils.expectThrow(this.proxyAdmin.upgrade(this.proxyBridge.options.address, bridgeLogic.address));
+                    await truffleAssertions.fails(
+                        this.proxyAdmin.upgrade(this.proxyBridge.options.address, bridgeLogic.address),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('should transfer ownership', async () => {
@@ -191,7 +195,10 @@ contract('Bridge upgrade test', async (accounts) => {
                     assert.equal(owner, anAccount);
 
                     const bridgeLogic = await BridgeV3.new();
-                    await utils.expectThrow(this.proxyAdmin.upgrade(this.proxyBridge.options.address, bridgeLogic.address));
+                    await truffleAssertions.fails(
+                        this.proxyAdmin.upgrade(this.proxyBridge.options.address, bridgeLogic.address),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
             });// end upgrade governance
@@ -243,9 +250,10 @@ contract('Bridge upgrade test', async (accounts) => {
                     });
 
                     it('should have removed the method tokenFallback', async () => {
-                        await utils.expectThrow(
-                            this.token.transferAndCall(this.proxyBridge.options.address, web3.utils.toWei('1000'), '0x'),
-                            { from: deployerAddress }
+                        await truffleAssertions.fails(
+                            this.token.transferAndCall(this.proxyBridge.options.address, web3.utils.toWei('1000'), '0x',
+                            { from: deployerAddress }),
+                            truffleAssertions.ErrorType.REVERT
                         );
                     });
 

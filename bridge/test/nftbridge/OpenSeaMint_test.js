@@ -1,6 +1,6 @@
 /* libraries used */
+const truffleAssertions = require('truffle-assertions');
 const { toBN } = require('web3-utils')
-const utils = require('../utils');
 
 /* Contracts in this test */
 const OpenSea721 = artifacts.require('./OpenSea721.sol');
@@ -40,9 +40,10 @@ contract('Interaction with OpenSea721', (accounts) => {
     it('should fail transfer the tokens called by other account without approval', async () => {
       await instance.mintTo(owner)
       tokenId++;
-      await utils.expectThrow(
-        instance.safeTransferFrom(owner, userA, tokenId, '0x', {from: otherAccount}),
-        'ERC1155: caller is not owner nor approved'
+      await truffleAssertions.fails(
+        instance.safeTransferFrom(owner, userA, tokenId, {from: otherAccount}),
+        truffleAssertions.ErrorType.REVERT,
+        'ERC721: transfer caller is not owner nor approved'
       );
     });
     it('should transfer the tokens called by other account with approval', async () => {
