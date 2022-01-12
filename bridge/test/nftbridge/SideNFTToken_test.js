@@ -1,6 +1,6 @@
 const SideToken = artifacts.require("./SideNFTToken");
 const utils = require("../utils");
-const truffleAssert = require("truffle-assertions");
+const truffleAssertions = require("truffle-assertions");
 
 contract("SideNFTToken", async function(accounts) {
   const tokenCreator = accounts[0];
@@ -22,7 +22,7 @@ contract("SideNFTToken", async function(accounts) {
     });
 
     it("should fail empty minter address", async function() {
-      await truffleAssert.fails(
+      await truffleAssertions.fails(
         SideToken.new(
           tokenName,
           tokenSymbol,

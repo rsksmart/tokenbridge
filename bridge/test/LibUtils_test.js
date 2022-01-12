@@ -4,6 +4,7 @@ const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed')
 const SideToken = artifacts.require('./SideToken');
 
 const BN = web3.utils.BN;
+const truffleAssertions = require('truffle-assertions');
 const utils = require('./utils');
 
 contract('LibUtils', async function (accounts) {
@@ -34,7 +35,7 @@ contract('LibUtils', async function (accounts) {
         });
 
         it('decimals to granularity should fail over 18 decimals', async function () {
-            await utils.expectThrow(this.utilsLib.decimalsToGranularity(19));
+            await truffleAssertions.fails(this.utilsLib.decimalsToGranularity(19), truffleAssertions.ErrorType.REVERT);
         });
 
     });
@@ -49,11 +50,11 @@ contract('LibUtils', async function (accounts) {
         });
 
         it('Throw if is not a contract', async function () {
-            await utils.expectThrow(this.utilsLib.getDecimals(owner));
+            await truffleAssertions.fails(this.utilsLib.getDecimals(owner), truffleAssertions.ErrorType.REVERT);
         });
 
         it('Throw if does not have decimals()', async function () {
-            await utils.expectThrow(this.utilsLib.getDecimals(this.utilsLib.address));
+            await truffleAssertions.fails(this.utilsLib.getDecimals(this.utilsLib.address), truffleAssertions.ErrorType.REVERT);
         });
 
         it('from  uint256', async function () {
