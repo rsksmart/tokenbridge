@@ -5,7 +5,7 @@ jobs:
   build:
     working_directory: ~/repo
     docker:
-      - image: circleci/node:16.13.2
+      - image: circleci/node:lts
       # The first ganache-cli container is meant to simulate a main chain, and the second one for a side chain (integration testing only)
       - image: trufflesuite/ganache-cli
         # The gas limit is 6700000 to avoid trying to deploy a contract larger than expected
