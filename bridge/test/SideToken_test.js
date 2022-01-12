@@ -2,11 +2,10 @@ const SideToken = artifacts.require('./SideToken');
 const mockERC677Receiver = artifacts.require('./mockERC677Receiver');
 const mockERC777Recipient = artifacts.require('./mockERC777Recipient');
 
-const truffleAssert = require('truffle-assertions');
+const truffleAssertions = require('truffle-assertions');
 const ethUtil = require('ethereumjs-util');
 
 const utils = require('./utils');
-const expectThrow = utils.expectThrow;
 const keccak256 = web3.utils.keccak256;
 
 contract('SideToken', async function (accounts) {
@@ -29,11 +28,11 @@ contract('SideToken', async function (accounts) {
             assert.isNotEmpty(token.address)
         });
         it('should fail empty minter address', async function () {
-            await utils.expectThrow(SideToken.new("SIDE", "SIDE", '0x', 1));
+            await truffleAssertions.fails(SideToken.new("SIDE", "SIDE", utils.NULL_ADDRESS, 1), truffleAssertions.ErrorType.REVERT);
         });
 
         it('should fail empty granularity', async function () {
-            await utils.expectThrow(SideToken.new("SIDE", "SIDE", tokenCreator, 0));
+            await truffleAssertions.fails(SideToken.new("SIDE", "SIDE", tokenCreator, 0), truffleAssertions.ErrorType.REVERT);
         });
     });
 
@@ -77,7 +76,10 @@ contract('SideToken', async function (accounts) {
         });
 
         it('mint only default operators', async function () {
-            await expectThrow(this.token.mint(anAccount, 1000, '0x', '0x', { from: anAccount }));
+            await truffleAssertions.fails(
+                this.token.mint(anAccount, 1000, '0x', '0x', { from: anAccount }),
+                truffleAssertions.ErrorType.REVERT
+            );
 
             const creatorBalance = await this.token.balanceOf(tokenCreator);
             assert.equal(creatorBalance, 0);
@@ -180,12 +182,18 @@ contract('SideToken', async function (accounts) {
 
         it('transferAndCall to account', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-            await expectThrow(this.token.transferAndCall(anotherAccount, 400, '0x', { from: anAccount }));
+            await truffleAssertions.fails(
+                this.token.transferAndCall(anotherAccount, 400, '0x', { from: anAccount }),
+                truffleAssertions.ErrorType.REVERT
+            );
         });
 
         it('transferAndCalls to empty account', async function () {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
-            await expectThrow(this.token.transferAndCall('0x', 400, '0x', { from: anAccount }));
+            await truffleAssertions.fails(
+                this.token.transferAndCall(utils.NULL_ADDRESS, 400, '0x', { from: anAccount }),
+                truffleAssertions.ErrorType.REVERT
+            );
         });
 
         it('transferAndCalls to contract', async function () {
@@ -236,7 +244,10 @@ contract('SideToken', async function (accounts) {
             await this.token.mint(anAccount, 1000, '0x', '0x', { from: tokenCreator });
 
             let receiver = await SideToken.new("SIDE", "SIDE", tokenCreator, '1');
-            await expectThrow(this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }));
+            await truffleAssertions.fails(
+                this.token.transferAndCall(receiver.address, 400, '0x000001',{ from: anAccount }),
+                truffleAssertions.ErrorType.REVERT
+            );
         });
 
     });
@@ -400,7 +411,7 @@ contract('SideToken', async function (accounts) {
                 s
             );
 
-            truffleAssert.eventEmitted(receipt, 'Approval', (ev) => {
+            truffleAssertions.eventEmitted(receipt, 'Approval', (ev) => {
                 return ev.owner === accountWallet.address
                 && ev.spender === anotherAccount
                 && ev.value.toString() === amount
@@ -426,7 +437,7 @@ contract('SideToken', async function (accounts) {
 
             const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
 
-            await utils.expectThrow(this.token.permit(
+            await truffleAssertions.fails(this.token.permit(
                     accountWallet.address,
                     anotherAccount,
                     amount,
@@ -434,7 +445,8 @@ contract('SideToken', async function (accounts) {
                     v,
                     s,
                     r
-                )
+                ),
+                truffleAssertions.ErrorType.REVERT
             );
           });
 
@@ -464,7 +476,7 @@ contract('SideToken', async function (accounts) {
                 s
             );
 
-            await utils.expectThrow(
+            await truffleAssertions.fails(
                 this.token.permit(
                     accountWallet.address,
                     anotherAccount,
@@ -473,7 +485,8 @@ contract('SideToken', async function (accounts) {
                     v,
                     r,
                     s
-                )
+                ),
+                truffleAssertions.ErrorType.REVERT
             );
           });
 
@@ -493,7 +506,7 @@ contract('SideToken', async function (accounts) {
 
             const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(accountWallet.privateKey.slice(2), 'hex'));
 
-            await utils.expectThrow(this.token.permit(
+            await truffleAssertions.fails(this.token.permit(
                     accountWallet.address,
                     anotherAccount,
                     amount,
@@ -501,7 +514,8 @@ contract('SideToken', async function (accounts) {
                     v,
                     r,
                     s
-                )
+                ),
+                truffleAssertions.ErrorType.REVERT
             );
           });
     });

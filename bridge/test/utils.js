@@ -51,17 +51,6 @@ const promisify = (inner) =>
     })
   );
 
-function expectThrow(promise) {
-  return promise.then(
-    (result) => {
-      assert.equal(result.toString(), "It should have thrown an Error");
-    },
-    (err) => {
-      return err;
-    }
-  );
-}
-
 function checkGas(gas) {
   //process.stdout.write(`\x1b[36m[Gas:${gas}]\x1b[0m`);
   assert(gas < GAS_LIMIT, "Gas used bigger than the maximum in mainnet");
@@ -214,7 +203,6 @@ module.exports = {
   checkRcpt: checkRcpt,
   evm_mine: evm_mine,
   promisify: promisify,
-  expectThrow: expectThrow,
   calculatePrefixesSuffixes: calculatePrefixesSuffixes,
   increaseTimestamp: increaseTimestamp,
   ascii_to_hexa: ascii_to_hexa,
