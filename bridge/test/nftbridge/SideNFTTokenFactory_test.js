@@ -2,7 +2,7 @@ const SideNFTToken = artifacts.require("./SideNFTToken");
 const SideNFTTokenFactory = artifacts.require("./SideNFTTokenFactory");
 
 const utils = require("../utils");
-const truffleAssert = require("truffle-assertions");
+const truffleAssertions = require("truffle-assertions");
 
 contract("SideNFTTokenFactory", async function(accounts) {
   const tokenCreator = accounts[0];
@@ -31,7 +31,7 @@ contract("SideNFTTokenFactory", async function(accounts) {
     );
     utils.checkRcpt(receipt);
     let firstSideTokenAddress;
-    truffleAssert.eventEmitted(
+    truffleAssertions.eventEmitted(
       receipt,
       sideNFTTokenCreatedEventType,
       (event) => {
@@ -64,7 +64,7 @@ contract("SideNFTTokenFactory", async function(accounts) {
       { from: tokenCreator }
     );
     utils.checkRcpt(receipt);
-    truffleAssert.eventEmitted(
+    truffleAssertions.eventEmitted(
       receipt,
       sideNFTTokenCreatedEventType,
       (event) => {
@@ -83,7 +83,7 @@ contract("SideNFTTokenFactory", async function(accounts) {
   it("fails to create a new side NFT token due to using a wrong caller", async function() {
     assert.equal(await this.sideNFTTokenFactory.primary(), tokenCreator);
 
-    await truffleAssert.fails(
+    await truffleAssertions.fails(
       this.sideNFTTokenFactory.createSideNFTToken(
         tokenName,
         tokenName,
@@ -91,7 +91,7 @@ contract("SideNFTTokenFactory", async function(accounts) {
         tokenContractURI,
         { from: anAccount }
       ),
-      truffleAssert.ErrorType.REVERT,
+      truffleAssertions.ErrorType.REVERT,
       "Secondary: caller is not the primary account"
     );
   });
