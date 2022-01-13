@@ -45,8 +45,8 @@ interface IFederation {
     bytes32 transactionHash,
     uint32 logIndex,
     TokenType tokenType,
-		uint256 originChainId,
-		uint256	destinationChainId
+	  uint256 originChainId,
+	  uint256	destinationChainId
   ) external;
 
   /**
