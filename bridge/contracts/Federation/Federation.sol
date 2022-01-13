@@ -273,8 +273,8 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
     bytes32 transactionHash,
     uint32 logIndex,
     TokenType tokenType,
-		uint256 originChainId,
-		uint256	destinationChainId
+	uint256 originChainId,
+	uint256	destinationChainId
   ) internal {
     if (tokenType == TokenType.NFT) {
       require(address(bridgeNFT) != NULL_ADDRESS, "Federation: Empty NFTBridge");
@@ -286,8 +286,8 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
         blockHash,
         transactionHash,
         logIndex,
-	originChainId,
-	destinationChainId
+		originChainId,
+		destinationChainId
       );
       return;
     }
@@ -300,8 +300,8 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
       blockHash,
       transactionHash,
       logIndex,
-			originChainId,
-			destinationChainId
+	  originChainId,
+	  destinationChainId
     );
   }
 

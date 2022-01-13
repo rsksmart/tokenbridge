@@ -1093,6 +1093,24 @@ contract('Bridge', async function (accounts) {
 
                 });
 
+                it('fail accept transfer with wrong destination chainId', async function () {
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.acceptTransfer(
+                            this.token.address,
+                            tokenOwner,
+                            anAccount,
+                            this.amount,
+                            this.txReceipt.receipt.blockHash,
+                            this.txReceipt.tx,
+                            this.txReceipt.receipt.logs[0].logIndex,
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
+
                 it('fail accept transfer with receiver empty address', async function () {
                     const decimals = 18;
                     const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
