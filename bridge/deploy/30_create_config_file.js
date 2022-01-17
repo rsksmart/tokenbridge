@@ -19,6 +19,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
   const config = {
+    name: network.name,
     bridge: BridgeProxy.address.toLowerCase(),
     federation: federatorProxyAddress.toLowerCase(),
     multiSig: multiSigAddress.toLowerCase(),
