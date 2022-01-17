@@ -22,8 +22,8 @@ export class Main {
   logger: LogWrapper;
   endpoint: any;
   metricCollector: any;
-  mainFederator: Federator;
-  mainFederatorNFT: FederatorNFT;
+  rskFederator: Federator;
+  rskFederatorNFT: FederatorNFT;
   config: Config;
 
   constructor() {
@@ -40,12 +40,12 @@ export class Main {
 
     const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
     const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
-    this.mainFederator = new Federator(
+    this.rskFederator = new Federator(
       this.config,
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
       this.metricCollector,
     );
-    this.mainFederatorNFT = new FederatorNFT(
+    this.rskFederatorNFT = new FederatorNFT(
       {
         ...this.config,
         storagePath: `${this.config.storagePath}/nft`,
@@ -61,8 +61,8 @@ export class Main {
 
   async run() {
     try {
-      await this.runNftMainFederator();
-      await this.runErcMainFederator();
+      await this.runNftRskFederator();
+      await this.runErcRskFederator();
 
       for (const sideChainConfig of this.config.sidechain) {
         const heartbeat = new Heartbeat(
@@ -72,8 +72,8 @@ export class Main {
           sideChainConfig,
         );
 
-        await this.runNftSideFederators(sideChainConfig);
-        await this.runErcSideFederator(sideChainConfig);
+        await this.runNftOtherChainFederators(sideChainConfig);
+        await this.runErcOtherChainFederators(sideChainConfig);
 
         await heartbeat.readLogs();
         this.scheduleHeartbeatProcesses(heartbeat);
@@ -84,12 +84,12 @@ export class Main {
     }
   }
 
-  async runErcMainFederator() {
+  async runErcRskFederator() {
     this.logger.info('RSK Host', this.config.mainchain.host);
-    await this.mainFederator.runAll();
+    await this.rskFederator.runAll();
   }
 
-  async runErcSideFederator(sideChainConfig) {
+  async runErcOtherChainFederators(sideChainConfig) {
     const sideFederator = new Federator(
       {
         ...this.config,
@@ -105,17 +105,17 @@ export class Main {
     await sideFederator.runAll();
   }
 
-  async runNftMainFederator() {
+  async runNftRskFederator() {
     if (!this.config.useNft) {
       return;
     }
     if (this.config.mainchain.nftBridge == null) {
       throw new Error('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
     }
-    await this.mainFederatorNFT.runAll();
+    await this.rskFederatorNFT.runAll();
   }
 
-  async runNftSideFederators(sideChainConfig: ConfigChain) {
+  async runNftOtherChainFederators(sideChainConfig: ConfigChain) {
     if (!this.config.useNft) {
       return;
     }
