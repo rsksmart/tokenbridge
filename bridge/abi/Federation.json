@@ -97,13 +97,13 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "fedRskBlock",
+        "name": "currentChainId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "fedEthBlock",
+        "name": "currentBlock",
         "type": "uint256"
       },
       {
@@ -114,21 +114,21 @@
       },
       {
         "indexed": false,
-        "internalType": "string",
-        "name": "nodeRskInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsIds",
+        "type": "uint256[]"
       },
       {
         "indexed": false,
-        "internalType": "string",
-        "name": "nodeEthInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsBlocks",
+        "type": "uint256[]"
       },
       {
         "indexed": false,
-        "internalType": "uint256",
-        "name": "chainId",
-        "type": "uint256"
+        "internalType": "string[]",
+        "name": "fedChainsInfo",
+        "type": "string[]"
       }
     ],
     "name": "HeartBeat",
@@ -346,29 +346,24 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "fedRskBlock",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fedEthBlock",
-        "type": "uint256"
-      },
-      {
         "internalType": "string",
         "name": "federatorVersion",
         "type": "string"
       },
       {
-        "internalType": "string",
-        "name": "nodeRskInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsIds",
+        "type": "uint256[]"
       },
       {
-        "internalType": "string",
-        "name": "nodeEthInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsBlocks",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "fedChainsInfo",
+        "type": "string[]"
       }
     ],
     "name": "emitHeartbeat",
