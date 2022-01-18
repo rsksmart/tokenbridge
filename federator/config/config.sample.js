@@ -1,6 +1,6 @@
 const fs = require("fs");
 module.exports = {
-  mainchain: require("./rsktestnet-kovan.json"), //the json containing the smart contract addresses in rsk
+  mainchain: require("./rsktestnet.json"), //the json containing the smart contract addresses in rsk
   sidechain: [
     require("./kovan.json"), //the json containing the smart contract addresses in eth
     require("./bsctestnet.json"), //the json containing the smart contract addresses in binance
