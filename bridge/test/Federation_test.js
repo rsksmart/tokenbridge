@@ -344,7 +344,7 @@ contract('Federation', async function (accounts) {
                 return result;
             }
 
-            describe.only('emitHeartbeat', async function() {
+            describe('emitHeartbeat', async function() {
                 it('should be succesful', async function() {
                     const fedRskChainId = '30';
                     const fedEthChainId = '1';

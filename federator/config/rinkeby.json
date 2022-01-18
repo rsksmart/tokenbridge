@@ -1,5 +1,5 @@
 {
-    "name": "Rinkeby Testnet",
+    "name": "rinkeby",
     "bridge": "0x7e339118346364d7d86ab67cb0775cbb808e65f7",
     "nftBridge": "0xb9b8d1e30f0ebec0c8f4cf0b1717566d84fc4080",
     "federation": "0xbc383764cebc13b66c04e1abeb36804a0caaa5c6",

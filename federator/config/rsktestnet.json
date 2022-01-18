@@ -1,4 +1,5 @@
 {
+    "name": "rsktestnet-kovan",
     "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
     "host": "<YOUR HOST URL AND PORT>",
     "fromBlock": 957252

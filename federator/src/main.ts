@@ -25,35 +25,46 @@ export class Main {
   rskFederator: Federator;
   rskFederatorNFT: FederatorNFT;
   config: Config;
+  heartbeat: Heartbeat;
 
   constructor() {
     this.logger = Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR);
     this.config = Config.getInstance();
     this.endpoint = new Endpoint(this.logger, this.config.endpointsPort);
     this.endpoint.init();
-    let metricCollector;
+    let metricCollector: MetricCollector;
     try {
       metricCollector = new MetricCollector();
     } catch (error) {
       this.logger.error(`Error creating MetricCollector instance:`, error);
     }
 
-    const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
-    const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
-    this.rskFederator = new Federator(
+    this.heartbeat = new Heartbeat(
       this.config,
+      Logs.getInstance().getLogger(LOGGER_CATEGORY_HEARTBEAT),
+      this.metricCollector,
+    );
+    this.scheduleHeartbeatProcesses();
+
+    this.rskFederator = new Federator(
+      {
+        ...this.config,
+        storagePath: `${this.config.storagePath}/${this.config.mainchain.name}`,
+      },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
       this.metricCollector,
     );
     this.rskFederatorNFT = new FederatorNFT(
       {
         ...this.config,
-        storagePath: `${this.config.storagePath}/nft`,
+        storagePath: `${this.config.storagePath}/nft/${this.config.mainchain.name}`,
       },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_MAIN),
       metricCollector,
     );
 
+    const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
+    const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
     scheduler.start().catch((err) => {
       this.logger.error('Unhandled Error on start()', err);
     });
@@ -61,22 +72,13 @@ export class Main {
 
   async run() {
     try {
+      await this.heartbeat.readLogs();
       await this.runNftRskFederator();
       await this.runErcRskFederator();
 
       for (const sideChainConfig of this.config.sidechain) {
-        const heartbeat = new Heartbeat(
-          this.config,
-          Logs.getInstance().getLogger(LOGGER_CATEGORY_HEARTBEAT),
-          this.metricCollector,
-          sideChainConfig,
-        );
-
-        await this.runNftOtherChainFederators(sideChainConfig);
-        await this.runErcOtherChainFederators(sideChainConfig);
-
-        await heartbeat.readLogs();
-        this.scheduleHeartbeatProcesses(heartbeat);
+        await this.runNftOtherChainFederator(sideChainConfig);
+        await this.runErcOtherChainFederator(sideChainConfig);
       }
     } catch (err) {
       this.logger.error('Unhandled Error on run()', err);
@@ -89,13 +91,13 @@ export class Main {
     await this.rskFederator.runAll();
   }
 
-  async runErcOtherChainFederators(sideChainConfig) {
+  async runErcOtherChainFederator(sideChainConfig: ConfigChain) {
     const sideFederator = new Federator(
       {
         ...this.config,
         mainchain: sideChainConfig,
         sidechain: [this.config.mainchain],
-        storagePath: `${this.config.storagePath}/side-fed`,
+        storagePath: `${this.config.storagePath}/${sideChainConfig.name}`,
       },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_SIDE),
       this.metricCollector,
@@ -115,7 +117,7 @@ export class Main {
     await this.rskFederatorNFT.runAll();
   }
 
-  async runNftOtherChainFederators(sideChainConfig: ConfigChain) {
+  async runNftOtherChainFederator(sideChainConfig: ConfigChain) {
     if (!this.config.useNft) {
       return;
     }
@@ -125,7 +127,7 @@ export class Main {
         ...this.config,
         mainchain: sideChainConfig,
         sidechain: [this.config.mainchain],
-        storagePath: `${this.config.storagePath}/nft/side-fed`,
+        storagePath: `${this.config.storagePath}/nft/${sideChainConfig.name}`,
       },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_SIDE),
       this.metricCollector,
@@ -136,7 +138,7 @@ export class Main {
     await sideFederatorNFT.runAll();
   }
 
-  async scheduleHeartbeatProcesses(heartbeat) {
+  async scheduleHeartbeatProcesses() {
     const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval({
       host: this.config.mainchain.host,
       runHeartbeatEvery: this.config.runHeartbeatEvery,
@@ -145,7 +147,7 @@ export class Main {
     const heartBeatScheduler = new Scheduler(heartBeatPollingInterval, this.logger, {
       run: async function () {
         try {
-          await heartbeat.run();
+          await this.heartbeat.run();
         } catch (err) {
           this.logger.error('Unhandled Error on runHeartbeat()', err);
           process.exit(1);
