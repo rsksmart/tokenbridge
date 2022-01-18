@@ -24,10 +24,9 @@ export interface IFederation {
 
   emitHeartbeat(
     txSender: { sendTransaction: (arg0: string, arg1: any, arg2: number, arg3: string) => any },
-    fedRskBlock: any,
-    fedEthBlock: any,
     fedVersion: any,
-    nodeRskInfo: any,
-    nodeEthInfo: any,
+    fedChainsIds: any[],
+    fedChainsBlocks: any[],
+    fedChainsInfo: any[],
   );
 }

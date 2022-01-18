@@ -66,14 +66,13 @@ export class IFederationV2 implements IFederation {
 
   async emitHeartbeat(
     txSender: any,
-    fedRskBlock: any,
-    fedEthBlock: any,
-    fedVSN: any,
-    nodeRskInfo: any,
-    nodeEthInfo: any,
+    fedVersion: any,
+    fedChainsIds: any[],
+    fedChainsBlocks: any[],
+    fedChainsInfo: any[],
   ) {
     const txData = await this.federationContract.methods
-      .emitHeartbeat(fedRskBlock, fedEthBlock, fedVSN, nodeRskInfo, nodeEthInfo)
+      .emitHeartbeat(fedChainsBlocks[0], fedChainsBlocks[1], fedVersion, fedChainsInfo[0], fedChainsInfo[1])
       .encodeABI();
 
     await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
