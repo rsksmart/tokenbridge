@@ -1,5 +1,5 @@
 {
-    "name": "Rsk Mainnet",
+    "name": "rskmainnet",
     "bridge": "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
     "federation": "0xe37b6516f4fe2a27569a2751c1ad50f6340df369",
     "multiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",

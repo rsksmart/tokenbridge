@@ -5,37 +5,36 @@ import { ConfigChain } from './configChain';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import { CustomError } from './CustomError';
-import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import * as utils from '../lib/utils';
 import { IFederation } from '../contracts/IFederation';
 import { LogWrapper } from './logWrapper';
-const scriptVersion = process.env.npm_package_version;
+const fedVersion = process.env.npm_package_version;
 
 export class Heartbeat {
   config: Config;
   logger: LogWrapper;
   mainWeb3: Web3;
-  sideWeb3: Web3;
+  sidesWeb3: Web3[];
   transactionSender: any;
   lastBlockPath: string;
-  bridgeFactory: any;
   federationFactory: FederationFactory;
   metricCollector: any;
 
-  constructor(config: Config, logger: LogWrapper, metricCollector, sideChainConfig: ConfigChain) {
+  constructor(config: Config, logger: LogWrapper, metricCollector) {
     this.config = config;
     this.logger = logger;
 
     this.mainWeb3 = new Web3(config.mainchain.host);
-    this.sideWeb3 = new Web3(sideChainConfig.host);
 
     this.metricCollector = metricCollector;
-
+    this.federationFactory = new FederationFactory(this.config, this.logger, config.mainchain);
     this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
     this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
-    this.bridgeFactory = new BridgeFactory(this.config, this.logger, sideChainConfig);
-    this.federationFactory = new FederationFactory(this.config, this.logger, sideChainConfig);
+    this.sidesWeb3 = [];
+    for (const sideChainConfig of config.sidechain) {
+      this.sidesWeb3.push(new Web3(sideChainConfig.host));
+    }
   }
 
   async run(): Promise<boolean> {
@@ -44,14 +43,27 @@ export class Heartbeat {
     const sleepAfterRetryMs = 3000;
     while (retries > 0) {
       try {
-        const [currentBlockRSK, currentBlockETH, nodeRskInfo, nodeEthInfo] = await Promise.all([
-          this.mainWeb3.eth.getBlockNumber(),
-          this.sideWeb3.eth.getBlockNumber(),
-          this.mainWeb3.eth.getNodeInfo(),
-          this.sideWeb3.eth.getNodeInfo(),
+        const promiseChainsId = [];
+        const promiseBlocks = [];
+        const promiseNodesInfo = [];
+
+        promiseChainsId.push(this.mainWeb3.eth.net.getId());
+        promiseBlocks.push(this.mainWeb3.eth.getBlockNumber());
+        promiseNodesInfo.push(this.mainWeb3.eth.getNodeInfo());
+
+        for (const sideWeb3 of this.sidesWeb3) {
+          promiseChainsId.push(sideWeb3.eth.net.getId());
+          promiseBlocks.push(sideWeb3.eth.getBlockNumber());
+          promiseNodesInfo.push(sideWeb3.eth.getNodeInfo());
+        }
+
+        const [fedChainsId, fedChainsBlocks, fedChainInfo] = await Promise.all([
+          Promise.all(promiseChainsId),
+          Promise.all(promiseBlocks),
+          Promise.all(promiseNodesInfo),
         ]);
 
-        return await this._emitHeartbeat(currentBlockRSK, currentBlockETH, scriptVersion, nodeRskInfo, nodeEthInfo);
+        return await this._emitHeartbeat(fedVersion, fedChainsId, fedChainsBlocks, fedChainInfo);
       } catch (err) {
         this.logger.error(new Error('Exception Running Heartbeat'), err);
         retries--;
@@ -112,7 +124,8 @@ export class Heartbeat {
         throw new Error('Failed to obtain HeartBeat logs');
       }
       await this._processHeartbeatLogs(heartbeatLogs, {
-        ethLastBlock: await this.sideWeb3.eth.getBlockNumber(),
+        sidesChainIds: await Promise.all(this.sidesWeb3.map((sideWeb3) => sideWeb3.eth.net.getId)),
+        sidesLastBlock: await Promise.all(this.sidesWeb3.map((sideWeb3) => sideWeb3.eth.getBlockNumber())),
       });
 
       this.logger.info(`Found ${heartbeatLogs.length} heartbeatLogs`);
@@ -169,27 +182,29 @@ export class Heartbeat {
     return false;
   }
 
-  async _processHeartbeatLogs(logs, { ethLastBlock }) {
+  async _processHeartbeatLogs(logs, { sidesChainIds, sidesLastBlock }) {
     /*
-            if node it's not synchronizing, do ->
-        */
+        if node it's not synchronizing, do ->
+    */
 
     try {
       for (const log of logs) {
-        const { blockNumber } = log;
-
-        const { sender, fedRskBlock, fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo } = log.returnValues;
+        const { sender, currentChainId, currentBlock, fedVersion, fedChainsIds, fedChainsBlocks, fedChainsInfo } = log.returnValues;
 
         let logInfo = `[event: HeartBeat],`;
         logInfo += `[sender: ${sender}],`;
-        logInfo += `[fedRskBlock: ${fedRskBlock}],`;
-        logInfo += `[fedEthBlock: ${fedEthBlock}],`;
-        logInfo += `[federatorVersion: ${federatorVersion}],`;
-        logInfo += `[nodeRskInfo: ${nodeRskInfo}],`;
-        logInfo += `[nodeEthInfo: ${nodeEthInfo}],`;
-        logInfo += `[blockNumber: ${blockNumber}],`;
-        logInfo += `[RskBlockGap: ${blockNumber - fedRskBlock}],`;
-        logInfo += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
+        logInfo += `[fedVersion: ${fedVersion}],`;
+        logInfo += `[chainId: ${currentChainId}],`;
+        logInfo += `[blockNumber: ${currentBlock}],`;
+        logInfo += `[fedChainsIds: ${fedChainsIds}],`;
+        logInfo += `[fedChainsBlocks: ${fedChainsBlocks}],`;
+        logInfo += `[fedChainsInfo: ${fedChainsInfo}],`;
+        // logInfo += `[fedEthBlock: ${fedEthBlock}],`;
+        // logInfo += `[federatorVersion: ${federatorVersion}],`;
+        // logInfo += `[nodeRskInfo: ${nodeRskInfo}],`;
+        // logInfo += `[nodeEthInfo: ${nodeEthInfo}],`;
+        // logInfo += `[RskBlockGap: ${blockNumber - fedRskBlock}],`;
+        // logInfo += `[EstEthBlockGap: ${ethLastBlock - fedEthBlock}]`;
 
         this.logger.info(logInfo);
       }
@@ -200,7 +215,7 @@ export class Heartbeat {
     }
   }
 
-  async _emitHeartbeat(fedRskBlock, fedEthBlock, fedVersion, nodeRskInfo, nodeEthInfo) {
+  async _emitHeartbeat(fedVersion: string, fedChainIds: any[], fedChainsBlocks: any[], fedChainInfo: any[]) {
     try {
       const fedContract = await this.federationFactory.getMainFederationContract();
       const from = await this.transactionSender.getAddress(this.config.privateKey);
@@ -209,33 +224,30 @@ export class Heartbeat {
         throw new Error(`This Federator addr:${from} is not part of the federation`);
       }
 
-      this.logger.info(`emitHeartbeat(${fedRskBlock}, ${fedEthBlock}, ${fedVersion}, ${nodeRskInfo}, ${nodeEthInfo})`);
-      await fedContract.emitHeartbeat(
-        this.transactionSender,
-        fedRskBlock,
-        fedEthBlock,
-        fedVersion,
-        nodeRskInfo,
-        nodeEthInfo,
-      );
-      this._trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo);
+      this.logger.info(`emitHeartbeat(${fedVersion}, ${fedChainIds}, ${fedChainsBlocks}, ${fedChainInfo})`);
+      await fedContract.emitHeartbeat(this.transactionSender, fedVersion, fedChainIds, fedChainsBlocks, fedChainInfo);
+      this._trackHeartbeatMetrics(from, fedVersion, fedChainIds, fedChainsBlocks, fedChainInfo);
       this.logger.info(`Success emitting heartbeat`);
       return true;
     } catch (err) {
       throw new CustomError(
-        `Exception Emitting Heartbeat rskBlock: ${fedRskBlock} ethBlock: ${fedEthBlock} fedVersion: ${fedVersion}`,
+        `Exception Emitting Heartbeat fedVersion: ${fedVersion} fedChainIds: ${fedChainIds} fedChainsBlocks: ${fedChainsBlocks} fedChainsBlocks: ${fedChainInfo}`,
         err,
       );
     }
   }
 
-  _trackHeartbeatMetrics(fedRskBlock, from, fedVersion, nodeRskInfo, fedEthBlock, nodeEthInfo) {
-    this.mainWeb3.eth.net.getId().then((chainId) => {
-      this.metricCollector?.trackMainChainHeartbeatEmission(from, fedVersion, fedRskBlock, nodeRskInfo, chainId);
-    });
-    this.sideWeb3.eth.net.getId().then((chainId) => {
-      this.metricCollector?.trackSideChainHeartbeatEmission(from, fedVersion, fedEthBlock, nodeEthInfo, chainId);
-    });
+  _trackHeartbeatMetrics(from, fedVersion, fedChainIds, fedChainsBlocks, fedChainInfo) {
+    for (let i = 0; i < fedChainIds.length; i++) {
+      //this.metricCollector?.trackSideChainHeartbeatEmission
+      this.metricCollector?.trackMainChainHeartbeatEmission(
+        from,
+        fedVersion,
+        fedChainsBlocks[i],
+        fedChainInfo[i],
+        fedChainIds[i],
+      );
+    }
   }
 
   _saveProgress(path, value) {
