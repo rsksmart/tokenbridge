@@ -118,7 +118,7 @@ interface IFederation {
     address indexed sender,
     uint256 currentChainId,
     uint256 currentBlock,
-    string federatorVersion,
+    string fedVersion,
     uint256[] fedChainsIds,
 		uint256[] fedChainsBlocks,
 		string[] fedChainsInfo
