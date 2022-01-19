@@ -47,18 +47,12 @@ export class Main {
     this.scheduleHeartbeatProcesses();
 
     this.rskFederator = new Federator(
-      {
-        ...this.config,
-        storagePath: `${this.config.storagePath}/${this.config.mainchain.name}`,
-      },
+      this.config,
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
       this.metricCollector,
     );
     this.rskFederatorNFT = new FederatorNFT(
-      {
-        ...this.config,
-        storagePath: `${this.config.storagePath}/nft/${this.config.mainchain.name}`,
-      },
+      this.config,
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_MAIN),
       metricCollector,
     );
@@ -97,7 +91,6 @@ export class Main {
         ...this.config,
         mainchain: sideChainConfig,
         sidechain: [this.config.mainchain],
-        storagePath: `${this.config.storagePath}/${sideChainConfig.name}`,
       },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_SIDE),
       this.metricCollector,
@@ -127,7 +120,6 @@ export class Main {
         ...this.config,
         mainchain: sideChainConfig,
         sidechain: [this.config.mainchain],
-        storagePath: `${this.config.storagePath}/nft/${sideChainConfig.name}`,
       },
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_SIDE),
       this.metricCollector,
