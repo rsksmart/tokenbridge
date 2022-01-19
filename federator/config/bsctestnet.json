@@ -1,4 +1,5 @@
 {
+  "name": "bsctestnet",
   "bridge": "0x7aec56b782c593b312a8c33eefd8e50eef975980",
   "nftBridge": "0x65b7af91d525f80dc48d2131ebb7a59a5c33250b",
   "federation": "0xb3d06103af1a68026615e673d46047fab77db0fa",

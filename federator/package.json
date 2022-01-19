@@ -22,7 +22,7 @@
     "test": "jest --detectOpenHandles test/",
     "integrationTest": "rm -rf ./db/* && npx ts-node ./integrationTest/integrationTest.js",
     "nftIntegrationTest": "rm -rf ./db/* && npx ts-node ./integrationTest/nftIntegrationTest.js",
-    "integrationHeartbeatTest": "rm -rf ./db/* && node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log",
+    "integrationHeartbeatTest": "rm -rf ./db/* && npx ts-node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log federator.log",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "lint": "eslint . --ext .ts",
     "clean": "rm -rf ./db/* ./built"

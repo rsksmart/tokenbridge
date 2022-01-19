@@ -17,6 +17,7 @@ import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
+    config.storagePath = `${config.storagePath}/nft/${config.mainchain.name}`;
     super(config, logger, metricCollector);
   }
 

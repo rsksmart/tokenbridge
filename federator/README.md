@@ -27,7 +27,7 @@ To run the federator using Docker, go to the /federator/config folder and rename
 ```js
 module.exports = {
   mainchain: require('./rsktestnet-kovan.json'),
-  sidechain: require('./kovan.json'),
+  sidechain: [require('./kovan.json')],
   runEvery: 1, // In minutes,
   confirmations: 10,// Number of blocks before processing it,
   privateKey: require('federator.key'),

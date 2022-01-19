@@ -39,7 +39,7 @@ async function fundFederators(host, keys, privateKey, amount) {
         amount,
         privateKey
       );
-      logWrapper.info(
+      logWrapper.debug(
         `Successfuly transferred ${amount} to ${federatorAddress}`
       );
     } catch (err) {
