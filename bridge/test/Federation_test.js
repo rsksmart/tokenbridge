@@ -336,33 +336,92 @@ contract('Federation', async function (accounts) {
                 });
             });
 
+            const arrayMembersToString = (array) => {
+                const result = []
+                for (const element of array) {
+                    result.push(element.toString());
+                }
+                return result;
+            }
+
             describe('emitHeartbeat', async function() {
+                const fedRskChainId = '30';
+                const fedEthChainId = '1';
+                const fedBscChainId = '56';
+                const federatorVersion = '3.0.0';
+                const nodeRskInfo = 'rskjar/2.2.0';
+                const nodeEthInfo = 'geth/1.13.15';
+                const nodeBscInfo = 'geth/1.1.5';
+                const fedRskBlock = '123456';
+                const fedEthBlock = '999000000';
+                const fedBscBlock = '999000000';
+
                 it('should be succesful', async function() {
-                    const fedRskBlock = '123456';
-                    const fedEthBlock = '999000000';
-                    const federatorVersion = '2.0.0';
-                    const nodeRskInfo = 'rskjar/2.2.0';
-                    const nodeEthInfo = 'geth/1.10.2';
-                    let receipt = await this.federators.emitHeartbeat(fedRskBlock,fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo, {from: federator1});
+                    const receipt = await this.federators.emitHeartbeat(
+                        federatorVersion,
+                        [ fedRskChainId, fedEthChainId, fedBscChainId ],
+                        [ fedRskBlock, fedEthBlock, fedBscBlock ],
+                        [ nodeRskInfo, nodeEthInfo, nodeBscInfo ],
+                        {from: federator1}
+                    );
                     utils.checkRcpt(receipt);
 
                     assert.equal(receipt.logs[0].event, 'HeartBeat');
                     assert.equal(receipt.logs[0].args[0], federator1);
-                    assert.equal(receipt.logs[0].args[1], fedRskBlock);
-                    assert.equal(receipt.logs[0].args[2], fedEthBlock);
+                    assert.equal(receipt.logs[0].args[1], await web3.eth.net.getId() );
+                    assert.equal(receipt.logs[0].args[2], await web3.eth.getBlockNumber());
                     assert.equal(receipt.logs[0].args[3], federatorVersion);
-                    assert.equal(receipt.logs[0].args[4], nodeRskInfo);
-                    assert.equal(receipt.logs[0].args[5], nodeEthInfo);
+                    assert.deepEqual(arrayMembersToString(receipt.logs[0].args[4]),
+                        [ fedRskChainId, fedEthChainId, fedBscChainId ]
+                    );
+                    assert.deepEqual(arrayMembersToString(receipt.logs[0].args[5]), [ fedRskBlock, fedEthBlock, fedBscBlock ]);
+                    assert.deepEqual(arrayMembersToString(receipt.logs[0].args[6]), [ nodeRskInfo, nodeEthInfo, nodeBscInfo ]);
                 });
 
                 it('should fail if not a memeber', async function() {
-                    const fedRskBlock = '123456';
-                    const fedEthBlock = '999000000';
-                    const federatorVersion = '2.0.0';
-                    const nodeRskInfo = 'rskjar/2.2.0';
-                    const nodeEthInfo = 'geth/1.10.2';
                     await truffleAssertions.fails(
-                        this.federators.emitHeartbeat(fedRskBlock,fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo, {from: deployer}),
+                        this.federators.emitHeartbeat(
+                            federatorVersion,
+                            [ fedRskChainId, fedEthChainId, fedBscChainId ],
+                            [ fedRskBlock, fedEthBlock, fedBscBlock ],
+                            [ nodeRskInfo, nodeEthInfo, nodeBscInfo ],
+                            {from: anAccount}
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
+
+                it('should fail if different array size', async function() {
+                    await truffleAssertions.fails(
+                        this.federators.emitHeartbeat(
+                            federatorVersion,
+                            [ fedRskChainId, fedEthChainId, fedBscChainId ],
+                            [ fedRskBlock, fedEthBlock, fedBscBlock ],
+                            [ nodeRskInfo, nodeEthInfo ],
+                            {from: anAccount}
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+
+                    await truffleAssertions.fails(
+                        this.federators.emitHeartbeat(
+                            federatorVersion,
+                            [ fedRskChainId, fedEthChainId ],
+                            [ fedRskBlock, fedEthBlock, fedBscBlock ],
+                            [ nodeRskInfo, nodeEthInfo, nodeBscInfo ],
+                            {from: anAccount}
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+
+                    await truffleAssertions.fails(
+                        this.federators.emitHeartbeat(
+                            federatorVersion,
+                            [ fedRskChainId, fedEthChainId, fedBscChainId ],
+                            [ fedRskBlock, fedEthBlock ],
+                            [ nodeRskInfo, nodeEthInfo, nodeBscInfo ],
+                            {from: anAccount}
+                        ),
                         truffleAssertions.ErrorType.REVERT
                     );
                 });
