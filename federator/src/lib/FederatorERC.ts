@@ -66,6 +66,7 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
+    config.storagePath = `${config.storagePath}/${config.mainchain.name}`;
     super(config, logger, metricCollector);
   }
 
@@ -253,8 +254,6 @@ export default class FederatorERC extends Federator {
     const originChainId = Number(originChainIdStr);
     const destinationChainId = Number(destinationChainIdStr);
 
-    this.logger.upsertContext('originChainId', originChainId);
-    this.logger.upsertContext('destinationChainId', destinationChainId);
     this.logger.upsertContext('transactionHash', transactionHash);
     this.logger.upsertContext('blockHash', blockHash);
     this.logger.upsertContext('blockNumber', blockNumber);

@@ -18,7 +18,6 @@ export interface JsonConfigParams {
   federatorRetries?: number;
   useNft?: boolean;
   checkHttps?: boolean;
-  explorer?: string;
 }
 
 export class ConfigData {
@@ -30,16 +29,15 @@ export class ConfigData {
   storagePath: string; // the path were the db is going to be stored
   etherscanApiKey: string; // If using ganache can be any string
   runHeartbeatEvery: number; // In hours
-  endpointsPort: number; // Server port
-  nftConfirmations: number; // number of block confirmations for the nft bridge
-  useNft: boolean;
-  federatorRetries: number;
-  checkHttps: boolean;
+  endpointsPort?: number; // Server port
+  nftConfirmations?: number; // number of block confirmations for the nft bridge
+  useNft?: boolean;
+  federatorRetries?: number;
+  checkHttps?: boolean;
   explorer?: string;
 }
 
 export class Config extends ConfigData {
-
   private static instance: Config;
 
   private constructor(jsonConfig: JsonConfigParams) {

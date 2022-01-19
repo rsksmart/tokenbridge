@@ -77,11 +77,10 @@ interface IFederation {
     @notice It emmits an HeartBeat like an healthy check
   */
   function emitHeartbeat(
-    uint256 fedRskBlock,
-    uint256 fedEthBlock,
     string calldata federatorVersion,
-    string calldata nodeRskInfo,
-    string calldata nodeEthInfo
+		uint256[] calldata fedChainsIds,
+		uint256[] calldata fedChainsBlocks,
+		string[] calldata fedChainsInfo
   ) external;
 
   event Executed(
@@ -117,12 +116,12 @@ interface IFederation {
   );
   event HeartBeat(
     address indexed sender,
-    uint256 fedRskBlock,
-    uint256 fedEthBlock,
-    string federatorVersion,
-    string nodeRskInfo,
-    string nodeEthInfo,
-    uint256 chainId
+    uint256 currentChainId,
+    uint256 currentBlock,
+    string fedVersion,
+    uint256[] fedChainsIds,
+		uint256[] fedChainsBlocks,
+		string[] fedChainsInfo
   );
 
 }

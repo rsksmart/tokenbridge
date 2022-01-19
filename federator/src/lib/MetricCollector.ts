@@ -75,7 +75,7 @@ export class MetricCollector {
   }
 
   trackMainChainHeartbeatEmission(
-    from: number,
+    from: string,
     fedVersion: string,
     fedBlock: number,
     nodeInfo: string,
@@ -85,7 +85,7 @@ export class MetricCollector {
   }
 
   trackSideChainHeartbeatEmission(
-    from: number,
+    from: string,
     fedVersion: string,
     fedBlock: number,
     nodeInfo: string,
@@ -95,7 +95,7 @@ export class MetricCollector {
   }
 
   private static trackHeartbeatEmission(
-    from: number,
+    from: string,
     fedVersion: string,
     fedBlock: number,
     nodeInfo: string,

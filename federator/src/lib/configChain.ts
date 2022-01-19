@@ -4,6 +4,7 @@ const DEFAULT_BLOCK_TIME_MS = 15000;
 const DEFAULT_FROM_BLOCK = 0;
 
 export interface ConfigChainParams {
+  name: string;
   bridge: string;
   federation: string;
   multiSig: string;
@@ -16,6 +17,7 @@ export interface ConfigChainParams {
 }
 
 export class ConfigChain {
+  name: string;
   bridge: string;
   nftBridge: string;
   federation: string;
@@ -27,6 +29,7 @@ export class ConfigChain {
   blockTimeMs: number;
 
   constructor(chainConfig: ConfigChainParams) {
+    this.name = chainConfig.name;
     this.bridge = chainConfig.bridge;
     this.federation = chainConfig.federation;
     this.multiSig = chainConfig.multiSig;

@@ -69,7 +69,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	}
 
 	function initialize(
-		address[] memory _members,
+		address[] calldata _members,
 		uint _required,
 		address _bridge,
 		address owner,
@@ -417,20 +417,21 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@dev Emits HeartBeat event
 		*/
 	function emitHeartbeat(
-		uint256 fedRskBlock,
-		uint256 fedEthBlock,
-		string calldata federatorVersion,
-		string calldata nodeRskInfo,
-		string calldata nodeEthInfo
+		string calldata fedVersion,
+		uint256[] calldata fedChainsIds,
+		uint256[] calldata fedChainsBlocks,
+		string[] calldata fedChainsInfo
 	) external onlyMember override {
+		require(fedChainsIds.length == fedChainsBlocks.length &&
+			fedChainsIds.length == fedChainsInfo.length, "Federation: Length missmatch");
 		emit HeartBeat(
 			_msgSender(),
-			fedRskBlock,
-			fedEthBlock,
-			federatorVersion,
-			nodeRskInfo,
-			nodeEthInfo,
-			block.chainid
+			block.chainid,
+			block.number,
+			fedVersion,
+			fedChainsIds,
+			fedChainsBlocks,
+			fedChainsInfo
 		);
 	}
 }

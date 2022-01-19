@@ -75,18 +75,18 @@ export class TransactionSender {
       if (fastGasPrice >= gasPrice && useGasPrice >= fastGasPrice) {
         // If fastGasPrice is cheaper than gasPrice x1.5 use fastGasPrice
         // we check that fastGasPrice is bigger than gasPrice to avoid posible attacks and API errors
-        this.logger.info('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
-        this.logger.info('gasOraclePrice', gasOraclePrice);
-        this.logger.debug('useGasPrice >= fastGasPrice, we will use', fastGasPricePlus);
+        this.logger.trace('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
+        this.logger.trace('gasOraclePrice', gasOraclePrice);
+        this.logger.trace('useGasPrice >= fastGasPrice, we will use', fastGasPricePlus);
         return fastGasPricePlus;
       }
       if (useGasPrice <= 25000000000) {
         // Currently when we restart an ethereum node the eth_getPrice is given values that are lower than the network
         // Usually around 9 GWei or 15 GWei that's why we set the limit in 25 GWei
         // When this happens we will use the gas price provided by etherscan
-        this.logger.info('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
-        this.logger.info('gasOraclePrice', gasOraclePrice);
-        this.logger.debug('useGasPrice <= 25000000000, we will use', fastGasPricePlus);
+        this.logger.trace('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
+        this.logger.trace('gasOraclePrice', gasOraclePrice);
+        this.logger.trace('useGasPrice <= 25000000000, we will use', fastGasPricePlus);
         return fastGasPricePlus;
       }
       if (proposeGasPrice >= gasPrice && proposeGasPrice >= useGasPrice && proposeGasPrice < useGasPrice * 5) {
@@ -94,9 +94,9 @@ export class TransactionSender {
         // we add a control in case proposeGasPrice is way high
         // Try to use fastGasPrice if the value is too high, use proposeGasPrice and add 2 Gwei to help avoid gas spikes
         const recommendedGas = fastGasPrice < useGasPrice * 5 ? fastGasPricePlus : proposeGasPrice + 5000000000;
-        this.logger.info('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
-        this.logger.info('gasOraclePrice', gasOraclePrice);
-        this.logger.debug('proposeGasPrice >= useGasPrice, we will use', recommendedGas);
+        this.logger.trace('gasPrice', gasPrice, 'useGasPrice', useGasPrice);
+        this.logger.trace('gasOraclePrice', gasOraclePrice);
+        this.logger.trace('proposeGasPrice >= useGasPrice, we will use', recommendedGas);
         return recommendedGas;
       }
     }
@@ -138,7 +138,6 @@ export class TransactionSender {
     };
 
     if (await this.isRsk()) {
-      this.logger.debug(`it is rsk, I will delete rawTx.chainId`);
       delete rawTx.chainId;
       delete rawTx.r;
       delete rawTx.s;
@@ -147,9 +146,9 @@ export class TransactionSender {
 
     if (this.debuggingMode) {
       rawTx.gas = this.numberToHexString(100);
-      this.logger.debug(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`);
+      this.logger.warn(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`);
     }
-    this.logger.debug('createRawTransaction RawTx', rawTx);
+    this.logger.trace('createRawTransaction RawTx', rawTx);
     return rawTx;
   }
 
