@@ -105,6 +105,6 @@ export class IFederationV3 implements IFederation {
     );
 
     const txData = emitHeartbeat.encodeABI();
-    await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
   }
 }

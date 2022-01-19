@@ -75,6 +75,6 @@ export class IFederationV2 implements IFederation {
       .emitHeartbeat(fedChainsBlocks[0], fedChainsBlocks[1], fedVersion, fedChainsInfo[0], fedChainsInfo[1])
       .encodeABI();
 
-    await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
   }
 }
