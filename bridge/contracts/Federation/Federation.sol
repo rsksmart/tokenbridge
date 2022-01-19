@@ -417,7 +417,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@dev Emits HeartBeat event
 		*/
 	function emitHeartbeat(
-		string calldata federatorVersion,
+		string calldata fedVersion,
 		uint256[] calldata fedChainsIds,
 		uint256[] calldata fedChainsBlocks,
 		string[] calldata fedChainsInfo
@@ -428,7 +428,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 			_msgSender(),
 			block.chainid,
 			block.number,
-			federatorVersion,
+			fedVersion,
 			fedChainsIds,
 			fedChainsBlocks,
 			fedChainsInfo

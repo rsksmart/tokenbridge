@@ -345,18 +345,19 @@ contract('Federation', async function (accounts) {
             }
 
             describe('emitHeartbeat', async function() {
+                const fedRskChainId = '30';
+                const fedEthChainId = '1';
+                const fedBscChainId = '56';
+                const federatorVersion = '3.0.0';
+                const nodeRskInfo = 'rskjar/2.2.0';
+                const nodeEthInfo = 'geth/1.13.15';
+                const nodeBscInfo = 'geth/1.1.5';
+                const fedRskBlock = '123456';
+                const fedEthBlock = '999000000';
+                const fedBscBlock = '999000000';
+
                 it('should be succesful', async function() {
-                    const fedRskChainId = '30';
-                    const fedEthChainId = '1';
-                    const fedBscChainId = '56';
-                    const fedRskBlock = '123456';
-                    const fedEthBlock = '999000000';
-                    const fedBscBlock = '999000000';
-                    const federatorVersion = '3.0.0';
-                    const nodeRskInfo = 'rskjar/2.2.0';
-                    const nodeEthInfo = 'geth/1.13.15';
-                    const nodeBscInfo = 'geth/1.1.5';
-                    let receipt = await this.federators.emitHeartbeat(
+                    const receipt = await this.federators.emitHeartbeat(
                         federatorVersion,
                         [ fedRskChainId, fedEthChainId, fedBscChainId ],
                         [ fedRskBlock, fedEthBlock, fedBscBlock ],
@@ -378,16 +379,6 @@ contract('Federation', async function (accounts) {
                 });
 
                 it('should fail if not a memeber', async function() {
-                    const fedRskChainId = '30';
-                    const fedEthChainId = '1';
-                    const fedBscChainId = '56';
-                    const fedRskBlock = '123456';
-                    const fedEthBlock = '999000000';
-                    const fedBscBlock = '999000000';
-                    const federatorVersion = '3.0.0';
-                    const nodeRskInfo = 'rskjar/2.2.0';
-                    const nodeEthInfo = 'geth/1.13.15';
-                    const nodeBscInfo = 'geth/1.1.5';
                     await truffleAssertions.fails(
                         this.federators.emitHeartbeat(
                             federatorVersion,
@@ -401,17 +392,6 @@ contract('Federation', async function (accounts) {
                 });
 
                 it('should fail if different array size', async function() {
-                    const fedRskChainId = '30';
-                    const fedEthChainId = '1';
-                    const fedBscChainId = '56';
-                    const fedRskBlock = '123456';
-                    const fedEthBlock = '999000000';
-                    const fedBscBlock = '999000000';
-                    const federatorVersion = '3.0.0';
-                    const nodeRskInfo = 'rskjar/2.2.0';
-                    const nodeEthInfo = 'geth/1.13.15';
-                    const nodeBscInfo = 'geth/1.1.5';
-
                     await truffleAssertions.fails(
                         this.federators.emitHeartbeat(
                             federatorVersion,
