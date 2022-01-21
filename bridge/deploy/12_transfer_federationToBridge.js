@@ -25,5 +25,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   log(`MultiSig submitTransaction Change Federation in the Bridge`);
 };
 module.exports.id = 'transfer_federation_to_bridge'; // id required to prevent reexecution
-module.exports.tags = ['TransferFederationToBridge', 'new', 'IntegrationTest'];
+module.exports.tags = ['TransferFederationToBridge', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['Bridge', 'BridgeProxy', 'FederationProxy', 'MultiSigWallet'];
