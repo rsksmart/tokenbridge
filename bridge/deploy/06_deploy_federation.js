@@ -7,10 +7,10 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {deploy, log} = deployments;
   const FEDERATION_LAST_VERSION = 'v3'
 
-  const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
-  if (federatorProxyAddress) {
+  const federationProxyAddress = await address.getFederationProxyAddress(hre);
+  if (federationProxyAddress) {
     const Federation = await deployments.get('Federation');
-    const federation = new web3.eth.Contract(Federation.abi, federatorProxyAddress);
+    const federation = new web3.eth.Contract(Federation.abi, federationProxyAddress);
     const currentFederationVersion = federation.methods.version().call();
     if (currentFederationVersion === FEDERATION_LAST_VERSION) {
       return;
@@ -35,4 +35,4 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_federation'; // id required to prevent reexecution
-module.exports.tags = ['Federation', 'NewImplementation', 'DeployFromScratch', 'IntegrationTest'];
+module.exports.tags = ['Federation', 'Upgrade', 'DeployFromScratch', 'IntegrationTest'];

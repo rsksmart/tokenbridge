@@ -14,14 +14,14 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const BridgeProxy = await deployments.get('BridgeProxy');
   const multiSigAddress = await address.getMultiSigAddress(hre);
-  const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
+  const federationProxyAddress = await address.getFederationProxyAddress(hre);
   const MultiSigWallet = await deployments.get('MultiSigWallet');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
   const config = {
     name: network.name,
     bridge: BridgeProxy.address.toLowerCase(),
-    federation: federatorProxyAddress.toLowerCase(),
+    federation: federationProxyAddress.toLowerCase(),
     multiSig: multiSigAddress.toLowerCase(),
     allowTokens: AllowTokensProxy.address.toLowerCase()
   };
