@@ -25,5 +25,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   log(`MultiSig submitTransaction changeAllowtokens to AllowTokens in the Bridge`);
 };
 module.exports.id = 'transfer_allow_tokens'; // id required to prevent reexecution
-module.exports.tags = ['TransferAllowTokensToBridge', 'new', 'IntegrationTest'];
+module.exports.tags = ['TransferAllowTokensToBridge', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['Bridge', 'BridgeProxy', 'AllowTokensProxy', 'MultiSigWallet'];
