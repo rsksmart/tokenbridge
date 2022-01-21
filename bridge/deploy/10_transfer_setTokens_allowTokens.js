@@ -28,7 +28,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   log(`AllowTokens Transfered Ownership to MultiSigWallet`);
 };
 module.exports.id = 'transfer_set_tokens_allow_tokens'; // id required to prevent reexecution
-module.exports.tags = ['AllowTokensProxyTransferSetTokens', 'new', 'IntegrationTest'];
+module.exports.tags = ['TransferSetTokens', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['MultiSigWallet', 'AllowTokens', 'AllowTokensProxy'];
 
 async function setTokens(network, allowTokens, deployer) {

@@ -14,6 +14,9 @@
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "deploy": "npx hardhat deploy --show-stack-traces --network",
+    "deployFromScratchTag": "npx hardhat deploy --tags DeployFromScratch --show-stack-traces --network",
+    "deployNewImplementationTag": "npx hardhat deploy --tags NewImplementation --show-stack-traces --network",
+    "deployUpgradeTag": "npx hardhat deploy --tags NewImplementation --show-stack-traces --network",
     "deployIntegrationTag": "npx hardhat deploy --tags IntegrationTest,IntegrationTestNft --show-stack-traces --network",
     "deployLocalIntegrationTest": "npm run deployIntegrationTag development && npm run deployIntegrationTag mirrorDevelopment",
     "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest"
