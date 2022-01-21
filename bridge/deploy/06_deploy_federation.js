@@ -35,4 +35,4 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_federation'; // id required to prevent reexecution
-module.exports.tags = ['Federation', 'new', 'IntegrationTest'];
+module.exports.tags = ['Federation', 'NewImplementation', 'DeployFromScratch', 'IntegrationTest'];

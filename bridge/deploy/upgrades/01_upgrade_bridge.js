@@ -24,5 +24,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   log(`MultiSig submitTransaction upgrade BridgeProxy contract in ProxyAdmin`);
 };
 module.exports.id = 'deploy_new_bridge'; // id required to prevent reexecution
-module.exports.tags = ['UpgradeBridge'];
-module.exports.dependencies = ['BridgeDeployment'];
+module.exports.tags = ['UpgradeBridge', 'Upgrade'];
+module.exports.dependencies = ['Bridge'];

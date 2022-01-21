@@ -51,7 +51,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
-module.exports.tags = ['FederationProxy', 'new', 'IntegrationTest'];
+module.exports.tags = ['FederationProxy', 'NewImplementation', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'BridgeProxy'];
 
 function getFederationConf(deployer, network) {

@@ -64,5 +64,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   fs.writeFileSync(`../federator/config/${network.name}.json`, JSON.stringify(config, null, 4));
 };
 module.exports.id = 'create_config_file'; // id required to prevent reexecution
-module.exports.tags = ['CreateConfigFile', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokens'];
+module.exports.tags = ['CreateConfigFile', 'DeployFromScratch', 'IntegrationTest'];
+module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokensProxy'];
