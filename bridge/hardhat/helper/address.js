@@ -47,12 +47,12 @@ async function getNftBridgeProxyAddress(hre) {
   return nftBridgeProxyDeployment;
 }
 
-async function getFederatorProxyAddress(hre) {
+async function getFederationProxyAddress(hre) {
   const {deployments} = hre;
-  const {federatorProxy} = await getNamedAccountsInstance(hre);
+  const {federationProxy} = await getNamedAccountsInstance(hre);
 
-  if (federatorProxy) {
-    return federatorProxy;
+  if (federationProxy) {
+    return federationProxy;
   }
   const federationProxyDeployment = await deployments.getOrNull('FederationProxy')
   if (federationProxyDeployment) {
@@ -86,7 +86,7 @@ module.exports = {
   getMultiSigAddress: getMultiSigAddress,
   getBridgeProxyAddress: getBridgeProxyAddress,
   getNftBridgeProxyAddress: getNftBridgeProxyAddress,
-  getFederatorProxyAddress: getFederatorProxyAddress,
+  getFederationProxyAddress: getFederationProxyAddress,
   getAllowTokensProxyAddress: getAllowTokensProxyAddress,
   getSideTokenFactoryAddress: getSideTokenFactoryAddress,
 };

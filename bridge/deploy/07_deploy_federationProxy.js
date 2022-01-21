@@ -2,10 +2,10 @@ const address = require('../hardhat/helper/address');
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
-  const {deployer, federatorProxy} = await getNamedAccounts();
+  const {deployer, federationProxy} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (federatorProxy) {
+  if (federationProxy) {
     return;
   }
 
@@ -51,7 +51,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
-module.exports.tags = ['FederationProxy', 'NewImplementation', 'DeployFromScratch', 'IntegrationTest'];
+module.exports.tags = ['FederationProxy', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'BridgeProxy'];
 
 function getFederationConf(deployer, network) {
