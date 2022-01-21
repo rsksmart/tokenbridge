@@ -30,4 +30,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_sideTokenFactory'; // id required to prevent reexecution
-module.exports.tags = ['SideTokenFactory', 'new', 'IntegrationTest'];
+module.exports.tags = ['SideTokenFactory', 'DeployFromScratch', 'IntegrationTest'];
