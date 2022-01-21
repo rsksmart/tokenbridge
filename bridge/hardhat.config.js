@@ -221,7 +221,7 @@ function getNamedAccounts() {
     proxyAdmin: getProxyAdminAddressesByChainId(),
     allowTokensProxy: getAllowTokensProxyAddressesByChainId(),
     bridgeProxy: getBridgeProxyAddressesByChainId(),
-    federatorProxy: getFederatorProxyAddressesByChainId(),
+    federationProxy: getFederationProxyAddressesByChainId(),
     sideTokenFactory: getSideTokenFactoryAddressesByChainId(),
   };
 }
@@ -279,14 +279,14 @@ function getBridgeProxyAddressesByChainId() {
   return bridgeProxyAddressesByChainId;
 }
 
-function getFederatorProxyAddressesByChainId() {
-  const federatorProxyAddressesByChainId = {};
-  federatorProxyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0x5e29c223d99648c88610519f96e85e627b3abe17';
-  federatorProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x7ecfda6072942577d36f939ad528b366b020004b';
-  federatorProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
-  federatorProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
-  federatorProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xBC383764ceBc13b66c04E1abeb36804a0Caaa5C6';
-  return federatorProxyAddressesByChainId;
+function getFederationProxyAddressesByChainId() {
+  const federationProxyAddressesByChainId = {};
+  federationProxyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0x5e29c223d99648c88610519f96e85e627b3abe17';
+  federationProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x7ecfda6072942577d36f939ad528b366b020004b';
+  federationProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
+  federationProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
+  federationProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xBC383764ceBc13b66c04E1abeb36804a0Caaa5C6';
+  return federationProxyAddressesByChainId;
 }
 
 function getSideTokenFactoryAddressesByChainId() {
