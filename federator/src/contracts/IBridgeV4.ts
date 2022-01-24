@@ -1,22 +1,25 @@
 import { Contract, EventData } from 'web3-eth-contract';
 import { IBridge } from './IBridge';
 
-interface MappedTokensParams {
+interface SideTokenAddressByOriginalTokenInterface {
   originalTokenAddress: string;
+  chainId: number;
 }
 
-export class IBridgeV3 implements IBridge {
+export class IBridgeV4 implements IBridge {
   bridgeContract: Contract;
+  chainId: number;
 
-  constructor(bridgeContract: Contract) {
+  constructor(bridgeContract: Contract, chainId: number) {
     this.bridgeContract = bridgeContract;
+    this.chainId = chainId;
   }
 
-  getFederation(): Promise<string> {
+  getFederation() {
     return this.bridgeContract.methods.getFederation();
   }
 
-  getAllowedTokens(): Promise<string> {
+  getAllowedTokens() {
     return this.bridgeContract.methods.allowedTokens();
   }
 
@@ -29,14 +32,14 @@ export class IBridgeV3 implements IBridge {
   }
 
   getProcessed(transactionHash: string): Promise<boolean> {
-    return this.bridgeContract.methods.processed(transactionHash);
+    return this.bridgeContract.methods.claimed(transactionHash);
   }
 
-  getVersion(): Promise<string> {
+  getVersion() {
     return this.bridgeContract.methods.version();
   }
 
-  getMappedToken(paramsObj: MappedTokensParams): Promise<string> {
-    return this.bridgeContract.methods.mappedTokens(paramsObj.originalTokenAddress);
+  getMappedToken(paramsObj: SideTokenAddressByOriginalTokenInterface) {
+    return this.bridgeContract.methods.sideTokenByOriginalToken(paramsObj.chainId, paramsObj.originalTokenAddress);
   }
 }
