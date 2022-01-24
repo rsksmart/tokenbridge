@@ -1,6 +1,6 @@
 import abiAllowTokensV0 from '../../../bridge/abi/AllowTokensV0.json';
 import abiAllowTokensV1 from '../../../bridge/abi/AllowTokens.json';
-import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
+import abiBridge from '../../../bridge/abi/Bridge.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
 import { CustomError } from '../lib/CustomError';
@@ -18,11 +18,8 @@ export class AllowTokensFactory extends ContractFactory {
   sideChainBridgeContract: any;
   constructor(config: ConfigData, logger: LogWrapper, sideChain: ConfigChain) {
     super(config, logger, sideChain);
-    this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(
-      abiBridgeV3 as AbiItem[],
-      this.config.mainchain.bridge,
-    );
-    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridgeV3 as AbiItem[], sideChain.bridge);
+    this.mainChainBridgeContract = new this.mainWeb3.eth.Contract(abiBridge as AbiItem[], this.config.mainchain.bridge);
+    this.sideChainBridgeContract = new this.sideWeb3.eth.Contract(abiBridge as AbiItem[], sideChain.bridge);
   }
 
   async getVersion(allowTokensContract) {

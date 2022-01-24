@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { web3 } = require('hardhat');
 const hardhatConfig = require('../hardhat.config');
 const toWei = web3.utils.toWei;
 const address = require('../hardhat/helper/address');
@@ -20,6 +21,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const config = {
     name: network.name,
+    chainId: await web3.eth.net.getId(),
     bridge: BridgeProxy.address.toLowerCase(),
     federation: federationProxyAddress.toLowerCase(),
     multiSig: multiSigAddress.toLowerCase(),

@@ -1,8 +1,8 @@
-import abiBridgeV2 from '../../../bridge/abi/BridgeV2.json';
-import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
+import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
+import abiBridgeV4 from '../../../bridge/abi/Bridge.json';
 import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
-import { IBridge } from './IBridge';
 import { IBridgeV3 } from './IBridgeV3';
+import { IBridgeV4 } from './IBridgeV4';
 import { IBridgeNft } from './IBridgeNft';
 import { CustomError } from '../lib/CustomError';
 import * as utils from '../lib/utils';
@@ -25,18 +25,18 @@ export class BridgeFactory extends ContractFactory {
   }
 
   async createInstance(web3: Web3, address: string) {
-    let bridgeContract = this.getContractByAbi(abiBridgeV3 as AbiItem[], address, web3);
+    let bridgeContract = this.getContractByAbi(abiBridgeV4 as AbiItem[], address, web3);
     const version = await this.getVersion(bridgeContract);
     const chainId = await web3.eth.net.getId();
+    this.logger.warn("===version=====", version);
     switch (version) {
+      case VERSIONS.V4:
+        return new IBridgeV4(bridgeContract, chainId);
       case VERSIONS.V3:
-        return new IBridgeV3(bridgeContract, chainId);
-      case VERSIONS.V2:
-      case VERSIONS.V1:
-        bridgeContract = this.getContractByAbi(abiBridgeV2 as AbiItem[], address, web3);
-        return new IBridge(bridgeContract);
+        bridgeContract = this.getContractByAbi(abiBridgeV3 as AbiItem[], address, web3);
+        return new IBridgeV3(bridgeContract);
       default:
-        throw Error('Unknown Bridge contract version');
+        throw Error('Unknown or deprecated Bridge contract version');
     }
   }
 
