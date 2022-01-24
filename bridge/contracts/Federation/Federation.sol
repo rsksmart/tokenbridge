@@ -51,7 +51,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	/**
 		(bytes32) transactionId => (bool) voted
 		@notice Check if that transaction was already processed
-		*/
+	*/
 	mapping(bytes32 => bool) public processed;
 
 	/** Federator v3 variables */

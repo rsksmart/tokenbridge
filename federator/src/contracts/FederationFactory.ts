@@ -41,7 +41,6 @@ export class FederationFactory extends ContractFactory {
   async createInstance(web3: Web3, address: string): Promise<IFederation> {
     let federationContract = this.getContractByAbi(abiFederationV3 as AbiItem[], address, web3);
     const version = await this.getVersion(federationContract);
-
     switch (version) {
       case VERSIONS.V3:
         return new IFederationV3(this.config, federationContract);
@@ -49,7 +48,7 @@ export class FederationFactory extends ContractFactory {
         federationContract = this.getContractByAbi(abiFederationV2 as AbiItem[], address, web3);
         return new IFederationV2(this.config, federationContract);
       default:
-        throw Error('Unknown Federation contract version');
+        throw Error('Unknown or deprecated Federation contract version');
     }
   }
 

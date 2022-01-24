@@ -1,7 +1,7 @@
 import Tx from 'ethereumjs-tx';
 import * as ethUtils from 'ethereumjs-util';
 import * as utils from '../lib/utils';
-import fs from 'fs';
+import * as fs from 'fs';
 import axios from 'axios';
 
 import { CustomError } from './CustomError';
