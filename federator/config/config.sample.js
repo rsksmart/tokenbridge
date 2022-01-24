@@ -6,7 +6,6 @@ module.exports = {
     require("./bsctestnet.json"), //the json containing the smart contract addresses in binance
   ],
   runEvery: 2, // In minutes,
-  confirmations: 120, // Number of blocks before processing it, if working with ganache set as 0
   privateKey: fs.readFileSync(`${__dirname}/federator.key`, "utf8"),
   storagePath: "./db",
   etherscanApiKey: "",

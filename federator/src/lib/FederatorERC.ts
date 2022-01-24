@@ -259,7 +259,6 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('blockNumber', blockNumber);
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
-
     const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
     const sideTokenAddress = await utils.retry3Times(
       originBridge.getMappedToken({

@@ -5,7 +5,7 @@ async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
 
-  const oldFederatorAddress = "0x00.....";
+  const oldFederatorAddress = "0x8f397ff074ff190fc650e5cab4da039a8163e12a";
 
   const Federation = await deployments.get('FederationV2');
   const FederationProxy = await deployments.get('FederationProxy');

@@ -5,10 +5,8 @@ const DEFAULT_FROM_BLOCK = 0;
 
 export interface ConfigChainParams {
   name: string;
+  chainId: number;
   bridge: string;
-  federation: string;
-  multiSig: string;
-  allowTokens: string;
   host: string;
   nftBridge?: string;
   testToken?: string;
@@ -18,11 +16,9 @@ export interface ConfigChainParams {
 
 export class ConfigChain {
   name: string;
+  chainId: number;
   bridge: string;
   nftBridge: string;
-  federation: string;
-  multiSig: string;
-  allowTokens: string;
   testToken: string;
   host: string;
   fromBlock: number;
@@ -30,10 +26,8 @@ export class ConfigChain {
 
   constructor(chainConfig: ConfigChainParams) {
     this.name = chainConfig.name;
+    this.chainId = chainConfig.chainId;
     this.bridge = chainConfig.bridge;
-    this.federation = chainConfig.federation;
-    this.multiSig = chainConfig.multiSig;
-    this.allowTokens = chainConfig.allowTokens;
     this.host = chainConfig.host;
     this.testToken = chainConfig?.testToken;
     this.nftBridge = chainConfig?.nftBridge;

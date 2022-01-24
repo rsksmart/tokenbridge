@@ -1,19 +1,18 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-pragma abicoder v2;
 
 // Upgradables
 import "../zeppelin/upgradable/Initializable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "../Bridge/IBridgeV2.sol";
+import "../Bridge/IBridgeV3.sol";
 
 contract FederationV2 is Initializable, UpgradableOwnable {
     uint constant public MAX_MEMBER_COUNT = 50;
     address constant private NULL_ADDRESS = address(0);
 
-    IBridgeV2 public bridge;
+    IBridgeV3 public bridge;
     address[] public members;
     uint public required;
 
@@ -68,7 +67,7 @@ contract FederationV2 is Initializable, UpgradableOwnable {
     }
 
     function initialize(address[] memory _members, uint _required, address _bridge, address owner)
-    public validRequirement(_members.length, _required) initializer {
+    validRequirement(_members.length, _required) public initializer {
         UpgradableOwnable.initialize(owner);
         require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
         members = _members;
@@ -92,7 +91,7 @@ contract FederationV2 is Initializable, UpgradableOwnable {
 
     function _setBridge(address _bridge) internal {
         require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
-        bridge = IBridgeV2(_bridge);
+        bridge = IBridgeV3(_bridge);
         emit BridgeChanged(_bridge);
     }
 
@@ -140,14 +139,12 @@ contract FederationV2 is Initializable, UpgradableOwnable {
             processed[transactionId] = true;
             bridge.acceptTransfer(
                 originalTokenAddress,
+                sender,
                 receiver,
                 amount,
-                "",
                 blockHash,
                 transactionHash,
-                logIndex,
-                18,
-                3
+                logIndex
             );
             emit Executed(
                 _msgSender(),

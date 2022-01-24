@@ -18,3 +18,4 @@ heartbeat.log
 federator.log
 /built
 /abis
+/config/test.local.federator.key
