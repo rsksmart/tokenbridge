@@ -28,7 +28,6 @@ export class BridgeFactory extends ContractFactory {
     let bridgeContract = this.getContractByAbi(abiBridgeV4 as AbiItem[], address, web3);
     const version = await this.getVersion(bridgeContract);
     const chainId = await web3.eth.net.getId();
-    this.logger.warn("===version=====", version);
     switch (version) {
       case VERSIONS.V4:
         return new IBridgeV4(bridgeContract, chainId);
@@ -53,14 +52,6 @@ export class BridgeFactory extends ContractFactory {
     }
   }
 
-  async getSideBridgeContract() {
-    try {
-      return await this.createInstance(this.sideWeb3, this.sideChain.bridge);
-    } catch (err) {
-      throw new CustomError(`Exception creating Side Bridge Contract`, err);
-    }
-  }
-
   getMainNftBridgeContract() {
     try {
       return this.createInstanceNft(this.mainWeb3, this.config.mainchain.nftBridge);
@@ -69,11 +60,4 @@ export class BridgeFactory extends ContractFactory {
     }
   }
 
-  getSideNftBridgeContract() {
-    try {
-      return this.createInstanceNft(this.sideWeb3, this.sideChain.nftBridge);
-    } catch (err) {
-      throw new CustomError(`Exception creating Side Bridge NFT Contract`, err);
-    }
-  }
 }

@@ -17,7 +17,7 @@ import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
-    config.storagePath = `${config.storagePath}/nft/${config.mainchain.name}`;
+    config.storagePath = `${config.storagePath}/nft/`;
     super(config, logger, metricCollector);
   }
 
@@ -293,7 +293,6 @@ export default class FederatorNFT extends Federator {
           federatorAddress,
           originChainId,
           destinationChainId,
-          federationFactory,
           transactionSender,
           federatorContract,
           sideChainConfig,
@@ -320,7 +319,6 @@ export default class FederatorNFT extends Federator {
     federatorAddress,
     originChainId,
     destinationChainId,
-    federationFactory,
     transactionSender,
     federatorContract,
     sideChainConfig,
@@ -338,7 +336,6 @@ export default class FederatorNFT extends Federator {
     federatorAddress: string;
     originChainId: number;
     destinationChainId: number;
-    federationFactory: FederationFactory;
     transactionSender: TransactionSender;
     federatorContract: IFederationV3;
     sideChainConfig: ConfigChain;
