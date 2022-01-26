@@ -28,6 +28,6 @@ export class IBridgeNft {
   }
 
   getMappedToken({ originalTokenAddress, chainId }) {
-    return this.nftBridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress);
+    return this.nftBridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress).call();
   }
 }

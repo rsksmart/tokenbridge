@@ -37,6 +37,6 @@ export class IBridgeV3 implements IBridge {
   }
 
   getMappedToken(paramsObj: MappedTokensParams): Promise<string> {
-    return this.bridgeContract.methods.mappedTokens(paramsObj.originalTokenAddress);
+    return this.bridgeContract.methods.mappedTokens(paramsObj.originalTokenAddress).call();
   }
 }

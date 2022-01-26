@@ -66,7 +66,6 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
-    config.storagePath = `${config.storagePath}/${config.mainchain.name}`;
     super(config, logger, metricCollector);
   }
 
@@ -146,6 +145,7 @@ export default class FederatorERC extends Federator {
     }
     fromBlock = fromBlock + 1;
     this.logger.debug('Running from Block', fromBlock);
+    this.logger.error('===getLogsAndProcess====', mainChainId, sideChainConfig);
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -186,7 +186,7 @@ export default class FederatorERC extends Federator {
       `getLogsAndProcess started currentBlock: ${getLogParams.currentBlock}, fromBlock: ${getLogParams.fromBlock}, toBlock: ${getLogParams.toBlock}`,
     );
     if (getLogParams.fromBlock >= getLogParams.toBlock) {
-      this.logger.debug('getLogsAndProcess fromBlock >= toBlock', getLogParams.fromBlock, getLogParams.toBlock);
+      this.logger.trace('getLogsAndProcess fromBlock >= toBlock', getLogParams.fromBlock, getLogParams.toBlock);
       return;
     }
     this.logger.upsertContext('Current Block', getLogParams.currentBlock);
@@ -208,6 +208,7 @@ export default class FederatorERC extends Federator {
       const logs = await mainBridge.getPastEvents('Cross', {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
+        _destinationChainId: getLogParams.sideChainId,
       });
       if (!logs) {
         throw new Error('Failed to obtain the logs');
@@ -260,11 +261,11 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
     const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
-    const sideTokenAddress = await utils.retry3Times(
+    const sideTokenAddress = await typescriptUtils.retryNTimes(
       originBridge.getMappedToken({
         originalTokenAddress: tokenAddress,
         chainId: destinationChainIdStr,
-      }).call,
+      }),
     );
 
     let allowed: number, mediumAmount: number, largeAmount: number;
@@ -377,9 +378,9 @@ export default class FederatorERC extends Federator {
         );
       }
     } else {
-      this.logger.debug(
-        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-        originalTokenAddress: ${processTransactionParams.tokenAddress} was already processed`,
+      this.logger.info(
+        `Already processed Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+        originalTokenAddress: ${processTransactionParams.tokenAddress}`,
       );
     }
   }
@@ -438,7 +439,6 @@ export default class FederatorERC extends Federator {
       );
       if (fs.existsSync(revertedTxnsPath)) {
         revertedTxns = JSON.parse(fs.readFileSync(revertedTxnsPath, 'utf8'));
-        this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
       }
 
       if (revertedTxns[voteTransactionParams.transactionId]) {
@@ -450,11 +450,6 @@ export default class FederatorERC extends Federator {
         return false;
       }
 
-      this.logger.info(
-        `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
-        TransactionId ${voteTransactionParams.transactionId} was not reverted.`,
-      );
-
       const receipt = await voteTransactionParams.transactionSender.sendTransaction(
         voteTransactionParams.sideFedContract.getAddress(),
         txDataAbi,
@@ -463,7 +458,7 @@ export default class FederatorERC extends Federator {
       );
 
       if (!receipt.status) {
-        this.logger.info(
+        this.logger.error(
           `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
           TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
           receipt,
