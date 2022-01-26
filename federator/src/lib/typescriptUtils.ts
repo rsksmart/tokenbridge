@@ -2,7 +2,7 @@ export const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const retryNTimes = async (toTry: Promise<any>, times = 5, intervalInMs = 1000) => {
+export const retryNTimes = async (toTry: Promise<any>, times = 3, intervalInMs = 1000) => {
   if (times < 1) {
     throw new Error(`Bad argument: 'times' must be greater than 0, but ${times} was received.`);
   }

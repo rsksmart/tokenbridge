@@ -15,5 +15,5 @@ export interface IBridge {
 
   getVersion();
 
-  getMappedToken(paramsObj: any);
+  getMappedToken(paramsObj: any): Promise<string>;
 }

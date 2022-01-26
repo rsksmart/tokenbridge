@@ -39,7 +39,9 @@ export class IBridgeV4 implements IBridge {
     return this.bridgeContract.methods.version();
   }
 
-  getMappedToken(paramsObj: SideTokenAddressByOriginalTokenInterface) {
-    return this.bridgeContract.methods.sideTokenByOriginalToken(paramsObj.chainId, paramsObj.originalTokenAddress);
+  getMappedToken(paramsObj: SideTokenAddressByOriginalTokenInterface): Promise<string> {
+    return this.bridgeContract.methods
+      .sideTokenByOriginalToken(paramsObj.chainId, paramsObj.originalTokenAddress)
+      .call();
   }
 }
