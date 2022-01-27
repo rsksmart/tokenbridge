@@ -66,21 +66,7 @@ export interface VoteTransactionParams extends ProcessTransactionParams {
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
-    config.storagePath = `${config.storagePath}/${config.mainchain.name}`;
     super(config, logger, metricCollector);
-  }
-
-  getFromBlock(sideChainId: number, mainChainId: number): number {
-    let fromBlock: number = null;
-    try {
-      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(sideChainId, mainChainId), 'utf8'));
-    } catch (err) {
-      fromBlock = this.config.mainchain.fromBlock;
-    }
-    if (fromBlock < this.config.mainchain.fromBlock) {
-      fromBlock = this.config.mainchain.fromBlock;
-    }
-    return fromBlock;
   }
 
   async run({
@@ -124,7 +110,7 @@ export default class FederatorERC extends Federator {
       return false;
     }
 
-    this.logger.debug(`Current Block ${currentBlock} ChainId ${mainChainId}`);
+    this.logger.trace(`Current Block ${currentBlock} ChainId ${mainChainId}`);
     const allowTokens = await allowTokensFactory.getMainAllowTokensContract();
     const confirmations = await allowTokens.getConfirmations();
     const toBlock = currentBlock - confirmations.largeAmountConfirmations;
@@ -137,7 +123,7 @@ export default class FederatorERC extends Federator {
       return false;
     }
 
-    let fromBlock = this.getFromBlock(mainChainId, sideChainId);
+    let fromBlock = this.getLastBlock(mainChainId, sideChainId);
     if (fromBlock >= toBlock && fromBlock >= newToBlock) {
       this.logger.warn(
         `Current chain ${mainChainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
@@ -162,7 +148,7 @@ export default class FederatorERC extends Federator {
     });
     const lastBlockProcessed = toBlock;
 
-    this.logger.debug('Started the second Log and Process', newToBlock);
+    this.logger.debug('Started Log and Process of Medium and Small confirmations up to block', newToBlock);
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -186,7 +172,7 @@ export default class FederatorERC extends Federator {
       `getLogsAndProcess started currentBlock: ${getLogParams.currentBlock}, fromBlock: ${getLogParams.fromBlock}, toBlock: ${getLogParams.toBlock}`,
     );
     if (getLogParams.fromBlock >= getLogParams.toBlock) {
-      this.logger.debug('getLogsAndProcess fromBlock >= toBlock', getLogParams.fromBlock, getLogParams.toBlock);
+      this.logger.trace('getLogsAndProcess fromBlock >= toBlock', getLogParams.fromBlock, getLogParams.toBlock);
       return;
     }
     this.logger.upsertContext('Current Block', getLogParams.currentBlock);
@@ -205,9 +191,10 @@ export default class FederatorERC extends Federator {
       this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
       this.logger.upsertContext('fromBlock', fromPageBlock);
       this.logger.upsertContext('toBlock', toPagedBlock);
-      const logs = await mainBridge.getPastEvents('Cross', {
+      const logs = await mainBridge.getPastEvents('Cross', getLogParams.sideChainId, {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
+        _destinationChainId: getLogParams.sideChainId,
       });
       if (!logs) {
         throw new Error('Failed to obtain the logs');
@@ -219,7 +206,7 @@ export default class FederatorERC extends Federator {
         logs,
       });
       if (!getLogParams.mediumAndSmall) {
-        this._saveProgress(this.getLastBlockPath(getLogParams.sideChainId, getLogParams.mainChainId), toPagedBlock);
+        this._saveProgress(this.getLastBlockPath(getLogParams.mainChainId, getLogParams.sideChainId), toPagedBlock);
       }
       fromPageBlock = toPagedBlock + 1;
     }
@@ -259,13 +246,12 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('blockNumber', blockNumber);
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
-
     const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
-    const sideTokenAddress = await utils.retry3Times(
+    const sideTokenAddress = await typescriptUtils.retryNTimes(
       originBridge.getMappedToken({
         originalTokenAddress: tokenAddress,
         chainId: destinationChainIdStr,
-      }).call,
+      }),
     );
 
     let allowed: number, mediumAmount: number, largeAmount: number;
@@ -378,9 +364,9 @@ export default class FederatorERC extends Federator {
         );
       }
     } else {
-      this.logger.debug(
-        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-        originalTokenAddress: ${processTransactionParams.tokenAddress} was already processed`,
+      this.logger.info(
+        `Already processed Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+        originalTokenAddress: ${processTransactionParams.tokenAddress}`,
       );
     }
   }
@@ -439,7 +425,6 @@ export default class FederatorERC extends Federator {
       );
       if (fs.existsSync(revertedTxnsPath)) {
         revertedTxns = JSON.parse(fs.readFileSync(revertedTxnsPath, 'utf8'));
-        this.logger.info(`read these transactions from reverted transactions file`, revertedTxns);
       }
 
       if (revertedTxns[voteTransactionParams.transactionId]) {
@@ -451,11 +436,6 @@ export default class FederatorERC extends Federator {
         return false;
       }
 
-      this.logger.info(
-        `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
-        TransactionId ${voteTransactionParams.transactionId} was not reverted.`,
-      );
-
       const receipt = await voteTransactionParams.transactionSender.sendTransaction(
         voteTransactionParams.sideFedContract.getAddress(),
         txDataAbi,
@@ -464,7 +444,7 @@ export default class FederatorERC extends Federator {
       );
 
       if (!receipt.status) {
-        this.logger.info(
+        this.logger.error(
           `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
           TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
           receipt,

@@ -35,4 +35,4 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_bridge'; // id required to prevent reexecution
-module.exports.tags = ['Bridge', 'new', 'BridgeDeployment', 'IntegrationTest'];
+module.exports.tags = ['Bridge', 'Upgrade', 'DeployFromScratch', 'IntegrationTest'];

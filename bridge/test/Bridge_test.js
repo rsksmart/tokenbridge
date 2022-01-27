@@ -50,7 +50,7 @@ contract('Bridge', async function (accounts) {
     const federation = accounts[5];
     const tokenName = 'MAIN';
     const tokenSymbol = 'MAIN';
-    const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes,uint256,uint256)');
+    const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,uint256,address,uint256,uint256,bytes)');
     // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
     const chainId = await web3.eth.getChainId();
 
@@ -96,7 +96,7 @@ contract('Bridge', async function (accounts) {
 
         it('should retrieve the version', async function () {
             const result = await this.bridge.version();
-            assert.equal(result, "v3");
+            assert.equal(result, "v4");
         });
 
         describe('owner', async function () {
@@ -444,29 +444,24 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
+                        "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
                     },
                     {
-                      "indexed": true,
-                      "name": "_from",
-                      "type": "address"
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
                     },
                     {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
                     },
                     {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
+                        "indexed": false,
+                        "name": "_from",
+                        "type": "address"
                     },
                     {
                         "indexed": false,
@@ -475,8 +470,13 @@ contract('Bridge', async function (accounts) {
                     },
                     {
                         "indexed": false,
-                        "name": "_destinationChainId",
+                        "name": "_amount",
                         "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
                     }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
@@ -516,40 +516,40 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
                       },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    },
-                    {
+                      {
                         "indexed": false,
                         "name": "_originChainId",
                         "type": "uint256"
-                    },
-                    {
+                      },
+                      {
                         "indexed": false,
-                        "name": "_destinationChainId",
+                        "name": "_amount",
                         "type": "uint256"
-                    }
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
@@ -586,40 +586,40 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
-                    },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_originChainId",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_destinationChainId",
-                      "type": "uint256"
-                    }
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
@@ -660,40 +660,40 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
                       },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_originChainId",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_destinationChainId",
-                      "type": "uint256"
-                    }
+                      {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);

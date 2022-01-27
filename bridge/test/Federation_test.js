@@ -1239,7 +1239,7 @@ contract('Federation', async function (accounts) {
                   chains.HARDHAT_TEST_NET_CHAIN_ID,
                   { from: federator2 }
                 ),
-                'reverted',
+                truffleAssertions.ErrorType.REVERT,
                 'function call to a non-contract account'
               );
             });

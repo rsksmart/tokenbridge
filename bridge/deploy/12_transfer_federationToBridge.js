@@ -2,10 +2,10 @@ const address = require('../hardhat/helper/address');
 
 module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments} = hre;
-  const {deployer, federatorProxy} = await getNamedAccounts();
+  const {deployer, federationProxy} = await getNamedAccounts();
   const {log} = deployments;
 
-  if (federatorProxy) {
+  if (federationProxy) {
     return;
   }
 
@@ -13,7 +13,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
-  const federationProxyAddress = await address.getFederatorProxyAddress(hre);
+  const federationProxyAddress = await address.getFederationProxyAddress(hre);
   const multiSigAddress =  await address.getMultiSigAddress(hre);
 
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, multiSigAddress);
@@ -25,5 +25,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   log(`MultiSig submitTransaction Change Federation in the Bridge`);
 };
 module.exports.id = 'transfer_federation_to_bridge'; // id required to prevent reexecution
-module.exports.tags = ['TransferFederationToBridge', 'new', 'IntegrationTest'];
+module.exports.tags = ['TransferFederationToBridge', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['Bridge', 'BridgeProxy', 'FederationProxy', 'MultiSigWallet'];

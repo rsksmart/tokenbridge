@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { web3 } = require('hardhat');
 const hardhatConfig = require('../hardhat.config');
 const toWei = web3.utils.toWei;
 const address = require('../hardhat/helper/address');
@@ -14,18 +15,19 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const BridgeProxy = await deployments.get('BridgeProxy');
   const multiSigAddress = await address.getMultiSigAddress(hre);
-  const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
+  const federationProxyAddress = await address.getFederationProxyAddress(hre);
   const MultiSigWallet = await deployments.get('MultiSigWallet');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
   const config = {
     name: network.name,
     bridge: BridgeProxy.address.toLowerCase(),
-    federation: federatorProxyAddress.toLowerCase(),
+    federation: federationProxyAddress.toLowerCase(),
     multiSig: multiSigAddress.toLowerCase(),
     allowTokens: AllowTokensProxy.address.toLowerCase()
   };
 
+  config.chainId = await web3.eth.net.getId();
   if (!network.live) {
     const AllowTokens = await deployments.get('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
@@ -64,5 +66,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   fs.writeFileSync(`../federator/config/${network.name}.json`, JSON.stringify(config, null, 4));
 };
 module.exports.id = 'create_config_file'; // id required to prevent reexecution
-module.exports.tags = ['CreateConfigFile', 'new', 'IntegrationTest'];
-module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokens'];
+module.exports.tags = ['CreateConfigFile', 'DeployFromScratch', 'IntegrationTest'];
+module.exports.dependencies = ['BridgeProxy', 'FederationProxy', 'MultiSigWallet', 'AllowTokensProxy'];

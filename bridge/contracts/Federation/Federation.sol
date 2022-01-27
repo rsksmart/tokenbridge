@@ -10,7 +10,6 @@ import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 import "../nftbridge/INFTBridge.sol";
 import "../interface/IBridge.sol";
 import "../interface/IFederation.sol";
-
 contract Federation is Initializable, UpgradableOwnable, IFederation {
 	uint constant public MAX_MEMBER_COUNT = 50;
 	address constant private NULL_ADDRESS = address(0);
@@ -52,7 +51,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	/**
 		(bytes32) transactionId => (bool) voted
 		@notice Check if that transaction was already processed
-		*/
+	*/
 	mapping(bytes32 => bool) public processed;
 
 	/** Federator v3 variables */
@@ -235,6 +234,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 
 		if (validateTransaction(transactionId, transactionIdMultichain)) {
 			processed[transactionIdMultichain] = true;
+
 			acceptTransfer(
 				originalTokenAddress,
 				sender,
@@ -289,20 +289,19 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		originChainId,
 		destinationChainId
       );
-      return;
-    }
-
-    bridge.acceptTransfer(
-      originalTokenAddress,
-      sender,
-      receiver,
-      value,
-      blockHash,
-      transactionHash,
-      logIndex,
-	  originChainId,
-	  destinationChainId
-    );
+    } else {
+	  bridge.acceptTransfer(
+		originalTokenAddress,
+		sender,
+		receiver,
+		value,
+		blockHash,
+		transactionHash,
+		logIndex,
+		originChainId,
+		destinationChainId
+	  );
+	}
   }
 
   /**
