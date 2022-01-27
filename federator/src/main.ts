@@ -26,6 +26,8 @@ export class Main {
   rskFederatorNFT: FederatorNFT;
   config: Config;
   heartbeat: Heartbeat;
+  heartBeatScheduler: Scheduler;
+  federatorScheduler: Scheduler;
 
   constructor() {
     this.logger = Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR);
@@ -43,8 +45,6 @@ export class Main {
       Logs.getInstance().getLogger(LOGGER_CATEGORY_HEARTBEAT),
       this.metricCollector,
     );
-    // TODO uncoment this after tests
-    this.scheduleHeartbeatProcesses();
 
     this.rskFederator = new Federator(
       this.config,
@@ -56,15 +56,15 @@ export class Main {
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_MAIN),
       this.metricCollector,
     );
-
-    const pollingInterval = this.config.runEvery * 1000 * 60; // Minutes
-    const scheduler = new Scheduler(pollingInterval, this.logger, { run: () => this.run() });
-    scheduler.start().catch((err) => {
-      this.logger.error('Unhandled Error on scheduler.start()', err);
-    });
   }
 
-  async run() {
+  async start() {
+    this.scheduleFederatorProcesses();
+    // TODO uncoment this after tests
+    this.scheduleHeartbeatProcesses();
+  }
+
+  async runFederator() {
     try {
       // TODO uncoment this after tests
       await this.heartbeat.readLogs();
@@ -76,7 +76,7 @@ export class Main {
         await this.runErcOtherChainFederator(sideChainConfig);
       }
     } catch (err) {
-      this.logger.error('Unhandled Error on run()', err);
+      this.logger.error('Unhandled Error on main.run()', err);
       process.exit(1);
     }
   }
@@ -131,13 +131,31 @@ export class Main {
     await sideFederatorNFT.runAll();
   }
 
+  async scheduleFederatorProcesses() {
+    const federatorPollingInterval = this.config.runEvery * 1000 * 60; // Minutes
+    this.federatorScheduler = new Scheduler(federatorPollingInterval, this.logger, {
+      run: async () => {
+        try {
+          await this.runFederator();
+        } catch (err) {
+          this.logger.error('Unhandled Error on runFederator()', err);
+          process.exit(1);
+        }
+      },
+    });
+
+    this.federatorScheduler.start().catch((err) => {
+      this.logger.error('Unhandled Error on federatorScheduler.start()', err);
+    });
+  }
+
   async scheduleHeartbeatProcesses() {
     const heartBeatPollingInterval = await utils.getHeartbeatPollingInterval({
       host: this.config.mainchain.host,
       runHeartbeatEvery: this.config.runHeartbeatEvery,
     });
 
-    const heartBeatScheduler = new Scheduler(heartBeatPollingInterval, this.logger, {
+    this.heartBeatScheduler = new Scheduler(heartBeatPollingInterval, this.logger, {
       run: async () => {
         try {
           await this.heartbeat.run();
@@ -148,14 +166,14 @@ export class Main {
       },
     });
 
-    heartBeatScheduler.start().catch((err) => {
+    this.heartBeatScheduler.start().catch((err) => {
       this.logger.error('Unhandled Error on heartBeatScheduler.start()', err);
     });
   }
 }
 
 const main = new Main();
-main.run();
+main.start();
 
 async function exitHandler() {
   process.exit(1);

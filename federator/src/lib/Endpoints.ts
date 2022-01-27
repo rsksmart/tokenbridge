@@ -9,6 +9,7 @@ export class Endpoint {
   constructor(_logger, port: number) {
     this.logger = _logger;
     this.port = port;
+    this.logger.upsertContext('service', this.constructor.name);
   }
 
   logCall(req, res, next) {
