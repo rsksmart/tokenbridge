@@ -69,19 +69,6 @@ export default class FederatorERC extends Federator {
     super(config, logger, metricCollector);
   }
 
-  getFromBlock(sideChainId: number, mainChainId: number): number {
-    let fromBlock: number = null;
-    try {
-      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(sideChainId, mainChainId), 'utf8'));
-    } catch (err) {
-      fromBlock = this.config.mainchain.fromBlock;
-    }
-    if (fromBlock < this.config.mainchain.fromBlock) {
-      fromBlock = this.config.mainchain.fromBlock;
-    }
-    return fromBlock;
-  }
-
   async run({
     sideChainConfig,
     sideChainWeb3,
@@ -123,7 +110,7 @@ export default class FederatorERC extends Federator {
       return false;
     }
 
-    this.logger.debug(`Current Block ${currentBlock} ChainId ${mainChainId}`);
+    this.logger.trace(`Current Block ${currentBlock} ChainId ${mainChainId}`);
     const allowTokens = await allowTokensFactory.getMainAllowTokensContract();
     const confirmations = await allowTokens.getConfirmations();
     const toBlock = currentBlock - confirmations.largeAmountConfirmations;
@@ -136,7 +123,7 @@ export default class FederatorERC extends Federator {
       return false;
     }
 
-    let fromBlock = this.getFromBlock(mainChainId, sideChainId);
+    let fromBlock = this.getLastBlock(mainChainId, sideChainId);
     if (fromBlock >= toBlock && fromBlock >= newToBlock) {
       this.logger.warn(
         `Current chain ${mainChainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
@@ -145,7 +132,6 @@ export default class FederatorERC extends Federator {
     }
     fromBlock = fromBlock + 1;
     this.logger.debug('Running from Block', fromBlock);
-    this.logger.error('===getLogsAndProcess====', mainChainId, sideChainConfig);
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -162,7 +148,7 @@ export default class FederatorERC extends Federator {
     });
     const lastBlockProcessed = toBlock;
 
-    this.logger.debug('Started the second Log and Process', newToBlock);
+    this.logger.debug('Started Log and Process of Medium and Small confirmations up to block', newToBlock);
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -220,7 +206,7 @@ export default class FederatorERC extends Federator {
         logs,
       });
       if (!getLogParams.mediumAndSmall) {
-        this._saveProgress(this.getLastBlockPath(getLogParams.sideChainId, getLogParams.mainChainId), toPagedBlock);
+        this._saveProgress(this.getLastBlockPath(getLogParams.mainChainId, getLogParams.sideChainId), toPagedBlock);
       }
       fromPageBlock = toPagedBlock + 1;
     }
