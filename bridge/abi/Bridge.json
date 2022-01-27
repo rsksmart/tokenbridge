@@ -164,14 +164,26 @@
       {
         "indexed": true,
         "internalType": "address",
-        "name": "_from",
+        "name": "_to",
         "type": "address"
       },
       {
         "indexed": true,
+        "internalType": "uint256",
+        "name": "_destinationChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
-        "name": "_to",
+        "name": "_from",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "_originChainId",
+        "type": "uint256"
       },
       {
         "indexed": false,
@@ -184,18 +196,6 @@
         "internalType": "bytes",
         "name": "_userData",
         "type": "bytes"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_originChainId",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "_destinationChainId",
-        "type": "uint256"
       }
     ],
     "name": "Cross",
