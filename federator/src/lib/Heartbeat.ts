@@ -26,8 +26,9 @@ export class Heartbeat {
   constructor(config: Config, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
-
-    this.logger.upsertContext('service', this.constructor.name);
+    if (this.logger.upsertContext) {
+      this.logger.upsertContext('service', this.constructor.name);
+    }
     this.mainWeb3 = new Web3(config.mainchain.host);
 
     this.metricCollector = metricCollector;
