@@ -24,6 +24,7 @@ export default abstract class Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
+    this.logger.upsertContext('service', this.constructor.name);
 
     if (config.checkHttps && !utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       this.logger.info('Check of checkHttpsOrLocalhost failed');
@@ -47,7 +48,7 @@ export default abstract class Federator {
     return client.eth.net.getId();
   }
 
-  getLastBlockPath(sideChainId: number, mainChainId: number): string {
+  getLastBlockPath(mainChainId: number, sideChainId: number): string {
     return `${this.config.storagePath}/lastBlock_${mainChainId}_${sideChainId}.txt`;
   }
 
@@ -68,15 +69,16 @@ export default abstract class Federator {
     return this.getWeb3(this.config.mainchain.host);
   }
 
-  getFromBlock(sideChainId: number, mainChainId: number): number {
+  getLastBlock(mainChainId: number, sideChainId: number): number {
     let fromBlock: number = null;
+    const originalFromBlock = this.config.mainchain.fromBlock || 0;
     try {
-      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(sideChainId, mainChainId), 'utf8'));
+      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(mainChainId, sideChainId), 'utf8'));
     } catch (err) {
-      fromBlock = this.config.mainchain.fromBlock;
+      fromBlock = originalFromBlock;
     }
-    if (fromBlock < this.config.mainchain.fromBlock) {
-      fromBlock = this.config.mainchain.fromBlock;
+    if (fromBlock < originalFromBlock) {
+      fromBlock = originalFromBlock;
     }
     return fromBlock;
   }
@@ -109,6 +111,7 @@ export default abstract class Federator {
 
   async runAll(): Promise<boolean> {
     for (const sideChainConfig of this.config.sidechain) {
+      this.logger.trace(`${this.constructor.name} from ${this.config.mainchain.chainId} to ${sideChainConfig.chainId}`);
       this.resetRetries();
       const sideChainWeb3 = this.getWeb3(sideChainConfig.host);
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);

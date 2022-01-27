@@ -92,7 +92,7 @@ export default class FederatorNFT extends Federator {
       });
     }
 
-    let fromBlock = this.getLastBlock(sideChainId, mainChainId);
+    let fromBlock = this.getLastBlock(mainChainId, sideChainId);
     if (fromBlock >= toBlock) {
       this.logger.warn(
         `Current chain ${mainChainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
@@ -113,20 +113,6 @@ export default class FederatorNFT extends Federator {
       sideChainConfig,
     });
     return true;
-  }
-
-  getLastBlock(sideChainId: number, mainChainId: number): number {
-    let fromBlock: number = null;
-    const originalFromBlock = this.config.mainchain.fromBlock || 0;
-    try {
-      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(sideChainId, mainChainId), 'utf8'));
-    } catch (err) {
-      fromBlock = originalFromBlock;
-    }
-    if (fromBlock < originalFromBlock) {
-      fromBlock = originalFromBlock;
-    }
-    return fromBlock;
   }
 
   async getLogsAndProcess({
@@ -184,7 +170,7 @@ export default class FederatorNFT extends Federator {
         federationFactory,
         sideChainConfig,
       });
-      this._saveProgress(this.getLastBlockPath(sideChainId, mainChainId), toPagedBlock.toString());
+      this._saveProgress(this.getLastBlockPath(mainChainId, sideChainId), toPagedBlock.toString());
       fromPageBlock = toPagedBlock + 1;
     }
   }
