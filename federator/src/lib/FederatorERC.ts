@@ -205,7 +205,7 @@ export default class FederatorERC extends Federator {
       this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
       this.logger.upsertContext('fromBlock', fromPageBlock);
       this.logger.upsertContext('toBlock', toPagedBlock);
-      const logs = await mainBridge.getPastEvents('Cross', {
+      const logs = await mainBridge.getPastEvents('Cross', getLogParams.sideChainId, {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
         _destinationChainId: getLogParams.sideChainId,
