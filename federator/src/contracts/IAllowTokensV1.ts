@@ -77,7 +77,7 @@ export class IAllowTokensV1 implements IAllowTokens {
       }
       return result;
     } catch (err) {
-      throw new CustomError(`Exception getInfoAndLimits at AllowTokens Contract`, err);
+      throw new CustomError(`Exception getInfoAndLimits at AllowTokens Contract for ${objParams.tokenAddress}`, err);
     }
   }
 }

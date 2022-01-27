@@ -9,13 +9,15 @@ import * as utils from '../lib/utils';
 import { IFederation } from '../contracts/IFederation';
 import { LogWrapper } from './logWrapper';
 import { MetricCollector } from './MetricCollector';
+import * as typescriptUtils from './typescriptUtils';
+
 const currentVersion = process.env.npm_package_version;
 
 export class Heartbeat {
   config: Config;
   logger: LogWrapper;
   mainWeb3: Web3;
-  sidesWeb3: Web3[];
+  sideChains: any[];
   transactionSender: any;
   lastBlockPath: string;
   federationFactory: FederationFactory;
@@ -24,16 +26,22 @@ export class Heartbeat {
   constructor(config: Config, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
-
+    if (this.logger.upsertContext) {
+      this.logger.upsertContext('service', this.constructor.name);
+    }
     this.mainWeb3 = new Web3(config.mainchain.host);
 
     this.metricCollector = metricCollector;
     this.federationFactory = new FederationFactory(this.config, this.logger, config.mainchain);
     this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
     this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
-    this.sidesWeb3 = [];
+    this.sideChains = [];
     for (const sideChainConfig of config.sidechain) {
-      this.sidesWeb3.push(new Web3(sideChainConfig.host));
+      this.sideChains.push({
+        web3: new Web3(sideChainConfig.host),
+        chainId: sideChainConfig.chainId,
+        name: sideChainConfig.name,
+      });
     }
   }
 
@@ -43,25 +51,19 @@ export class Heartbeat {
     const sleepAfterRetryMs = 3000;
     while (retries > 0) {
       try {
-        const promiseChainsId = [];
-        const promiseBlocks = [];
-        const promiseNodesInfo = [];
+        const fedChainsId = [];
+        const fedChainsBlocks = [];
+        const fedChainInfo = [];
 
-        promiseChainsId.push(this.mainWeb3.eth.net.getId());
-        promiseBlocks.push(this.mainWeb3.eth.getBlockNumber());
-        promiseNodesInfo.push(this.mainWeb3.eth.getNodeInfo());
+        fedChainsId.push(this.config.mainchain.chainId);
+        fedChainsBlocks.push(await typescriptUtils.retryNTimes(this.mainWeb3.eth.getBlockNumber()));
+        fedChainInfo.push(await typescriptUtils.retryNTimes(this.mainWeb3.eth.getNodeInfo()));
 
-        for (const sideWeb3 of this.sidesWeb3) {
-          promiseChainsId.push(sideWeb3.eth.net.getId());
-          promiseBlocks.push(sideWeb3.eth.getBlockNumber());
-          promiseNodesInfo.push(sideWeb3.eth.getNodeInfo());
+        for (const sideChain of this.sideChains) {
+          fedChainsId.push(sideChain.chainId);
+          fedChainsBlocks.push(await typescriptUtils.retryNTimes(sideChain.web3.eth.getBlockNumber()));
+          fedChainInfo.push(await typescriptUtils.retryNTimes(sideChain.web3.eth.getNodeInfo()));
         }
-
-        const [fedChainsId, fedChainsBlocks, fedChainInfo] = await Promise.all([
-          Promise.all(promiseChainsId),
-          Promise.all(promiseBlocks),
-          Promise.all(promiseNodesInfo),
-        ]);
 
         return await this._emitHeartbeat(currentVersion, fedChainsId, fedChainsBlocks, fedChainInfo);
       } catch (err) {
@@ -184,11 +186,25 @@ export class Heartbeat {
     /*
         if node it's not synchronizing, do ->
     */
-
     try {
       for (const log of logs) {
-        const { sender, fedVersion, currentBlock, fedChainsIds, fedChainsBlocks, fedChainsInfo } = log.returnValues;
-        this._trackHeartbeatMetrics(sender, fedVersion, currentBlock, fedChainsIds, fedChainsBlocks, fedChainsInfo);
+        if (log.returnValues.fedChainsIds) {
+          // New heartbeat event (FederationV3)
+          const { sender, fedVersion, currentBlock, fedChainsIds, fedChainsBlocks, fedChainsInfo } = log.returnValues;
+          this._trackHeartbeatMetrics(sender, fedVersion, currentBlock, fedChainsIds, fedChainsBlocks, fedChainsInfo);
+        } else {
+          // Old heartbeat event (FederationV2)
+          const { sender, fedRskBlock, fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo } = log.returnValues;
+          const sideChain = this.sideChains.find((x) => x.chainId == 1 || x.chainId == 42);
+          this._trackHeartbeatMetrics(
+            sender,
+            federatorVersion,
+            log.blockNumber,
+            [this.config.mainchain.chainId, sideChain.chainId],
+            [fedRskBlock, fedEthBlock],
+            [nodeRskInfo, nodeEthInfo],
+          );
+        }
       }
 
       return true;
@@ -270,7 +286,7 @@ export class Heartbeat {
   }
 
   async _checkIfRsk() {
-    const chainId = await this.mainWeb3.eth.net.getId();
+    const chainId = this.config.mainchain.chainId;
     if (!utils.checkIfItsInRSK(chainId)) {
       this.logger.error(new Error(`Heartbeat should only run on RSK ${chainId}`));
       process.exit(1);

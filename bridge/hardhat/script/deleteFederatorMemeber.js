@@ -4,8 +4,8 @@ const hre = require("hardhat");
 async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
-  const transactionEtherValue = 0;
-  const oldFederatorAddress = "0xeac27e59f8a71613137e9c5d475d05c7d4d198e8";
+
+  const oldFederatorAddress = "0x8f397ff074ff190fc650e5cab4da039a8163e12a";
 
   const Federation = await deployments.get('FederationV2');
   const FederationProxy = await deployments.get('FederationProxy');
@@ -22,7 +22,7 @@ async function main() {
 
   const receipt = await multiSigContract.methods.submitTransaction(
     FederationProxy.address,
-    transactionEtherValue,
+    0,
     methodCallRemoveOldMember.encodeABI()
   ).send({
     from: deployer,

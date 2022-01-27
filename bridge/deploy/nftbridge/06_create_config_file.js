@@ -26,7 +26,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     allowTokens: AllowTokensProxy.address.toLowerCase(),
     nftConfirmations: 5
   };
-
+  config.chainId = await web3.eth.net.getId();
   log(`New federation address: ${config.federation}`);
 
   if (!network.live) {

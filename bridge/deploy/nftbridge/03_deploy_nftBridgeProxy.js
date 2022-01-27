@@ -11,14 +11,14 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
-  const federatorProxyAddress = await address.getFederatorProxyAddress(hre);
+  const federationProxyAddress = await address.getFederationProxyAddress(hre);
   const SideNFTTokenFactory = await deployments.get(sideNFTTokenFactoryName);
 
   const NFTBridge = await deployments.get('NFTBridge');
   const nftBridge = new web3.eth.Contract(NFTBridge.abi, NFTBridge.address);
   const methodCall = nftBridge.methods.initialize(
     multiSigAddress,
-    federatorProxyAddress,
+    federationProxyAddress,
     utils.NULL_ADDRESS,
     SideNFTTokenFactory.address
   );
