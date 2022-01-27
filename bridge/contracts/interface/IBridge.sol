@@ -106,12 +106,12 @@ interface IBridge {
 
 	event Cross(
 		address indexed _tokenAddress,
-		address _from,
 		address indexed _to,
-		uint256 _amount,
-		bytes _userData,
+		uint256 indexed _destinationChainId,
+		address _from,
 		uint256 _originChainId,
-		uint256 indexed _destinationChainId
+		uint256 _amount,
+		bytes _userData
 	);
 
 	event NewSideToken(

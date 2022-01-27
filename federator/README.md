@@ -119,10 +119,7 @@ This endpoint is introduced, in order to better monitor health status on the Fed
     **Content:** `{ "status" : "ok" }`
 
 ### Skip HTTPS check
-- As an developer you can set the variable `BRIDGE_SKIP_HTTPS` to skip the HTTPS check on the host url config
-```shell
-$~ export BRIDGE_SKIP_HTTPS true
-```
+- As an developer you can set in config.js the property `checkHttps: false` to skip the HTTPS check on the host url config
 
 # Datadog
 
