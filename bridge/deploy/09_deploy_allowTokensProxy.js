@@ -57,7 +57,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_allow_tokens_proxy'; // id required to prevent reexecution
-module.exports.tags = ['AllowTokensProxy', 'new', 'IntegrationTest'];
+module.exports.tags = ['AllowTokensProxy', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = ['ProxyAdmin', 'BridgeProxy', 'AllowTokens'];
 
 function tokensTypesMainnet() {

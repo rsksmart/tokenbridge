@@ -1,3 +1,5 @@
+import { EventData } from 'web3-eth-contract';
+
 export class IBridgeNft {
   nftBridgeContract: any;
 
@@ -5,11 +7,12 @@ export class IBridgeNft {
     this.nftBridgeContract = nftBridgeContract;
   }
 
-  getFederation(): Promise<string> {
-    return this.nftBridgeContract.methods.getFederation().call();
+  getFederation() {
+    return this.nftBridgeContract.methods.getFederation();
   }
 
-  getPastEvents(eventName: string, options: any): Promise<any> {
+  getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
+    options._destinationChainId = destinationChainId;
     return this.nftBridgeContract.getPastEvents(eventName, options);
   }
 
@@ -17,15 +20,15 @@ export class IBridgeNft {
     return this.nftBridgeContract.options.address;
   }
 
-  getProcessed(transactionHash: string): Promise<boolean> {
-    return this.nftBridgeContract.methods.processed(transactionHash).call();
+  getProcessed(transactionHash: string) {
+    return this.nftBridgeContract.methods.processed(transactionHash);
   }
 
-  getVersion(): Promise<string> {
-    return this.nftBridgeContract.methods.version().call();
+  getVersion() {
+    return this.nftBridgeContract.methods.version();
   }
 
   getMappedToken({ originalTokenAddress, chainId }) {
-    return this.nftBridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress);
+    return this.nftBridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress).call();
   }
 }

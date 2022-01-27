@@ -102,7 +102,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	}
 
 	function version() override external pure returns (string memory) {
-		return "v3";
+		return "v4";
 	}
 
 	function initDomainSeparator() public {
@@ -558,29 +558,31 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		OriginalToken memory sideToken = getOriginalTokenBySideToken(tokenToUse);
 		if (sideToken.tokenAddress != NULL_ADDRESS) {
 			// Side Token Crossing back
-			uint256 granularity = LibUtils.getGranularity(tokenToUse);
-			uint256 modulo = amountMinusFees.mod(granularity);
-			fee = fee.add(modulo);
-			amountMinusFees = amountMinusFees.sub(modulo);
-			IERC777(tokenToUse).burn(amountMinusFees, userData);
+			{ // Created scope to avoid stack too deep
+				uint256 granularity = LibUtils.getGranularity(tokenToUse);
+				uint256 modulo = amountMinusFees.mod(granularity);
+				fee = fee.add(modulo);
+				amountMinusFees = amountMinusFees.sub(modulo);
+				IERC777(tokenToUse).burn(amountMinusFees, userData);
+			}
 			emit Cross(
 				sideToken.tokenAddress,
-				from,
 				to,
-				amountMinusFees,
-				userData,
+				destinationChainId,
+				from,
 				block.chainid,
-				destinationChainId
+				amountMinusFees,
+				userData
 			);
 		} else {
 			emit Cross(
 				tokenToUse,
-				from,
 				to,
-				amountMinusFees,
-				userData,
+				destinationChainId,
+				from,
 				block.chainid,
-				destinationChainId
+				amountMinusFees,
+				userData
 			);
 		}
 

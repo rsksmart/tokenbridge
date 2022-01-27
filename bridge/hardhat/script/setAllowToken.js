@@ -5,9 +5,8 @@ async function main() {
   const {getNamedAccounts, deployments} = hre;
   const {deployer} = await getNamedAccounts();
 
-  const transactionEtherValue = 0;
-
-  const WBNB = await deployments.get('WBNB');
+  const tokenToList = '0x00.....';
+  const tokenToListType = '0';
   const AllowTokens = await deployments.get('AllowTokens');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
@@ -19,13 +18,13 @@ async function main() {
   console.log("\nAllowTokensProxy", AllowTokensProxy.address);
   console.log("\nMultiSigWallet", MultiSigWallet.address);
 
-  const methodCallSetToken = allowTokens.methods.setToken(WBNB.address, '0');
+  const methodCallSetToken = allowTokens.methods.setToken(tokenToList, tokenToListType);
   const result = await methodCallSetToken.call({ from: MultiSigWallet.address});
   console.log("Method call result", result);
 
   const receipt = await multiSigContract.methods.submitTransaction(
     AllowTokensProxy.address,
-    transactionEtherValue,
+    0,
     methodCallSetToken.encodeABI()
   ).send({
     from: deployer,

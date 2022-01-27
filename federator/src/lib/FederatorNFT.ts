@@ -17,7 +17,7 @@ import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
-    config.storagePath = `${config.storagePath}/nft/${config.mainchain.name}`;
+    config.storagePath = `${config.storagePath}/nft/`;
     super(config, logger, metricCollector);
   }
 
@@ -92,7 +92,7 @@ export default class FederatorNFT extends Federator {
       });
     }
 
-    let fromBlock = this.getLastBlock(sideChainId, mainChainId);
+    let fromBlock = this.getLastBlock(mainChainId, sideChainId);
     if (fromBlock >= toBlock) {
       this.logger.warn(
         `Current chain ${mainChainId} Height ${toBlock} is the same or lesser than the last block processed ${fromBlock}`,
@@ -113,20 +113,6 @@ export default class FederatorNFT extends Federator {
       sideChainConfig,
     });
     return true;
-  }
-
-  getLastBlock(sideChainId: number, mainChainId: number): number {
-    let fromBlock: number = null;
-    const originalFromBlock = this.config.mainchain.fromBlock || 0;
-    try {
-      fromBlock = parseInt(fs.readFileSync(this.getLastBlockPath(sideChainId, mainChainId), 'utf8'));
-    } catch (err) {
-      fromBlock = originalFromBlock;
-    }
-    if (fromBlock < originalFromBlock) {
-      fromBlock = originalFromBlock;
-    }
-    return fromBlock;
   }
 
   async getLogsAndProcess({
@@ -166,7 +152,7 @@ export default class FederatorNFT extends Federator {
         toPagedBlock = toBlock;
       }
       this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
-      const logs = await mainBridge.getPastEvents('Cross', {
+      const logs = await mainBridge.getPastEvents('Cross', sideChainId, {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
       });
@@ -184,7 +170,7 @@ export default class FederatorNFT extends Federator {
         federationFactory,
         sideChainConfig,
       });
-      this._saveProgress(this.getLastBlockPath(sideChainId, mainChainId), toPagedBlock.toString());
+      this._saveProgress(this.getLastBlockPath(mainChainId, sideChainId), toPagedBlock.toString());
       fromPageBlock = toPagedBlock + 1;
     }
   }
@@ -222,16 +208,22 @@ export default class FederatorNFT extends Federator {
         const {
           _to: receiver,
           _from: sender,
-          _tokenId: tokenIdStr,
+          _tokenId: tokenIdStr, // NFT only
           _originChainId: originChainIdStr,
           _destinationChainId: destinationChainIdStr,
+          _originalTokenAddress: originalTokenAddressStr,
         } = log.returnValues;
 
         const originChainId = Number(originChainIdStr);
         const destinationChainId = Number(destinationChainIdStr);
+        if (sideChainId != destinationChainId) {
+          this.logger.debug(
+            `Skipping logs with destinationChainId:${destinationChainId} as sideChainId is:${sideChainId}`,
+          );
+          return false;
+        }
         const tokenId = new BN(tokenIdStr);
-
-        const originalTokenAddress = log.returnValues._originalTokenAddress.toLowerCase();
+        const originalTokenAddress = originalTokenAddressStr.toLowerCase();
         const blocksConfirmed = currentBlock - blockNumber;
         const nftConfirmationsForCurrentChainId = await this.getNftConfirmationsForCurrentChainId();
         if (blocksConfirmed < nftConfirmationsForCurrentChainId) {
@@ -293,7 +285,6 @@ export default class FederatorNFT extends Federator {
           federatorAddress,
           originChainId,
           destinationChainId,
-          federationFactory,
           transactionSender,
           federatorContract,
           sideChainConfig,
@@ -320,7 +311,6 @@ export default class FederatorNFT extends Federator {
     federatorAddress,
     originChainId,
     destinationChainId,
-    federationFactory,
     transactionSender,
     federatorContract,
     sideChainConfig,
@@ -338,7 +328,6 @@ export default class FederatorNFT extends Federator {
     federatorAddress: string;
     originChainId: number;
     destinationChainId: number;
-    federationFactory: FederationFactory;
     transactionSender: TransactionSender;
     federatorContract: IFederationV3;
     sideChainConfig: ConfigChain;

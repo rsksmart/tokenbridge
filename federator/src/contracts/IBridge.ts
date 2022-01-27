@@ -1,41 +1,19 @@
-import { Contract } from 'web3-eth-contract';
+import { Contract, EventData } from 'web3-eth-contract';
 
-interface MappedTokensParams {
-  originalTokenAddress: string;
-}
-
-export class IBridge {
+export interface IBridge {
   bridgeContract: Contract;
 
-  constructor(bridgeContract: Contract) {
-    this.bridgeContract = bridgeContract;
-  }
+  getFederation();
 
-  getFederation() {
-    return this.bridgeContract.methods.getFederation();
-  }
+  getAllowedTokens();
 
-  getAllowedTokens() {
-    return this.bridgeContract.methods.allowedTokens();
-  }
+  getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]>;
 
-  getPastEvents(eventName: string, options: any) {
-    return this.bridgeContract.getPastEvents(eventName, options);
-  }
+  getAddress(): string;
 
-  getAddress() {
-    return this.bridgeContract.options.address;
-  }
+  getProcessed(transactionHash: string);
 
-  getProcessed(transactionHash: string) {
-    return this.bridgeContract.methods.processed(transactionHash).call();
-  }
+  getVersion();
 
-  getVersion() {
-    return this.bridgeContract.methods.version();
-  }
-
-  getMappedToken(paramsObj: MappedTokensParams) {
-    return this.bridgeContract.methods.mappedTokens(paramsObj.originalTokenAddress);
-  }
+  getMappedToken(paramsObj: any): Promise<string>;
 }

@@ -35,4 +35,4 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_allow_tokens'; // id required to prevent reexecution
-module.exports.tags = ['AllowTokens', 'new', 'IntegrationTest'];
+module.exports.tags = ['AllowTokens', 'DeployFromScratch', 'IntegrationTest'];
