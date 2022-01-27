@@ -11,7 +11,8 @@ export class IBridgeNft {
     return this.nftBridgeContract.methods.getFederation();
   }
 
-  getPastEvents(eventName: string, options: any): Promise<EventData[]> {
+  getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
+    options._destinationChainId = destinationChainId;
     return this.nftBridgeContract.getPastEvents(eventName, options);
   }
 

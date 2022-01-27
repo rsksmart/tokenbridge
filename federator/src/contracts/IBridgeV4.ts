@@ -23,7 +23,8 @@ export class IBridgeV4 implements IBridge {
     return this.bridgeContract.methods.allowedTokens();
   }
 
-  getPastEvents(eventName: string, options: any): Promise<EventData[]> {
+  getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
+    options._destinationChainId = destinationChainId;
     return this.bridgeContract.getPastEvents(eventName, options);
   }
 
