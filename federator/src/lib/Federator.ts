@@ -24,7 +24,9 @@ export default abstract class Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
     this.logger = logger;
-    this.logger.upsertContext('service', this.constructor.name);
+    if (this.logger.upsertContext) {
+      this.logger.upsertContext('service', this.constructor.name);
+    }
 
     if (config.checkHttps && !utils.checkHttpsOrLocalhost(config.mainchain.host)) {
       this.logger.info('Check of checkHttpsOrLocalhost failed');
