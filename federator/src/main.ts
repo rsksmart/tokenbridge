@@ -43,7 +43,8 @@ export class Main {
       Logs.getInstance().getLogger(LOGGER_CATEGORY_HEARTBEAT),
       this.metricCollector,
     );
-    // this.scheduleHeartbeatProcesses();
+    // TODO uncoment this after tests
+    this.scheduleHeartbeatProcesses();
 
     this.rskFederator = new Federator(
       this.config,
@@ -65,7 +66,8 @@ export class Main {
 
   async run() {
     try {
-      // await this.heartbeat.readLogs();
+      // TODO uncoment this after tests
+      await this.heartbeat.readLogs();
       await this.runNftRskFederator();
       await this.runErcRskFederator();
 

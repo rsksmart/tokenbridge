@@ -7,7 +7,7 @@ export interface IBridge {
 
   getAllowedTokens();
 
-  getPastEvents(eventName: string, options: any): Promise<EventData[]>;
+  getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]>;
 
   getAddress(): string;
 

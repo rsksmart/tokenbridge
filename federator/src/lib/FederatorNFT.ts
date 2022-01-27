@@ -166,7 +166,7 @@ export default class FederatorNFT extends Federator {
         toPagedBlock = toBlock;
       }
       this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
-      const logs = await mainBridge.getPastEvents('Cross', {
+      const logs = await mainBridge.getPastEvents('Cross', sideChainId, {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
       });
@@ -222,16 +222,22 @@ export default class FederatorNFT extends Federator {
         const {
           _to: receiver,
           _from: sender,
-          _tokenId: tokenIdStr,
+          _tokenId: tokenIdStr, // NFT only
           _originChainId: originChainIdStr,
           _destinationChainId: destinationChainIdStr,
+          _originalTokenAddress: originalTokenAddressStr,
         } = log.returnValues;
 
         const originChainId = Number(originChainIdStr);
         const destinationChainId = Number(destinationChainIdStr);
+        if (sideChainId != destinationChainId) {
+          this.logger.debug(
+            `Skipping logs with destinationChainId:${destinationChainId} as sideChainId is:${sideChainId}`,
+          );
+          return false;
+        }
         const tokenId = new BN(tokenIdStr);
-
-        const originalTokenAddress = log.returnValues._originalTokenAddress.toLowerCase();
+        const originalTokenAddress = originalTokenAddressStr.toLowerCase();
         const blocksConfirmed = currentBlock - blockNumber;
         const nftConfirmationsForCurrentChainId = await this.getNftConfirmationsForCurrentChainId();
         if (blocksConfirmed < nftConfirmationsForCurrentChainId) {
