@@ -21,13 +21,13 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const config = {
     name: network.name,
-    chainId: await web3.eth.net.getId(),
     bridge: BridgeProxy.address.toLowerCase(),
     federation: federationProxyAddress.toLowerCase(),
     multiSig: multiSigAddress.toLowerCase(),
     allowTokens: AllowTokensProxy.address.toLowerCase()
   };
 
+  config.chainId = await web3.eth.net.getId();
   if (!network.live) {
     const AllowTokens = await deployments.get('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
