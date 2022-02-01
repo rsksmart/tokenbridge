@@ -28,8 +28,12 @@ export class IBridgeV3 implements IBridge {
     return this.bridgeContract.options.address;
   }
 
-  getProcessed(transactionHash: string): Promise<boolean> {
-    return this.bridgeContract.methods.processed(transactionHash);
+  getTransactionDataHash({ to, amount, blockHash, transactionHash, logIndex }): Promise<string> {
+    return this.bridgeContract.methods.getTransactionDataHash(to, amount, blockHash, transactionHash, logIndex);
+  }
+
+  getProcessed(transactionDataHash: string): Promise<boolean> {
+    return this.bridgeContract.methods.claimed(transactionDataHash);
   }
 
   getVersion(): Promise<string> {
