@@ -11,6 +11,7 @@ import * as typescriptUtils from './typescriptUtils';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
 import { LogWrapper } from './logWrapper';
+import { IBridgeFactory } from '../contracts/IBridgeFactory';
 
 export default abstract class Federator {
   public logger: LogWrapper;
@@ -103,7 +104,7 @@ export default abstract class Federator {
     sideChainConfig: ConfigChain;
     sideChainWeb3: web3;
     transactionSender: TransactionSender;
-    bridgeFactory: BridgeFactory;
+    bridgeFactory: IBridgeFactory;
     federationFactory: FederationFactory;
   }): Promise<boolean>;
 
@@ -120,8 +121,8 @@ export default abstract class Federator {
       this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
         while (this.numberOfRetries > 0) {
-          const bridgeFactory = new BridgeFactory(this.config, this.logger, sideChainConfig);
-          const federationFactory = new FederationFactory(this.config, this.logger, sideChainConfig);
+          const bridgeFactory = new BridgeFactory();
+          const federationFactory = new FederationFactory();
           const success: boolean = await this.run({
             sideChainConfig,
             sideChainWeb3,

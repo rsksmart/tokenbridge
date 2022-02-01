@@ -1,8 +1,8 @@
-import { ConfigData } from '../lib/config';
 import { Contract, EventData } from 'web3-eth-contract';
 import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
 import { IFederation } from './IFederation';
+import { ConfigChain } from '../lib/configChain';
 
 export interface TransactionIdParams {
   originalTokenAddress: string;
@@ -22,11 +22,13 @@ export interface VoteTransactionParams extends TransactionIdParams {
 
 export class IFederationV3 implements IFederation {
   federationContract: Contract;
-  config: ConfigData;
+  config: ConfigChain;
+  privateKey: string;
 
-  constructor(config: ConfigData, fedContract: Contract) {
+  constructor(config: ConfigChain, fedContract: Contract, privateKey: string) {
     this.federationContract = fedContract;
     this.config = config;
+    this.privateKey = privateKey;
   }
 
   getVersion(): string {
@@ -105,6 +107,6 @@ export class IFederationV3 implements IFederation {
     );
 
     const txData = emitHeartbeat.encodeABI();
-    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.privateKey);
   }
 }
