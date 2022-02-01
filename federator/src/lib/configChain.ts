@@ -7,6 +7,8 @@ export interface ConfigChainParams {
   name: string;
   chainId: number;
   bridge: string;
+  allowTokens: string;
+  federation: string;
   host: string;
   nftBridge?: string;
   testToken?: string;
@@ -18,6 +20,8 @@ export class ConfigChain {
   name: string;
   chainId: number;
   bridge: string;
+  allowTokens: string;
+  federation: string;
   nftBridge: string;
   testToken: string;
   host: string;
@@ -28,6 +32,8 @@ export class ConfigChain {
     this.name = chainConfig.name;
     this.chainId = chainConfig.chainId;
     this.bridge = chainConfig.bridge;
+    this.federation = chainConfig.federation;
+    this.allowTokens = chainConfig.allowTokens;
     this.host = chainConfig.host;
     this.testToken = chainConfig?.testToken;
     this.nftBridge = chainConfig?.nftBridge;
