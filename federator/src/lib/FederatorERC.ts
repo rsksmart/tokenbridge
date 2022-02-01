@@ -15,6 +15,7 @@ import { BN } from 'ethereumjs-util';
 import { IFederation } from '../contracts/IFederation';
 import { IAllowTokens } from '../contracts/IAllowTokens';
 import { LogWrapper } from './logWrapper';
+import { IBridge } from '../contracts/IBridge';
 
 export interface BaseLogsParams {
   sideChainId: number;
@@ -43,6 +44,7 @@ export interface ProcessLogParams extends BaseLogsParams {
   sideFedContract: IFederation;
   allowTokens: IAllowTokens;
   federatorAddress: string;
+  sideBridgeContract: IBridge;
 }
 
 export interface ProcessTransactionParams extends ProcessLogParams {
@@ -50,9 +52,6 @@ export interface ProcessTransactionParams extends ProcessLogParams {
   senderAddress: string;
   receiver: string;
   amount: BN;
-  symbol: string;
-  decimals: string;
-  granularity: string;
   typeId: string;
   transactionId: string;
   originChainId: number;
@@ -87,7 +86,7 @@ export default class FederatorERC extends Federator {
     const sideChainId = await this.getChainId(sideChainWeb3);
     this.logger.upsertContext('Main Chain ID', mainChainId);
     this.logger.upsertContext('Side Chain ID', sideChainId);
-    const allowTokensFactory = new AllowTokensFactory(this.config, this.logger, sideChainConfig);
+    const allowTokensFactory = new AllowTokensFactory();
 
     this.logger.trace(`Federator Run started currentBlock: ${currentBlock}, currentChainId: ${mainChainId}`);
     const isMainSyncing = await this.getMainChainWeb3().eth.isSyncing();
@@ -111,7 +110,7 @@ export default class FederatorERC extends Federator {
     }
 
     this.logger.trace(`Current Block ${currentBlock} ChainId ${mainChainId}`);
-    const allowTokens = await allowTokensFactory.getMainAllowTokensContract();
+    const allowTokens = await allowTokensFactory.createInstance(this.config.mainchain);
     const confirmations = await allowTokens.getConfirmations();
     const toBlock = currentBlock - confirmations.largeAmountConfirmations;
     const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
@@ -176,7 +175,7 @@ export default class FederatorERC extends Federator {
       return;
     }
     this.logger.upsertContext('Current Block', getLogParams.currentBlock);
-    const mainBridge = await getLogParams.bridgeFactory.getMainBridgeContract();
+    const mainBridge = await getLogParams.bridgeFactory.createInstance(this.config.mainchain);
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((getLogParams.toBlock - getLogParams.fromBlock) / recordsPerPage);
@@ -228,10 +227,7 @@ export default class FederatorERC extends Federator {
       _to: receiver,
       _from: crossFromAddress,
       _amount: amount,
-      _symbol: symbol,
       _tokenAddress: tokenAddress,
-      _decimals: decimals,
-      _granularity: granularity,
       _typeId: typeId,
       _originChainId: originChainIdStr,
       _destinationChainId: destinationChainIdStr,
@@ -246,7 +242,7 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('blockNumber', blockNumber);
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
-    const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
+    const originBridge = await processLogParams.bridgeFactory.createInstance(this.config.mainchain);
     const sideTokenAddress = await typescriptUtils.retryNTimes(
       originBridge.getMappedToken({
         originalTokenAddress: tokenAddress,
@@ -284,10 +280,10 @@ export default class FederatorERC extends Federator {
       // At this point we're processing blocks newer than largeAmountConfirmations
       // and older than smallAmountConfirmations
       if (amountBN.gte(largeAmountBN)) {
-        const c = processLogParams.currentBlock - blockNumber;
-        const rC = processLogParams.confirmations.largeAmountConfirmations;
+        const confirmations = processLogParams.currentBlock - blockNumber;
+        const neededConfirmations = processLogParams.confirmations.largeAmountConfirmations;
         this.logger.debug(
-          `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+          `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
         return false;
       }
@@ -296,10 +292,10 @@ export default class FederatorERC extends Federator {
         amountBN.gte(mediumAmountBN) &&
         processLogParams.currentBlock - blockNumber < processLogParams.confirmations.mediumAmountConfirmations
       ) {
-        const c = processLogParams.currentBlock - blockNumber;
-        const rC = processLogParams.confirmations.mediumAmountConfirmations;
+        const confirmations = processLogParams.currentBlock - blockNumber;
+        const neededConfirmations = processLogParams.confirmations.mediumAmountConfirmations;
         this.logger.debug(
-          `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+          `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
         return false;
       }
@@ -325,9 +321,6 @@ export default class FederatorERC extends Federator {
       senderAddress: crossFromAddress,
       receiver,
       amount,
-      symbol,
-      decimals,
-      granularity,
       typeId,
       transactionId,
       originChainId,
@@ -338,8 +331,17 @@ export default class FederatorERC extends Federator {
   }
 
   async processTransaction(processTransactionParams: ProcessTransactionParams) {
+    const transactionDataHash = await processTransactionParams.sideBridgeContract.getTransactionDataHash({
+      to: processTransactionParams.log.to,
+      amount: processTransactionParams.log.amount,
+      blockHash: processTransactionParams.log.blockHash,
+      transactionHash: processTransactionParams.log.transactionHash,
+      logIndex: processTransactionParams.log.logIndex,
+      originChainId: processTransactionParams.log.originChainId,
+      destinationChainId: processTransactionParams.log.destinationChainId,
+    });
     const wasProcessed = await typescriptUtils.retryNTimes(
-      processTransactionParams.sideFedContract.transactionWasProcessed(processTransactionParams.transactionId),
+      processTransactionParams.sideBridgeContract.getProcessed(transactionDataHash),
     );
     if (!wasProcessed) {
       const hasVoted = await processTransactionParams.sideFedContract.hasVoted(
@@ -374,8 +376,14 @@ export default class FederatorERC extends Federator {
   async _processLogs(processLogsParams: ProcessLogsParams) {
     try {
       const federatorAddress = await processLogsParams.transactionSender.getAddress(this.config.privateKey);
-      const sideFedContract = await processLogsParams.federationFactory.getSideFederationContract();
-      const allowTokens = await processLogsParams.allowTokensFactory.getMainAllowTokensContract();
+      const sideFedContract = await processLogsParams.federationFactory.createInstance(
+        processLogsParams.sideChainConfig,
+        this.config.privateKey,
+      );
+      const sideBridgeContract = await processLogsParams.bridgeFactory.createInstance(
+        processLogsParams.sideChainConfig,
+      );
+      const allowTokens = await processLogsParams.allowTokensFactory.createInstance(this.config.mainchain);
 
       await this.checkFederatorIsMember(sideFedContract, federatorAddress);
 
@@ -386,6 +394,7 @@ export default class FederatorERC extends Federator {
           sideFedContract,
           allowTokens,
           federatorAddress,
+          sideBridgeContract,
         });
       }
 
@@ -428,7 +437,7 @@ export default class FederatorERC extends Federator {
       }
 
       if (revertedTxns[voteTransactionParams.transactionId]) {
-        this.logger.info(
+        this.logger.warn(
           `Skipping Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
           TransactionId ${voteTransactionParams.transactionId} since it's marked as reverted.`,
           revertedTxns[voteTransactionParams.transactionId],
@@ -459,12 +468,9 @@ export default class FederatorERC extends Federator {
               sender: voteTransactionParams.senderAddress,
               receiver: voteTransactionParams.receiver,
               amount: voteTransactionParams.amount,
-              symbol: voteTransactionParams.symbol,
               blockHash: voteTransactionParams.blockHash,
               transactionHash: voteTransactionParams.transactionHash,
               logIndex: voteTransactionParams.logIndex,
-              decimals: voteTransactionParams.decimals,
-              granularity: voteTransactionParams.granularity,
               error: receipt.error,
             },
           }),

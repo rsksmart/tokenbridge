@@ -1,15 +1,17 @@
-import { ConfigData } from '../lib/config';
 import { Contract } from 'web3-eth-contract';
 import { VERSIONS } from './Constants';
 import { IFederation } from './IFederation';
+import { ConfigChain } from '../lib/configChain';
 
 export class IFederationV2 implements IFederation {
   federationContract: Contract;
-  config: ConfigData;
+  config: ConfigChain;
+  privateKey: string;
 
-  constructor(config: ConfigData, fedContract: Contract) {
+  constructor(config: ConfigChain, fedContract: Contract, privateKey: string) {
     this.federationContract = fedContract;
     this.config = config;
+    this.privateKey = privateKey;
   }
 
   getVersion() {
@@ -75,6 +77,6 @@ export class IFederationV2 implements IFederation {
       .emitHeartbeat(fedChainsBlocks[0], fedChainsBlocks[1], fedVersion, fedChainsInfo[0], fedChainsInfo[1])
       .encodeABI();
 
-    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.privateKey);
   }
 }
