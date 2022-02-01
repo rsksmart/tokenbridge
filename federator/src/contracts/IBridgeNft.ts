@@ -1,34 +1,58 @@
-import { EventData } from 'web3-eth-contract';
+import { Contract, EventData } from 'web3-eth-contract';
+import { IBridge } from './IBridge';
 
-export class IBridgeNft {
-  nftBridgeContract: any;
+export class IBridgeNft implements IBridge {
+  bridgeContract: Contract;
 
   constructor(nftBridgeContract: any) {
-    this.nftBridgeContract = nftBridgeContract;
+    this.bridgeContract = nftBridgeContract;
+  }
+  getAllowedTokens() {
+    throw new Error('Method not implemented.');
   }
 
   getFederation() {
-    return this.nftBridgeContract.methods.getFederation();
+    return this.bridgeContract.methods.getFederation();
   }
 
   getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
     options._destinationChainId = destinationChainId;
-    return this.nftBridgeContract.getPastEvents(eventName, options);
+    return this.bridgeContract.getPastEvents(eventName, options);
   }
 
   getAddress(): string {
-    return this.nftBridgeContract.options.address;
+    return this.bridgeContract.options.address;
   }
 
-  getProcessed(transactionHash: string) {
-    return this.nftBridgeContract.methods.processed(transactionHash);
+  getTransactionDataHash({
+    to,
+    amount,
+    blockHash,
+    transactionHash,
+    logIndex,
+    originChainId,
+    destinationChainId,
+  }): Promise<string> {
+    return this.bridgeContract.methods.getTransactionDataHash(
+      to,
+      amount,
+      blockHash,
+      transactionHash,
+      logIndex,
+      originChainId,
+      destinationChainId,
+    );
   }
 
-  getVersion() {
-    return this.nftBridgeContract.methods.version();
+  getProcessed(transactionDataHash: string) {
+    return this.bridgeContract.methods.claimed(transactionDataHash);
+  }
+
+  getVersion(): Promise<string> {
+    return this.bridgeContract.methods.version();
   }
 
   getMappedToken({ originalTokenAddress, chainId }) {
-    return this.nftBridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress).call();
+    return this.bridgeContract.methods.getSideTokenByOriginalToken(chainId, originalTokenAddress).call();
   }
 }
