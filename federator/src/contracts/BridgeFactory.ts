@@ -2,7 +2,7 @@ import abiBridgeV3 from '../../../bridge/abi/BridgeV3.json';
 import abiBridgeV4 from '../../../bridge/abi/Bridge.json';
 import { IBridgeV3 } from './IBridgeV3';
 import { IBridgeV4 } from './IBridgeV4';
-import * as utils from '../lib/utils';
+import * as typescriptUtils from '../lib/typescriptUtils';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
 import { VERSIONS } from './Constants';
@@ -12,7 +12,7 @@ import { IBridge } from './IBridge';
 
 export class BridgeFactory extends ContractFactory {
   async getVersion(bridgeContract: Contract): Promise<string> {
-    return utils.retry3Times(bridgeContract.methods.version().call);
+    return typescriptUtils.retryNTimes(bridgeContract.methods.version().call());
   }
 
   async createInstance(configChain: ConfigChain): Promise<IBridge> {

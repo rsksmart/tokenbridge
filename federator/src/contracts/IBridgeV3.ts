@@ -29,15 +29,15 @@ export class IBridgeV3 implements IBridge {
   }
 
   getTransactionDataHash({ to, amount, blockHash, transactionHash, logIndex }): Promise<string> {
-    return this.bridgeContract.methods.getTransactionDataHash(to, amount, blockHash, transactionHash, logIndex);
+    return this.bridgeContract.methods.getTransactionDataHash(to, amount, blockHash, transactionHash, logIndex).call();
   }
 
   getProcessed(transactionDataHash: string): Promise<boolean> {
-    return this.bridgeContract.methods.claimed(transactionDataHash);
+    return this.bridgeContract.methods.claimed(transactionDataHash).call();
   }
 
   getVersion(): Promise<string> {
-    return this.bridgeContract.methods.version();
+    return this.bridgeContract.methods.version().call();
   }
 
   getMappedToken(paramsObj: MappedTokensParams): Promise<string> {
