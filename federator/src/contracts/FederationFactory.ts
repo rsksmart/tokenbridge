@@ -1,11 +1,8 @@
 import abiFederationV2 from '../../../bridge/abi/FederationV2.json';
 import abiFederationV3 from '../../../bridge/abi/Federation.json';
-import abiBridgeV3 from '../../../bridge/abi/Bridge.json';
-import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
 import { IFederationV2 } from './IFederationV2';
 import { IFederationV3 } from './IFederationV3';
-import { CustomError } from '../lib/CustomError';
-import * as utils from '../lib/utils';
+import * as typescriptUtils from '../lib/typescriptUtils';
 import { VERSIONS } from './Constants';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
@@ -42,7 +39,7 @@ export class FederationFactory extends ContractFactory {
 
   async getVersion(federationContract: Contract) {
     try {
-      return await utils.retry3Times(federationContract.methods.version().call);
+      return await typescriptUtils.retryNTimes(federationContract.methods.version().call());
     } catch (err) {
       return 'v1';
     }
