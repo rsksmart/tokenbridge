@@ -2,7 +2,7 @@ import abiAllowTokensV0 from '../../../bridge/abi/AllowTokensV0.json';
 import abiAllowTokensV1 from '../../../bridge/abi/AllowTokens.json';
 import { IAllowTokensV1 } from './IAllowTokensV1';
 import { IAllowTokensV0 } from './IAllowTokensV0';
-import * as utils from '../lib/utils';
+import * as typescriptUtils from '../lib/typescriptUtils';
 import { ContractFactory } from './ContractFactory';
 import { AbiItem } from 'web3-utils';
 import { VERSIONS } from './Constants';
@@ -12,7 +12,7 @@ import { ConfigChain } from '../lib/configChain';
 export class AllowTokensFactory extends ContractFactory {
   async getVersion(allowTokensContract) {
     try {
-      return await utils.retry3Times(allowTokensContract.methods.version().call);
+      return await typescriptUtils.retryNTimes(allowTokensContract.methods.version().call());
     } catch (err) {
       return VERSIONS.V0;
     }
