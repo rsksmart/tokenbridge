@@ -11,57 +11,15 @@ import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
-import { BN } from 'ethereumjs-util';
 import { IFederation } from '../contracts/IFederation';
-import { IAllowTokens } from '../contracts/IAllowTokens';
 import { LogWrapper } from './logWrapper';
-import { IBridge } from '../contracts/IBridge';
-
-export interface BaseLogsParams {
-  sideChainId: number;
-  mainChainId: number;
-  transactionSender: TransactionSender;
-  currentBlock: number;
-  mediumAndSmall: boolean;
-  confirmations: { mediumAmountConfirmations: number; largeAmountConfirmations: number };
-  sideChainConfig: ConfigChain;
-  federationFactory: FederationFactory;
-  allowTokensFactory: AllowTokensFactory;
-  bridgeFactory: BridgeFactory;
-}
-
-export interface GetLogsParams extends BaseLogsParams {
-  fromBlock: number;
-  toBlock: number;
-}
-
-export interface ProcessLogsParams extends BaseLogsParams {
-  logs: any[];
-}
-
-export interface ProcessLogParams extends BaseLogsParams {
-  log: any;
-  sideFedContract: IFederation;
-  allowTokens: IAllowTokens;
-  federatorAddress: string;
-  sideBridgeContract: IBridge;
-}
-
-export interface ProcessTransactionParams extends ProcessLogParams {
-  tokenAddress: string;
-  senderAddress: string;
-  receiver: string;
-  amount: BN;
-  typeId: string;
-  transactionId: string;
-  originChainId: number;
-  destinationChainId: number;
-}
-export interface VoteTransactionParams extends ProcessTransactionParams {
-  blockHash: string;
-  transactionHash: string;
-  logIndex: number;
-}
+import {
+  GetLogsParams,
+  ProcessLogParams,
+  ProcessLogsParams,
+  ProcessTransactionParams,
+  VoteTransactionParams,
+} from '../types/federator';
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
@@ -331,46 +289,51 @@ export default class FederatorERC extends Federator {
   }
 
   async processTransaction(processTransactionParams: ProcessTransactionParams) {
-    const transactionDataHash = await processTransactionParams.sideBridgeContract.getTransactionDataHash({
-      to: processTransactionParams.log.to,
-      amount: processTransactionParams.log.amount,
+    const dataToHash = {
+      to: processTransactionParams.receiver,
+      amount: processTransactionParams.amount,
       blockHash: processTransactionParams.log.blockHash,
       transactionHash: processTransactionParams.log.transactionHash,
       logIndex: processTransactionParams.log.logIndex,
-      originChainId: processTransactionParams.log.originChainId,
-      destinationChainId: processTransactionParams.log.destinationChainId,
-    });
+      originChainId: processTransactionParams.originChainId,
+      destinationChainId: processTransactionParams.destinationChainId,
+    };
+    this.logger.info('===dataToHash===', dataToHash);
+    this.logger.warn('===log===', processTransactionParams.log);
+    const transactionDataHash = await typescriptUtils.retryNTimes(
+      processTransactionParams.sideBridgeContract.getTransactionDataHash(dataToHash),
+    );
     const wasProcessed = await typescriptUtils.retryNTimes(
       processTransactionParams.sideBridgeContract.getProcessed(transactionDataHash),
     );
-    if (!wasProcessed) {
-      const hasVoted = await processTransactionParams.sideFedContract.hasVoted(
-        processTransactionParams.transactionId,
-        processTransactionParams.federatorAddress,
-      );
-      if (!hasVoted) {
-        this.logger.info(
-          `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash}
-          originalTokenAddress: ${processTransactionParams.tokenAddress}`,
-        );
-        await this._voteTransaction({
-          ...processTransactionParams,
-          blockHash: processTransactionParams.log.blockHash,
-          transactionHash: processTransactionParams.log.transactionHash,
-          logIndex: processTransactionParams.log.logIndex,
-        });
-      } else {
-        this.logger.debug(
-          `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-          originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
-        );
-      }
-    } else {
+    if (wasProcessed) {
       this.logger.info(
         `Already processed Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-        originalTokenAddress: ${processTransactionParams.tokenAddress}`,
+          originalTokenAddress: ${processTransactionParams.tokenAddress}`,
       );
+      return;
     }
+    const hasVoted = await processTransactionParams.sideFedContract.hasVoted(
+      processTransactionParams.transactionId,
+      processTransactionParams.federatorAddress,
+    );
+    if (hasVoted) {
+      this.logger.debug(
+        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+        originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
+      );
+      return;
+    }
+    this.logger.info(
+      `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash}
+      originalTokenAddress: ${processTransactionParams.tokenAddress}`,
+    );
+    await this._voteTransaction({
+      ...processTransactionParams,
+      blockHash: processTransactionParams.log.blockHash,
+      transactionHash: processTransactionParams.log.transactionHash,
+      logIndex: processTransactionParams.log.logIndex,
+    });
   }
 
   async _processLogs(processLogsParams: ProcessLogsParams) {
