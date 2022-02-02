@@ -1,24 +1,8 @@
 import { Contract, EventData } from 'web3-eth-contract';
-import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
 import { IFederation } from './IFederation';
 import { ConfigChain } from '../lib/configChain';
-
-export interface TransactionIdParams {
-  originalTokenAddress: string;
-  sender: string;
-  receiver: string;
-  amount: BN;
-  blockHash: string;
-  transactionHash: string;
-  logIndex: number;
-  originChainId: number;
-  destinationChainId: number;
-}
-
-export interface VoteTransactionParams extends TransactionIdParams {
-  tokenType: number;
-}
+import { TransactionIdParams, VoteTransactionV3Params } from '../types/federator';
 
 export class IFederationV3 implements IFederation {
   federationContract: Contract;
@@ -67,7 +51,7 @@ export class IFederationV3 implements IFederation {
     return this.federationContract.methods.hasVoted(txId).call({ from });
   }
 
-  getVoteTransactionABI(paramsObj: VoteTransactionParams): Promise<any> {
+  getVoteTransactionABI(paramsObj: VoteTransactionV3Params): Promise<any> {
     return this.federationContract.methods
       .voteTransaction(
         paramsObj.originalTokenAddress,

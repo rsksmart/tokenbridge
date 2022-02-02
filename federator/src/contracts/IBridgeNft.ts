@@ -33,23 +33,17 @@ export class IBridgeNft implements IBridge {
     originChainId,
     destinationChainId,
   }): Promise<string> {
-    return this.bridgeContract.methods.getTransactionDataHash(
-      to,
-      amount,
-      blockHash,
-      transactionHash,
-      logIndex,
-      originChainId,
-      destinationChainId,
-    );
+    return this.bridgeContract.methods
+      .getTransactionDataHash(to, amount, blockHash, transactionHash, logIndex, originChainId, destinationChainId)
+      .call();
   }
 
   getProcessed(transactionDataHash: string) {
-    return this.bridgeContract.methods.claimed(transactionDataHash);
+    return this.bridgeContract.methods.claimed(transactionDataHash).call();
   }
 
   getVersion(): Promise<string> {
-    return this.bridgeContract.methods.version();
+    return this.bridgeContract.methods.version().call();
   }
 
   getMappedToken({ originalTokenAddress, chainId }) {

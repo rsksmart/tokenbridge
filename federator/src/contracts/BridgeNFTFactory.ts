@@ -3,12 +3,12 @@ import { IBridgeNft } from './IBridgeNft';
 import { AbiItem } from 'web3-utils';
 import { ContractFactory } from './ContractFactory';
 import { ConfigChain } from '../lib/configChain';
-import * as utils from '../lib/utils';
+import * as typescriptUtils from '../lib/typescriptUtils';
 import { Contract } from 'web3-eth-contract';
 
 export class BridgeNFTFactory extends ContractFactory {
   async getVersion(bridgeContract: Contract): Promise<string> {
-    return utils.retry3Times(bridgeContract.methods.version().call);
+    return typescriptUtils.retryNTimes(bridgeContract.methods.version().call());
   }
 
   async createInstance(configChain: ConfigChain): Promise<IBridgeNft> {
