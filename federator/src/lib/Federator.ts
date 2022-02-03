@@ -11,7 +11,6 @@ import * as typescriptUtils from './typescriptUtils';
 import { ConfigChain } from './configChain';
 import { IFederation } from '../contracts/IFederation';
 import { LogWrapper } from './logWrapper';
-import { IBridgeFactory } from '../contracts/IBridgeFactory';
 
 export default abstract class Federator {
   public logger: LogWrapper;
@@ -104,7 +103,7 @@ export default abstract class Federator {
     sideChainConfig: ConfigChain;
     sideChainWeb3: web3;
     transactionSender: TransactionSender;
-    bridgeFactory: IBridgeFactory;
+    bridgeFactory: BridgeFactory;
     federationFactory: FederationFactory;
   }): Promise<boolean>;
 
