@@ -2,7 +2,7 @@ import web3 from 'web3';
 import fs from 'fs';
 import TransactionSender from './TransactionSender';
 import { CustomError } from './CustomError';
-import { BridgeNFTFactory } from '../contracts/BridgeNFTFactory';
+import { BridgeFactory } from '../contracts/BridgeFactory';
 import { FederationFactory } from '../contracts/FederationFactory';
 import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
@@ -49,7 +49,7 @@ export default class FederatorNFT extends Federator {
     sideChainConfig: ConfigChain;
     sideChainWeb3: web3;
     transactionSender: TransactionSender;
-    bridgeFactory: BridgeNFTFactory;
+    bridgeFactory: BridgeFactory;
     federationFactory: FederationFactory;
   }): Promise<boolean> {
     const currentBlock = await this.getMainChainWeb3().eth.getBlockNumber();
@@ -107,7 +107,7 @@ export default class FederatorNFT extends Federator {
       toBlock,
       currentBlock,
       transactionSender,
-      bridgeNFTFactory: bridgeFactory,
+      bridgeFactory,
       federationFactory,
       sideChainConfig,
     });
@@ -121,7 +121,7 @@ export default class FederatorNFT extends Federator {
     toBlock,
     currentBlock,
     transactionSender,
-    bridgeNFTFactory,
+    bridgeFactory,
     federationFactory,
     sideChainConfig,
   }: {
@@ -131,7 +131,7 @@ export default class FederatorNFT extends Federator {
     toBlock: number;
     currentBlock: number;
     transactionSender: TransactionSender;
-    bridgeNFTFactory: BridgeNFTFactory;
+    bridgeFactory: BridgeFactory;
     federationFactory: FederationFactory;
     sideChainConfig: ConfigChain;
   }): Promise<void> {
@@ -139,7 +139,7 @@ export default class FederatorNFT extends Federator {
       return;
     }
 
-    const mainBridge = await bridgeNFTFactory.createInstance(this.config.mainchain);
+    const mainBridge = await bridgeFactory.createNftInstance(this.config.mainchain);
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
     this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
