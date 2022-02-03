@@ -130,7 +130,7 @@ contract NFTBridge is
       _transactionHash,
       _logIndex,
       _originChainId,
-      _destinationChainId
+	    _destinationChainId
     );
 
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
@@ -148,7 +148,7 @@ contract NFTBridge is
       _blockHash,
       _logIndex,
       _originChainId,
-      _destinationChainId
+	    _destinationChainId
     );
   }
 
@@ -290,7 +290,7 @@ contract NFTBridge is
     // Transfer the tokens on IERC721, they should be already Approved for the bridge Address to use them
     IERC721(tokenAddress).transferFrom(sender, address(this), tokenId);
 
-    crossTokens(tokenAddress, to, tokenCreator, "", tokenId, destinationChainId);
+    crossTokens(tokenAddress, to, tokenCreator, tokenId, destinationChainId, "");
 
     if (fixedFee == 0) {
       return;
@@ -310,46 +310,34 @@ contract NFTBridge is
     address tokenAddress,
     address to,
     address tokenCreator,
-    bytes memory userData,
     uint256 tokenId,
-    uint256 destinationChainId
+    uint256 destinationChainId,
+    bytes memory userData
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
     require(block.chainid != destinationChainId, "NFTBridge: destination chain id equal current chain id");
     _setAddressFromCrossedOriginalToken(destinationChainId, tokenAddress, true);
 
-    IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
-    IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
-    string memory tokenURI = metadataIERC.tokenURI(tokenId);
+    string memory tokenURI = IERC721Metadata(tokenAddress).tokenURI(tokenId);
 
     OriginalNft memory originalToken = getOriginalTokenBySideToken(tokenAddress);
+    address originalTokenAddress = tokenAddress;
     if (originalToken.nftAddress != NULL_ADDRESS) {
       ERC721Burnable(tokenAddress).burn(tokenId);
-      emit Cross(
-        originalToken.nftAddress,
-        _msgSender(),
-        to,
-        tokenCreator,
-        userData,
-        enumerable.totalSupply(),
-        tokenId,
-        tokenURI,
-        block.chainid,
-        destinationChainId
-      );
-      return;
+      originalTokenAddress = originalToken.nftAddress;
     }
 
+    uint256 totalSupply = IERC721Enumerable(tokenAddress).totalSupply();
     emit Cross(
-      tokenAddress,
-      _msgSender(),
+      originalTokenAddress,
       to,
+      destinationChainId,
+      _msgSender(),
+      block.chainid,
       tokenCreator,
-      userData,
-      enumerable.totalSupply(),
+      totalSupply,
       tokenId,
       tokenURI,
-      block.chainid,
-      destinationChainId
+      userData
     );
   }
 
@@ -362,7 +350,7 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-  uint256	_destinationChainId
+	  uint256	_destinationChainId
   ) public pure override returns (bytes32) {
     return keccak256(
       abi.encodePacked(
