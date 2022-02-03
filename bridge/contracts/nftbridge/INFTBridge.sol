@@ -44,7 +44,7 @@ interface INFTBridge {
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-	uint256	_destinationChainId
+	  uint256	_destinationChainId
   ) external;
 
   /**
@@ -68,16 +68,17 @@ interface INFTBridge {
 
   event Cross(
     address indexed _originalTokenAddress,
-    address indexed _from,
     address indexed _to,
+    uint256 indexed _destinationChainId,
+    address _from,
+    uint256 _originChainId,
     address _tokenCreator,
-    bytes _userData,
     uint256 _totalSupply,
     uint256 _tokenId,
     string _tokenURI,
-    uint256 _originChainId,
-	uint256 _destinationChainId
+    bytes _userData
   );
+
   event NewSideNFTToken(
     address indexed _newSideNFTTokenAddress,
     address indexed _originalTokenAddress,
@@ -93,7 +94,7 @@ interface INFTBridge {
     bytes32 _blockHash,
     uint256 _logIndex,
     uint256 _originChainId,
-	uint256	_destinationChainId
+	  uint256	_destinationChainId
   );
   event FixedFeeNFTChanged(uint256 _amount);
   event ClaimedNFTToken(
@@ -106,6 +107,6 @@ interface INFTBridge {
     uint256 _logIndex,
     address _receiver,
     uint256 _originChainId,
-	uint256	_destinationChainId
+	  uint256	_destinationChainId
   );
 }
