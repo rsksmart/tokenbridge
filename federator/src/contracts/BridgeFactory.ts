@@ -9,6 +9,8 @@ import { VERSIONS } from './Constants';
 import { Contract } from 'web3-eth-contract';
 import { ConfigChain } from '../lib/configChain';
 import { IBridge } from './IBridge';
+import abiNftBridge from '../../../bridge/abi/NFTBridge.json';
+import { IBridgeNft } from './IBridgeNft';
 
 export class BridgeFactory extends ContractFactory {
   async getVersion(bridgeContract: Contract): Promise<string> {
@@ -29,5 +31,17 @@ export class BridgeFactory extends ContractFactory {
       default:
         throw Error('Unknown or deprecated Bridge contract version');
     }
+  }
+
+  async createNftInstance(configChain: ConfigChain): Promise<IBridge> {
+    const web3 = this.getWeb3(configChain.host);
+    const chainId = configChain.chainId;
+    const nftBridgeContract = this.getContractByAbiAndChainId(
+      abiNftBridge as AbiItem[],
+      configChain.nftBridge,
+      web3,
+      chainId,
+    );
+    return new IBridgeNft(nftBridgeContract);
   }
 }
