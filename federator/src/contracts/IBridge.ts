@@ -13,7 +13,7 @@ export interface IBridge {
 
   getProcessed(transactionDataHash: string);
 
-  getVersion(): Promise<string>;
+  getVersion(): string;
 
   getTransactionDataHash({
     to,

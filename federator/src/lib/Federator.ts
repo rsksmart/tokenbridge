@@ -117,29 +117,28 @@ export default abstract class Federator {
       this.resetRetries();
       const sideChainWeb3 = this.getWeb3(sideChainConfig.host);
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);
-      this.logger.upsertContext('Retrie', this.getCurrentRetrie());
-      try {
-        while (this.numberOfRetries > 0) {
+      while (this.numberOfRetries > 0) {
+        this.logger.upsertContext('Retrie', this.getCurrentRetrie());
+        try {
           const bridgeFactory = new BridgeFactory();
           const federationFactory = new FederationFactory();
-          const success: boolean = await this.run({
+          await this.run({
             sideChainConfig,
             sideChainWeb3,
             transactionSender,
             bridgeFactory,
             federationFactory,
           });
-          if (success) {
-            this.resetRetries();
-            break;
-          }
+          this.resetRetries();
+          this.logger.clearContext();
+          break;
+        } catch (err) {
+          this.logger.error(new Error('Exception Running Federator'), err);
+          this.numberOfRetries--;
+          this.checkRetries();
+          this.logger.clearContext();
+          await utils.sleep(this.config.mainchain.blockTimeMs);
         }
-      } catch (err) {
-        this.logger.error(new Error('Exception Running Federator'), err);
-        this.numberOfRetries--;
-        this.logger.debug(`Runned ${this.getCurrentRetrie()} retrie`);
-        this.checkRetries();
-        await utils.sleep(this.config.mainchain.blockTimeMs);
       }
     }
 

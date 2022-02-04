@@ -20,6 +20,7 @@ import {
   ProcessTransactionParams,
   VoteTransactionParams,
 } from '../types/federator';
+import { VERSIONS } from '../contracts/Constants';
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
@@ -42,11 +43,11 @@ export default class FederatorERC extends Federator {
     const currentBlock = await this.getMainChainWeb3().eth.getBlockNumber();
     const mainChainId = await this.getCurrentChainId();
     const sideChainId = await this.getChainId(sideChainWeb3);
-    this.logger.upsertContext('Main Chain ID', mainChainId);
-    this.logger.upsertContext('Side Chain ID', sideChainId);
+    this.logger.upsertContext('Origin Chain ID', mainChainId);
+    this.logger.upsertContext('Destination Chain ID', sideChainId);
     const allowTokensFactory = new AllowTokensFactory();
 
-    this.logger.trace(`Federator Run started currentBlock: ${currentBlock}, currentChainId: ${mainChainId}`);
+    this.logger.trace(`Federator Run started Current Block: ${currentBlock}`);
     const isMainSyncing = await this.getMainChainWeb3().eth.isSyncing();
     if (isMainSyncing !== false) {
       this.logger.warn(
@@ -67,16 +68,17 @@ export default class FederatorERC extends Federator {
       return false;
     }
 
-    this.logger.trace(`Current Block ${currentBlock} ChainId ${mainChainId}`);
     const allowTokens = await allowTokensFactory.createInstance(this.config.mainchain);
     const confirmations = await allowTokens.getConfirmations();
     const toBlock = currentBlock - confirmations.largeAmountConfirmations;
     const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
 
-    this.logger.info('Running to Block', toBlock);
-    this.logger.info(`Confirmations Large: ${confirmations.largeAmountConfirmations}, newToBlock ${newToBlock}`);
-
     if (toBlock <= 0 && newToBlock <= 0) {
+      this.logger.warn(
+        `Current Block: ${currentBlock}. No new blocks, toBlock: ${toBlock} newToBlock: ${newToBlock} are 0`,
+        'Confirmations needed:',
+        confirmations,
+      );
       return false;
     }
 
@@ -88,7 +90,17 @@ export default class FederatorERC extends Federator {
       return false;
     }
     fromBlock = fromBlock + 1;
-    this.logger.debug('Running from Block', fromBlock);
+
+    this.logger.info(
+      `Running ${fromBlock} to Block ${toBlock} Large Amount Confirmations: ${confirmations.largeAmountConfirmations}`,
+    );
+    const destinationBridge = await bridgeFactory.createInstance(sideChainConfig);
+    const destinationBridgeVersion = destinationBridge.getVersion();
+    if (destinationBridgeVersion == VERSIONS.V3 && [4, 56, 97].includes(sideChainConfig.chainId)) {
+      this.logger.warn(`Destination Bridge version ${destinationBridgeVersion} does not support multichain`);
+      return false;
+    }
+
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -105,7 +117,7 @@ export default class FederatorERC extends Federator {
     });
     const lastBlockProcessed = toBlock;
 
-    this.logger.debug('Started Log and Process of Medium and Small confirmations up to block', newToBlock);
+    this.logger.info(`Process Medium and Small Confirmations Running ${lastBlockProcessed} to Block ${newToBlock}`);
     await this.getLogsAndProcess({
       sideChainId,
       mainChainId,
@@ -145,7 +157,9 @@ export default class FederatorERC extends Federator {
       if (currentPage === numberOfPages) {
         toPagedBlock = getLogParams.toBlock;
       }
-      this.logger.debug(`Page ${currentPage} getting events from block ${fromPageBlock} to ${toPagedBlock}`);
+      this.logger.debug(
+        `Page ${currentPage} of ${numberOfPages}, getting events from block ${fromPageBlock} to ${toPagedBlock}`,
+      );
       this.logger.upsertContext('fromBlock', fromPageBlock);
       this.logger.upsertContext('toBlock', toPagedBlock);
       const logs = await mainBridge.getPastEvents('Cross', getLogParams.sideChainId, {
@@ -158,14 +172,19 @@ export default class FederatorERC extends Federator {
       }
 
       this.logger.info(`Found ${logs.length} logs`);
-      await this._processLogs({
-        ...getLogParams,
-        logs,
-      });
+      if (logs.length > 0) {
+        await this._processLogs({
+          ...getLogParams,
+          logs,
+        });
+      }
       if (!getLogParams.mediumAndSmall) {
         this._saveProgress(this.getLastBlockPath(getLogParams.mainChainId, getLogParams.sideChainId), toPagedBlock);
       }
       fromPageBlock = toPagedBlock + 1;
+      this.logger.removeContext('fromBlock');
+      this.logger.removeContext('toBlock');
+      this.logger.removeContext('Current Block');
     }
   }
 
@@ -174,6 +193,14 @@ export default class FederatorERC extends Federator {
     if (!isMember) {
       throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
     }
+  }
+
+  cleanTransactionLogContext() {
+    this.logger.removeContext('transactionHash');
+    this.logger.removeContext('blockHash');
+    this.logger.removeContext('blockNumber');
+    this.logger.removeContext('tokenAddress');
+    this.logger.removeContext('transactionId');
   }
 
   async processLog(processLogParams: ProcessLogParams): Promise<boolean> {
@@ -243,6 +270,7 @@ export default class FederatorERC extends Federator {
         this.logger.debug(
           `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
+        this.cleanTransactionLogContext();
         return false;
       }
 
@@ -255,6 +283,7 @@ export default class FederatorERC extends Federator {
         this.logger.debug(
           `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
+        this.cleanTransactionLogContext();
         return false;
       }
     }
@@ -272,7 +301,7 @@ export default class FederatorERC extends Federator {
         destinationChainId,
       }),
     );
-    this.logger.info('get transaction id:', transactionId);
+    this.logger.upsertContext('transactionId', transactionId);
     await this.processTransaction({
       ...processLogParams,
       tokenAddress,
@@ -285,6 +314,7 @@ export default class FederatorERC extends Federator {
       destinationChainId,
     });
 
+    this.cleanTransactionLogContext();
     return true;
   }
 
@@ -298,8 +328,6 @@ export default class FederatorERC extends Federator {
       originChainId: processTransactionParams.originChainId,
       destinationChainId: processTransactionParams.destinationChainId,
     };
-    this.logger.info('===dataToHash===', dataToHash);
-    this.logger.warn('===log===', processTransactionParams.log);
     const transactionDataHash = await typescriptUtils.retryNTimes(
       processTransactionParams.sideBridgeContract.getTransactionDataHash(dataToHash),
     );

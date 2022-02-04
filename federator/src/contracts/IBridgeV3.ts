@@ -1,4 +1,5 @@
 import { Contract, EventData } from 'web3-eth-contract';
+import { VERSIONS } from './Constants';
 import { IBridge } from './IBridge';
 
 interface MappedTokensParams {
@@ -7,9 +8,11 @@ interface MappedTokensParams {
 
 export class IBridgeV3 implements IBridge {
   bridgeContract: Contract;
+  chainId: number;
 
-  constructor(bridgeContract: Contract) {
+  constructor(bridgeContract: Contract, chainId: number) {
     this.bridgeContract = bridgeContract;
+    this.chainId = chainId;
   }
 
   getFederation(): Promise<string> {
@@ -21,6 +24,10 @@ export class IBridgeV3 implements IBridge {
   }
 
   async getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
+    if ([4, 56, 97].includes(this.chainId)) {
+      // Binance and Ribkeby shouldn't cross events until the multichain bridge starts
+      return [];
+    }
     return this.bridgeContract.getPastEvents(eventName, options);
   }
 
@@ -36,8 +43,8 @@ export class IBridgeV3 implements IBridge {
     return this.bridgeContract.methods.claimed(transactionDataHash).call();
   }
 
-  getVersion(): Promise<string> {
-    return this.bridgeContract.methods.version().call();
+  getVersion(): string {
+    return VERSIONS.V3;
   }
 
   getMappedToken(paramsObj: MappedTokensParams): Promise<string> {

@@ -1,4 +1,5 @@
 import { Contract, EventData } from 'web3-eth-contract';
+import { VERSIONS } from './Constants';
 import { IBridge } from './IBridge';
 
 interface SideTokenAddressByOriginalTokenInterface {
@@ -50,8 +51,8 @@ export class IBridgeV4 implements IBridge {
     return this.bridgeContract.methods.claimed(transactionDataHash).call();
   }
 
-  getVersion(): Promise<string> {
-    return this.bridgeContract.methods.version().call();
+  getVersion(): string {
+    return VERSIONS.V4;
   }
 
   getMappedToken(paramsObj: SideTokenAddressByOriginalTokenInterface): Promise<string> {

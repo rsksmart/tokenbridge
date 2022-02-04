@@ -27,7 +27,7 @@ export class BridgeFactory extends ContractFactory {
         return new IBridgeV4(bridgeContract, configChain.chainId);
       case VERSIONS.V3:
         bridgeContract = this.getContractByAbiAndChainId(abiBridgeV3 as AbiItem[], configChain.bridge, web3, chainId);
-        return new IBridgeV3(bridgeContract);
+        return new IBridgeV3(bridgeContract, configChain.chainId);
       default:
         throw Error('Unknown or deprecated Bridge contract version');
     }
