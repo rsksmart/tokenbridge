@@ -81,20 +81,14 @@ function getSidechainFederators(keys, sideConfig) {
         {
           ...sideConfig,
           privateKey: key,
-          storagePath: `${config.storagePath}/nft-side-fed-${i + 1}`,
+          storagePath: `${config.storagePath}/nft-fed-${i + 1}`,
         },
         logWrapperFederator
       );
       federators.push(federator);
     });
   } else {
-    const federator = new FederatorNFT.default(
-      {
-        ...sideConfig,
-        storagePath: `${config.storagePath}/side-fed`,
-      },
-      logWrapperFederator
-    );
+    const federator = new FederatorNFT.default(sideConfig, logWrapperFederator);
     federators.push(federator);
   }
   sideConfig.sidechain = sideConfig.sidechain[0];
