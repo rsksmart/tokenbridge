@@ -130,7 +130,7 @@ contract NFTBridge is
       _transactionHash,
       _logIndex,
       _originChainId,
-	_destinationChainId
+	    _destinationChainId
     );
 
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
