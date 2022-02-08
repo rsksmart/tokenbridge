@@ -751,6 +751,28 @@ contract("Bridge NFT", async function(accounts) {
             "NFTBridge: Already accepted"
         );
       });
+
+      it("throws an error when origin chain is 0", async function () {
+        await truffleAssertions.fails(
+            this.NFTBridge.acceptTransfer(
+                tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                0, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                {from: federation}
+            ),
+            "Bridge: ChainId is 0"
+        );
+      });
+
+      it("throws an error when destination chain is invalid", async function () {
+        await truffleAssertions.fails(
+            this.NFTBridge.acceptTransfer(
+                tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                {from: federation}
+            ),
+            "Bridge: Not block.chainid"
+        );
+      });
     });
 
     describe("claim", async function () {
