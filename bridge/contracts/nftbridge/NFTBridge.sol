@@ -154,7 +154,7 @@ contract NFTBridge is
     return sideTokenByOriginalTokenByChain[chainId][originalToken];
   }
 
-  function setSideTokenByOriginalToken(uint256 chainId, address originalToken, address sideToken) public {
+  function _setSideTokenByOriginalToken(uint256 chainId, address originalToken, address sideToken) internal {
     sideTokenByOriginalTokenByChain[chainId][originalToken] = sideToken;
   }
 
@@ -162,7 +162,7 @@ contract NFTBridge is
     return originalTokenBySideToken[sideToken];
   }
 
-  function setOriginalTokenBySideToken(address sideToken, OriginalNft memory originalToken) public {
+  function _setOriginalTokenBySideToken(address sideToken, OriginalNft memory originalToken) internal {
     originalTokenBySideToken[sideToken] = originalToken;
   }
 
@@ -170,7 +170,7 @@ contract NFTBridge is
     return isAddressFromCrossedOriginalTokenByChain[chainId][originalToken];
   }
 
-  function setAddressFromCrossedOriginalToken(uint256 chainId, address originalToken, bool addressHasCrossed) public {
+  function _setAddressFromCrossedOriginalToken(uint256 chainId, address originalToken, bool addressHasCrossed) internal {
     isAddressFromCrossedOriginalTokenByChain[chainId][originalToken] = addressHasCrossed;
   }
 
@@ -189,12 +189,12 @@ contract NFTBridge is
     // Create side token
     address sideTokenAddress = sideTokenFactory.createSideNFTToken(_tokenName, _tokenSymbol, _baseURI, _contractURI);
 
-    setSideTokenByOriginalToken(originChainId, _originalTokenAddress, sideTokenAddress);
+    _setSideTokenByOriginalToken(originChainId, _originalTokenAddress, sideTokenAddress);
 
     OriginalNft memory originalNft;
     originalNft.originChainId = originChainId;
     originalNft.nftAddress = _originalTokenAddress;
-    setOriginalTokenBySideToken(sideTokenAddress, originalNft);
+    _setOriginalTokenBySideToken(sideTokenAddress, originalNft);
 
     emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, _tokenSymbol, originChainId);
   }
@@ -305,7 +305,7 @@ contract NFTBridge is
     uint256 destinationChainId
   ) internal whenNotUpgrading whenNotPaused nonReentrant {
     require(block.chainid != destinationChainId, "NFTBridge: destination chain id equal current chain id");
-    setAddressFromCrossedOriginalToken(destinationChainId, tokenAddress, true);
+    _setAddressFromCrossedOriginalToken(destinationChainId, tokenAddress, true);
 
     IERC721Enumerable enumerable = IERC721Enumerable(tokenAddress);
     IERC721Metadata metadataIERC = IERC721Metadata(tokenAddress);
