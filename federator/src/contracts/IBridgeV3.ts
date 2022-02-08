@@ -1,4 +1,5 @@
 import { Contract, EventData } from 'web3-eth-contract';
+import { NEW_CHAIN_IDS } from '../lib/chainId';
 import { VERSIONS } from './Constants';
 import { IBridge } from './IBridge';
 
@@ -24,7 +25,7 @@ export class IBridgeV3 implements IBridge {
   }
 
   async getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
-    if ([4, 56, 97].includes(this.chainId)) {
+    if (NEW_CHAIN_IDS.includes(this.chainId)) {
       // Binance and Ribkeby shouldn't cross events until the multichain bridge starts
       return [];
     }

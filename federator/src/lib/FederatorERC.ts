@@ -21,6 +21,7 @@ import {
   VoteTransactionParams,
 } from '../types/federator';
 import { VERSIONS } from '../contracts/Constants';
+import { NEW_CHAIN_IDS } from './chainId';
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
@@ -96,7 +97,7 @@ export default class FederatorERC extends Federator {
     );
     const destinationBridge = await bridgeFactory.createInstance(sideChainConfig);
     const destinationBridgeVersion = destinationBridge.getVersion();
-    if (destinationBridgeVersion == VERSIONS.V3 && [4, 56, 97].includes(sideChainConfig.chainId)) {
+    if (destinationBridgeVersion == VERSIONS.V3 && NEW_CHAIN_IDS.includes(sideChainConfig.chainId)) {
       this.logger.warn(`Destination Bridge version ${destinationBridgeVersion} does not support multichain`);
       return false;
     }
