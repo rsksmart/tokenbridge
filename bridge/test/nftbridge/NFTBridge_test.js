@@ -1,4 +1,5 @@
 const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
+const NftBridgeInherited = artifacts.require("./NFTInheritedBridge");
 const NftBridge = artifacts.require("./NFTBridge");
 const TestTokenCreator = artifacts.require("./TestTokenCreator");
 const AllowTokens = artifacts.require("./AllowTokens");
@@ -73,6 +74,7 @@ contract("Bridge NFT", async function(accounts) {
     this.NFTBridge = await NftBridge.new();
     this.sideNFTBridge = await NftBridge.new();
     this.sideChainSideTokenFactory = await SideNFTTokenFactory.new();
+    this.nftInheritedBridge = await NftBridgeInherited.new();
 
     await this.NFTBridge.methods[
       "initialize(address,address,address,address)"
@@ -688,7 +690,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssertions.fails(
             this.NFTBridge.acceptTransfer(
                 unknownTokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
-                chains.HARDHAT_TEST_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Unknown token"
@@ -749,6 +751,28 @@ contract("Bridge NFT", async function(accounts) {
                 {from: federation}
             ),
             "NFTBridge: Already accepted"
+        );
+      });
+
+      it("throws an error when origin chain is 0", async function () {
+        await truffleAssertions.fails(
+            this.NFTBridge.acceptTransfer(
+                tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                0, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                {from: federation}
+            ),
+            "Bridge: ChainId is 0"
+        );
+      });
+
+      it("throws an error when destination chain is invalid", async function () {
+        await truffleAssertions.fails(
+            this.NFTBridge.acceptTransfer(
+                tokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                {from: federation}
+            ),
+            "Bridge: Not block.chainid"
         );
       });
     });
@@ -998,6 +1022,25 @@ contract("Bridge NFT", async function(accounts) {
             await assertTokenHasBeenClaimed(this.NFTBridge.address, anAccount, this.token);
           });
 
+    });
+
+    describe("validations", async function(){
+      
+      it("should revert when checkChainIdExposed is passed 0 as chain id", async function () {
+        await truffleAssertions.fails(
+          this.nftInheritedBridge.checkChainIdExposed(0),
+          truffleAssertions.ErrorType.REVERT,
+          "NFTBridge: ChainId is 0"
+        );
+      });
+
+      it("should revert when shouldBeCurrentChainIdExposed is not block.chainId", async function () {
+        await truffleAssertions.fails(
+          this.nftInheritedBridge.shouldBeCurrentChainIdExposed(99),
+          truffleAssertions.ErrorType.REVERT,
+          "NFTBridge: Not block.chainid"
+        );
+      });
     });
   });
 });
