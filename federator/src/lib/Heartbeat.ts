@@ -32,7 +32,7 @@ export class Heartbeat {
     this.mainWeb3 = new Web3(config.mainchain.host);
 
     this.metricCollector = metricCollector;
-    this.federationFactory = new FederationFactory(this.config, this.logger, config.mainchain);
+    this.federationFactory = new FederationFactory();
     this.transactionSender = new TransactionSender(this.mainWeb3, this.logger, this.config);
     this.lastBlockPath = `${config.storagePath || __dirname}/heartBeatLastBlock.txt`;
     this.sideChains = [];
@@ -142,7 +142,7 @@ export class Heartbeat {
     while (retries > 0) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
-        const fedContract = await this.federationFactory.getMainFederationContract();
+        const fedContract = await this.federationFactory.createInstance(this.config.mainchain, this.config.privateKey);
 
         const toBlock = currentBlock;
         this.logger.info('Running to Block', toBlock);
@@ -215,7 +215,7 @@ export class Heartbeat {
 
   async _emitHeartbeat(fedVersion: string, fedChainsIds: any[], fedChainsBlocks: any[], fedChainInfo: any[]) {
     try {
-      const fedContract = await this.federationFactory.getMainFederationContract();
+      const fedContract = await this.federationFactory.createInstance(this.config.mainchain, this.config.privateKey);
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const isMember = await fedContract.isMember(from);
       if (!isMember) {

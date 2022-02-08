@@ -16,6 +16,7 @@ import {
   LOGGER_CATEGORY_FEDERATOR_SIDE,
   LOGGER_CATEGORY_FEDERATOR_NFT_SIDE,
   LOGGER_CATEGORY_HEARTBEAT,
+  LOGGER_CATEGORY_ENDPOINT,
 } from './lib/logs';
 
 export class Main {
@@ -32,7 +33,7 @@ export class Main {
   constructor() {
     this.logger = Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR);
     this.config = Config.getInstance();
-    this.endpoint = new Endpoint(this.logger, this.config.endpointsPort);
+    this.endpoint = new Endpoint(Logs.getInstance().getLogger(LOGGER_CATEGORY_ENDPOINT), this.config.endpointsPort);
     this.endpoint.init();
     try {
       this.metricCollector = new MetricCollector();

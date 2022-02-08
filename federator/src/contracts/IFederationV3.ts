@@ -1,32 +1,18 @@
-import { ConfigData } from '../lib/config';
 import { Contract, EventData } from 'web3-eth-contract';
-import { BN } from 'ethereumjs-util';
 import { VERSIONS } from './Constants';
 import { IFederation } from './IFederation';
-
-export interface TransactionIdParams {
-  originalTokenAddress: string;
-  sender: string;
-  receiver: string;
-  amount: BN;
-  blockHash: string;
-  transactionHash: string;
-  logIndex: number;
-  originChainId: number;
-  destinationChainId: number;
-}
-
-export interface VoteTransactionParams extends TransactionIdParams {
-  tokenType: number;
-}
+import { ConfigChain } from '../lib/configChain';
+import { TransactionIdParams, VoteTransactionV3Params } from '../types/federator';
 
 export class IFederationV3 implements IFederation {
   federationContract: Contract;
-  config: ConfigData;
+  config: ConfigChain;
+  privateKey: string;
 
-  constructor(config: ConfigData, fedContract: Contract) {
+  constructor(config: ConfigChain, fedContract: Contract, privateKey: string) {
     this.federationContract = fedContract;
     this.config = config;
+    this.privateKey = privateKey;
   }
 
   getVersion(): string {
@@ -65,7 +51,7 @@ export class IFederationV3 implements IFederation {
     return this.federationContract.methods.hasVoted(txId).call({ from });
   }
 
-  getVoteTransactionABI(paramsObj: VoteTransactionParams): Promise<any> {
+  getVoteTransactionABI(paramsObj: VoteTransactionV3Params): Promise<any> {
     return this.federationContract.methods
       .voteTransaction(
         paramsObj.originalTokenAddress,
@@ -105,6 +91,6 @@ export class IFederationV3 implements IFederation {
     );
 
     const txData = emitHeartbeat.encodeABI();
-    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.config.privateKey);
+    return await txSender.sendTransaction(this.getAddress(), txData, 0, this.privateKey);
   }
 }

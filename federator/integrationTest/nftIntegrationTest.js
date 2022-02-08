@@ -369,10 +369,10 @@ async function assertThatNftTokensCrossedToBridge(
   nftBridgeContract,
   transactionHash
 ) {
-  const txDataHash = await nftBridgeContract.methods
+  const hasCrossed = await nftBridgeContract.methods
     .hasCrossed(transactionHash)
     .call();
-  if (txDataHash === utils.ZERO_HASH) {
+  if (!hasCrossed) {
     logger.error("Token was not voted by federators");
     process.exit(1);
   }

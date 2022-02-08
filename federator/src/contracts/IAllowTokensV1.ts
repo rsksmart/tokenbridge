@@ -20,7 +20,7 @@ export class IAllowTokensV1 implements IAllowTokens {
     this.chainId = chainId;
   }
 
-  getVersion() {
+  getVersion(): string {
     return VERSIONS.V1;
   }
 
