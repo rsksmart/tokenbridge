@@ -690,7 +690,7 @@ contract("Bridge NFT", async function(accounts) {
         await truffleAssertions.fails(
             this.NFTBridge.acceptTransfer(
                 unknownTokenAddress, anAccount, anotherAccount, tokenId, blockHash, transactionHash, logIndex,
-                chains.HARDHAT_TEST_NET_CHAIN_ID, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID,
                 {from: federation}
             ),
             "NFTBridge: Unknown token"
