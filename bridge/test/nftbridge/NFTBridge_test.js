@@ -1,4 +1,5 @@
 const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
+const NftBridgeInherited = artifacts.require("./NFTInheritedBridge");
 const NftBridge = artifacts.require("./NFTBridge");
 const TestTokenCreator = artifacts.require("./TestTokenCreator");
 const AllowTokens = artifacts.require("./AllowTokens");
@@ -73,6 +74,7 @@ contract("Bridge NFT", async function(accounts) {
     this.NFTBridge = await NftBridge.new();
     this.sideNFTBridge = await NftBridge.new();
     this.sideChainSideTokenFactory = await SideNFTTokenFactory.new();
+    this.nftInheritedBridge = await NftBridgeInherited.new();
 
     await this.NFTBridge.methods[
       "initialize(address,address,address,address)"
@@ -1020,6 +1022,25 @@ contract("Bridge NFT", async function(accounts) {
             await assertTokenHasBeenClaimed(this.NFTBridge.address, anAccount, this.token);
           });
 
+    });
+
+    describe("validations", async function(){
+      
+      it("should revert when checkChainIdExposed is passed 0 as chain id", async function () {
+        await truffleAssertions.fails(
+          this.nftInheritedBridge.checkChainIdExposed(0),
+          truffleAssertions.ErrorType.REVERT,
+          "NFTBridge: ChainId is 0"
+        );
+      });
+
+      it("should revert when shouldBeCurrentChainIdExposed is not block.chainId", async function () {
+        await truffleAssertions.fails(
+          this.nftInheritedBridge.shouldBeCurrentChainIdExposed(99),
+          truffleAssertions.ErrorType.REVERT,
+          "NFTBridge: Not block.chainid"
+        );
+      });
     });
   });
 });
