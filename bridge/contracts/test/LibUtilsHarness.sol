@@ -22,4 +22,8 @@ contract LibUtilsHarness {
         return LibUtils.bytesToAddress(bys);
     }
 
+    function toUint128(bytes memory _bytes, uint256 _start) external pure returns (uint128) {
+        return LibUtils.toUint128(_bytes, _start);
+    }
+
 }
