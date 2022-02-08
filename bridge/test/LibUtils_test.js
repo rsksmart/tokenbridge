@@ -100,13 +100,13 @@ contract('LibUtils', async function (accounts) {
     describe('toUint128', async function() {
         it('Should convert bytes to uint128', async function() {
             const bytes = accounts[1];
-            
+
             await truffleAssertions.passes(this.utilsLib.toUint128(bytes, 0));
         });
 
         it('Should validate if the byte size is not out of bounds', async function() {
             const invalidBytesSize = '0x1ABC7154748D1CE5144';
-            
+
             await truffleAssertions.fails(this.utilsLib.toUint128(invalidBytesSize, 0), "LibUtils: toUint128_outOfBounds");
         });
     });
