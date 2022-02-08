@@ -1,10 +1,10 @@
 import { Contract, EventData } from 'web3-eth-contract';
-import { ConfigData } from '../lib/config';
-import { TransactionIdParams, VoteTransactionParams } from './IFederationV3';
+import { ConfigChain } from '../lib/configChain';
+import { TransactionIdParams, VoteTransactionV3Params } from '../types/federator';
 
 export interface IFederation {
   federationContract: Contract;
-  config: ConfigData;
+  config: ConfigChain;
 
   getVersion(): string;
 
@@ -16,7 +16,7 @@ export interface IFederation {
 
   hasVoted(txId: string, from: string): Promise<boolean>;
 
-  getVoteTransactionABI(paramsObj: VoteTransactionParams): Promise<any>;
+  getVoteTransactionABI(paramsObj: VoteTransactionV3Params): Promise<any>;
 
   getAddress(): string;
 

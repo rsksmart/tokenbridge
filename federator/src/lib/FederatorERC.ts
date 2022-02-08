@@ -11,58 +11,15 @@ import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import Federator from './Federator';
 import { ConfigChain } from './configChain';
-import { BN } from 'ethereumjs-util';
 import { IFederation } from '../contracts/IFederation';
-import { IAllowTokens } from '../contracts/IAllowTokens';
 import { LogWrapper } from './logWrapper';
-
-export interface BaseLogsParams {
-  sideChainId: number;
-  mainChainId: number;
-  transactionSender: TransactionSender;
-  currentBlock: number;
-  mediumAndSmall: boolean;
-  confirmations: { mediumAmountConfirmations: number; largeAmountConfirmations: number };
-  sideChainConfig: ConfigChain;
-  federationFactory: FederationFactory;
-  allowTokensFactory: AllowTokensFactory;
-  bridgeFactory: BridgeFactory;
-}
-
-export interface GetLogsParams extends BaseLogsParams {
-  fromBlock: number;
-  toBlock: number;
-}
-
-export interface ProcessLogsParams extends BaseLogsParams {
-  logs: any[];
-}
-
-export interface ProcessLogParams extends BaseLogsParams {
-  log: any;
-  sideFedContract: IFederation;
-  allowTokens: IAllowTokens;
-  federatorAddress: string;
-}
-
-export interface ProcessTransactionParams extends ProcessLogParams {
-  tokenAddress: string;
-  senderAddress: string;
-  receiver: string;
-  amount: BN;
-  symbol: string;
-  decimals: string;
-  granularity: string;
-  typeId: string;
-  transactionId: string;
-  originChainId: number;
-  destinationChainId: number;
-}
-export interface VoteTransactionParams extends ProcessTransactionParams {
-  blockHash: string;
-  transactionHash: string;
-  logIndex: number;
-}
+import {
+  GetLogsParams,
+  ProcessLogParams,
+  ProcessLogsParams,
+  ProcessTransactionParams,
+  VoteTransactionParams,
+} from '../types/federator';
 
 export default class FederatorERC extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
@@ -87,7 +44,7 @@ export default class FederatorERC extends Federator {
     const sideChainId = await this.getChainId(sideChainWeb3);
     this.logger.upsertContext('Main Chain ID', mainChainId);
     this.logger.upsertContext('Side Chain ID', sideChainId);
-    const allowTokensFactory = new AllowTokensFactory(this.config, this.logger, sideChainConfig);
+    const allowTokensFactory = new AllowTokensFactory();
 
     this.logger.trace(`Federator Run started currentBlock: ${currentBlock}, currentChainId: ${mainChainId}`);
     const isMainSyncing = await this.getMainChainWeb3().eth.isSyncing();
@@ -111,7 +68,7 @@ export default class FederatorERC extends Federator {
     }
 
     this.logger.trace(`Current Block ${currentBlock} ChainId ${mainChainId}`);
-    const allowTokens = await allowTokensFactory.getMainAllowTokensContract();
+    const allowTokens = await allowTokensFactory.createInstance(this.config.mainchain);
     const confirmations = await allowTokens.getConfirmations();
     const toBlock = currentBlock - confirmations.largeAmountConfirmations;
     const newToBlock = currentBlock - confirmations.smallAmountConfirmations;
@@ -176,7 +133,7 @@ export default class FederatorERC extends Federator {
       return;
     }
     this.logger.upsertContext('Current Block', getLogParams.currentBlock);
-    const mainBridge = await getLogParams.bridgeFactory.getMainBridgeContract();
+    const mainBridge = await getLogParams.bridgeFactory.createInstance(this.config.mainchain);
 
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((getLogParams.toBlock - getLogParams.fromBlock) / recordsPerPage);
@@ -228,10 +185,7 @@ export default class FederatorERC extends Federator {
       _to: receiver,
       _from: crossFromAddress,
       _amount: amount,
-      _symbol: symbol,
       _tokenAddress: tokenAddress,
-      _decimals: decimals,
-      _granularity: granularity,
       _typeId: typeId,
       _originChainId: originChainIdStr,
       _destinationChainId: destinationChainIdStr,
@@ -246,7 +200,7 @@ export default class FederatorERC extends Federator {
     this.logger.upsertContext('blockNumber', blockNumber);
     this.logger.upsertContext('tokenAddress', tokenAddress);
 
-    const originBridge = await processLogParams.bridgeFactory.getMainBridgeContract();
+    const originBridge = await processLogParams.bridgeFactory.createInstance(this.config.mainchain);
     const sideTokenAddress = await typescriptUtils.retryNTimes(
       originBridge.getMappedToken({
         originalTokenAddress: tokenAddress,
@@ -284,10 +238,10 @@ export default class FederatorERC extends Federator {
       // At this point we're processing blocks newer than largeAmountConfirmations
       // and older than smallAmountConfirmations
       if (amountBN.gte(largeAmountBN)) {
-        const c = processLogParams.currentBlock - blockNumber;
-        const rC = processLogParams.confirmations.largeAmountConfirmations;
+        const confirmations = processLogParams.currentBlock - blockNumber;
+        const neededConfirmations = processLogParams.confirmations.largeAmountConfirmations;
         this.logger.debug(
-          `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+          `[large amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
         return false;
       }
@@ -296,10 +250,10 @@ export default class FederatorERC extends Federator {
         amountBN.gte(mediumAmountBN) &&
         processLogParams.currentBlock - blockNumber < processLogParams.confirmations.mediumAmountConfirmations
       ) {
-        const c = processLogParams.currentBlock - blockNumber;
-        const rC = processLogParams.confirmations.mediumAmountConfirmations;
+        const confirmations = processLogParams.currentBlock - blockNumber;
+        const neededConfirmations = processLogParams.confirmations.mediumAmountConfirmations;
         this.logger.debug(
-          `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${c} < ${rC}`,
+          `[medium amount] Tx: ${transactionHash} ${amount} originalTokenAddress:${tokenAddress} won't be proccessed yet ${confirmations} < ${neededConfirmations}`,
         );
         return false;
       }
@@ -325,9 +279,6 @@ export default class FederatorERC extends Federator {
       senderAddress: crossFromAddress,
       receiver,
       amount,
-      symbol,
-      decimals,
-      granularity,
       typeId,
       transactionId,
       originChainId,
@@ -338,44 +289,64 @@ export default class FederatorERC extends Federator {
   }
 
   async processTransaction(processTransactionParams: ProcessTransactionParams) {
-    const wasProcessed = await typescriptUtils.retryNTimes(
-      processTransactionParams.sideFedContract.transactionWasProcessed(processTransactionParams.transactionId),
+    const dataToHash = {
+      to: processTransactionParams.receiver,
+      amount: processTransactionParams.amount,
+      blockHash: processTransactionParams.log.blockHash,
+      transactionHash: processTransactionParams.log.transactionHash,
+      logIndex: processTransactionParams.log.logIndex,
+      originChainId: processTransactionParams.originChainId,
+      destinationChainId: processTransactionParams.destinationChainId,
+    };
+    this.logger.info('===dataToHash===', dataToHash);
+    this.logger.warn('===log===', processTransactionParams.log);
+    const transactionDataHash = await typescriptUtils.retryNTimes(
+      processTransactionParams.sideBridgeContract.getTransactionDataHash(dataToHash),
     );
-    if (!wasProcessed) {
-      const hasVoted = await processTransactionParams.sideFedContract.hasVoted(
-        processTransactionParams.transactionId,
-        processTransactionParams.federatorAddress,
-      );
-      if (!hasVoted) {
-        this.logger.info(
-          `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash}
-          originalTokenAddress: ${processTransactionParams.tokenAddress}`,
-        );
-        await this._voteTransaction({
-          ...processTransactionParams,
-          blockHash: processTransactionParams.log.blockHash,
-          transactionHash: processTransactionParams.log.transactionHash,
-          logIndex: processTransactionParams.log.logIndex,
-        });
-      } else {
-        this.logger.debug(
-          `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-          originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
-        );
-      }
-    } else {
+    const wasProcessed = await typescriptUtils.retryNTimes(
+      processTransactionParams.sideBridgeContract.getProcessed(transactionDataHash),
+    );
+    if (wasProcessed) {
       this.logger.info(
         `Already processed Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
-        originalTokenAddress: ${processTransactionParams.tokenAddress}`,
+          originalTokenAddress: ${processTransactionParams.tokenAddress}`,
       );
+      return;
     }
+    const hasVoted = await processTransactionParams.sideFedContract.hasVoted(
+      processTransactionParams.transactionId,
+      processTransactionParams.federatorAddress,
+    );
+    if (hasVoted) {
+      this.logger.debug(
+        `Block: ${processTransactionParams.log.blockHash} Tx: ${processTransactionParams.log.transactionHash}
+        originalTokenAddress: ${processTransactionParams.tokenAddress}  has already been voted by us`,
+      );
+      return;
+    }
+    this.logger.info(
+      `Voting tx: ${processTransactionParams.log.transactionHash} block: ${processTransactionParams.log.blockHash}
+      originalTokenAddress: ${processTransactionParams.tokenAddress}`,
+    );
+    await this._voteTransaction({
+      ...processTransactionParams,
+      blockHash: processTransactionParams.log.blockHash,
+      transactionHash: processTransactionParams.log.transactionHash,
+      logIndex: processTransactionParams.log.logIndex,
+    });
   }
 
   async _processLogs(processLogsParams: ProcessLogsParams) {
     try {
       const federatorAddress = await processLogsParams.transactionSender.getAddress(this.config.privateKey);
-      const sideFedContract = await processLogsParams.federationFactory.getSideFederationContract();
-      const allowTokens = await processLogsParams.allowTokensFactory.getMainAllowTokensContract();
+      const sideFedContract = await processLogsParams.federationFactory.createInstance(
+        processLogsParams.sideChainConfig,
+        this.config.privateKey,
+      );
+      const sideBridgeContract = await processLogsParams.bridgeFactory.createInstance(
+        processLogsParams.sideChainConfig,
+      );
+      const allowTokens = await processLogsParams.allowTokensFactory.createInstance(this.config.mainchain);
 
       await this.checkFederatorIsMember(sideFedContract, federatorAddress);
 
@@ -386,6 +357,7 @@ export default class FederatorERC extends Federator {
           sideFedContract,
           allowTokens,
           federatorAddress,
+          sideBridgeContract,
         });
       }
 
@@ -428,7 +400,7 @@ export default class FederatorERC extends Federator {
       }
 
       if (revertedTxns[voteTransactionParams.transactionId]) {
-        this.logger.info(
+        this.logger.warn(
           `Skipping Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
           TransactionId ${voteTransactionParams.transactionId} since it's marked as reverted.`,
           revertedTxns[voteTransactionParams.transactionId],
@@ -459,12 +431,9 @@ export default class FederatorERC extends Federator {
               sender: voteTransactionParams.senderAddress,
               receiver: voteTransactionParams.receiver,
               amount: voteTransactionParams.amount,
-              symbol: voteTransactionParams.symbol,
               blockHash: voteTransactionParams.blockHash,
               transactionHash: voteTransactionParams.transactionHash,
               logIndex: voteTransactionParams.logIndex,
-              decimals: voteTransactionParams.decimals,
-              granularity: voteTransactionParams.granularity,
               error: receipt.error,
             },
           }),

@@ -120,8 +120,8 @@ export default abstract class Federator {
       this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
         while (this.numberOfRetries > 0) {
-          const bridgeFactory = new BridgeFactory(this.config, this.logger, sideChainConfig);
-          const federationFactory = new FederationFactory(this.config, this.logger, sideChainConfig);
+          const bridgeFactory = new BridgeFactory();
+          const federationFactory = new FederationFactory();
           const success: boolean = await this.run({
             sideChainConfig,
             sideChainWeb3,

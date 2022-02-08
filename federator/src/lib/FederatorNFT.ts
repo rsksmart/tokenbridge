@@ -8,7 +8,7 @@ import * as utils from '../lib/utils';
 import * as typescriptUtils from './typescriptUtils';
 import { RSK_TEST_NET_CHAIN_ID, ETH_KOVAN_CHAIN_ID, ETH_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID } from './chainId';
 import { MetricCollector } from './MetricCollector';
-import { IFederationV3 } from '../contracts/IFederationV3';
+import { IFederation } from '../contracts/IFederation';
 import { BN } from 'ethereumjs-util';
 import { ConfigChain } from './configChain';
 import Federator from './Federator';
@@ -17,8 +17,7 @@ import { LogWrapper } from './logWrapper';
 
 export default class FederatorNFT extends Federator {
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
-    config.storagePath = `${config.storagePath}/nft/`;
-    super(config, logger, metricCollector);
+    super({ ...config, storagePath: `${config.storagePath}/nft/` }, logger, metricCollector);
   }
 
   private async getNftConfirmationsForCurrentChainId(): Promise<number> {
@@ -140,7 +139,7 @@ export default class FederatorNFT extends Federator {
       return;
     }
 
-    const mainBridge = bridgeFactory.getMainNftBridgeContract();
+    const mainBridge = await bridgeFactory.createNftInstance(this.config.mainchain);
     const recordsPerPage = 1000;
     const numberOfPages = Math.ceil((toBlock - fromBlock) / recordsPerPage);
     this.logger.debug(`Total pages ${numberOfPages}, blocks per page ${recordsPerPage}`);
@@ -194,7 +193,8 @@ export default class FederatorNFT extends Federator {
   }): Promise<boolean> {
     try {
       const federatorAddress = await transactionSender.getAddress(this.config.privateKey);
-      const federatorContract = await federationFactory.getSideFederationNftContract();
+      // SideChain Federation
+      const federatorContract = await federationFactory.createInstance(sideChainConfig, this.config.privateKey);
       const isMember: boolean = await typescriptUtils.retryNTimes(federatorContract.isMember(federatorAddress));
       if (!isMember) {
         throw new Error(`This Federator addr:${federatorAddress} is not part of the federation`);
@@ -329,7 +329,7 @@ export default class FederatorNFT extends Federator {
     originChainId: number;
     destinationChainId: number;
     transactionSender: TransactionSender;
-    federatorContract: IFederationV3;
+    federatorContract: IFederation;
     sideChainConfig: ConfigChain;
   }): Promise<boolean> {
     try {
@@ -410,7 +410,7 @@ export default class FederatorNFT extends Federator {
     voteTransactionTxData: any;
     federatorAddress: string;
     transactionSender: TransactionSender;
-    federatorContract: IFederationV3;
+    federatorContract: IFederation;
   }): Promise<boolean> {
     const revertedTxnsPath = this.getRevertedTxnsPath(sideChainId, mainChainId);
     let revertedTxns = {};
@@ -466,7 +466,7 @@ export default class FederatorNFT extends Federator {
     }
   }
 
-  private async trackTransactionResultMetric(wasTransactionVoted, federatorAddress, federator: IFederationV3) {
+  private async trackTransactionResultMetric(wasTransactionVoted, federatorAddress, federator: IFederation) {
     this.metricCollector?.trackERC721FederatorVotingResult(
       wasTransactionVoted,
       federatorAddress,

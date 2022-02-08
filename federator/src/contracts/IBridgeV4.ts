@@ -32,12 +32,26 @@ export class IBridgeV4 implements IBridge {
     return this.bridgeContract.options.address;
   }
 
-  getProcessed(transactionHash: string): Promise<boolean> {
-    return this.bridgeContract.methods.claimed(transactionHash);
+  getTransactionDataHash({
+    to,
+    amount,
+    blockHash,
+    transactionHash,
+    logIndex,
+    originChainId,
+    destinationChainId,
+  }): Promise<string> {
+    return this.bridgeContract.methods
+      .getTransactionDataHash(to, amount, blockHash, transactionHash, logIndex, originChainId, destinationChainId)
+      .call();
   }
 
-  getVersion() {
-    return this.bridgeContract.methods.version();
+  getProcessed(transactionDataHash: string): Promise<boolean> {
+    return this.bridgeContract.methods.claimed(transactionDataHash).call();
+  }
+
+  getVersion(): Promise<string> {
+    return this.bridgeContract.methods.version().call();
   }
 
   getMappedToken(paramsObj: SideTokenAddressByOriginalTokenInterface): Promise<string> {
