@@ -648,6 +648,71 @@ contract('Federation', async function (accounts) {
                 truffleAssertions.eventNotEmitted(receipt, 'Executed');
             });
 
+            it('voteTransaction should be pending with 1/2 feds require 2 and voted twice', async function() {
+                await this.federators.changeRequirement(2);
+                const transactionId = await this.federators.getTransactionId(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
+                let transactionCount = await this.federators.getTransactionCount(transactionId);
+                assert.equal(transactionCount, 0);
+
+                const receipt = await this.federators.voteTransaction(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    {from: federator1}
+                );
+                utils.checkRcpt(receipt);
+
+                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVoted, true);
+
+                const secondReceipt = await this.federators.voteTransaction(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    utils.tokenType.COIN,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    {from: federator1}
+                );
+                utils.checkRcpt(secondReceipt);
+
+                transactionCount = await this.federators.getTransactionCount(transactionId);
+                assert.equal(transactionCount, 1);
+
+                let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
+                assert.equal(transactionWasProcessed, false);
+
+                transactionWasProcessed = await this.bridge.hasCrossed(transactionHash);
+                assert.equal(transactionWasProcessed, false);
+
+                truffleAssertions.eventEmitted(receipt, 'Voted', (ev) => {
+                    return ev.federator === federator1 && ev.transactionId === transactionId;
+                });
+
+                truffleAssertions.eventNotEmitted(receipt, 'Executed');
+            });
+
             it('voteTransaction should be successful with 2/2 feds require 1', async function() {
                 const transactionId = await this.federators.getTransactionId(
                     originalTokenAddress,
