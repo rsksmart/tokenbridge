@@ -164,7 +164,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		return deprecatedKnownTokens[originalToken];
 	}
 
-	function setKnownTokenByChain(uint256 chainId, address originalToken, bool knownTokenValue) public {
+	function _setKnownTokenByChain(uint256 chainId, address originalToken, bool knownTokenValue) internal {
 		knownTokenByChain[chainId][originalToken] = knownTokenValue;
 	}
 
@@ -543,7 +543,7 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 	) internal whenNotUpgrading whenNotPaused nonReentrant {
 		require(block.chainid != destinationChainId, "Bridge: destination chain id equal current chain id");
 		checkChainId(destinationChainId);
-		setKnownTokenByChain(destinationChainId, tokenToUse, true);
+		_setKnownTokenByChain(destinationChainId, tokenToUse, true);
 		uint256 fee = amount.mul(feePercentage).div(feePercentageDivider);
 		uint256 amountMinusFees = amount.sub(fee);
 		uint8 decimals = LibUtils.getDecimals(tokenToUse);
