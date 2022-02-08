@@ -102,11 +102,11 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-	uint256	_destinationChainId
+  uint256	_destinationChainId
   ) external whenNotPaused nonReentrant override {
     require(_msgSender() == federation, "NFTBridge: Not Federation");
     checkChainId(_originChainId);
-		shouldBeCurrentChainId(_destinationChainId);
+    shouldBeCurrentChainId(_destinationChainId);
     require(
       isAddressFromCrossedOriginalToken(_originChainId, _tokenAddress) ||
       getSideTokenByOriginalToken(_originChainId, _tokenAddress) != NULL_ADDRESS,
@@ -130,7 +130,7 @@ contract NFTBridge is
       _transactionHash,
       _logIndex,
       _originChainId,
-	    _destinationChainId
+      _destinationChainId
     );
 
     // Do not remove, claimed will also have transactions previously processed using older bridge versions
@@ -148,13 +148,13 @@ contract NFTBridge is
       _blockHash,
       _logIndex,
       _originChainId,
-	    _destinationChainId
+      _destinationChainId
     );
   }
 
-	function shouldBeCurrentChainId(uint256 chainId) internal view {
-		require(chainId == block.chainid, "NFTBridge: Not block.chainid");
-	}
+  function shouldBeCurrentChainId(uint256 chainId) internal view {
+    require(chainId == block.chainid, "NFTBridge: Not block.chainid");
+  }
 
   function getSideTokenByOriginalToken(uint256 chainId, address originalToken) public view returns(address) {
     return sideTokenByOriginalTokenByChain[chainId][originalToken];
@@ -205,9 +205,9 @@ contract NFTBridge is
     emit NewSideNFTToken(sideTokenAddress, _originalTokenAddress, _tokenSymbol, originChainId);
   }
 
-	function checkChainId(uint256 chainId) internal pure {
-		require(chainId > 0, "NFTBridge: ChainId is 0");
-	}
+  function checkChainId(uint256 chainId) internal pure {
+    require(chainId > 0, "NFTBridge: ChainId is 0");
+  }
 
   function claim(NFTClaimData calldata _claimData) external override {
     _claim(_claimData, _claimData.to);
@@ -334,7 +334,7 @@ contract NFTBridge is
         tokenId,
         tokenURI,
         block.chainid,
-				destinationChainId
+        destinationChainId
       );
       return;
     }
@@ -362,7 +362,7 @@ contract NFTBridge is
     bytes32 _transactionHash,
     uint32 _logIndex,
     uint256 _originChainId,
-	uint256	_destinationChainId
+  uint256	_destinationChainId
   ) public pure override returns (bytes32) {
     return keccak256(
       abi.encodePacked(
