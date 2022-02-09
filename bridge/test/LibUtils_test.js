@@ -106,8 +106,6 @@ contract('LibUtils', async function (accounts) {
             const returnValue = await this.utilsLib.toUint128(hex32BytesString, 0);
 
             assert.equal(returnValue, number);
-
-            await truffleAssertions.passes(this.utilsLib.toUint128(hex32BytesString, 0));
         });
 
         it('Should validate if the byte size is not out of bounds', async function() {
