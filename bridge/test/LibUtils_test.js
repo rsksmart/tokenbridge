@@ -112,7 +112,7 @@ contract('LibUtils', async function (accounts) {
 
         it('Should validate if the byte size is not out of bounds', async function() {
             const invalidBytesSize = '0x1ABC7154748D1CE5144';
-            
+
             await truffleAssertions.fails(this.utilsLib.toUint128(invalidBytesSize, 0), "LibUtils: toUint128_outOfBounds");
         });
     });
