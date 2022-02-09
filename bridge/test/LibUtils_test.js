@@ -99,13 +99,15 @@ contract('LibUtils', async function (accounts) {
 
     describe('toUint128', async function() {
         it('Should convert bytes to uint128', async function() {
-            const bytes = accounts[1];
-            console.log(bytes);
+            const number = 16;
+            const hex = number.toString(16);
+            const hex32BytesString = '0x' + hex.padStart(32, '0');
 
-            const retorno = await this.utilsLib.toUint128(bytes, 0);
-            console.log(retorno);
-            
-            await truffleAssertions.passes(this.utilsLib.toUint128(bytes, 0));
+            const returnValue = await this.utilsLib.toUint128(hex32BytesString, 0);
+
+            assert.equal(returnValue, number);
+
+            await truffleAssertions.passes(this.utilsLib.toUint128(hex32BytesString, 0));
         });
 
         it('Should validate if the byte size is not out of bounds', async function() {
