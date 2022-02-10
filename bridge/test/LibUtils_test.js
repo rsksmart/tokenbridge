@@ -97,4 +97,29 @@ contract('LibUtils', async function (accounts) {
         });
     });
 
+    describe('toUint128', async function() {
+        it('Should convert bytes to uint128', async function() {
+            const number = 13499;
+            const hex = number.toString(16);
+            const hex32BytesString = '0x' + hex.padStart(32, '0');
+
+            const returnValue32 = await this.utilsLib.toUint128(hex32BytesString, 0);
+            assert.equal(returnValue32, number);
+
+            const hex34BytesString = '0x' + hex.padStart(34, '0');
+            const sub32Char = hex34BytesString.split('0x')[1].substring(0,32);
+            const convertedResult = parseInt(sub32Char, 16);
+
+            const returnValue34 = await this.utilsLib.toUint128(hex34BytesString, 0);
+
+            assert.equal(returnValue34, convertedResult);
+        });
+
+        it('Should validate if the byte size is not out of bounds', async function() {
+            const invalidBytesSize = '0x1ABC7154748D1CE5144';
+
+            await truffleAssertions.fails(this.utilsLib.toUint128(invalidBytesSize, 0), "LibUtils: toUint128_outOfBounds");
+        });
+    });
+
 });
