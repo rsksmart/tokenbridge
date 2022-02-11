@@ -10,7 +10,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   }
 
   const Bridge = await deployments.get('Bridge');
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
+  const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
 
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
   const federationProxyAddress = await address.getFederationProxyAddress(hre);
