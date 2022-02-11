@@ -47,10 +47,10 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   if (deployResultProxy.newlyDeployed) {
     log(`Contract AllowTokensProxy deployed at ${deployResultProxy.address} using ${deployResultProxy.receipt.gasUsed.toString()} gas`);
 
-    if(network.live && !chains.isRSK(network.config.network_id)) {
-      log(`Startig Verification of ${deployResult.address}`);
+    if(network.live && !chains.isRSK(network)) {
+      log(`Startig Verification of ${deployResultProxy.address}`);
       await hre.run("verify:verify", {
-        address: deployResult.address,
+        address: deployResultProxy.address,
         constructorArguments: constructorArguments,
       });
     }
