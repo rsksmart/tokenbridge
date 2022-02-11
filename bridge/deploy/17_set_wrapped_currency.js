@@ -11,7 +11,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const Bridge = await deployments.get('Bridge');
   const BridgeProxy = await deployments.get('BridgeProxy');
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
+  const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
 
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
@@ -48,6 +48,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 module.exports.id = 'set_bridge_wrapped_currency'; // id required to prevent reexecution
 module.exports.tags = ['BridgeSetWrappedCurrency', 'DeployFromScratch', 'IntegrationTest'];
 module.exports.dependencies = [
-  'AllowTokensProxy', 'AllowTokens', 'Bridge', 'BridgeProxy', 'MultiSigWallet',
-  'TransferAllowTokensToBridge', 'TransferFederationToBridge', 'SideTokenFactoryToBridge'
+  'AllowTokensProxy', 'AllowTokens', 'Bridge', 'BridgeProxy', 'MultiSigWallet'
 ];

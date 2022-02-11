@@ -1,4 +1,6 @@
 const address = require('../hardhat/helper/address');
+const chains = require('../hardhat/helper/chains');
+
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
@@ -41,10 +43,10 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   if (deployProxyResult.newlyDeployed) {
     log(`Contract FederationProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
 
-    if(network.live && !chains.isRSK(network.config.network_id)) {
-      log(`Startig Verification of ${deployResult.address}`);
+    if(network.live && !chains.isRSK(network)) {
+      log(`Startig Verification of ${deployProxyResult.address}`);
       await hre.run("verify:verify", {
-        address: deployResult.address,
+        address: deployProxyResult.address,
         constructorArguments: constructorArguments,
       });
     }
@@ -56,7 +58,7 @@ module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'Br
 
 function getFederationConf(deployer, network) {
   const networkName = network.name.toLowerCase();
-  if (networkName.includes('testnet') || networkName.includes('kovan')) {
+  if (networkName.includes('testnet') || networkName.includes('kovan') || networkName.includes('rinkeby')) {
     return {
       members: ['0x8f397ff074ff190fc650e5cab4da039a8163e12a'],
       required: 1,

@@ -38,7 +38,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   if (deployProxyResult.newlyDeployed) {
     log(`Contract BridgeProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
 
-    if(network.live && !chains.isRSK(network.config.network_id)) {
+    if(network.live && !chains.isRSK(network)) {
       log(`Startig Verification of ${deployResult.address}`);
       await hre.run("verify:verify", {
         address: deployResult.address,
