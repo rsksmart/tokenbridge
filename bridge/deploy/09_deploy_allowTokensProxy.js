@@ -13,7 +13,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const AllowTokens = await deployments.get('AllowTokens');
+  const AllowTokens = await deployments.getArtifact('AllowTokens');
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
 
@@ -36,6 +36,8 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     proxyAdminAddress,
     methodCall.encodeABI()
   ];
+
+  console.log('constructorArguments', constructorArguments)
 
   const deployResultProxy = await deploy('AllowTokensProxy', {
     from: deployer,

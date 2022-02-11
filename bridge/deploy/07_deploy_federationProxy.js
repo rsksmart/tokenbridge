@@ -11,7 +11,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const Federation = await deployments.get('Federation');
+  const Federation = await deployments.getArtifact('Federation');
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
@@ -33,6 +33,8 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     proxyAdminAddress,
     methodCall.encodeABI()
   ];
+
+  console.log('constructorArguments', constructorArguments)
 
   const deployProxyResult = await deploy('FederationProxy', {
     from: deployer,
