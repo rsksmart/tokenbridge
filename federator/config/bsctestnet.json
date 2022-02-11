@@ -1,11 +1,10 @@
 {
   "name": "bsctestnet",
   "chainId": 97,
-  "bridge": "0x7aec56b782c593b312a8c33eefd8e50eef975980",
-  "federation": "0xb3D06103af1A68026615E673d46047FAB77DB0Fa",
-  "allowTokens": "0x8c1901c031Cdf42a846c0C422A3B5A2c943F4944",
-  "nftBridge": "0x65b7af91d525f80dc48d2131ebb7a59a5c33250b",
+  "bridge": "0xd9d2f9ee990ddb1147e595ae4f69ec468a0b58d0",
+  "federation": "0xD40F8613173E636D570c47dB3A6Ac57EA9ccac83",
+  "allowTokens": "0x9a64fc2416EE2157e19DC2C79B5B22D113a9E0C3",
   "nftConfirmations": 5,
   "host": "https://data-seed-prebsc-1-s1.binance.org:8545/",
-  "fromBlock": 12129647
+  "fromBlock": 16645932
 }
