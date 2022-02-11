@@ -16,7 +16,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const BridgeProxy = await deployments.get('BridgeProxy');
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const federationProxyAddress = await address.getFederationProxyAddress(hre);
-  const MultiSigWallet = await deployments.get('MultiSigWallet');
+  const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
 
   const config = {
