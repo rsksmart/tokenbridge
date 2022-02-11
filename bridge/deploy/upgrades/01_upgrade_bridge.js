@@ -5,15 +5,15 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, bridgeProxy, proxyAdmin, multiSig} = await getNamedAccounts();
   const {log} = deployments;
 
-  const bridgeDeployment = await deployments.get('Bridge');
-  const proxyAdminArtifact = await deployments.get('ProxyAdmin');
-  const multiSigWalletDeployment = await deployments.get('MultiSigWallet');
+  const bridgeDeployed = await deployments.get('Bridge');
+  const proxyAdminArtifact = await deployments.getArtifact('ProxyAdmin');
+  const multiSigWalletArtifact = await deployments.getArtifact('MultiSigWallet');
 
   const proxyAdminContract = new web3.eth.Contract(proxyAdminArtifact.abi, proxyAdmin);
-  const methodCallUpdagradeBridgeDeployment = proxyAdminContract.methods.upgrade(bridgeProxy, bridgeDeployment.address);
+  const methodCallUpdagradeBridgeDeployment = proxyAdminContract.methods.upgrade(bridgeProxy, bridgeDeployed.address);
   await methodCallUpdagradeBridgeDeployment.call({ from: multiSig });
 
-  const multiSigContract = new web3.eth.Contract(multiSigWalletDeployment.abi, multiSig);
+  const multiSigContract = new web3.eth.Contract(multiSigWalletArtifact.abi, multiSig);
   await multiSigContract.methods.submitTransaction(
     proxyAdmin,
     0,

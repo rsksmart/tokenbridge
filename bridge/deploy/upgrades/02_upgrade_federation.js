@@ -5,17 +5,17 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, federationProxy, proxyAdmin, multiSig} = await getNamedAccounts();
   const {log} = deployments;
 
-  const federationDeployment = await deployments.get('Federation');
-  const proxyAdminDeployment = await deployments.get('ProxyAdmin');
-  const multiSigWalletDeployment = await deployments.get('MultiSigWallet');
+  const federationDeployed = await deployments.get('Federation');
+  const proxyAdminArtifact = await deployments.getArtifact('ProxyAdmin');
+  const multiSigWalletDeployment = await deployments.getArtifact('MultiSigWallet');
 
-  const proxyAdminContract = new web3.eth.Contract(proxyAdminDeployment.abi, proxyAdmin);
-  const methodCallUpdagradeBridgeDeployment = proxyAdminContract.methods.upgrade(federationProxy, federationDeployment.address);
+  const proxyAdminContract = new web3.eth.Contract(proxyAdminArtifact.abi, proxyAdmin);
+  const methodCallUpdagradeBridgeDeployment = proxyAdminContract.methods.upgrade(federationProxy, federationDeployed.address);
   await methodCallUpdagradeBridgeDeployment.call({ from: multiSig });
 
   const multiSigContract = new web3.eth.Contract(multiSigWalletDeployment.abi, multiSig);
   await multiSigContract.methods.submitTransaction(
-    proxyAdminDeployment.address,
+    proxyAdmin,
     0,
     methodCallUpdagradeBridgeDeployment.encodeABI(),
   ).send({ from: deployer });

@@ -9,7 +9,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 
   const allowTokensProxyAddress = await address.getAllowTokensProxyAddress(hre);
   if (allowTokensProxyAddress) {
-    const AllowTokens = await deployments.get('AllowTokens');
+    const AllowTokens = await deployments.getArtifact('AllowTokens');
     const allowTokens = new web3.eth.Contract(AllowTokens.abi, allowTokensProxyAddress);
     const currentAllowTokensVersion = allowTokens.methods.version().call();
     if (currentAllowTokensVersion === ALLOW_TOKEN_LAST_VERSION) {

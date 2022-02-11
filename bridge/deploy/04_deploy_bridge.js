@@ -9,7 +9,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
   if (bridgeProxyAddress) {
-    const Bridge = await deployments.get('Bridge');
+    const Bridge = await deployments.getArtifact('Bridge');
     const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
     const currentBridgeVersion = bridge.methods.version().call();
     if (currentBridgeVersion === BRIDGE_LAST_VERSION) {
