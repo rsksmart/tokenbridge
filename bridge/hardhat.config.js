@@ -11,7 +11,8 @@ require("@nomiclabs/hardhat-etherscan");
 const fs = require('fs');
 const chains = require('./hardhat/helper/chains');
 const MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', {encoding: 'utf8'}) : ''; // Your metamask's recovery words
-const ETHERESCAN_KEY = fs.existsSync('./etherscan.key') ? fs.readFileSync('./etherscan.key', {encoding: 'utf8'}) : ''; // Your metamask's recovery words
+const ETHERESCAN_KEY = fs.existsSync('./etherscan.key') ? fs.readFileSync('./etherscan.key', {encoding: 'utf8'}) : ''; // Your Etherscan API Key to verify the contracts
+const BSCSCAN_KEY = fs.existsSync('./bscscan.key') ? fs.readFileSync('./bscscan.key', {encoding: 'utf8'}) : ''; // Your BscScan API Key to verify the contracts
 const INFURA_PROJECT_ID = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key', {encoding: 'utf8'}) : ''; //  Your Infura project ID
 
 const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
@@ -58,7 +59,16 @@ module.exports = {
   },
   namedAccounts: getNamedAccounts(),
   etherscan: {
-    apiKey: ETHERESCAN_KEY
+    apiKey: {
+      mainnet: ETHERESCAN_KEY,
+      ropsten: ETHERESCAN_KEY,
+      rinkeby: ETHERESCAN_KEY,
+      goerli: ETHERESCAN_KEY,
+      kovan: ETHERESCAN_KEY,
+      // binance smart chain
+      bsc: BSCSCAN_KEY,
+      bscTestnet: BSCSCAN_KEY,
+    }
   },
   networks: {
     hardhat: {

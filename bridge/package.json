@@ -31,6 +31,7 @@
     "node": "16"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-etherscan": "^3.0.1",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@thinkanddev/deploy-eip-1820-web3-rsk": "^1.0.2",
@@ -48,7 +49,6 @@
     "truffle-assertions": "^0.9.2"
   },
   "devDependencies": {
-    "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "coveralls": "^3.1.1",
     "ethereum-waffle": "^3.4.0",
     "hardhat-abi-exporter": "^2.2.1",
