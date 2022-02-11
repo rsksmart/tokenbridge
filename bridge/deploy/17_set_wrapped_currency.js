@@ -9,7 +9,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const Bridge = await deployments.get('Bridge');
+  const Bridge = await deployments.getArtifact('Bridge');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
 
