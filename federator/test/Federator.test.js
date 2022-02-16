@@ -43,6 +43,7 @@ describe('Federator module tests', () => {
 
         let federator = new Federator(testConfig, logger, web3Mock);
         try{
+            expect(federator._hasVoted()).toBeFalsy();
             await federator._voteTransaction(null, null);
             expect(false).toBeTruthy();
         } catch (err) {
