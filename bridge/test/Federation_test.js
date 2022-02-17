@@ -494,6 +494,9 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVoted, false);
+
                 const receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -509,7 +512,7 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
+                hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
                 assert.equal(hasVoted, true);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -559,6 +562,9 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVoted, false);
+
                 await truffleAssertions.fails(
                     this.federators.voteTransaction(
                         wrongTokenAddress,
@@ -576,7 +582,7 @@ contract('Federation', async function (accounts) {
                     truffleAssertions.ErrorType.REVERT
                 );
 
-                const hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
+                hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
                 assert.equal(hasVoted, false);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
@@ -614,6 +620,11 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+
                 const receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -629,8 +640,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 1);
@@ -664,6 +677,11 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+
                 const receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -679,8 +697,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
 
                 const secondReceipt = await this.federators.voteTransaction(
                     originalTokenAddress,
@@ -696,6 +716,11 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
                 utils.checkRcpt(secondReceipt);
+
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 1);
@@ -728,6 +753,11 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -743,8 +773,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 1);
@@ -767,8 +799,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 2);
@@ -808,6 +842,11 @@ contract('Federation', async function (accounts) {
                 let transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -823,8 +862,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 1);
@@ -847,8 +888,10 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
 
                 transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 2);
@@ -874,6 +917,26 @@ contract('Federation', async function (accounts) {
 
             it('voteTransaction should be successful with 2/3 feds', async function() {
                 this.federators.addMember(federator3);
+
+                let transactionId = await this.federators.getTransactionId(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
+
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                let hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
+
                 await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -888,20 +951,12 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
 
-                let transactionId = await this.federators.getTransactionId(
-                    originalTokenAddress,
-                    anAccount,
-                    anAccount,
-                    amount,
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                );
-
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
@@ -919,6 +974,13 @@ contract('Federation', async function (accounts) {
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
                 );
+
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
                 assert.equal(hasVoted, true);
@@ -948,6 +1010,26 @@ contract('Federation', async function (accounts) {
             it('voteTransaction should be successful with 2/3 feds require 2', async function() {
                 await this.federators.changeRequirement(2);
                 this.federators.addMember(federator3);
+
+                let transactionId = await this.federators.getTransactionId(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
+
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                let hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -962,20 +1044,12 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
 
-                let transactionId = await this.federators.getTransactionId(
-                    originalTokenAddress,
-                    anAccount,
-                    anAccount,
-                    amount,
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                );
-
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
@@ -994,8 +1068,12 @@ contract('Federation', async function (accounts) {
                     {from: federator2}
                 );
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let count = await this.federators.getTransactionCount(transactionId, {from: federator2});
                 assert.equal(count, 2);
@@ -1021,6 +1099,26 @@ contract('Federation', async function (accounts) {
 
             it('voteTransaction should handle correctly already processed transaction', async function() {
                 this.federators.addMember(federator3);
+
+                let transactionId = await this.federators.getTransactionId(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
+
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                let hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -1035,20 +1133,12 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
 
-                let transactionId = await this.federators.getTransactionId(
-                    originalTokenAddress,
-                    anAccount,
-                    anAccount,
-                    amount,
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                );
-
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
@@ -1067,8 +1157,12 @@ contract('Federation', async function (accounts) {
                     {from: federator2}
                 );
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let count = await this.federators.getTransactionCount(transactionId, {from: federator2});
                 assert.equal(count, 2);
@@ -1105,8 +1199,12 @@ contract('Federation', async function (accounts) {
                     {from: federator3}
                 );
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator3});
-                assert.equal(hasVoted, false);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator2});
                 assert.equal(transactionWasProcessed, true);
@@ -1115,6 +1213,26 @@ contract('Federation', async function (accounts) {
             it('voteTransaction should be successful with 3/3 feds require 3', async function() {
                 await this.federators.addMember(federator3);
                 await this.federators.changeRequirement(3);
+
+                let transactionId = await this.federators.getTransactionId(
+                    originalTokenAddress,
+                    anAccount,
+                    anAccount,
+                    amount,
+                    blockHash,
+                    transactionHash,
+                    logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                );
+
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+                let hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                let hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -1129,20 +1247,12 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
 
-                let transactionId = await this.federators.getTransactionId(
-                    originalTokenAddress,
-                    anAccount,
-                    anAccount,
-                    amount,
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                );
-
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, false);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let transactionWasProcessed = await this.federators.transactionWasProcessed(transactionId, {from: federator1});
                 assert.equal(transactionWasProcessed, false);
@@ -1161,8 +1271,12 @@ contract('Federation', async function (accounts) {
                     {from: federator2}
                 );
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, false);
 
                 let count = await this.federators.getTransactionCount(transactionId, {from: federator2});
                 assert.equal(count, 2);
@@ -1190,8 +1304,12 @@ contract('Federation', async function (accounts) {
                     {from: federator3}
                 );
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator3});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
+                hasVotedFederator2 = await this.federators.hasVoted(transactionId, {from: federator2});
+                assert.equal(hasVotedFederator2, true);
+                hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
+                assert.equal(hasVotedFederator3, true);
 
                 count = await this.federators.getTransactionCount(transactionId, {from: federator2});
                 assert.equal(count, 3);
@@ -1240,6 +1358,9 @@ contract('Federation', async function (accounts) {
                 const transactionCount = await this.federators.getTransactionCount(transactionId);
                 assert.equal(transactionCount, 0);
 
+                let hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, false);
+
                 let receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
                     anAccount,
@@ -1255,8 +1376,8 @@ contract('Federation', async function (accounts) {
                 );
                 utils.checkRcpt(receipt);
 
-                let hasVoted = await this.federators.hasVoted(transactionId, {from: federator1});
-                assert.equal(hasVoted, true);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
 
                 receipt = await this.federators.voteTransaction(
                     originalTokenAddress,
@@ -1272,6 +1393,8 @@ contract('Federation', async function (accounts) {
                     {from: federator1}
                 );
                 utils.checkRcpt(receipt);
+                hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
+                assert.equal(hasVotedFederator1, true);
             });
 
             it('should fail since NFT bridge address is random', async function() {
