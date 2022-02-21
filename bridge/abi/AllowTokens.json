@@ -733,46 +733,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "tokenAddress",
-        "type": "address"
-      },
-      {
-        "components": [
-          {
-            "internalType": "bool",
-            "name": "allowed",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "typeId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "spentToday",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "lastDay",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct IAllowTokens.TokenInfo",
-        "name": "info",
-        "type": "tuple"
-      }
-    ],
-    "name": "setTokenInfoByTokenAddress",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint256",
         "name": "typeId",
         "type": "uint256"
