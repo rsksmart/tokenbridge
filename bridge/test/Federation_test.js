@@ -982,7 +982,7 @@ contract('Federation', async function (accounts) {
                 hasVotedFederator3 = await this.federators.hasVoted(transactionId, {from: federator3});
                 assert.equal(hasVotedFederator3, false);
 
-                hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
+                const hasVoted = await this.federators.hasVoted(transactionId, {from: federator2});
                 assert.equal(hasVoted, true);
 
                 let count = await this.federators.getTransactionCount(transactionId, {from: federator2});
