@@ -55,7 +55,7 @@
     "elliptic": ">=6.5.4",
     "glob-parent": ">=5.1.2",
     "hardhat-abi-exporter": "^2.2.1",
-    "node-fetch": ">=2.6.1",
+    "node-fetch": ">=2.6.7",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "web3": ">=1.0.0",
