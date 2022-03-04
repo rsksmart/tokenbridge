@@ -40,7 +40,7 @@ The ABI to interact with the contracts are in the ['abi folder'](./bridge/abi)
 
 ### Dapp
 
-The dapp of the token bridge can be found in the ['UI Folder'](./ui)
+The dapp of the token bridge can be found in the repository ['tokenbirdge-ui'](https://github.com/rsksmart/tokenbridge-ui)
 
 
 ### Federation
