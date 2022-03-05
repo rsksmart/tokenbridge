@@ -205,6 +205,271 @@ contract('Bridge', async function (accounts) {
             });
         });
 
+        describe('createSiteTokens', async function() {
+            it('should create side token', async function () {
+                await this.bridge.createSideToken(
+                    0,
+                    this.token.address,
+                    6,
+                    'eMAIN',
+                    'MAIN on Ethereum',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, 'eMAIN');
+
+                const sideTokenDecimals = await sideToken.decimals();
+                assert.equal(sideTokenDecimals.toString(), '18');
+
+                const sideTokenGranularity = await sideToken.granularity();
+                assert.equal(sideTokenGranularity.toString(), '1000000000000');
+
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
+
+                const result = await this.allowTokens.getInfoAndLimits(sideTokenAddress);
+                assert.equal(result.info.typeId.toString(), '0');
+                assert.equal(result.info.allowed, true);
+
+            });
+
+            it('fail create side token if decimals bigger than 18', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        this.token.address,
+                        19,
+                        'MAIN',
+                        'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('fail create side token if inexistent chainId', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        this.token.address,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        0,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('fail create side token if inexistent typeId', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        1,
+                        this.token.address,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('fail create side token if not the owner', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        this.token.address,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: federation }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('fail create side token if no token address', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        utils.NULL_ADDRESS,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+            it('fail create side token if already created', async function () {
+                await this.bridge.createSideToken(
+                    0,
+                    this.token.address,
+                    18,
+                    'MAIN',
+                    'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        this.token.address,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('should create multiple side token', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await this.bridge.createMultipleSideTokens(
+                    [0, 0],
+                    [this.token.address, otherTokenAddr],
+                    [6, 18],
+                    ['eMAIN', 'eOTHER'],
+                    ['MAIN on Ethereum', 'Other token on Ethereum'],
+                    [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                    { from: bridgeManager }
+                );
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
+                const sideTokenSymbol = await sideToken.symbol();
+                assert.equal(sideTokenSymbol, 'eMAIN');
+
+                const sideTokenDecimals = await sideToken.decimals();
+                assert.equal(sideTokenDecimals.toString(), '18');
+
+                const sideTokenGranularity = await sideToken.granularity();
+                assert.equal(sideTokenGranularity.toString(), '1000000000000');
+
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
+
+                const otherResult = await this.allowTokens.getInfoAndLimits(sideTokenAddress);
+                assert.equal(otherResult.info.typeId.toString(), '0');
+                assert.equal(otherResult.info.allowed, true);
+
+                const otherSideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.BSC_TEST_NET_CHAIN_ID, otherTokenAddr);
+                const otherSideToken = await SideToken.at(otherSideTokenAddress);
+                const otherSideTokenSymbol = await otherSideToken.symbol();
+                assert.equal(otherSideTokenSymbol, 'eOTHER');
+
+                const otherSideTokenDecimals = await otherSideToken.decimals();
+                assert.equal(otherSideTokenDecimals.toString(), '18');
+
+                const otherSideTokenGranularity = await otherSideToken.granularity();
+                assert.equal(otherSideTokenGranularity.toString(), '1');
+
+                const otherOriginalToken = await this.bridge.getOriginalTokenBySideToken(otherSideTokenAddress);
+                assert.equal(otherOriginalToken.tokenAddress.toLowerCase(), otherTokenAddr);
+
+                const result = await this.allowTokens.getInfoAndLimits(otherSideTokenAddress);
+                assert.equal(result.info.typeId.toString(), '0');
+                assert.equal(result.info.allowed, true);
+
+            });
+
+            it('fail create multiple side token different address length', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await truffleAssertions.fails(
+                    this.bridge.createMultipleSideTokens(
+                        [0, 0],
+                        [otherTokenAddr],
+                        [6, 18],
+                        ['eMAIN', 'eOTHER'],
+                        ['MAIN on Ethereum', 'Other token on Ethereum'],
+                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT,
+                    "Bridge: invalid addresses length"
+                );
+            });
+
+            it('fail create multiple side token different address length', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await truffleAssertions.fails(
+                    this.bridge.createMultipleSideTokens(
+                        [0, 0],
+                        [this.token.address, otherTokenAddr],
+                        [6],
+                        ['eMAIN', 'eOTHER'],
+                        ['MAIN on Ethereum', 'Other token on Ethereum'],
+                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT,
+                    "Bridge: invalid decimals length"
+                );
+            });
+
+            it('fail create multiple side token different address length', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await truffleAssertions.fails(
+                    this.bridge.createMultipleSideTokens(
+                        [0, 0],
+                        [this.token.address, otherTokenAddr],
+                        [6, 18],
+                        ['eMAIN'],
+                        ['MAIN on Ethereum', 'Other token on Ethereum'],
+                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT,
+                    "Bridge: invalid symbols length"
+                );
+            });
+
+            it('fail create multiple side token different address length', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await truffleAssertions.fails(
+                    this.bridge.createMultipleSideTokens(
+                        [0, 0],
+                        [this.token.address, otherTokenAddr],
+                        [6, 19],
+                        ['eMAIN', 'eOTHER'],
+                        ['MAIN on Ethereum'],
+                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT,
+                    "Bridge: invalid names length"
+                );
+            });
+
+            it('fail create multiple side token different address length', async function () {
+                const otherTokenAddr = utils.getRandomAddress();
+                await truffleAssertions.fails(
+                    this.bridge.createMultipleSideTokens(
+                        [0, 0],
+                        [this.token.address, otherTokenAddr],
+                        [6, 19],
+                        ['eMAIN', 'eOTHER'],
+                        ['MAIN on Ethereum', 'Other token on Ethereum'],
+                        [chains.HARDHAT_TEST_NET_CHAIN_ID],
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT,
+                    "Bridge: invalid chainIds length"
+                );
+            });
+
+        });
+
         describe('receiveTokens', async function () {
             it('receiveTokens approve and transferFrom for ERC20', async function () {
                 const amount = web3.utils.toWei('1000');
@@ -2652,104 +2917,6 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.info.typeId.toString(), '0');
                 assert.equal(result.info.allowed, true);
 
-            });
-
-            it('fail create side token if decimals bigger than 18', async function () {
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        0,
-                        this.token.address,
-                        19,
-                        'MAIN',
-                        'MAIN',
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
-            });
-
-            it('fail create side token if inexistent chainId', async function () {
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        0,
-                        this.token.address,
-                        18,
-                        'MAIN',
-                        'MAIN',
-                        0,
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
-            });
-
-            it('fail create side token if inexistent typeId', async function () {
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        1,
-                        this.token.address,
-                        18,
-                        'MAIN',
-                        'MAIN',
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
-            });
-
-            it('fail create side token if not the owner', async function () {
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        0,
-                        this.token.address,
-                        18,
-                        'MAIN',
-                        'MAIN',
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
-                        { from: federation }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
-            });
-
-            it('fail create side token if no token address', async function () {
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        0,
-                        utils.NULL_ADDRESS,
-                        18,
-                        'MAIN',
-                        'MAIN',
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
-            });
-            it('fail create side token if already created', async function () {
-                await this.bridge.createSideToken(
-                    0,
-                    this.token.address,
-                    18,
-                    'MAIN',
-                    'MAIN',
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    { from: bridgeManager }
-                );
-                await truffleAssertions.fails(
-                    this.bridge.createSideToken(
-                        0,
-                        this.token.address,
-                        18,
-                        'MAIN',
-                        'MAIN',
-                        chains.HARDHAT_TEST_NET_CHAIN_ID,
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT
-                );
             });
 
             it('should reject receiveTokens ERC20', async function () {

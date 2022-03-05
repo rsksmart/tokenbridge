@@ -94,6 +94,15 @@ interface IBridge {
 		uint256 _chainId
 	) external;
 
+	function createMultipleSideTokens(
+		uint256[] calldata _typeIds,
+		address[] calldata _originalTokenAddresses,
+		uint8[] calldata _originalTokenDecimals,
+		string[] calldata _tokenSymbols,
+		string[] calldata _tokenNames,
+		uint256[] calldata _originChainIds
+	) external;
+
 	function getTransactionDataHash(
 		address _to,
 		uint256 _amount,

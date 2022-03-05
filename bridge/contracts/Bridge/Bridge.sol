@@ -234,14 +234,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		require(chainId > 0, "Bridge: ChainId is 0");
 	}
 
-	function createSideToken(
+	function _createSideToken(
 		uint256 _typeId,
 		address _originalTokenAddress,
 		uint8 _originalTokenDecimals,
 		string calldata _tokenSymbol,
 		string calldata _tokenName,
 		uint256 _originChainId
-	) external onlyOwner override {
+	) internal {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
 		checkChainId(_originChainId);
 		address sideToken = sideTokenByOriginalToken(_originChainId, _originalTokenAddress);
@@ -261,6 +261,50 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		allowTokens.setToken(sideToken, _typeId);
 
 		emit NewSideToken(sideToken, _originalTokenAddress, _tokenSymbol, granularity, _originChainId);
+	}
+
+	function createSideToken(
+		uint256 _typeId,
+		address _originalTokenAddress,
+		uint8 _originalTokenDecimals,
+		string calldata _tokenSymbol,
+		string calldata _tokenName,
+		uint256 _originChainId
+	) external onlyOwner override {
+		_createSideToken(
+			_typeId,
+			_originalTokenAddress,
+			_originalTokenDecimals,
+			_tokenSymbol,
+			_tokenName,
+			_originChainId
+		);
+	}
+
+	function createMultipleSideTokens(
+		uint256[] calldata _typeIds,
+		address[] calldata _originalTokenAddresses,
+		uint8[] calldata _originalTokenDecimals,
+		string[] calldata _tokenSymbols,
+		string[] calldata _tokenNames,
+		uint256[] calldata _originChainIds
+	) external onlyOwner override {
+		require(_typeIds.length == _originalTokenAddresses.length, "Bridge: invalid addresses length");
+		require(_typeIds.length == _originalTokenDecimals.length, "Bridge: invalid decimals length");
+		require(_typeIds.length == _tokenSymbols.length, "Bridge: invalid symbols length");
+		require(_typeIds.length == _tokenNames.length, "Bridge: invalid names length");
+		require(_typeIds.length == _originChainIds.length, "Bridge: invalid chainIds length");
+
+		for(uint256 i = 0; i < _typeIds.length; i++) {
+			_createSideToken(
+				_typeIds[i],
+				_originalTokenAddresses[i],
+				_originalTokenDecimals[i],
+				_tokenSymbols[i],
+				_tokenNames[i],
+				_originChainIds[i]
+			);
+		}
 	}
 
 	function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
