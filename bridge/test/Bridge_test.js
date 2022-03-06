@@ -337,12 +337,22 @@ contract('Bridge', async function (accounts) {
             it('should create multiple side token', async function () {
                 const otherTokenAddr = utils.getRandomAddress();
                 await this.bridge.createMultipleSideTokens(
-                    [0, 0],
-                    [this.token.address, otherTokenAddr],
-                    [6, 18],
-                    ['eMAIN', 'eOTHER'],
-                    ['MAIN on Ethereum', 'Other token on Ethereum'],
-                    [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
+                    [{
+                        _typeId: 0,
+                        _originalTokenAddress: this.token.address,
+                        _originalTokenDecimals: 6,
+                        _originalTokenSymbol: 'eMAIN',
+                        _originalTokenName: 'MAIN on Ethereum',
+                        _originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
+                    },
+                    {
+                        _typeId: 0,
+                        _originalTokenAddress: otherTokenAddr,
+                        _originalTokenDecimals: 18,
+                        _originalTokenSymbol: 'eOTHER',
+                        _originalTokenName: 'Other token on Ethereum',
+                        _originChainId: chains.BSC_TEST_NET_CHAIN_ID
+                    }],
                     { from: bridgeManager }
                 );
                 const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
@@ -382,92 +392,6 @@ contract('Bridge', async function (accounts) {
                 assert.equal(result.info.allowed, true);
 
             });
-
-            it('fail create multiple side token different address length', async function () {
-                const otherTokenAddr = utils.getRandomAddress();
-                await truffleAssertions.fails(
-                    this.bridge.createMultipleSideTokens(
-                        [0, 0],
-                        [otherTokenAddr],
-                        [6, 18],
-                        ['eMAIN', 'eOTHER'],
-                        ['MAIN on Ethereum', 'Other token on Ethereum'],
-                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT,
-                    "Bridge: invalid addresses length"
-                );
-            });
-
-            it('fail create multiple side token different address length', async function () {
-                const otherTokenAddr = utils.getRandomAddress();
-                await truffleAssertions.fails(
-                    this.bridge.createMultipleSideTokens(
-                        [0, 0],
-                        [this.token.address, otherTokenAddr],
-                        [6],
-                        ['eMAIN', 'eOTHER'],
-                        ['MAIN on Ethereum', 'Other token on Ethereum'],
-                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT,
-                    "Bridge: invalid decimals length"
-                );
-            });
-
-            it('fail create multiple side token different address length', async function () {
-                const otherTokenAddr = utils.getRandomAddress();
-                await truffleAssertions.fails(
-                    this.bridge.createMultipleSideTokens(
-                        [0, 0],
-                        [this.token.address, otherTokenAddr],
-                        [6, 18],
-                        ['eMAIN'],
-                        ['MAIN on Ethereum', 'Other token on Ethereum'],
-                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT,
-                    "Bridge: invalid symbols length"
-                );
-            });
-
-            it('fail create multiple side token different address length', async function () {
-                const otherTokenAddr = utils.getRandomAddress();
-                await truffleAssertions.fails(
-                    this.bridge.createMultipleSideTokens(
-                        [0, 0],
-                        [this.token.address, otherTokenAddr],
-                        [6, 19],
-                        ['eMAIN', 'eOTHER'],
-                        ['MAIN on Ethereum'],
-                        [chains.HARDHAT_TEST_NET_CHAIN_ID, chains.BSC_TEST_NET_CHAIN_ID],
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT,
-                    "Bridge: invalid names length"
-                );
-            });
-
-            it('fail create multiple side token different address length', async function () {
-                const otherTokenAddr = utils.getRandomAddress();
-                await truffleAssertions.fails(
-                    this.bridge.createMultipleSideTokens(
-                        [0, 0],
-                        [this.token.address, otherTokenAddr],
-                        [6, 19],
-                        ['eMAIN', 'eOTHER'],
-                        ['MAIN on Ethereum', 'Other token on Ethereum'],
-                        [chains.HARDHAT_TEST_NET_CHAIN_ID],
-                        { from: bridgeManager }
-                    ),
-                    truffleAssertions.ErrorType.REVERT,
-                    "Bridge: invalid chainIds length"
-                );
-            });
-
         });
 
         describe('receiveTokens', async function () {
