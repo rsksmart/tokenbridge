@@ -4,6 +4,6 @@
     "bridge": "0x684a8a976635fb7ad74a0134ace990a6a0fcce84",
     "federation": "0x5d663981d930e8ec108280b9d80885658148ab0f",
     "allowTokens": "0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a",
-    "host": "http://ec2-18-218-165-234.us-east-2.compute.amazonaws.com:4444",
+    "host": "http://rskj-01.aws-us-west-2.dev.tokenbridge.rifcomputing.net:4444",
     "fromBlock": 2580608
 }
