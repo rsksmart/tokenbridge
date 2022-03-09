@@ -415,38 +415,40 @@ export default class FederatorERC extends Federator {
         this.config.privateKey,
       );
 
-      if (!receipt.status) {
-        this.logger.error(
-          `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
-          TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
-          receipt,
+      if (receipt !== null) {
+        if (!receipt.status) {
+          this.logger.error(
+            `Voting ${voteTransactionParams.amount} of originalTokenAddress:${voteTransactionParams.tokenAddress}
+            TransactionId ${voteTransactionParams.transactionId} failed, check the receipt`,
+            receipt,
+          );
+  
+          fs.writeFileSync(
+            revertedTxnsPath,
+            JSON.stringify({
+              ...revertedTxns,
+              [voteTransactionParams.transactionId]: {
+                originalTokenAddress: voteTransactionParams.tokenAddress,
+                sender: voteTransactionParams.senderAddress,
+                receiver: voteTransactionParams.receiver,
+                amount: voteTransactionParams.amount,
+                blockHash: voteTransactionParams.blockHash,
+                transactionHash: voteTransactionParams.transactionHash,
+                logIndex: voteTransactionParams.logIndex,
+                error: receipt.error,
+              },
+            }),
+          );
+        }
+  
+        await this.trackTransactionResultMetric(
+          receipt.status,
+          voteTransactionParams.federatorAddress,
+          voteTransactionParams.sideFedContract,
         );
-
-        fs.writeFileSync(
-          revertedTxnsPath,
-          JSON.stringify({
-            ...revertedTxns,
-            [voteTransactionParams.transactionId]: {
-              originalTokenAddress: voteTransactionParams.tokenAddress,
-              sender: voteTransactionParams.senderAddress,
-              receiver: voteTransactionParams.receiver,
-              amount: voteTransactionParams.amount,
-              blockHash: voteTransactionParams.blockHash,
-              transactionHash: voteTransactionParams.transactionHash,
-              logIndex: voteTransactionParams.logIndex,
-              error: receipt.error,
-            },
-          }),
-        );
+  
+        return true;
       }
-
-      await this.trackTransactionResultMetric(
-        receipt.status,
-        voteTransactionParams.federatorAddress,
-        voteTransactionParams.sideFedContract,
-      );
-
-      return true;
     } catch (err) {
       throw new CustomError(
         `Exception Voting tx:${voteTransactionParams.transactionHash} block: ${voteTransactionParams.blockHash} originalTokenAddress: ${voteTransactionParams.tokenAddress}`,
