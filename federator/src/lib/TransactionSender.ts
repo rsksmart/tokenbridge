@@ -59,7 +59,6 @@ export class TransactionSender {
     } catch (err) {
       return null;
     }
-    
   }
 
   async getEthGasPrice() {
@@ -218,41 +217,41 @@ export class TransactionSender {
     try {
       const from = await this.getAddress(privateKey);
       rawTx = await this.createRawTransaction(from, to, data, value);
-      if (rawTx !== null) {
-        if (privateKey && privateKey.length) {
-          const signedTx = this.signRawTransaction(rawTx, privateKey);
-          const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
-          receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
-            txHash = hash;
-            if (chainId === 1) {
-              // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
-              // see  https://github.com/ethereum/go-ethereum/issues/22308
-              const dataProxy = {
-                module: 'proxy',
-                action: 'eth_sendRawTransaction',
-                hex: serializedTx,
-              };
-              await this.useEtherscanApi(dataProxy);
-            }
-          });
-        } else {
-          //If no private key provided we use personal (personal is only for testing)
-          delete rawTx.r;
-          delete rawTx.s;
-          delete rawTx.v;
-          receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', (hash) => (txHash = hash));
-        }
-  
-        if (receipt.status) {
-          this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
-        } else {
-          this.logger.error('Transaction Receipt Status Failed', receipt);
-          this.logger.error('RawTx that failed Status', rawTx);
-        }
-  
-        return receipt;
+      if (rawTx === null) {
+        return rawTx;
       }
-      return null;
+      if (privateKey && privateKey.length) {
+        const signedTx = this.signRawTransaction(rawTx, privateKey);
+        const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
+        receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
+          txHash = hash;
+          if (chainId === 1) {
+            // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
+            // see  https://github.com/ethereum/go-ethereum/issues/22308
+            const dataProxy = {
+              module: 'proxy',
+              action: 'eth_sendRawTransaction',
+              hex: serializedTx,
+            };
+            await this.useEtherscanApi(dataProxy);
+          }
+        });
+      } else {
+        //If no private key provided we use personal (personal is only for testing)
+        delete rawTx.r;
+        delete rawTx.s;
+        delete rawTx.v;
+        receipt = await this.client.eth.sendTransaction(rawTx).once('transactionHash', (hash) => (txHash = hash));
+      }
+
+      if (receipt.status) {
+        this.logger.info(`Transaction Successful txHash:${receipt.transactionHash} blockNumber:${receipt.blockNumber}`);
+      } else {
+        this.logger.error('Transaction Receipt Status Failed', receipt);
+        this.logger.error('RawTx that failed Status', rawTx);
+      }
+
+      return receipt;
     } catch (err) {
       this.logger.error('Error in sendTransaction', err, `transactionHash:${txHash} to:${to} data:${data}`);
       if (throwOnError) {
