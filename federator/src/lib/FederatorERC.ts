@@ -195,6 +195,11 @@ export default class FederatorERC extends Federator {
     const originChainId = Number(originChainIdStr);
     const destinationChainId = Number(destinationChainIdStr);
 
+    if (processLogParams.mainChainId !== originChainId || processLogParams.sideChainId !== destinationChainId) {
+      this.logger.debug('Transaction is not for this sideToken');
+      return false;
+    }
+
     this.logger.upsertContext('transactionHash', transactionHash);
     this.logger.upsertContext('blockHash', blockHash);
     this.logger.upsertContext('blockNumber', blockNumber);
@@ -273,6 +278,7 @@ export default class FederatorERC extends Federator {
       }),
     );
     this.logger.info('get transaction id:', transactionId);
+    
     await this.processTransaction({
       ...processLogParams,
       tokenAddress,

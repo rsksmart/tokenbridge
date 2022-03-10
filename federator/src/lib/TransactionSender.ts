@@ -44,21 +44,17 @@ export class TransactionSender {
   }
 
   async getGasLimit(rawTx) {
-    try {
-      const estimatedGas = await this.client.eth.estimateGas({
-        gasPrice: rawTx.gasPrice,
-        value: rawTx.value,
-        to: rawTx.to,
-        data: rawTx.data,
-        from: rawTx.from,
-      });
-      // Gas estimation does not work correctly on RSK and after the London harfork, neither is working on Ethereum
-      // example https://etherscan.io/tx/0xd30d6cf428606e2ef3667427b9b6baecb2f4c9cbb44a0c82c735a238ec8f72fb
-      // To fix it, we decided to use a hardcoded gas estimation
-      return +estimatedGas < ESTIMATED_GAS ? ESTIMATED_GAS : +estimatedGas;
-    } catch (err) {
-      return null;
-    }
+    const estimatedGas = await this.client.eth.estimateGas({
+      gasPrice: rawTx.gasPrice,
+      value: rawTx.value,
+      to: rawTx.to,
+      data: rawTx.data,
+      from: rawTx.from,
+    });
+    // Gas estimation does not work correctly on RSK and after the London harfork, neither is working on Ethereum
+    // example https://etherscan.io/tx/0xd30d6cf428606e2ef3667427b9b6baecb2f4c9cbb44a0c82c735a238ec8f72fb
+    // To fix it, we decided to use a hardcoded gas estimation
+    return +estimatedGas < ESTIMATED_GAS ? ESTIMATED_GAS : +estimatedGas;
   }
 
   async getEthGasPrice() {
@@ -147,13 +143,7 @@ export class TransactionSender {
       delete rawTx.s;
     }
 
-    const gasLimit = await this.getGasLimit(rawTx);
-
-    if (gasLimit === null) {
-      return null;
-    }
-
-    rawTx.gas = this.numberToHexString(gasLimit);
+    rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
     
     if (this.debuggingMode) {
       rawTx.gas = this.numberToHexString(100);
@@ -217,9 +207,6 @@ export class TransactionSender {
     try {
       const from = await this.getAddress(privateKey);
       rawTx = await this.createRawTransaction(from, to, data, value);
-      if (rawTx === null) {
-        return rawTx;
-      }
       if (privateKey && privateKey.length) {
         const signedTx = this.signRawTransaction(rawTx, privateKey);
         const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
