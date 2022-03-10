@@ -278,7 +278,7 @@ export default class FederatorERC extends Federator {
       }),
     );
     this.logger.info('get transaction id:', transactionId);
-    
+
     await this.processTransaction({
       ...processLogParams,
       tokenAddress,
