@@ -151,7 +151,7 @@ export default class FederatorERC extends Federator {
       const logs = await mainBridge.getPastEvents('Cross', getLogParams.sideChainId, {
         fromBlock: fromPageBlock,
         toBlock: toPagedBlock,
-        _destinationChainId: getLogParams.sideChainId,
+        _destinationChainId: getLogParams.sideChainId
       });
       if (!logs) {
         throw new Error('Failed to obtain the logs');
@@ -194,11 +194,6 @@ export default class FederatorERC extends Federator {
 
     const originChainId = Number(originChainIdStr);
     const destinationChainId = Number(destinationChainIdStr);
-
-    if (processLogParams.mainChainId !== originChainId || processLogParams.sideChainId !== destinationChainId) {
-      this.logger.debug('Transaction is not for this sideToken');
-      return false;
-    }
 
     this.logger.upsertContext('transactionHash', transactionHash);
     this.logger.upsertContext('blockHash', blockHash);
