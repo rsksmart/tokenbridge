@@ -136,14 +136,15 @@ export class TransactionSender {
       r: 0,
       s: 0,
     };
-
+    
     if (await this.isRsk()) {
       delete rawTx.chainId;
       delete rawTx.r;
       delete rawTx.s;
     }
-    rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
 
+    rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
+    
     if (this.debuggingMode) {
       rawTx.gas = this.numberToHexString(100);
       this.logger.warn(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`);

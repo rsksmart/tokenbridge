@@ -119,7 +119,7 @@ export default abstract class Federator {
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);
       this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
-        while (this.numberOfRetries > 0) {
+         while (this.numberOfRetries > 0) {
           const bridgeFactory = new BridgeFactory();
           const federationFactory = new FederationFactory();
           const success: boolean = await this.run({
