@@ -24,7 +24,7 @@ export class IBridgeV4 implements IBridge {
   }
 
   getPastEvents(eventName: string, destinationChainId: number, options: any): Promise<EventData[]> {
-    options._destinationChainId = destinationChainId;
+    options.filter = { _destinationChainId: destinationChainId };
     return this.bridgeContract.getPastEvents(eventName, options);
   }
 
