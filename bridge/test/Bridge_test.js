@@ -8,11 +8,11 @@ const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
 const WRBTC = artifacts.require('./WRBTC');
 
 const utils = require('./utils');
-const truffleAssert = require('truffle-assertions');
+const chains = require('../hardhat/helper/chains');
+const truffleAssertions = require('truffle-assertions');
 const ethUtil = require('ethereumjs-util');
 
 const BN = web3.utils.BN;
-const randomHex = web3.utils.randomHex;
 const ONE_DAY = 24*3600;
 const toWei = web3.utils.toWei;
 
@@ -20,12 +20,12 @@ const keccak256 = web3.utils.keccak256;
 
 async function getClaimDigest(
     bridge,
-    claim, //{address _to,uint256 _amount,bytes32 _transactionHash,address _relayer,uint256 _fee},
+    claim, //{address _to,uint256 _amount,bytes32 _transactionHash,uint256 originChainId,address _relayer,uint256 _fee},
     nonce,
     deadline
 ) {
     const CLAIM_TYPEHASH = await bridge.CLAIM_TYPEHASH();
-    const DOMAIN_SEPARATOR = await bridge.DOMAIN_SEPARATOR();
+    const DOMAIN_SEPARATOR = await bridge.domainSeparator();
 
     return web3.utils.soliditySha3(
         {t:'bytes1', v:'0x19'},
@@ -33,8 +33,8 @@ async function getClaimDigest(
         {t:'bytes32', v:DOMAIN_SEPARATOR},
         {t:'bytes32', v:keccak256(
                 web3.eth.abi.encodeParameters(
-                    ['bytes32', 'address', 'uint256', 'bytes32', 'address', 'uint256', 'uint256', 'uint256'],
-                    [CLAIM_TYPEHASH, claim.to, claim.amount, claim.transactionHash, claim.relayer, claim.fee, nonce, deadline]
+                    ['bytes32', 'address', 'uint256', 'bytes32', 'uint256', 'address', 'uint256', 'uint256', 'uint256'],
+                    [CLAIM_TYPEHASH, claim.to, claim.amount, claim.transactionHash, claim.originChainId, claim.relayer, claim.fee, nonce, deadline]
                 )
             )
         }
@@ -50,6 +50,9 @@ contract('Bridge', async function (accounts) {
     const federation = accounts[5];
     const tokenName = 'MAIN';
     const tokenSymbol = 'MAIN';
+    const eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,uint256,address,uint256,uint256,bytes)');
+    // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
+    const chainId = await web3.eth.getChainId();
 
     before(async function () {
         await utils.saveState();
@@ -70,7 +73,7 @@ contract('Bridge', async function (accounts) {
             '0',
             [{
                 description:'MAIN',
-                limits:{
+                limits: {
                     max:toWei('10000'),
                     min:toWei('1'),
                     daily:toWei('100000'),
@@ -83,8 +86,8 @@ contract('Bridge', async function (accounts) {
         await this.allowTokens.setToken(this.token.address, this.typeId, { from: bridgeManager });
         this.sideTokenFactory = await SideTokenFactory.new();
         this.bridge = await Bridge.new();
-        await this.bridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
-            federation, this.allowTokens.address, this.sideTokenFactory.address, 'e');
+        await this.bridge.methods['initialize(address,address,address,address)'](bridgeManager,
+            federation, this.allowTokens.address, this.sideTokenFactory.address);
         await this.sideTokenFactory.transferPrimary(this.bridge.address);
         await this.allowTokens.transferPrimary(this.bridge.address, { from: bridgeOwner });
     });
@@ -93,7 +96,7 @@ contract('Bridge', async function (accounts) {
 
         it('should retrieve the version', async function () {
             const result = await this.bridge.version();
-            assert.equal(result, "v3");
+            assert.equal(result, "v4");
         });
 
         describe('owner', async function () {
@@ -110,7 +113,7 @@ contract('Bridge', async function (accounts) {
             });
 
             it('only manager can change manager', async function () {
-                await utils.expectThrow(this.bridge.transferOwnership(newBridgeManager));
+                await truffleAssertions.fails(this.bridge.transferOwnership(newBridgeManager), truffleAssertions.ErrorType.REVERT);
                 const manager = await this.bridge.owner();
                 assert.equal(manager, bridgeManager);
             });
@@ -127,7 +130,10 @@ contract('Bridge', async function (accounts) {
             it('only manager can change allowTokens', async function () {
                 let allowTokens = await this.bridge.allowTokens();
                 assert.equal(allowTokens, this.allowTokens.address);
-                await utils.expectThrow(this.bridge.changeAllowTokens(anAccount, { from: tokenOwner }));
+                await truffleAssertions.fails(
+                    this.bridge.changeAllowTokens(anAccount, { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
                 allowTokens = await this.bridge.allowTokens();
                 assert.equal(allowTokens, this.allowTokens.address);
             });
@@ -135,7 +141,10 @@ contract('Bridge', async function (accounts) {
             it('change allowTokens fail if zero address', async function () {
                 let allowTokens = await this.bridge.allowTokens();
                 assert.equal(allowTokens, this.allowTokens.address);
-                await utils.expectThrow(this.bridge.changeAllowTokens(utils.NULL_ADDRESS, { from: bridgeManager }));
+                await truffleAssertions.fails(
+                    this.bridge.changeAllowTokens(utils.NULL_ADDRESS, { from: bridgeManager }),
+                    truffleAssertions.ErrorType.REVERT
+                );
                 allowTokens = await this.bridge.allowTokens();
                 assert.equal(allowTokens, this.allowTokens.address);
             });
@@ -144,21 +153,27 @@ contract('Bridge', async function (accounts) {
                 const payment = 999; //9.99%
                 const feePercentageDivider = (await this.bridge.feePercentageDivider()).toNumber();
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
-                let result = await this.bridge.getFeePercentage();
+                const result = await this.bridge.getFeePercentage();
                 assert.equal(result, payment);
                 assert.equal((9.99/100).toFixed(4), payment/feePercentageDivider);
             });
 
             it('setFeePercentage should fail if not the owner', async function () {
                 const payment = 1000;
-                await utils.expectThrow(this.bridge.setFeePercentage(payment, { from: tokenOwner}));
-                let result = await this.bridge.getFeePercentage();
+                await truffleAssertions.fails(
+                    this.bridge.setFeePercentage(payment, { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
+                const result = await this.bridge.getFeePercentage();
                 assert.equal(result, 0);
             });
 
             it('setFeePercentage should fail if 10% or more', async function () {
                 const payment = await this.bridge.feePercentageDivider()/10;
-                await utils.expectThrow(this.bridge.setFeePercentage(payment, { from: bridgeManager}));
+                await truffleAssertions.fails(
+                    this.bridge.setFeePercentage(payment, { from: bridgeManager}),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
 
@@ -175,13 +190,16 @@ contract('Bridge', async function (accounts) {
             });
 
             it('only manager can change the federation', async function () {
-                await utils.expectThrow(this.bridge.changeFederation(newBridgeManager));
+                await truffleAssertions.fails(this.bridge.changeFederation(newBridgeManager), truffleAssertions.ErrorType.REVERT);
                 const federationAddress = await this.bridge.getFederation();
                 assert.equal(federationAddress, federation);
             });
 
             it('change federation new fed cant be null', async function () {
-                await utils.expectThrow(this.bridge.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }));
+                await truffleAssertions.fails(
+                    this.bridge.changeFederation(utils.NULL_ADDRESS, { from: bridgeManager }),
+                    truffleAssertions.ErrorType.REVERT
+                );
                 const federationAddress = await this.bridge.getFederation();
                 assert.equal(federationAddress, federation);
             });
@@ -193,9 +211,9 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, anAccount, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
+                truffleAssertions.eventEmitted(receipt, 'Cross', (ev) => {
                     return ev._tokenAddress === this.token.address
                     && ev._from === tokenOwner
                     && ev._to === anAccount
@@ -207,7 +225,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -217,14 +235,14 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -234,14 +252,14 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await this.token.balanceOf(tokenOwner);
                 let receipt = await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await this.token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -255,14 +273,14 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -277,14 +295,14 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await token.balanceOf(tokenOwner);
                 let receipt = await token.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(token.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const tokenBalance = await token.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.toString());
-                const isKnownToken = await this.bridge.knownTokens(token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -298,10 +316,10 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await erc20Alternative.balanceOf(tokenOwner);
                 let receipt = await erc20Alternative.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(erc20Alternative.address, anAccount, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc20Alternative.address, anAccount, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
-                truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
+                truffleAssertions.eventEmitted(receipt, 'Cross', (ev) => {
                     return ev._tokenAddress === erc20Alternative.address
                     && ev._from === tokenOwner
                     && ev._to === anAccount
@@ -313,23 +331,21 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc20Alternative.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc20Alternative.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc20Alternative.address);
                 assert.equal(isKnownToken, true);
             });
 
             it('depositTo using network currency', async function () {
                 const amount = web3.utils.toWei('1');
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
-                const decimals = (await wrbtc.decimals()).toString();
-                const symbol = await wrbtc.symbol();
 
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
 
-                receipt = await this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount });
+                const receipt = await this.bridge.depositTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
-                truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
+                truffleAssertions.eventEmitted(receipt, 'Cross', (ev) => {
                     return ev._tokenAddress === wrbtc.address
                     && ev._from === tokenOwner
                     && ev._to === anAccount
@@ -339,8 +355,20 @@ contract('Bridge', async function (accounts) {
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
+            });
+
+            it('fail depositTo invalid chainId', async function () {
+                const amount = web3.utils.toWei('1');
+                const wrbtc = await WRBTC.new({ from: tokenOwner });
+
+                await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
+                await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
+                await truffleAssertions.fails(
+                    this.bridge.depositTo(0, anAccount, { from: tokenOwner, value: amount }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('fail depositTo no wrapped currency set', async function () {
@@ -348,7 +376,10 @@ contract('Bridge', async function (accounts) {
                 const wrbtc = await WRBTC.new({ from: tokenOwner });
 
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                await utils.expectThrow(this.bridge.depositTo(anAccount, { from: tokenOwner, value: amount }));
+                await truffleAssertions.fails(
+                    this.bridge.depositTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, anAccount, { from: tokenOwner, value: amount }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('call depositTo from a contract', async function () {
@@ -357,12 +388,12 @@ contract('Bridge', async function (accounts) {
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address)
                 await this.bridge.setWrappedCurrency(wrbtc.address, { from: bridgeManager });
                 await this.allowTokens.setToken(wrbtc.address, this.typeId, { from: bridgeManager });
-                receipt = await mockContract.callDepositTo(anAccount, { from: tokenOwner, value: amount });
+                const receipt = await mockContract.callDepositTo(anAccount, chains.ETHEREUM_MAIN_NET_CHAIN_ID, { from: tokenOwner, value: amount });
                 utils.checkRcpt(receipt);
 
                 const bridgeBalance = await wrbtc.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(wrbtc.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, wrbtc.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -377,10 +408,10 @@ contract('Bridge', async function (accounts) {
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
                 let receipt = await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
-                receipt = await this.bridge.receiveTokensTo(erc777.address, tokenOwner, amount, { from: tokenOwner });
+                receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
-                truffleAssert.eventEmitted(receipt, 'Cross', (ev) => {
+                truffleAssertions.eventEmitted(receipt, 'Cross', (ev) => {
                     return ev._tokenAddress === erc777.address
                     && ev._from === tokenOwner
                     && ev._to === tokenOwner
@@ -392,7 +423,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -403,37 +434,49 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.setToken(erc777.address, this.typeId.toString(), { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = anAccount.toLowerCase();
+                const userData = web3.eth.abi.encodeParameters(
+                    ["address", "uint256"],
+                    [anAccount.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+                );
                 const result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
+                        "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
                     },
                     {
                         "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
-                      },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
                     },
                     {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
                     },
                     {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
                     }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
@@ -442,12 +485,14 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, anAccount);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -459,38 +504,52 @@ contract('Bridge', async function (accounts) {
                 const mockContract = await mockReceiveTokensCall.new(this.bridge.address);
                 await erc777.mint(mockContract.address, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(mockContract.address);
-                const userData = anAccount.toLowerCase();
+
+                const userData = web3.eth.abi.encodeParameters(
+                    ["address", "uint256"],
+                    [anAccount.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+                );
+
                 const result = await mockContract.callTokensReceived(erc777.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
                       },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    }
+                      {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
@@ -498,12 +557,14 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, anAccount);
                 assert.equal(decodedLog._amount, amount);
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(mockContract.address);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -515,51 +576,65 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", { from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = '0x';
+                const userData = web3.eth.abi.encodeParameters(
+                    ["uint256"],
+                    [chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+                );
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
                       },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    }
+                      {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
                 assert.equal(decodedLog._from, tokenOwner);
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount);
-                assert.equal(decodedLog._userData, null);
+                assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), new BN(originalTokenBalance).sub(new BN(amount)).toString());
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, amount);
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -575,38 +650,50 @@ contract('Bridge', async function (accounts) {
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
                 const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = tokenOwner.toLowerCase();
+                const userData = web3.eth.abi.encodeParameters(
+                    ["address", "uint256"],
+                    [tokenOwner.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+                );
                 let result = await erc777.send(this.bridge.address, amount, userData, { from: tokenOwner });
                 utils.checkRcpt(result);
 
-                let eventSignature = web3.eth.abi.encodeEventSignature('Cross(address,address,address,uint256,bytes)');
                 assert.equal(result.receipt.rawLogs[3].topics[0], eventSignature);
                 let decodedLog = web3.eth.abi.decodeLog([
                     {
-                      "indexed": true,
-                      "name": "_tokenAddress",
-                      "type": "address"
-                    },
-                    {
                         "indexed": true,
+                        "name": "_tokenAddress",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                      },
+                      {
+                        "indexed": true,
+                        "name": "_destinationChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
                         "name": "_from",
                         "type": "address"
                       },
-                    {
-                      "indexed": true,
-                      "name": "_to",
-                      "type": "address"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_amount",
-                      "type": "uint256"
-                    },
-                    {
-                      "indexed": false,
-                      "name": "_userData",
-                      "type": "bytes"
-                    }
+                      {
+                        "indexed": false,
+                        "name": "_originChainId",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_amount",
+                        "type": "uint256"
+                      },
+                      {
+                        "indexed": false,
+                        "name": "_userData",
+                        "type": "bytes"
+                      }
                   ], result.receipt.rawLogs[3].data, result.receipt.rawLogs[3].topics.slice(1));
 
                 assert.equal(decodedLog._tokenAddress, erc777.address);
@@ -614,6 +701,8 @@ contract('Bridge', async function (accounts) {
                 assert.equal(decodedLog._to, tokenOwner);
                 assert.equal(decodedLog._amount, amount.sub(fees).toString());
                 assert.equal(decodedLog._userData, userData);
+                assert.equal(decodedLog._originChainId, chainId);
+                assert.equal(decodedLog._destinationChainId, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
 
                 const tokenBalance = await erc777.balanceOf(tokenOwner);
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount).toString());
@@ -622,59 +711,72 @@ contract('Bridge', async function (accounts) {
                 const ownerBalance = await erc777.balanceOf(bridgeManager);
                 assert.equal(ownerBalance.toString(), fees.toString());
                 assert.equal(fees.toString(), (amount*1.85/100).toString());
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
             it('tokensReceived should fail if not a token contract', async function () {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
-                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                const originalTokenBalance = await erc777.balanceOf(tokenOwner);
-                let userData = tokenOwner;
-                await utils.expectThrow(this.bridge.tokensReceived(tokenOwner,tokenOwner, this.bridge.address, amount, userData, '0x', { from: tokenOwner }));
+                const userData = tokenOwner;
+                await truffleAssertions.fails(
+                    this.bridge.tokensReceived(tokenOwner,tokenOwner, this.bridge.address, amount, userData, '0x', { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT);
             });
 
             it('tokensReceived should fail if not directed to bridge', async function () {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
-                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                let userData = tokenOwner;
-                await utils.expectThrow(this.bridge.tokensReceived(erc777.address, erc777.address, tokenOwner, amount, userData, '0x', { from: tokenOwner }));
+                const userData = tokenOwner;
+                await truffleAssertions.fails(
+                    this.bridge.tokensReceived(erc777.address, erc777.address, tokenOwner, amount, userData, '0x', { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('tokensReceived should fail if calling from contract not whitelisted', async function () {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
-                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                let userData = tokenOwner;
-                await utils.expectThrow(this.bridge.tokensReceived(erc777.address, this.allowTokens.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }));
+                const userData = tokenOwner;
+                await truffleAssertions.fails(
+                    this.bridge.tokensReceived(erc777.address, this.allowTokens.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('tokensReceived should fail if calling from contract with no data', async function () {
                 const amount = web3.utils.toWei('1000');
                 const granularity = '100';
-                let erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
+                const erc777 = await SideToken.new("ERC777", "777", tokenOwner, granularity, { from: tokenOwner });
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                let userData = "0x";
-                await utils.expectThrow(this.bridge.tokensReceived(erc777.address, erc777.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }));
+                const userData = "0x";
+                await truffleAssertions.fails(
+                    this.bridge.tokensReceived(erc777.address, erc777.address, this.bridge.address, amount, userData, '0x', { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
 
             it('send money to contract should fail', async function () {
                 const payment = new BN('1000');
-                await utils.expectThrow(web3.eth.sendTransaction({ from:tokenOwner, to: this.bridge.address, value: payment }));
+                await truffleAssertions.fails(
+                    web3.eth.sendTransaction({ from:tokenOwner, to: this.bridge.address, value: payment }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('receiveTokens with payment successful', async function () {
@@ -686,7 +788,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
 
-                let receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner });
+                const receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await this.token.balanceOf(bridgeManager);
@@ -696,7 +798,7 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, true);
             });
 
@@ -714,7 +816,7 @@ contract('Bridge', async function (accounts) {
                 await this.bridge.setFeePercentage(payment, { from: bridgeManager});
                 await erc777.approve(this.bridge.address, amount, { from: tokenOwner });
 
-                let receipt = await this.bridge.receiveTokensTo(erc777.address, tokenOwner, amount, { from: tokenOwner });
+                const receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address, tokenOwner, amount, { from: tokenOwner });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await erc777.balanceOf(bridgeManager);
@@ -724,107 +826,128 @@ contract('Bridge', async function (accounts) {
                 assert.equal(tokenBalance.toString(), originalTokenBalance.sub(amount));
                 const bridgeBalance = await erc777.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance.toString(), amount.sub(fees).toString());
-                const isKnownToken = await this.bridge.knownTokens(erc777.address);
+                const isKnownToken = await this.bridge.knownToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, erc777.address);
                 assert.equal(isKnownToken, true);
             });
 
             it('receiveTokens should reject token not allowed', async function () {
-                let newToken = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                const newToken = await MainToken.new("MAIN", "MAIN", 18, web3.utils.toWei('1000000000'), { from: tokenOwner });
                 const amount = web3.utils.toWei('1000');
                 await newToken.approve(this.bridge.address, amount, { from: tokenOwner });
-                await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount, { from: tokenOwner }));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, newToken.address, tokenOwner, amount, { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('receiveTokens should work calling from a contract', async function () {
-                let otherContract = await mockReceiveTokensCall.new(this.bridge.address);
+                const otherContract = await mockReceiveTokensCall.new(this.bridge.address);
                 const amount = web3.utils.toWei('1000');
                 await this.token.transfer(otherContract.address, amount, { from: tokenOwner });
-                await otherContract.callReceiveTokens(this.token.address, tokenOwner, amount);
+                await otherContract.callReceiveTokens(this.token.address, tokenOwner, amount, chains.ETHEREUM_MAIN_NET_CHAIN_ID);
             });
 
             it('rejects to receive tokens greater than  max tokens allowed 18 decimals', async function() {
-                let limit = await this.allowTokens.typeLimits(this.typeId);
-                let maxTokensAllowed = limit.max;
-                let amount = maxTokensAllowed.add(new BN('1'));
+                const limit = await this.allowTokens.typeLimits(this.typeId);
+                const maxTokensAllowed = limit.max;
+                const amount = maxTokensAllowed.add(new BN('1'));
                 await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
-                await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
             });
 
             it('rejects to receive tokens greater than  max tokens allowed 8 decimals', async function() {
-                let newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                let limit = await this.allowTokens.typeLimits(this.typeId);
-                let maxTokensAllowed = limit.max;
-                let amount = maxTokensAllowed.div(new BN((10**10).toString()).add(new BN('1')));
+                const newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                const limit = await this.allowTokens.typeLimits(this.typeId);
+                const maxTokensAllowed = limit.max;
+                const amount = maxTokensAllowed.div(new BN((10**10).toString()).add(new BN('1')));
                 await newToken.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
-                await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
-                const isKnownToken = await this.bridge.knownTokens(newToken.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
             });
 
             it('rejects to receive tokens lesser than  min tokens allowed 18 decimals', async function() {
-                let limit = await this.allowTokens.typeLimits(this.typeId);
-                let minTokensAllowed = limit.min;
-                let amount = minTokensAllowed.sub(new BN('1'));
+                const limit = await this.allowTokens.typeLimits(this.typeId);
+                const minTokensAllowed = limit.min;
+                const amount = minTokensAllowed.sub(new BN('1'));
                 await this.token.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
-                await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount.toString(), { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
-                const isKnownToken = await this.bridge.knownTokens(this.token.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await this.token.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
             });
 
             it('rejects to receive tokens greater than  min tokens allowed 8 decimals', async function() {
-                let newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                let limit = await this.allowTokens.typeLimits(this.typeId);
-                let maxTokensAllowed = limit.max;
-                let amount = maxTokensAllowed.div(new BN((10**10).toString()).sub(new BN('1')));
+                const newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                const limit = await this.allowTokens.typeLimits(this.typeId);
+                const maxTokensAllowed = limit.max;
+                const amount = maxTokensAllowed.div(new BN((10**10).toString()).sub(new BN('1')));
                 await newToken.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
 
-                await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
-                const isKnownToken = await this.bridge.knownTokens(newToken.address);
+                const isKnownToken = await this.bridge.knownToken(chains.HARDHAT_TEST_NET_CHAIN_ID, newToken.address);
                 assert.equal(isKnownToken, false);
                 const bridgeBalance = await newToken.balanceOf(this.bridge.address);
                 assert.equal(bridgeBalance, 0);
             });
 
             it('rejects to receive tokens over the daily limit 18 decimals', async function() {
-                let limit = await this.allowTokens.typeLimits(this.typeId);
-                let maxTokensAllowed = limit.max;
-                let dailyLimit = limit.daily;
+                const limit = await this.allowTokens.typeLimits(this.typeId);
+                const maxTokensAllowed = limit.max;
+                const dailyLimit = limit.daily;
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
-                await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('rejects to receive tokens over the daily limit 8 decimals', async function() {
                 const newToken = await MainToken.new("MAIN", "MAIN", 8, web3.utils.toWei('1000000000'), { from: tokenOwner });
                 await this.allowTokens.setToken(newToken.address, this.typeId, { from: bridgeManager });
-                let limit = await this.allowTokens.typeLimits(this.typeId);
+                const limit = await this.allowTokens.typeLimits(this.typeId);
                 const maxTokensAllowed = limit.max;
                 const amount = BigInt(maxTokensAllowed) / BigInt(10**10);
                 const dailyLimit = limit.daily;
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await newToken.approve(this.bridge.address, amount.toString(), { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, newToken.address, tokenOwner, amount.toString(), { from: tokenOwner })
                 }
-                await utils.expectThrow(this.bridge.receiveTokensTo(newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, newToken.address, tokenOwner, amount.toString(), { from: tokenOwner}),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('clear spent today after 24 hours', async function() {
@@ -836,7 +959,7 @@ contract('Bridge', async function (accounts) {
 
                 for(var tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
                 maxWidthdraw = await this.allowTokens.calcMaxWithdraw(this.token.address);
                 assert.equal(maxWidthdraw.toString(), '0');
@@ -853,12 +976,12 @@ contract('Bridge', async function (accounts) {
 
                 for(let tokensSent = 0; tokensSent < dailyLimit; tokensSent = BigInt(maxTokensAllowed) + BigInt(tokensSent)) {
                     await this.token.approve(this.bridge.address, maxTokensAllowed, { from: tokenOwner });
-                    await this.bridge.receiveTokensTo(this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
+                    await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, maxTokensAllowed, { from: tokenOwner })
                 }
                 await utils.increaseTimestamp(web3, ONE_DAY + 1);
 
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-                let receipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner});
+                const receipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, amount, { from: tokenOwner});
                 utils.checkRcpt(receipt);
             });
 
@@ -893,8 +1016,8 @@ contract('Bridge', async function (accounts) {
             );
             this.mirrorSideTokenFactory = await SideTokenFactory.new();
             this.mirrorBridge = await Bridge.new();
-            await this.mirrorBridge.methods['initialize(address,address,address,address,string)'](bridgeManager,
-                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, 'r', { from: bridgeOwner });
+            await this.mirrorBridge.methods['initialize(address,address,address,address)'](bridgeManager,
+                federation, this.mirrorAllowTokens.address, this.mirrorSideTokenFactory.address, { from: bridgeOwner });
             await this.mirrorSideTokenFactory.transferPrimary(this.mirrorBridge.address);
             await this.mirrorAllowTokens.transferPrimary(this.mirrorBridge.address);
             // Set mirror wrapped currency
@@ -906,7 +1029,7 @@ contract('Bridge', async function (accounts) {
             this.decimals = (await this.token.decimals()).toString();
             this.granularity = 1;
             await this.token.approve(this.bridge.address, this.amount, { from: tokenOwner });
-            this.txReceipt = await this.bridge.receiveTokensTo(this.token.address, tokenOwner, this.amount, { from: tokenOwner });
+            this.txReceipt = await this.bridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address, tokenOwner, this.amount, { from: tokenOwner });
 
             await this.mirrorBridge.createSideToken(
                 0,
@@ -914,6 +1037,7 @@ contract('Bridge', async function (accounts) {
                 18,
                 tokenSymbol,
                 tokenName,
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                 { from: bridgeManager }
             );
 
@@ -923,12 +1047,13 @@ contract('Bridge', async function (accounts) {
                 18,
                 'WRBTC',
                 'Wrapped RBTC',
+                chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                 { from: bridgeManager }
             );
 
             //Cross wrapped token to test unwrap when crossing back
             this.wrbtcAmount = web3.utils.toWei('2');
-            this.txReceiptWrbtc = await this.bridge.depositTo(tokenOwner, { from: tokenOwner, value: this.wrbtcAmount });
+            this.txReceiptWrbtc = await this.bridge.depositTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, tokenOwner, { from: tokenOwner, value: this.wrbtcAmount });
         });
 
         describe('Cross the tokens', async function() {
@@ -940,6 +1065,8 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     )
                     const receipt = await this.mirrorBridge.acceptTransfer(
                         this.token.address,
@@ -949,6 +1076,8 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
                     utils.checkRcpt(receipt);
@@ -964,26 +1093,97 @@ contract('Bridge', async function (accounts) {
 
                 });
 
-                it('fail accept transfer with receiver empty address', async function () {
-                    let decimals = 18;
-                    let tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                it('fail accept transfer with wrong destination chainId', async function () {
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.acceptTransfer(
+                            this.token.address,
+                            tokenOwner,
+                            anAccount,
+                            this.amount,
+                            this.txReceipt.receipt.blockHash,
+                            this.txReceipt.tx,
+                            this.txReceipt.receipt.logs[0].logIndex,
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
 
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, utils.NULL_ADDRESS, this.amount,
+                it('fail accept transfer with receiver empty address', async function () {
+                    const decimals = 18;
+                    const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                    await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
+
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, utils.NULL_ADDRESS, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation })
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
+
+                it('fail accept transfer with originChainId 0', async function () {
+                    const decimals = 18;
+                    const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                    await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
+
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
+                        this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                        this.txReceipt.receipt.logs[0].logIndex, 0, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
+
+                it('fail accept transfer with destinationChainId 0', async function () {
+                    const decimals = 18;
+                    const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
+                    await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "MAIN",
+                        "MAIN",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
+
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
+                        this.txReceipt.receipt.blockHash, this.txReceipt.tx,
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, 0, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
 
                 it('accept transfer only federation', async function () {
-                    await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
+                    await truffleAssertions.fails(this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: bridgeOwner }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeOwner }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
-                    await utils.expectThrow(this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
+                    await truffleAssertions.fails(this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: bridgeManager }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: bridgeManager }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
                     const anAccountBalance = await this.token.balanceOf(anAccount);
                     assert.equal(anAccountBalance, 0);
@@ -995,48 +1195,60 @@ contract('Bridge', async function (accounts) {
                 it('should fail accept transfer the same transaction', async function () {
                     await this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const hasCrossed = await this.mirrorBridge.hasCrossed(this.txReceipt.tx);
                     assert.equal(hasCrossed, true);
 
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
                 });
 
                 it('should fail accept transfer  null token address', async function () {
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer("0x", anAccount, anAccount, this.amount,
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(utils.NULL_ADDRESS, anAccount, anAccount, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
                 });
 
                 it('should fail null receiver address', async function () {
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, 0, this.amount,
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, utils.NULL_ADDRESS, this.amount,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
                 });
 
                 it('should fail zero amount', async function () {
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, 0,
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, 0,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
 
                 });
 
                 it('should fail null blockhash', async function () {
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
-                        "0x", this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
+                        utils.NULL_HASH, this.txReceipt.tx,
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('should fail null transaction hash', async function () {
-                    await utils.expectThrow(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
-                        this.txReceipt.receipt.blockHash, "0x",
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation }));
+                    await truffleAssertions.fails(this.mirrorBridge.acceptTransfer(this.token.address, anAccount, anAccount, this.amount,
+                        this.txReceipt.receipt.blockHash, utils.NULL_HASH,
+                        this.txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation }),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
             });
 
@@ -1050,6 +1262,8 @@ contract('Bridge', async function (accounts) {
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
                         this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
                 });
@@ -1063,7 +1277,9 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1075,7 +1291,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         { from: federation }
                     );
@@ -1084,7 +1301,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1102,7 +1319,9 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
@@ -1114,7 +1333,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         { from: tokenOwner }
                     );
@@ -1123,7 +1343,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1134,85 +1354,124 @@ contract('Bridge', async function (accounts) {
                     assert.equal(mirrorSenderBalance, this.amount);
                 });
 
-                it('fail if claimFallback with incorrect claimFallback', async function() {
-                    utils.expectThrow(
-                            this.mirrorBridge.claimFallback(
+                it('fail if claimFallback with incorrect chainId', async function() {
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claimFallback(
                             {
                                 to: anAccount,
                                 amount: this.amount,
                                 blockHash: this.txReceipt.receipt.blockHash,
                                 transactionHash: this.txReceipt.tx,
-                                logIndex: this.txReceipt.receipt.logs[0].logIndex
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             { from: bridgeManager }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
+                });
+
+                it('fail if claimFallback with chainId 0', async function() {
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claimFallback(
+                            {
+                                to: anAccount,
+                                amount: this.amount,
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: 0,
+                            },
+                            { from: bridgeManager }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
 
                 it('fail if claim with incorrect account', async function() {
-                    utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: bridgeOwner,
-                            amount: this.amount,
-                            blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
-                        },
-                        { from: federation }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: bridgeOwner,
+                                amount: this.amount,
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('fail if claim with incorrect amount', async function() {
-                    utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: anAccount,
-                            amount: '1',
-                            blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
-                        },
-                        { from: federation }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: anAccount,
+                                amount: '1',
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('fail if claim with incorrect blockhash', async function() {
-                    utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: anAccount,
-                            amount: this.amount,
-                            blockHash: randomHex(32),
-                            transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
-                        },
-                        { from: federation }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: anAccount,
+                                amount: this.amount,
+                                blockHash: utils.getRandomHash(),
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('fail if claim with incorrect transactionHash', async function() {
-                    utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: anAccount,
-                            amount: this.amount,
-                            blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: randomHex(32),
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
-                        },
-                        { from: federation }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: anAccount,
+                                amount: this.amount,
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: utils.getRandomHash(),
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('fail if claim with incorrect logIndex', async function() {
-                    utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: anAccount,
-                            amount: this.amount,
-                            blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: this.txReceipt.tx,
-                            logIndex: '11'
-                        },
-                        { from: federation }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: anAccount,
+                                amount: this.amount,
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: '11',
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: federation }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('fail if claim same transaction twice', async function () {
@@ -1224,19 +1483,22 @@ contract('Bridge', async function (accounts) {
                         this.amount,
                         this.txReceipt.receipt.blockHash,
                         this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex
+                        this.txReceipt.receipt.logs[0].logIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.txReceipt.tx);
                     assert.equal(obtainedTransactionDataHash, transactionDataHash);
 
-                    receipt = await this.mirrorBridge.claim(
+                    const receipt = await this.mirrorBridge.claim(
                         {
                             to: anAccount,
                             amount: this.amount,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
@@ -1245,7 +1507,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.txReceipt.tx);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1253,26 +1515,38 @@ contract('Bridge', async function (accounts) {
                     const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance, this.amount);
 
-                    await utils.expectThrow(this.mirrorBridge.claim(
-                        {
-                            to: anAccount,
-                            amount: this.amount,
-                            blockHash: this.txReceipt.receipt.blockHash,
-                            transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
-                        },
-                        { from: anAccount }
-                    ));
+                    await truffleAssertions.fails(
+                        this.mirrorBridge.claim(
+                            {
+                                to: anAccount,
+                                amount: this.amount,
+                                blockHash: this.txReceipt.receipt.blockHash,
+                                transactionHash: this.txReceipt.tx,
+                                logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
+                            },
+                            { from: anAccount }
+                        ),
+                        truffleAssertions.ErrorType.REVERT
+                    );
                 });
 
                 it('should claim with decimals other than 18', async function () {
                     const decimals = 6;
                     const tokenWithDecimals = await MainToken.new("MAIN", "MAIN", decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithDecimals.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithDecimals.address,
+                        decimals,
+                        "rMAIN",
+                        "MAIN on RSK",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithDecimals.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
-                        txReceipt.receipt.logs[0].logIndex, { from: federation });
+                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(receipt);
 
                     receipt = await this.mirrorBridge.claim(
@@ -1281,19 +1555,20 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: txReceipt.receipt.blockHash,
                             transactionHash: txReceipt.tx,
-                            logIndex: txReceipt.receipt.logs[0].logIndex
+                            logIndex: txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithDecimals.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithDecimals.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
-                    assert.equal(originalTokenAddress, tokenWithDecimals.address);
+                    const originalToken = await this.mirrorBridge.getOriginalTokenBySideToken(sideTokenAddress);
+                    assert.equal(originalToken.tokenAddress, tokenWithDecimals.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance, 0);
@@ -1307,11 +1582,20 @@ contract('Bridge', async function (accounts) {
                     const granularity = '100';
                     const tokenWithGranularity = await SideToken.new("MAIN", "MAIN", tokenOwner, granularity, { from: tokenOwner });
                     tokenWithGranularity.mint(tokenOwner, this.amount, '0x', '0x', { from: tokenOwner });
-                    const txReceipt = await this.mirrorBridge.createSideToken(this.typeId, tokenWithGranularity.address, 18, "MAIN", "MAIN",  { from: bridgeManager });
+                    const txReceipt = await this.mirrorBridge.createSideToken(
+                        this.typeId,
+                        tokenWithGranularity.address,
+                        18,
+                        "rMAIN",
+                        "MAIN on RSK",
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        { from: bridgeManager }
+                    );
 
                     let receipt = await this.mirrorBridge.acceptTransfer(tokenWithGranularity.address, anAccount, anAccount, this.amount,
                         txReceipt.receipt.blockHash, txReceipt.tx,
-                        txReceipt.receipt.logs[0].logIndex, { from: federation });
+                        txReceipt.receipt.logs[0].logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(receipt);
 
                     receipt = await this.mirrorBridge.claim(
@@ -1320,34 +1604,35 @@ contract('Bridge', async function (accounts) {
                             amount: this.amount,
                             blockHash: txReceipt.receipt.blockHash,
                             transactionHash: txReceipt.tx,
-                            logIndex: txReceipt.receipt.logs[0].logIndex
+                            logIndex: txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                         },
                         { from: anAccount }
                     );
                     utils.checkRcpt(receipt);
 
-                    let sideTokenAddress = await this.mirrorBridge.mappedTokens(tokenWithGranularity.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, tokenWithGranularity.address);
                     let sideToken = await SideToken.at(sideTokenAddress);
                     const sideTokenSymbol = await sideToken.symbol();
                     assert.equal(sideTokenSymbol, "rMAIN");
 
-                    let originalTokenAddress = await this.mirrorBridge.originalTokens(sideTokenAddress);
-                    assert.equal(originalTokenAddress, tokenWithGranularity.address);
+                    const originalToken = await this.mirrorBridge.getOriginalTokenBySideToken(sideTokenAddress);
+                    assert.equal(originalToken.tokenAddress, tokenWithGranularity.address);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
                     assert.equal(mirrorBridgeBalance, 0);
                     const mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
                 });
-                
+
             });
 
             describe('claim gasless', async function() {
                 beforeEach(async function() {
-                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.utils.randomHex(32));
+                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
                     this.gaslessAmount = '1001';
-                    this.gaslessBlockHash = randomHex(32);
-                    this.gaslessTxHash = randomHex(32);
+                    this.gaslessBlockHash = utils.getRandomHash();
+                    this.gaslessTxHash = utils.getRandomHash();
                     this.gaslessLogIndex = '0';
 
                     await this.mirrorBridge.acceptTransfer(
@@ -1358,20 +1643,20 @@ contract('Bridge', async function (accounts) {
                         this.gaslessBlockHash,
                         this.gaslessTxHash,
                         this.gaslessLogIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
                     );
                 });
 
                 it('should have CLAIM_TYPEHASH', async function() {
-                    const expectedTypeHash = keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
+                    const expectedTypeHash =
+                        keccak256('Claim(address to,uint256 amount,bytes32 transactionHash,uint256 originChainId,address relayer,uint256 fee,uint256 nonce,uint256 deadline)');
                     const CLAIM_TYPEHASH = await this.mirrorBridge.CLAIM_TYPEHASH();
                     assert.equal(CLAIM_TYPEHASH, expectedTypeHash);
                 });
 
-                it('should have DOMAIN_SEPARATOR', async function() {
-                    // Bug ganache treast chainid opcode as 1 https://github.com/trufflesuite/ganache-core/issues/451
-                    const chainId = await web3.eth.getChainId();
-
+                it('should have domainSeparator', async function() {
                     const expectedTypeHash = keccak256(
                         web3.eth.abi.encodeParameters(
                             ['bytes32', 'bytes32', 'bytes32', 'uint256', 'address'],
@@ -1384,7 +1669,7 @@ contract('Bridge', async function (accounts) {
                             ]
                         )
                     )
-                    const DOMAIN_SEPARATOR = await this.mirrorBridge.DOMAIN_SEPARATOR();
+                    const DOMAIN_SEPARATOR = await this.mirrorBridge.domainSeparator();
                     assert.equal(DOMAIN_SEPARATOR, expectedTypeHash);
                 });
 
@@ -1397,12 +1682,14 @@ contract('Bridge', async function (accounts) {
                         this.gaslessAmount,
                         this.gaslessBlockHash,
                         this.gaslessTxHash,
-                        this.gaslessLogIndex
+                        this.gaslessLogIndex,
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                     );
 
                     const obtainedTransactionDataHash = await this.mirrorBridge.transactionsDataHashes(this.gaslessTxHash);
                     assert.equal(obtainedTransactionDataHash, transactionDataHash);
-                    
+
                     const relayer = federation;
                     const fee = '11';
                     const nonce = (await this.mirrorBridge.nonces(this.accountWallet.address)).toString();
@@ -1415,12 +1702,13 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: relayer,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
-                      );
-          
+                    );
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.mirrorBridge.claimGasless(
@@ -1429,7 +1717,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             blockHash: this.gaslessBlockHash,
                             transactionHash: this.gaslessTxHash,
-                            logIndex: this.gaslessLogIndex
+                            logIndex: this.gaslessLogIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                         },
                         relayer,
                         fee,
@@ -1444,7 +1733,7 @@ contract('Bridge', async function (accounts) {
                     hasBeenClaimed = await this.mirrorBridge.hasBeenClaimed(this.gaslessTxHash);
                     assert.equal(hasBeenClaimed, true);
 
-                    const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                    const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
                     const sideToken = await SideToken.at(sideTokenAddress);
 
                     const mirrorBridgeBalance = await sideToken.balanceOf(this.mirrorBridge.address);
@@ -1469,22 +1758,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1493,7 +1784,8 @@ contract('Bridge', async function (accounts) {
                             s,
                             r,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1510,22 +1802,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: anAccount,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1534,7 +1828,8 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1551,22 +1846,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.amount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1575,7 +1872,8 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1592,22 +1890,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             '100',
@@ -1616,7 +1916,8 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1633,22 +1934,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             anAccount,
                             fee,
@@ -1657,7 +1960,8 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1674,22 +1978,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1698,7 +2004,8 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
 
@@ -1715,22 +2022,24 @@ contract('Bridge', async function (accounts) {
                             amount: this.gaslessAmount,
                             transactionHash: this.gaslessTxHash,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
-                    await utils.expectThrow(
+                    await truffleAssertions.fails(
                         this.mirrorBridge.claimGasless(
                             {
                                 to: this.accountWallet.address,
                                 amount: this.gaslessAmount,
                                 blockHash: this.gaslessBlockHash,
                                 transactionHash: this.gaslessTxHash,
-                                logIndex: this.gaslessLogIndex
+                                logIndex: this.gaslessLogIndex,
+                                originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID,
                             },
                             relayer,
                             fee,
@@ -1739,25 +2048,35 @@ contract('Bridge', async function (accounts) {
                             r,
                             s,
                             { from: tokenOwner }
-                        )
+                        ),
+                        truffleAssertions.ErrorType.REVERT
                     );
                 });
-                
+
             }); // end claim gasless
 
             it('crossback with amount lower than granularity', async function () {
                 const granularity = '10000000000000000';
                 const decimals = '2';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, tokenSymbol, tokenName,  { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(
+                    this.typeId,
+                    aToken.address,
+                    decimals,
+                    tokenSymbol,
+                    tokenName,
+                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
 
-                await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, { from: federation });
+                const acceptTxReceipt = await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
+                    blockHash, txHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
+                utils.checkRcpt(acceptTxReceipt);
 
                 await this.mirrorBridge.claim(
                     {
@@ -1765,7 +2084,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     },
                     { from: anAccount }
                 );
@@ -1773,7 +2093,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN('33');
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(aToken.address);
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, aToken.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1783,7 +2103,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1798,16 +2118,23 @@ contract('Bridge', async function (accounts) {
             it('crossback with amount lower than granularity and no fees', async function () {
                 const granularity = '10000000000000000';
                 const decimals = '2';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const aToken = await MainToken.new(tokenName, tokenSymbol, decimals, web3.utils.toWei('1000000000'), { from: tokenOwner });
 
-                await this.mirrorBridge.createSideToken(this.typeId, aToken.address, decimals, "MAIN", "MAIN",  { from: bridgeManager });
+                await this.mirrorBridge.createSideToken(
+                    this.typeId,
+                    aToken.address,
+                    decimals,
+                    "MAIN", "MAIN",
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    { from: bridgeManager }
+                );
 
                 await this.mirrorBridge.acceptTransfer(aToken.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, { from: federation });
+                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1815,7 +2142,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1823,8 +2151,8 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(aToken.address);
-                const sideToken = await SideToken.at(sideTokenAddress);;
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, aToken.address);
+                const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
                 const modulo = amountToCrossBack.sub(fees).mod(new BN(granularity));
@@ -1833,7 +2161,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1846,12 +2174,12 @@ contract('Bridge', async function (accounts) {
 
             it('crossback wrapped network currency', async function () {
                 const granularity = '1';
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 await this.mirrorBridge.acceptTransfer(this.wrbtc.address, anAccount, anAccount, this.amount,
-                    blockHash, txHash, logIndex, { from: federation });
+                    blockHash, txHash, logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1859,7 +2187,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: blockHash,
                         transactionHash: txHash,
-                        logIndex: logIndex
+                        logIndex: logIndex,
+                        originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1867,7 +2196,7 @@ contract('Bridge', async function (accounts) {
                 const amountToCrossBack = new BN(web3.utils.toWei('1'));
                 const payment = new BN(0);
 
-                const sideTokenAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                const sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.wrbtc.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const feePercentageDivider = await this.mirrorBridge.feePercentageDivider();
                 const fees = amountToCrossBack.mul(payment).div(feePercentageDivider);
@@ -1877,7 +2206,7 @@ contract('Bridge', async function (accounts) {
                 await this.mirrorBridge.setFeePercentage(payment, { from: bridgeManager});
                 await sideToken.approve(this.mirrorBridge.address, amountToCrossBack, { from: anAccount });
 
-                let receipt = await this.mirrorBridge.receiveTokensTo(sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
+                const receipt = await this.mirrorBridge.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID, sideToken.address, anAccount, amountToCrossBack, { from: anAccount });
                 utils.checkRcpt(receipt);
 
                 const ownerBalance = await sideToken.balanceOf(bridgeManager);
@@ -1895,11 +2224,12 @@ contract('Bridge', async function (accounts) {
                 // Transfer to Side  Token
                 await this.mirrorBridge.acceptTransfer(this.token.address, tokenOwner, anAccount, this.amount,
                     this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                    this.txReceipt.receipt.logs[0].logIndex, { from: federation });
+                    this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                 this.amountToCrossBack = web3.utils.toWei('100');
                 this.decimals = (await this.token.decimals()).toString();
                 this.granularity = 1;
-                this.sideTokenAddress = await this.mirrorBridge.mappedTokens(this.token.address);
+                this.sideTokenAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.token.address);
 
                 await this.mirrorBridge.claim(
                     {
@@ -1907,7 +2237,8 @@ contract('Bridge', async function (accounts) {
                         amount: this.amount,
                         blockHash: this.txReceipt.receipt.blockHash,
                         transactionHash: this.txReceipt.tx,
-                        logIndex: this.txReceipt.receipt.logs[0].logIndex
+                        logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                        originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                     },
                     { from: anAccount }
                 );
@@ -1915,7 +2246,8 @@ contract('Bridge', async function (accounts) {
                 //Transfer Side WRBTC
                 await this.mirrorBridge.acceptTransfer(this.wrbtc.address, tokenOwner, anAccount, this.wrbtcAmount,
                     this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                    this.txReceiptWrbtc.receipt.logs[0].logIndex, { from: federation });
+                    this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                 await this.mirrorBridge.claim(
                     {
@@ -1923,13 +2255,14 @@ contract('Bridge', async function (accounts) {
                         amount: this.wrbtcAmount,
                         blockHash: this.txReceiptWrbtc.receipt.blockHash,
                         transactionHash: this.txReceiptWrbtc.tx,
-                        logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                        logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                        originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     },
                     { from: anAccount }
                 );
 
                 this.wrbtcAmountToCrossBack = web3.utils.toWei('1');
-                this.sideWrbtcAddress = await this.mirrorBridge.mappedTokens(this.wrbtc.address);
+                this.sideWrbtcAddress = await this.mirrorBridge.sideTokenByOriginalToken(chains.ETHEREUM_MAIN_NET_CHAIN_ID, this.wrbtc.address);
             });
 
             describe('Should burn the side tokens when transfered to the bridge', function () {
@@ -1941,7 +2274,13 @@ contract('Bridge', async function (accounts) {
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     let receipt = await sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
                     utils.checkRcpt(receipt);
-                    receipt = await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, tokenOwner, this.amountToCrossBack, { from: anAccount });
+                    receipt = await this.mirrorBridge.receiveTokensTo(
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        this.sideTokenAddress,
+                        tokenOwner,
+                        this.amountToCrossBack,
+                        { from: anAccount }
+                    );
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -1956,8 +2295,12 @@ contract('Bridge', async function (accounts) {
                     let mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
                     assert.equal(mirrorAnAccountBalance.toString(), this.amount.toString());
 
+                    const userData = web3.eth.abi.encodeParameters(
+                        ["address", "uint256"],
+                        [tokenOwner.toLowerCase(), chains.ETHEREUM_MAIN_NET_CHAIN_ID]
+                    );
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
-                    let receipt = await sideToken.send(this.mirrorBridge.address, this.amountToCrossBack, tokenOwner, { from: anAccount });
+                    const receipt = await sideToken.send(this.mirrorBridge.address, this.amountToCrossBack, userData, { from: anAccount });
                     utils.checkRcpt(receipt);
 
                     mirrorAnAccountBalance = await sideToken.balanceOf(anAccount);
@@ -1971,23 +2314,35 @@ contract('Bridge', async function (accounts) {
 
             describe('After the mirror Bridge burned the tokens', function () {
                 beforeEach(async function () {
-                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(web3.
-                        utils.randomHex(32));
+                    this.accountWallet = await web3.eth.accounts.privateKeyToAccount(utils.getRandomHash());
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideToken = await SideToken.at(this.sideTokenAddress);
                     await this.sideToken.approve(this.mirrorBridge.address, this.amountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(this.sideTokenAddress, this.accountWallet.address, this.amountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        this.sideTokenAddress,
+                        this.accountWallet.address,
+                        this.amountToCrossBack,
+                        { from: anAccount }
+                    );
 
                     //Transfer the Side tokens to the bridge, the bridge burns them and creates an event
                     this.sideWrbtc = await SideToken.at(this.sideWrbtcAddress);
                     await this.sideWrbtc.approve(this.mirrorBridge.address, this.wrbtcAmountToCrossBack, { from: anAccount });
-                    await this.mirrorBridge.receiveTokensTo(this.sideWrbtc.address, this.accountWallet.address, this.wrbtcAmountToCrossBack, { from: anAccount });
+                    await this.mirrorBridge.receiveTokensTo(
+                        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        this.sideWrbtc.address,
+                        this.accountWallet.address,
+                        this.wrbtcAmountToCrossBack,
+                        { from: anAccount }
+                    );
                 });
 
                 it('main Bridge should release the tokens', async function () {
                     let tx = await this.bridge.acceptTransfer(this.token.address, anAccount, this.accountWallet.address, this.amountToCrossBack,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(tx);
 
                     await this.bridge.claim(
@@ -1996,7 +2351,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amountToCrossBack,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                         },
                         { from: anAccount }
                     );
@@ -2010,7 +2366,8 @@ contract('Bridge', async function (accounts) {
                 it('main Bridge should release the network currency', async function () {
                     let tx = await this.bridge.acceptTransfer(this.wrbtc.address, anAccount, this.accountWallet.address, this.wrbtcAmountToCrossBack,
                         this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                        this.txReceiptWrbtc.receipt.logs[0].logIndex, { from: federation });
+                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                     utils.checkRcpt(tx);
 
                     await this.bridge.claim(
@@ -2019,7 +2376,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.wrbtcAmountToCrossBack,
                             blockHash: this.txReceiptWrbtc.receipt.blockHash,
                             transactionHash: this.txReceiptWrbtc.tx,
-                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID
                         },
                         { from: anAccount }
                     );
@@ -2039,7 +2397,8 @@ contract('Bridge', async function (accounts) {
 
                     await this.bridge.acceptTransfer(this.token.address, anAccount, this.accountWallet.address, this.amountToCrossBack,
                         this.txReceipt.receipt.blockHash, this.txReceipt.tx,
-                        this.txReceipt.receipt.logs[0].logIndex, { from: federation });
+                        this.txReceipt.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const digest = await getClaimDigest(
                         this.bridge,
@@ -2048,12 +2407,13 @@ contract('Bridge', async function (accounts) {
                             amount: this.amountToCrossBack,
                             transactionHash: this.txReceipt.tx,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const receipt = await this.bridge.claimGasless(
@@ -2062,7 +2422,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.amountToCrossBack,
                             blockHash: this.txReceipt.receipt.blockHash,
                             transactionHash: this.txReceipt.tx,
-                            logIndex: this.txReceipt.receipt.logs[0].logIndex
+                            logIndex: this.txReceipt.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         relayer,
                         fee,
@@ -2091,7 +2452,8 @@ contract('Bridge', async function (accounts) {
 
                     await this.bridge.acceptTransfer(this.wrbtc.address, anAccount, this.accountWallet.address, this.wrbtcAmountToCrossBack,
                         this.txReceiptWrbtc.receipt.blockHash, this.txReceiptWrbtc.tx,
-                        this.txReceiptWrbtc.receipt.logs[0].logIndex, { from: federation });
+                        this.txReceiptWrbtc.receipt.logs[0].logIndex, chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
 
                     const digest = await getClaimDigest(
                         this.bridge,
@@ -2100,12 +2462,13 @@ contract('Bridge', async function (accounts) {
                             amount: this.wrbtcAmountToCrossBack,
                             transactionHash: this.txReceiptWrbtc.tx,
                             relayer: federation,
-                            fee: fee
+                            fee: fee,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         nonce,
                         deadline
                       );
-          
+
                     const { v, r, s } = ethUtil.ecsign(Buffer.from(digest.slice(2), 'hex'), Buffer.from(this.accountWallet.privateKey.slice(2), 'hex'));
 
                     const originalToBalance = await web3.eth.getBalance(this.accountWallet.address);
@@ -2117,7 +2480,8 @@ contract('Bridge', async function (accounts) {
                             amount: this.wrbtcAmountToCrossBack,
                             blockHash: this.txReceiptWrbtc.receipt.blockHash,
                             transactionHash: this.txReceiptWrbtc.tx,
-                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex
+                            logIndex: this.txReceiptWrbtc.receipt.logs[0].logIndex,
+                            originChainId: chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         },
                         relayer,
                         fee,
@@ -2158,7 +2522,8 @@ contract('Bridge', async function (accounts) {
             let isPaused = await this.bridge.paused();
             assert.equal(isPaused, false);
 
-            await utils.expectThrow(this.bridge.pause());
+            await truffleAssertions.fails(this.bridge.pause(), truffleAssertions.ErrorType.REVERT);
+            isPaused = await this.bridge.paused();
             assert.equal(isPaused, false);
         });
 
@@ -2177,7 +2542,8 @@ contract('Bridge', async function (accounts) {
             let isPaused = await this.bridge.paused();
             assert.equal(isPaused, true);
 
-            await utils.expectThrow(this.bridge.unpause());
+            await truffleAssertions.fails(this.bridge.unpause(), truffleAssertions.ErrorType.REVERT);
+            isPaused = await this.bridge.paused();
             assert.equal(isPaused, true);
         });
     })
@@ -2187,28 +2553,28 @@ contract('Bridge', async function (accounts) {
 
         it('Should renounce ownership', async function() {
             await this.bridge.renounceOwnership({ from: bridgeManager });
-            let owner = await this.bridge.owner();
+            const owner = await this.bridge.owner();
             assert.equal(BigInt(owner), 0);
         });
 
         it('Should not renounce ownership when not called by the owner', async function() {
-            let owner = await this.bridge.owner();
-            await utils.expectThrow(this.bridge.renounceOwnership());
-            let ownerAfter = await this.bridge.owner();
+            const owner = await this.bridge.owner();
+            await truffleAssertions.fails(this.bridge.renounceOwnership(), truffleAssertions.ErrorType.REVERT);
+            const ownerAfter = await this.bridge.owner();
 
             assert.equal(owner, ownerAfter);
         });
 
         it('Should transfer ownership', async function() {
             await this.bridge.transferOwnership(anotherOwner, { from: bridgeManager });
-            let owner = await this.bridge.owner();
+            const owner = await this.bridge.owner();
             assert.equal(owner, anotherOwner);
         });
 
         it('Should not transfer ownership when not called by the owner', async function() {
-            let owner = await this.bridge.owner();
-            await utils.expectThrow(this.bridge.transferOwnership(anotherOwner));
-            let ownerAfter = await this.bridge.owner();
+            const owner = await this.bridge.owner();
+            await truffleAssertions.fails(this.bridge.transferOwnership(anotherOwner), truffleAssertions.ErrorType.REVERT);
+            const ownerAfter = await this.bridge.owner();
 
             assert.equal(owner, ownerAfter);
         });
@@ -2228,7 +2594,8 @@ contract('Bridge', async function (accounts) {
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, false);
 
-            await utils.expectThrow(this.bridge.setUpgrading(true));
+            await truffleAssertions.fails(this.bridge.setUpgrading(true), truffleAssertions.ErrorType.REVERT);
+            isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, false);
         });
 
@@ -2247,7 +2614,8 @@ contract('Bridge', async function (accounts) {
             let isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, true);
 
-            await utils.expectThrow(this.bridge.setUpgrading(false,));
+            await truffleAssertions.fails(this.bridge.setUpgrading(false), truffleAssertions.ErrorType.REVERT);
+            isUpgrading = await this.bridge.isUpgrading();
             assert.equal(isUpgrading, true);
         });
 
@@ -2261,11 +2629,12 @@ contract('Bridge', async function (accounts) {
                     0,
                     this.token.address,
                     6,
-                    'MAIN',
-                    'MAIN',
+                    'eMAIN',
+                    'MAIN on Ethereum',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
-                const sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
                 const sideTokenSymbol = await sideToken.symbol();
                 assert.equal(sideTokenSymbol, 'eMAIN');
@@ -2276,8 +2645,8 @@ contract('Bridge', async function (accounts) {
                 const sideTokenGranularity = await sideToken.granularity();
                 assert.equal(sideTokenGranularity.toString(), '1000000000000');
 
-                const originalTokenAddress = await this.bridge.originalTokens(sideTokenAddress);
-                assert.equal(originalTokenAddress, this.token.address);
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
 
                 const result = await this.allowTokens.getInfoAndLimits(sideTokenAddress);
                 assert.equal(result.info.typeId.toString(), '0');
@@ -2286,54 +2655,77 @@ contract('Bridge', async function (accounts) {
             });
 
             it('fail create side token if decimals bigger than 18', async function () {
-                await utils.expectThrow(
+                await truffleAssertions.fails(
                     this.bridge.createSideToken(
                         0,
                         this.token.address,
                         19,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
-                    )
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
+            });
+
+            it('fail create side token if inexistent chainId', async function () {
+                await truffleAssertions.fails(
+                    this.bridge.createSideToken(
+                        0,
+                        this.token.address,
+                        18,
+                        'MAIN',
+                        'MAIN',
+                        0,
+                        { from: bridgeManager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
                 );
             });
 
             it('fail create side token if inexistent typeId', async function () {
-                await utils.expectThrow(
+                await truffleAssertions.fails(
                     this.bridge.createSideToken(
                         1,
                         this.token.address,
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
-                    )
+                    ),
+                    truffleAssertions.ErrorType.REVERT
                 );
             });
 
             it('fail create side token if not the owner', async function () {
-                await utils.expectThrow(
+                await truffleAssertions.fails(
                     this.bridge.createSideToken(
                         0,
                         this.token.address,
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: federation }
-                    )
+                    ),
+                    truffleAssertions.ErrorType.REVERT
                 );
             });
 
             it('fail create side token if no token address', async function () {
-                await utils.expectThrow(
+                await truffleAssertions.fails(
                     this.bridge.createSideToken(
                         0,
                         utils.NULL_ADDRESS,
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
-                    )
+                    ),
+                    truffleAssertions.ErrorType.REVERT
                 );
             });
             it('fail create side token if already created', async function () {
@@ -2343,24 +2735,36 @@ contract('Bridge', async function (accounts) {
                     18,
                     'MAIN',
                     'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
-                await utils.expectThrow(
+                await truffleAssertions.fails(
                     this.bridge.createSideToken(
                         0,
                         this.token.address,
                         18,
                         'MAIN',
                         'MAIN',
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
                         { from: bridgeManager }
-                    )
+                    ),
+                    truffleAssertions.ErrorType.REVERT
                 );
             });
 
             it('should reject receiveTokens ERC20', async function () {
                 const amount = web3.utils.toWei('1000');
                 await this.token.approve(this.bridge.address, amount, { from: tokenOwner });
-                await utils.expectThrow(this.bridge.receiveTokensTo(this.token.address, tokenOwner, amount, { from: tokenOwner }));
+                await truffleAssertions.fails(
+                    this.bridge.receiveTokensTo(
+                        chains.HARDHAT_TEST_NET_CHAIN_ID,
+                        this.token.address,
+                        tokenOwner,
+                        amount,
+                        { from: tokenOwner }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should reject tokensReceived for ERC777', async function () {
@@ -2370,7 +2774,10 @@ contract('Bridge', async function (accounts) {
 
                 await this.allowTokens.setToken(erc777.address, this.typeId, { from: bridgeManager });
                 await erc777.mint(tokenOwner, amount, "0x", "0x", {from: tokenOwner });
-                await utils.expectThrow(erc777.send(this.bridge.address, amount, tokenOwner, { from: tokenOwner }));
+                await truffleAssertions.fails(
+                    erc777.send(this.bridge.address, amount, tokenOwner, { from: tokenOwner }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should accept transfer for the token', async function () {
@@ -2380,21 +2787,22 @@ contract('Bridge', async function (accounts) {
                     18,
                     'MAIN',
                     'MAIN',
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
 
-                const sideTokenAddress = await this.bridge.mappedTokens(this.token.address);
+                const sideTokenAddress = await this.bridge.sideTokenByOriginalToken(chains.HARDHAT_TEST_NET_CHAIN_ID, this.token.address);
                 const sideToken = await SideToken.at(sideTokenAddress);
 
-                const originalTokenAddress = await this.bridge.originalTokens(sideTokenAddress);
-                assert.equal(originalTokenAddress, this.token.address);
+                const originalToken = await this.bridge.getOriginalTokenBySideToken(sideTokenAddress);
+                assert.equal(originalToken.tokenAddress, this.token.address);
 
                 const balanceBeforeTransfer = await sideToken.balanceOf(anAccount);
                 const bridgeBalanceBeforeTransfer  = await sideToken.balanceOf(this.bridge.address);
 
                 const amount = web3.utils.toWei('1000');
-                const blockHash = randomHex(32);
-                const txHash = randomHex(32);
+                const blockHash = utils.getRandomHash();
+                const txHash = utils.getRandomHash();
                 const logIndex = 1;
 
                 const transactionDataHash =  await this.bridge.getTransactionDataHash(
@@ -2403,10 +2811,14 @@ contract('Bridge', async function (accounts) {
                     blockHash,
                     txHash,
                     logIndex,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID,
                 )
 
-                const receipt = await this.bridge.acceptTransfer(this.token.address, anAccount, anAccount, amount,
-                    blockHash, txHash, logIndex, { from: federation });
+                const receipt = await this.bridge.acceptTransfer(
+                    this.token.address, anAccount, anAccount, amount,
+                    blockHash, txHash, logIndex, chains.HARDHAT_TEST_NET_CHAIN_ID,
+                    chains.HARDHAT_TEST_NET_CHAIN_ID, { from: federation });
                 utils.checkRcpt(receipt);
 
 
@@ -2430,13 +2842,16 @@ contract('Bridge', async function (accounts) {
     describe('change SideTokenFactory', async function() {
 
         it('should reject empty address', async function () {
-            await utils.expectThrow(this.bridge.changeSideTokenFactory(utils.NULL_ADDRESS, { from: bridgeManager }));
+            await truffleAssertions.fails(
+                this.bridge.changeSideTokenFactory(utils.NULL_ADDRESS, { from: bridgeManager }),
+                truffleAssertions.ErrorType.REVERT
+            );
         });
 
         it('should be successful', async function () {
-            let newAddress = randomHex(20);
+            const newAddress = utils.getRandomAddress();
             await this.bridge.changeSideTokenFactory(newAddress, { from: bridgeManager });
-            let result = await this.bridge.sideTokenFactory();
+            const result = await this.bridge.sideTokenFactory();
             assert.equal(result.toLowerCase(), newAddress.toLowerCase());
         });
     });

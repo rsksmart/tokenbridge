@@ -4,6 +4,7 @@ const AllowTokens = artifacts.require('./AllowTokens');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
+const truffleAssertions = require('truffle-assertions');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
@@ -12,6 +13,7 @@ contract('AllowTokens', async function (accounts) {
     const manager = accounts[1];
     const anotherAccount = accounts[2];
     const anotherOwner = accounts[3];
+    const unauthorizedAccount = accounts[6];
 
     before(async function () {
         await utils.saveState();
@@ -94,16 +96,35 @@ contract('AllowTokens', async function (accounts) {
                 this.typeId = 0;
             });
 
+        describe('Set Token', async function () {
+            it('should fail calling from unauthorized sender', async function () {
+                await truffleAssertions.fails(
+                    this.allowTokens.setToken(this.token.address, 0, { from: unauthorizedAccount }),
+                    truffleAssertions.ErrorType.REVERT,
+                    'AllowTokens: unauthorized sender'
+                );
+            });
+
+            it('should fail calling with type id bigger than type descriptions', async function () {
+                const currentTypeDescriptionLength = await this.allowTokens.getTypeDescriptionsLength();
+                await truffleAssertions.fails(
+                    this.allowTokens.setToken(this.token.address, currentTypeDescriptionLength + 1, { from: manager }),
+                    truffleAssertions.ErrorType.REVERT,
+                    'AllowTokens: typeId does not exist'
+                );
+            });
+        });
+
         describe('Tokens whitelist', async function () {
             it('should have correct version', async function () {
-                let version = await this.allowTokens.version();
+                const version = await this.allowTokens.version();
                 assert.equal(version, 'v1');
             });
 
             it('fails isTokenAllowed if null address provided', async function() {
-                await utils.expectThrow(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS));
+                await truffleAssertions.fails(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS), 
+                    truffleAssertions.ErrorType.REVERT);
             })
-
 
             it('add token type', async function() {
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
@@ -114,7 +135,10 @@ contract('AllowTokens', async function (accounts) {
 
             it('fail if add token type is empty', async function() {
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
-                utils.expectThrow(this.allowTokens.addTokenType('', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.addTokenType('', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager }),
+                    truffleAssertions.ErrorType.REVERT
+                );
                 assert.equal('0', (await this.allowTokens.getTypeDescriptionsLength()).toString());
             });
 
@@ -123,17 +147,20 @@ contract('AllowTokens', async function (accounts) {
                     await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
                 }
                 assert.equal('250', (await this.allowTokens.getTypeDescriptionsLength()).toString());
-                utils.expectThrow(this.allowTokens.addTokenType('250TH', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.addTokenType('250TH', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager }),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('validates whitelisted token', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = 0;
+                const typeId = 0;
                 //Use owner to set the token
                 await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
                 let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, true);
-                let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
+                const otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
                 //use primary to set token
                 await this.allowTokens.setToken(otherToken.address, typeId, { from: tokenDeployer });
                 isAllowed = await this.allowTokens.isTokenAllowed(otherToken.address);
@@ -142,9 +169,9 @@ contract('AllowTokens', async function (accounts) {
 
             it('should add multiple tokens', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = 0;
-                let otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
-                await this.allowTokens.setMultipleTokens([
+                const typeId = 0;
+                const otherToken = await MainToken.new("OTHER", "OTHER", 18, 10000, { from: tokenDeployer });
+                await this.allowTokens.setMultipleTokens(                [
                     { token:this.token.address, typeId: typeId },
                     { token: otherToken.address, typeId: typeId }
                 ], { from: manager });
@@ -155,25 +182,25 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('fail if setToken caller is not the owner', async function() {
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = 0;
-                await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: anotherOwner }));
+                const typeId = 0;
+                await truffleAssertions.fails(this.allowTokens.setToken(this.token.address, typeId, { from: anotherOwner }), truffleAssertions.ErrorType.REVERT);
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
             it('fail if setToken address is empty', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = 0;
-                await utils.expectThrow(this.allowTokens.setToken(utils.NULL_ADDRESS, typeId, { from: manager }));
+                const typeId = 0;
+                await truffleAssertions.fails(this.allowTokens.setToken(utils.NULL_ADDRESS, typeId, { from: manager }), truffleAssertions.ErrorType.REVERT);
             });
 
             it('fail if setToken typeid does not exist', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = '2';
-                await utils.expectThrow(this.allowTokens.setToken(this.token.address, typeId, { from: manager }));
+                const typeId = '2';
+                await truffleAssertions.fails(this.allowTokens.setToken(this.token.address, typeId, { from: manager }));
             });
 
             it('setToken type even if address was already added', async function() {
@@ -210,17 +237,17 @@ contract('AllowTokens', async function (accounts) {
 
             it('fail if removeAllowedToken caller is not the owner', async function() {
                 await this.allowTokens.addTokenType('RIF', { max:toWei('10000'), min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3') }, { from: manager });
-                let typeId = 0;
+                const typeId = 0;
                 await this.allowTokens.setToken(this.token.address, typeId, { from: manager });
-                let previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
-                await utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }));
+                const previousIsTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                await truffleAssertions.fails(this.allowTokens.removeAllowedToken(this.token.address, { from: tokenDeployer }), truffleAssertions.ErrorType.REVERT);
 
-                let isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isTokenAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isTokenAllowed, previousIsTokenAllowed);
             });
 
             it('fail if removeAllowedToken address is not in the whitelist', async function() {
-                await utils.expectThrow(this.allowTokens.removeAllowedToken(this.token.address, { from: manager }));
+                await truffleAssertions.fails(this.allowTokens.removeAllowedToken(this.token.address, { from: manager }), truffleAssertions.ErrorType.REVERT);
             });
 
 
@@ -232,7 +259,7 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should set initial values', async function() {
-                let limits = await this.allowTokens.typeLimits(this.typeId);
+                const limits = await this.allowTokens.typeLimits(this.typeId);
                 assert.equal(limits.max.toString(), web3.utils.toWei('10000'));
                 assert.equal(limits.min.toString(), web3.utils.toWei('1'));
                 assert.equal(limits.daily.toString(), web3.utils.toWei('100000'));
@@ -244,7 +271,7 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('50000');
 
                 await this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('100'), largeAmount:toWei('1000')}, { from: manager });
-                let limits = await this.allowTokens.typeLimits(this.typeId);
+                const limits = await this.allowTokens.typeLimits(this.typeId);
 
                 assert.equal(limits.max.toString(), newMaxTokens.toString());
                 assert.equal(limits.min.toString(), newMinTokens.toString());
@@ -257,9 +284,15 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('50000');
 
                 let previousLimits = await this.allowTokens.typeLimits(this.typeId);
-                await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('100'), largeAmount:toWei('1000')}, { from: tokenDeployer }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:toWei('100'), largeAmount:toWei('1000')},
+                        { from: tokenDeployer }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
-                let limits = await this.allowTokens.typeLimits(this.typeId);
+                const limits = await this.allowTokens.typeLimits(this.typeId);
                 assert.equal(limits.max.toString(), previousLimits.max.toString());
                 assert.equal(limits.min.toString(), previousLimits.min.toString());
                 assert.equal(limits.daily.toString(), previousLimits.daily.toString());
@@ -271,7 +304,13 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('50000');
                 const mediumAmount = web3.utils.toWei('11');
                 const largeAmount = web3.utils.toWei('12');
-                await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount},
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('fail daily limit smaller than max', async function() {
@@ -280,7 +319,13 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('99');
                 const mediumAmount = web3.utils.toWei('11');
                 const largeAmount = web3.utils.toWei('12');
-                await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount},
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('fail if typeId bigger than max', async function() {
@@ -290,7 +335,13 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('300');
                 const mediumAmount = web3.utils.toWei('11');
                 const largeAmount = web3.utils.toWei('12');
-                await utils.expectThrow(this.allowTokens.setTypeLimits(typeId.toString(), {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        typeId.toString(), {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount},
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('fail medium amount smaller than min limit', async function() {
@@ -299,7 +350,13 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('1000');
                 const mediumAmount = web3.utils.toWei('10');
                 const largeAmount = web3.utils.toWei('12');
-                await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount},
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('fail large amount smaller than medium amount', async function() {
@@ -308,7 +365,13 @@ contract('AllowTokens', async function (accounts) {
                 const newDailyLimit = web3.utils.toWei('1000');
                 const mediumAmount = web3.utils.toWei('11');
                 const largeAmount = web3.utils.toWei('11');
-                await utils.expectThrow(this.allowTokens.setTypeLimits(this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount}, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setTypeLimits(
+                        this.typeId, {max: newMaxTokens, min:newMinTokens, daily:newDailyLimit, mediumAmount:mediumAmount, largeAmount:largeAmount},
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('calcMaxWithdraw', async function() {
@@ -339,34 +402,43 @@ contract('AllowTokens', async function (accounts) {
         describe('updateTokenTransfer', async function() {
 
             it('should check max value', async function() {
-                let maxLimit = toWei('10000');
+                const maxLimit = toWei('10000');
                 await this.allowTokens.addTokenType('RIF', { max:maxLimit, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
                 await this.allowTokens.updateTokenTransfer(this.token.address, maxLimit);
 
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(maxLimit).add(new BN('1'))));
+                await truffleAssertions.fails(
+                    this.allowTokens.updateTokenTransfer(this.token.address, new BN(maxLimit).add(new BN('1'))),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should check min value', async function() {
-                let minLimit = toWei('1');
+                const minLimit = toWei('1');
                 await this.allowTokens.addTokenType('RIF', {max:toWei('10000'), min:minLimit, daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
                 await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
 
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, new BN(minLimit).sub(new BN('1'))));
+                await truffleAssertions.fails(
+                    this.allowTokens.updateTokenTransfer(this.token.address, new BN(minLimit).sub(new BN('1'))),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should check daily limit', async function() {
-                let minLimit = toWei('1');
-                let dailyLimit = toWei('1');
+                const minLimit = toWei('1');
+                const dailyLimit = toWei('1');
                 await this.allowTokens.addTokenType('RIF', { max:toWei('1'), min:minLimit, daily:dailyLimit, mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
 
                 await this.allowTokens.updateTokenTransfer(this.token.address, minLimit);
 
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, minLimit, dailyLimit));
+                await truffleAssertions.fails(
+                    this.allowTokens.updateTokenTransfer(this.token.address, dailyLimit),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should allow side and whitelisted tokens', async function() {
@@ -378,9 +450,12 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should check allowed token if not side or allowed token', async function() {
-                let maxTokensAllowed = toWei('10000');
+                const maxTokensAllowed = toWei('10000');
                 //Token not allowed
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed));
+                await truffleAssertions.fails(
+                    this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed),
+                    truffleAssertions.ErrorType.REVERT
+                );
 
                 await this.allowTokens.addTokenType('RIF', {max:maxTokensAllowed, min:toWei('1'), daily:toWei('100000'), mediumAmount:toWei('2'), largeAmount:toWei('3')}, { from: manager });
                 await this.allowTokens.setToken(this.token.address, this.typeId, { from: manager });
@@ -438,14 +513,26 @@ contract('AllowTokens', async function (accounts) {
                 const newSmallAmountConfirmations = '30';
                 const newMediumAmountConfirmations = '10';
                 const newLargeAmountConfirmations = '50';
-                await utils.expectThrow(this.allowTokens.setConfirmations(newSmallAmountConfirmations, newMediumAmountConfirmations, newLargeAmountConfirmations, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setConfirmations(
+                        newSmallAmountConfirmations, newMediumAmountConfirmations, newLargeAmountConfirmations,
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('should fail to set medium amount confirmations bigger than large', async function() {
                 const newSmallAmountConfirmations = '30';
                 const newMediumAmountConfirmations = '50';
                 const newLargeAmountConfirmations = '40';
-                await utils.expectThrow(this.allowTokens.setConfirmations(newSmallAmountConfirmations, newMediumAmountConfirmations, newLargeAmountConfirmations, { from: manager }));
+                await truffleAssertions.fails(
+                    this.allowTokens.setConfirmations(
+                        newSmallAmountConfirmations, newMediumAmountConfirmations, newLargeAmountConfirmations,
+                        { from: manager }
+                    ),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
         });
@@ -454,28 +541,28 @@ contract('AllowTokens', async function (accounts) {
 
             it('Should renounce ownership', async function() {
                 await this.allowTokens.renounceOwnership({ from: manager });
-                let owner = await this.allowTokens.owner();
+                const owner = await this.allowTokens.owner();
                 assert.equal(BigInt(owner), 0);
             });
 
             it('Should not renounce ownership when not called by the owner', async function() {
-                let owner = await this.allowTokens.owner();
-                await utils.expectThrow(this.allowTokens.renounceOwnership());
-                let ownerAfter = await this.allowTokens.owner();
+                const owner = await this.allowTokens.owner();
+                await truffleAssertions.fails(this.allowTokens.renounceOwnership(), truffleAssertions.ErrorType.REVERT);
+                const ownerAfter = await this.allowTokens.owner();
 
                 assert.equal(owner, ownerAfter);
             });
 
             it('Should transfer ownership', async function() {
                 await this.allowTokens.transferOwnership(anotherOwner, { from: manager });
-                let owner = await this.allowTokens.owner();
+                const owner = await this.allowTokens.owner();
                 assert.equal(owner, anotherOwner);
             });
 
             it('Should not transfer ownership when not called by the owner', async function() {
-                let owner = await this.allowTokens.owner();
-                await utils.expectThrow(this.allowTokens.transferOwnership(anotherOwner));
-                let ownerAfter = await this.allowTokens.owner();
+                const owner = await this.allowTokens.owner();
+                await truffleAssertions.fails(this.allowTokens.transferOwnership(anotherOwner), truffleAssertions.ErrorType.REVERT);
+                const ownerAfter = await this.allowTokens.owner();
 
                 assert.equal(owner, ownerAfter);
             });
@@ -484,23 +571,29 @@ contract('AllowTokens', async function (accounts) {
         describe('Secondary methods', async function() {
 
             it('Should not allowed when not called by primary', async function() {
-                let maxTokensAllowed = toWei('10000');
-                await utils.expectThrow(this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, {from: anotherAccount}));
+                const maxTokensAllowed = toWei('10000');
+                await truffleAssertions.fails(
+                    this.allowTokens.updateTokenTransfer(this.token.address, maxTokensAllowed, {from: anotherAccount}),
+                    truffleAssertions.ErrorType.REVERT
+                );
             });
 
             it('Should not transfer primary when not called by the owner', async function() {
-                let owner = await this.allowTokens.primary();
-                await utils.expectThrow(this.allowTokens.transferPrimary(anotherOwner, {from: anotherAccount}));
-                let ownerAfter = await this.allowTokens.primary();
+                const owner = await this.allowTokens.primary();
+                await truffleAssertions.fails(
+                    this.allowTokens.transferPrimary(anotherOwner, {from: anotherAccount}),
+                    truffleAssertions.ErrorType.REVERT
+                );
+                const ownerAfter = await this.allowTokens.primary();
 
                 assert.equal(owner, ownerAfter);
             });
 
             it('Should transfer primary', async function() {
                 await this.allowTokens.transferPrimary(anotherOwner);
-                let primary = await this.allowTokens.primary();
+                const primary = await this.allowTokens.primary();
                 assert.equal(primary, anotherOwner);
-                let owner = await this.allowTokens.owner();
+                const owner = await this.allowTokens.owner();
                 assert.notEqual(owner, primary);
             });
         })
@@ -527,24 +620,24 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('should fail to add a new allowed token due to missing signatures', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                const data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, false);
 
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, false);
             });
 
             it('should add a new allowed token', async function() {
-                let data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
+                const data = this.allowTokens.contract.methods.setToken(this.token.address, this.typeId).encodeABI();
 
                 await this.multiSig.submitTransaction(this.allowTokens.address, 0, data, { from: multiSigOnwerA });
                 this.txIndex++;
                 await this.multiSig.confirmTransaction(this.txIndex, { from: multiSigOnwerB });
 
-                let isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, true);
             });
 
@@ -562,7 +655,7 @@ contract('AllowTokens', async function (accounts) {
                 tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, false);
 
-                isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, true);
             });
 
@@ -580,7 +673,7 @@ contract('AllowTokens', async function (accounts) {
                 let tx = await this.multiSig.transactions(this.txIndex);
                 assert.equal(tx.executed, true);
 
-                isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
+                const isAllowed = await this.allowTokens.isTokenAllowed(this.token.address);
                 assert.equal(isAllowed, false);
             });
 

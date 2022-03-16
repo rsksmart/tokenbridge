@@ -68,6 +68,18 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "Executed",
@@ -85,32 +97,38 @@
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "fedRskBlock",
+        "name": "currentChainId",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "uint256",
-        "name": "fedEthBlock",
+        "name": "currentBlock",
         "type": "uint256"
       },
       {
         "indexed": false,
         "internalType": "string",
-        "name": "federatorVersion",
+        "name": "fedVersion",
         "type": "string"
       },
       {
         "indexed": false,
-        "internalType": "string",
-        "name": "nodeRskInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsIds",
+        "type": "uint256[]"
       },
       {
         "indexed": false,
-        "internalType": "string",
-        "name": "nodeEthInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsBlocks",
+        "type": "uint256[]"
+      },
+      {
+        "indexed": false,
+        "internalType": "string[]",
+        "name": "fedChainsInfo",
+        "type": "string[]"
       }
     ],
     "name": "HeartBeat",
@@ -140,6 +158,19 @@
       }
     ],
     "name": "MemberRemoval",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "address",
+        "name": "bridgeNFT",
+        "type": "address"
+      }
+    ],
+    "name": "NFTBridgeChanged",
     "type": "event"
   },
   {
@@ -230,6 +261,18 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "Voted",
@@ -275,6 +318,19 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "bridgeNFT",
+    "outputs": [
+      {
+        "internalType": "contract INFTBridge",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "internalType": "uint256",
@@ -290,29 +346,24 @@
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "fedRskBlock",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "fedEthBlock",
-        "type": "uint256"
-      },
-      {
         "internalType": "string",
-        "name": "federatorVersion",
+        "name": "fedVersion",
         "type": "string"
       },
       {
-        "internalType": "string",
-        "name": "nodeRskInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsIds",
+        "type": "uint256[]"
       },
       {
-        "internalType": "string",
-        "name": "nodeEthInfo",
-        "type": "string"
+        "internalType": "uint256[]",
+        "name": "fedChainsBlocks",
+        "type": "uint256[]"
+      },
+      {
+        "internalType": "string[]",
+        "name": "fedChainsInfo",
+        "type": "string[]"
       }
     ],
     "name": "emitHeartbeat",
@@ -388,6 +439,16 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "getTransactionId",
@@ -441,6 +502,11 @@
         "internalType": "address",
         "name": "owner",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_bridgeNFT",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -483,6 +549,54 @@
   {
     "inputs": [],
     "name": "isOwner",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "transactionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "transactionIdMultichain",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isProcessed",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bytes32",
+        "name": "transactionId",
+        "type": "bytes32"
+      },
+      {
+        "internalType": "bytes32",
+        "name": "transactionIdMultichain",
+        "type": "bytes32"
+      }
+    ],
+    "name": "isVoted",
     "outputs": [
       {
         "internalType": "bool",
@@ -593,6 +707,19 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_bridgeNFT",
+        "type": "address"
+      }
+    ],
+    "name": "setNFTBridge",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "transactionId",
         "type": "bytes32"
@@ -654,7 +781,7 @@
       },
       {
         "internalType": "uint256",
-        "name": "amount",
+        "name": "value",
         "type": "uint256"
       },
       {
@@ -671,16 +798,25 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
+      },
+      {
+        "internalType": "enum IFederation.TokenType",
+        "name": "tokenType",
+        "type": "uint8"
+      },
+      {
+        "internalType": "uint256",
+        "name": "originChainId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "destinationChainId",
+        "type": "uint256"
       }
     ],
     "name": "voteTransaction",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

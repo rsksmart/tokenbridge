@@ -4,6 +4,7 @@ const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed')
 const SideToken = artifacts.require('./SideToken');
 
 const BN = web3.utils.BN;
+const truffleAssertions = require('truffle-assertions');
 const utils = require('./utils');
 
 contract('LibUtils', async function (accounts) {
@@ -34,7 +35,7 @@ contract('LibUtils', async function (accounts) {
         });
 
         it('decimals to granularity should fail over 18 decimals', async function () {
-            await utils.expectThrow(this.utilsLib.decimalsToGranularity(19));
+            await truffleAssertions.fails(this.utilsLib.decimalsToGranularity(19), truffleAssertions.ErrorType.REVERT);
         });
 
     });
@@ -49,11 +50,11 @@ contract('LibUtils', async function (accounts) {
         });
 
         it('Throw if is not a contract', async function () {
-            await utils.expectThrow(this.utilsLib.getDecimals(owner));
+            await truffleAssertions.fails(this.utilsLib.getDecimals(owner), truffleAssertions.ErrorType.REVERT);
         });
 
         it('Throw if does not have decimals()', async function () {
-            await utils.expectThrow(this.utilsLib.getDecimals(this.utilsLib.address));
+            await truffleAssertions.fails(this.utilsLib.getDecimals(this.utilsLib.address), truffleAssertions.ErrorType.REVERT);
         });
 
         it('from  uint256', async function () {
@@ -93,6 +94,31 @@ contract('LibUtils', async function (accounts) {
             let result = await this.utilsLib.bytesToAddress(bytes);
 
             assert.equal(result, accounts[1]);
+        });
+    });
+
+    describe('toUint128', async function() {
+        it('Should convert bytes to uint128', async function() {
+            const number = 13499;
+            const hex = number.toString(16);
+            const hex32BytesString = '0x' + hex.padStart(32, '0');
+
+            const returnValue32 = await this.utilsLib.toUint128(hex32BytesString, 0);
+            assert.equal(returnValue32, number);
+
+            const hex34BytesString = '0x' + hex.padStart(34, '0');
+            const sub32Char = hex34BytesString.split('0x')[1].substring(0,32);
+            const convertedResult = parseInt(sub32Char, 16);
+
+            const returnValue34 = await this.utilsLib.toUint128(hex34BytesString, 0);
+
+            assert.equal(returnValue34, convertedResult);
+        });
+
+        it('Should validate if the byte size is not out of bounds', async function() {
+            const invalidBytesSize = '0x1ABC7154748D1CE5144';
+
+            await truffleAssertions.fails(this.utilsLib.toUint128(invalidBytesSize, 0), "LibUtils: toUint128_outOfBounds");
         });
     });
 

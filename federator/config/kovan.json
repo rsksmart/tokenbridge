@@ -1,5 +1,9 @@
 {
+    "name": "kovan",
+    "chainId": 42,
     "bridge": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-    "host": "<YOUR HOST URL AND PORT>",
-    "fromBlock": 19234172
+    "federation": "0xa347438BC288f56Cb6083A79133e70DD2d1f6c2d",
+    "allowTokens": "0x92BF86334583909B60F9b798A9Dd7Debd899fEc4",
+    "host": "https://kovan.infura.io/v3/6f9ea94e89da48089bf925e53205720c",
+    "fromBlock": 29761089
 }

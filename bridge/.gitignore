@@ -1,7 +1,7 @@
 infura.key
 mnemonic.key
 etherscan.key
-
+bscscan.key
 #Build
 /out
 /build
@@ -23,7 +23,10 @@ deployed/soliditycoverage.json
 #Hardhat files
 cache
 artifacts
+deployments/development
 
+# Waffle
+waffle_flatten
 
 # Coverage directory used by tools like istanbul
 coverage
@@ -51,3 +54,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
+
+# Script files
+arguments.js
