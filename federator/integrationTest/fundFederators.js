@@ -1,11 +1,11 @@
-const Web3 = require('web3');
-const log4js = require('log4js');
+const Web3 = require("web3");
+const logs = require("../src/lib/logs");
 
-const logConfig = require('../config/log-config.json');
-const TransactionSender = require('../src/lib/TransactionSender.js');
+const TransactionSender = require("../src/lib/TransactionSender");
 
-const logger = log4js.getLogger('Fund Federators');
-log4js.configure(logConfig);
+const logWrapper = logs.Logs.getInstance().getLogger(
+  logs.LOGGER_CATEGORY_FEDERATOR_FUND
+);
 
 /**
  * Use this function as an executable script to fund a wallet on a test enviroment
@@ -21,24 +21,31 @@ let keys = process.argv[3];
 let privateKey = process.argv[4];
 let amount = process.argv[5];
 
-if (scriptPath.indexOf('fundFederators') !== -1) {
-    keys = keys.replace(/ /g, '').split(',') || [];
-    fundFederators(host, keys, privateKey, amount);
+if (scriptPath.indexOf("fundFederators") !== -1) {
+  keys = keys.replace(/ /g, "").split(",") || [];
+  fundFederators(host, keys, privateKey, amount);
 }
 
 async function fundFederators(host, keys, privateKey, amount) {
-    const web3 = new Web3(host);
-    const transactionSender = new TransactionSender(web3, logger, {});
+  const web3 = new Web3(host);
+  const transactionSender = new TransactionSender.default(web3, logWrapper, {});
 
-    for (let i = 0; i < keys.length; i++) {
-        try {
-            const federatorAddress = await transactionSender.getAddress(keys[i]);
-            await transactionSender.sendTransaction(federatorAddress, '', amount, privateKey);
-            logger.info(`Successfuly transferred ${amount} to ${federatorAddress}`);
-        } catch (err) {
-            logger.error('Error transferring to wallet', err);
-        }
+  for (let i = 0; i < keys.length; i++) {
+    try {
+      const federatorAddress = await transactionSender.getAddress(keys[i]);
+      await transactionSender.sendTransaction(
+        federatorAddress,
+        "",
+        amount,
+        privateKey
+      );
+      logWrapper.debug(
+        `Successfuly transferred ${amount} to ${federatorAddress}`
+      );
+    } catch (err) {
+      logWrapper.error("Error transferring to wallet", err);
     }
+  }
 }
 
 module.exports = fundFederators;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
-import "../IWrapped.sol";
+import "../interface/IWrapped.sol";
 
 contract WRBTC is IWrapped {
     string public name     = "Wrapped RBTC";
@@ -27,7 +27,8 @@ contract WRBTC is IWrapped {
     function withdraw(uint wad) override public {
         require(balanceOf[msg.sender] >= wad, "WRBTC: Balance less than wad");
         balanceOf[msg.sender] -= wad;
-        msg.sender.transfer(wad);
+        (bool success, ) = msg.sender.call{value:wad, gas:23000}("");
+        require(success, "WRBTC: transfer fail");
         emit Withdrawal(msg.sender, wad);
     }
 
@@ -51,7 +52,7 @@ contract WRBTC is IWrapped {
     {
         require(balanceOf[src] >= wad, "WRBTC: Balance less than wad");
 
-        if (src != msg.sender && allowance[src][msg.sender] != uint(-1)) {
+        if (src != msg.sender && allowance[src][msg.sender] != type(uint).max) {
             require(allowance[src][msg.sender] >= wad, "WRBTC: Allowance less than wad");
             allowance[src][msg.sender] -= wad;
         }

@@ -2,7 +2,7 @@
 
 // SPDX-License-Identifier: MIT
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /*
@@ -18,7 +18,7 @@ pragma abicoder v2;
 abstract contract  Context {
 
     function _msgSender() internal view returns (address payable) {
-        return msg.sender;
+        return payable(msg.sender);
     }
 
     function _msgData() internal view returns (bytes memory) {
@@ -31,7 +31,7 @@ abstract contract  Context {
 // Dependency file: contracts/zeppelin/token/ERC777/IERC777.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -225,7 +225,7 @@ interface IERC777 {
 // Dependency file: contracts/zeppelin/token/ERC777/IERC777Recipient.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -263,7 +263,7 @@ interface IERC777Recipient {
 // Dependency file: contracts/zeppelin/token/ERC777/IERC777Sender.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -301,7 +301,7 @@ interface IERC777Sender {
 // Dependency file: contracts/zeppelin/token/ERC20/IERC20.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -383,7 +383,7 @@ interface IERC20 {
 // Dependency file: contracts/zeppelin/math/SafeMath.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -545,11 +545,11 @@ library SafeMath {
 // Dependency file: contracts/zeppelin/utils/Address.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
- * @dev Collection of functions related to the address type,
+ * @dev Collection of functions related to the address type
  */
 library Address {
     /**
@@ -570,24 +570,134 @@ library Address {
      * ====
      */
     function isContract(address account) internal view returns (bool) {
-        // According to EIP-1052, 0x0 is the value returned for not-yet created accounts
-        // and 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470 is returned
-        // for accounts without code, i.e. `keccak256('')`
-        bytes32 codehash;
-        bytes32 accountHash = 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470;
+        // This method relies on extcodesize, which returns 0 for contracts in
+        // construction, since the code is only stored at the end of the
+        // constructor execution.
+
+        uint256 size;
         // solhint-disable-next-line no-inline-assembly
-        assembly { codehash := extcodehash(account) }
-        return (codehash != accountHash && codehash != 0x0);
+        assembly { size := extcodesize(account) }
+        return size > 0;
     }
 
-     /**
+    /**
+     * @dev Replacement for Solidity's `transfer`: sends `amount` wei to
+     * `recipient`, forwarding all available gas and reverting on errors.
+     *
+     * https://eips.ethereum.org/EIPS/eip-1884[EIP1884] increases the gas cost
+     * of certain opcodes, possibly making contracts go over the 2300 gas limit
+     * imposed by `transfer`, making them unable to receive funds via
+     * `transfer`. {sendValue} removes this limitation.
+     *
+     * https://diligence.consensys.net/posts/2019/09/stop-using-soliditys-transfer-now/[Learn more].
+     *
+     * IMPORTANT: because control is transferred to `recipient`, care must be
+     * taken to not create reentrancy vulnerabilities. Consider using
+     * {ReentrancyGuard} or the
+     * https://solidity.readthedocs.io/en/v0.5.11/security-considerations.html#use-the-checks-effects-interactions-pattern[checks-effects-interactions pattern].
+     */
+    function sendValue(address payable recipient, uint256 amount) internal {
+        require(address(this).balance >= amount, "Address: insufficient balance");
+
+        // solhint-disable-next-line avoid-low-level-calls, avoid-call-value
+        (bool success, ) = recipient.call{ value: amount }("");
+        require(success, "Address: unable to send value, recipient may have reverted");
+    }
+
+    /**
+     * @dev Performs a Solidity function call using a low level `call`. A
+     * plain`call` is an unsafe replacement for a function call: use this
+     * function instead.
+     *
+     * If `target` reverts with a revert reason, it is bubbled up by this
+     * function (like regular Solidity function calls).
+     *
+     * Returns the raw returned data. To convert to the expected return value,
+     * use https://solidity.readthedocs.io/en/latest/units-and-global-variables.html?highlight=abi.decode#abi-encoding-and-decoding-functions[`abi.decode`].
+     *
+     * Requirements:
+     *
+     * - `target` must be a contract.
+     * - calling `target` with `data` must not revert.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+      return functionCall(target, data, "Address: low-level call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`], but with
+     * `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCall(address target, bytes memory data, string memory errorMessage) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, 0, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but also transferring `value` wei to `target`.
+     *
+     * Requirements:
+     *
+     * - the calling contract must have an ETH balance of at least `value`.
+     * - the called Solidity function must be `payable`.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCallWithValue-address-bytes-uint256-}[`functionCallWithValue`], but
+     * with `errorMessage` as a fallback revert reason when `target` reverts.
+     *
+     * _Available since v3.1._
+     */
+    function functionCallWithValue(address target, bytes memory data, uint256 value, string memory errorMessage) internal returns (bytes memory) {
+        require(address(this).balance >= value, "Address: insufficient balance for call");
+        require(isContract(target), "Address: call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.call{ value: value }(data);
+        return _verifyCallResult(success, returndata, errorMessage);
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+        return functionStaticCall(target, data, "Address: low-level static call failed");
+    }
+
+    /**
+     * @dev Same as {xref-Address-functionCall-address-bytes-string-}[`functionCall`],
+     * but performing a static call.
+     *
+     * _Available since v3.3._
+     */
+    function functionStaticCall(address target, bytes memory data, string memory errorMessage) internal view returns (bytes memory) {
+        require(isContract(target), "Address: static call to non-contract");
+
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory returndata) = target.staticcall(data);
+        return _verifyCallResult(success, returndata, errorMessage);
+    }
+
+    /**
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
      * but performing a delegate call.
      *
      * _Available since v3.4._
      */
     function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
-        return functionDelegateCall(target, data, "Address: delegate call failed");
+        return functionDelegateCall(target, data, "Address: low-level delegate call failed");
     }
 
     /**
@@ -628,7 +738,7 @@ library Address {
 // Dependency file: contracts/zeppelin/introspection/IERC1820Registry.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 /**
@@ -743,7 +853,7 @@ interface IERC1820Registry {
 // Dependency file: contracts/zeppelin/token/ERC777/ERC777.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 // import "contracts/zeppelin/GSN/Context.sol";
@@ -1224,30 +1334,30 @@ contract ERC777 is Context, IERC777, IERC20 {
 }
 
 
-// Dependency file: contracts/IERC677Receiver.sol
+// Dependency file: contracts/interface/IERC677Receiver.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface IERC677Receiver {
   function onTokenTransfer(address _sender, uint _value, bytes calldata _data) external;
 }
 
-// Dependency file: contracts/ISideToken.sol
+// Dependency file: contracts/interface/ISideToken.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface ISideToken {
     function mint(address account, uint256 amount, bytes calldata userData, bytes calldata operatorData) external;
 }
 
-// Dependency file: contracts/LibEIP712.sol
+// Dependency file: contracts/lib/LibEIP712.sol
 
 
-// pragma solidity ^0.7.0;
+// pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 // https://github.com/0xProject/0x-monorepo/blob/development/contracts/utils/contracts/src/LibEIP712.sol
@@ -1345,26 +1455,25 @@ library LibEIP712 {
     }
 }
 
-// Root file: contracts/SideToken.sol
+// Root file: contracts/SideToken/SideToken.sol
 
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 // import "contracts/zeppelin/token/ERC777/ERC777.sol";
-// import "contracts/IERC677Receiver.sol";
-// import "contracts/ISideToken.sol";
-// import "contracts/LibEIP712.sol";
+// import "contracts/interface/IERC677Receiver.sol";
+// import "contracts/interface/ISideToken.sol";
+// import "contracts/lib/LibEIP712.sol";
 
 contract SideToken is ISideToken, ERC777 {
-    using Address for address;
     using SafeMath for uint256;
 
     address public minter;
     uint256 private _granularity;
 
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
-    bytes32 public DOMAIN_SEPARATOR;
+    bytes32 public domainSeparator;
     // keccak256("Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)");
     bytes32 public constant PERMIT_TYPEHASH = 0x6e71edae12b1b97f4d1f60370fef10105fa2faae0126114a169c64845d6126c9;
     mapping(address => uint) public nonces;
@@ -1379,22 +1488,17 @@ contract SideToken is ISideToken, ERC777 {
         minter = _minterAddr;
         _granularity = _newGranularity;
 
-        uint chainId;
-        // solium-disable-next-line security/no-inline-assembly
-        assembly {
-            chainId := chainid()
-        }
-        DOMAIN_SEPARATOR = LibEIP712.hashEIP712Domain(
+        domainSeparator = LibEIP712.hashEIP712Domain(
             name(),
             "1",
-            chainId,
+            block.chainid,
             address(this)
         );
     }
 
     modifier onlyMinter() {
-        require(_msgSender() == minter, "SideToken: Caller is not the minter");
-        _;
+      require(_msgSender() == minter, "SideToken: Caller is not the minter");
+      _;
     }
 
     function mint(
@@ -1431,9 +1535,9 @@ contract SideToken is ISideToken, ERC777 {
 
     // https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2612.md
     function permit(address owner, address spender, uint value, uint deadline, uint8 v, bytes32 r, bytes32 s) external {
-        require(deadline >= block.timestamp, "SideToken: EXPIRED");
+        require(deadline >= block.timestamp, "SideToken: EXPIRED"); // solhint-disable-line not-rely-on-time
         bytes32 digest = LibEIP712.hashEIP712Message(
-            DOMAIN_SEPARATOR,
+            domainSeparator,
             keccak256(
                 abi.encode(
                     PERMIT_TYPEHASH,

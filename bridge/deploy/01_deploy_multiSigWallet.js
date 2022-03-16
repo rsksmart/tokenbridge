@@ -4,22 +4,23 @@ module.exports = async function({getNamedAccounts, deployments, network}) { // H
   const {deployer, multiSig} = await getNamedAccounts();
   const {deploy, log} = deployments;
 
-  if (!multiSig) {
-    const deployResult = await deploy('MultiSigWallet', {
-      from: deployer,
-      args: [[deployer], 1],
-      log: true
-    });
-
-    if (deployResult.newlyDeployed) {
-      log(
-        `Contract MultiSigWallet deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`
-      );
-    }
+  if (multiSig) {
+    return;
   }
+
+  const deployResult = await deploy('MultiSigWallet', {
+    from: deployer,
+    args: [[deployer], 1],
+    log: true
+  });
+
+  if (deployResult.newlyDeployed) {
+    log(`Contract MultiSigWallet deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
+  }
+
   if (!network.live) {
     await deploy1820(web3);
   }
 };
 module.exports.id = 'deploy_multiSigWallet'; // id required to prevent re-execution
-module.exports.tags = ['MultiSigWallet'];
+module.exports.tags = ['MultiSigWallet', 'DeployFromScratch', 'IntegrationTest'];

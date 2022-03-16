@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
+pragma solidity ^0.8.0;
 
-import "../LibUtils.sol";
+import "../lib/LibUtils.sol";
 
 contract LibUtilsHarness {
 
@@ -20,6 +20,10 @@ contract LibUtilsHarness {
 
     function bytesToAddress(bytes memory bys) external pure returns (address addr) {
         return LibUtils.bytesToAddress(bys);
+    }
+
+    function toUint128(bytes memory _bytes, uint256 _start) external pure returns (uint128) {
+        return LibUtils.toUint128(_bytes, _start);
     }
 
 }

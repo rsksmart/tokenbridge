@@ -1,6 +1,7 @@
 const SideToken = artifacts.require('./SideToken');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
+const truffleAssertions = require('truffle-assertions');
 const utils = require('./utils');
 
 contract('SideTokenFactory', async function (accounts) {
@@ -27,14 +28,12 @@ contract('SideTokenFactory', async function (accounts) {
         utils.checkRcpt(receipt);
     });
 
-    it('fails to create a new side token due to wrong parameters', async function() {
-        await utils.expectThrow(this.sideTokenFactory.createSideToken());
-        await utils.expectThrow(this.sideTokenFactory.createSideToken("SIDE", 1));
-    });
-
     it('fails to create a new side token due to wrong caller', async function() {
         assert.equal(await this.sideTokenFactory.primary(), tokenCreator);
-        await utils.expectThrow(this.sideTokenFactory.createSideToken("SIDE", "SIDE", 1, { from: anAccount }));
+        await truffleAssertions.fails(
+            this.sideTokenFactory.createSideToken("SIDE", "SIDE", 1, { from: anAccount }),
+            truffleAssertions.ErrorType.REVERT
+        );
     });
 
     it('should create side token', async function () {
@@ -75,9 +74,9 @@ contract('SideTokenFactory', async function (accounts) {
         await this.sideTokenFactory.transferPrimary(anAccount);
         assert.equal(await this.sideTokenFactory.primary(), anAccount);
 
-        let receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1, { from: anAccount });
-        let sideTokenAddress = receipt.logs[0].args[0];
-        let sideToken = await SideToken.at(sideTokenAddress);
+        const receipt = await this.sideTokenFactory.createSideToken("SIDE", "SID", 1, { from: anAccount });
+        const sideTokenAddress = receipt.logs[0].args[0];
+        const sideToken = await SideToken.at(sideTokenAddress);
 
         const minter = await sideToken.minter();
         assert.equal(minter, anAccount);
