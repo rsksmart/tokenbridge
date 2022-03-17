@@ -13,6 +13,5 @@ RUN chown -R node:node .
 USER node
 
 RUN npm ci
-RUN npm run build
 
 ENTRYPOINT [ "npm", "start" ]
