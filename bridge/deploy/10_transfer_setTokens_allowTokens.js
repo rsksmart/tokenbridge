@@ -1,4 +1,3 @@
-const chains = require("../hardhat/helper/chains");
 const { tokensByChainId } = require("../hardhat/helper/tokens");
 const address = require('../hardhat/helper/address');
 
