@@ -159,7 +159,10 @@ export class Main {
     this.heartBeatScheduler = new Scheduler(heartBeatPollingInterval, this.logger, {
       run: async () => {
         try {
-          await this.heartbeat.run();
+          const result = await this.heartbeat.run();
+          if (!result) {
+            this.logger.warn("Heartbeat run run was not successful.")
+          }
         } catch (err) {
           this.logger.error('Unhandled Error on runHeartbeat()', err);
           process.exit(1);
