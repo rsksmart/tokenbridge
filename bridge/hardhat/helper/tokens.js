@@ -105,7 +105,7 @@ const tokensByChainId = (chainId) => {
             return bscMainnet;
 
         default:
-            return null;
+            return [];
     }
 
 }
