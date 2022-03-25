@@ -77,7 +77,7 @@ const rskTestnet = {
 const bscTestnet = {
     BTC: {address: '0x6ce8da28e2f864420840cf74474eff5fd80e65b8', typeId: '0', isSideToken: false, decimals: 18, symbol: 'BTC'}, //BTC
     ETH: {address: '0x8babbb98678facc7342735486c851abd7a0d17ca', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //ETH
-    WBNB: {address: '0xae13d989dac2f0debff460ac112a837c89baa7cd', typeId: '2', isSideToken: false, decimals: 18, symbol: 'sBNB'}, //WBNB
+    WBNB: {address: '0xae13d989dac2f0debff460ac112a837c89baa7cd', typeId: '2', isSideToken: false, decimals: 18, symbol: 'WBNB'}, //WBNB
     USDC: {address: '0x5d47b6e7edfc82e2ecd481b3db70d0f6600fdef8', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDC'}, //USDC
     USDT: {address: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDT'}, //USDT
     BUSD: {address: '0x110887fc420292dce51c08504cee377872d0db66', typeId: '4', isSideToken: false, decimals: 18, symbol: 'BUSD'}, //BUSD
