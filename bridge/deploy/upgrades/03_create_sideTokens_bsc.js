@@ -53,8 +53,9 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   for (const token of tokens) {
     const sideTokenAddr = await bridgeContract.methods.sideTokenByOriginalToken(bscChainId, token.address).call();
-    if (sideTokenAddr.toString() !== address.NULL_ADDRESS)
+    if (sideTokenAddr.toString() !== address.NULL_ADDRESS) {
       continue;
+    }
     
     if (tokensToCreate.length == 3) {
       await createMultipleSideTokens();
