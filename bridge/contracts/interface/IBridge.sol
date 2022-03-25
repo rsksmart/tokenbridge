@@ -17,6 +17,15 @@ interface IBridge {
 		address tokenAddress;
 		uint256 originChainId;
 	}
+	
+	struct CreateSideTokenStruct {
+		uint256 _typeId;
+		address _originalTokenAddress;
+		uint8 _originalTokenDecimals;
+		string _originalTokenSymbol;
+		string _originalTokenName;
+		uint256 _originChainId;
+	}
 
 	function version() external pure returns (string memory);
 
@@ -92,6 +101,10 @@ interface IBridge {
 		string calldata _originalTokenSymbol,
 		string calldata _originalTokenName,
 		uint256 _chainId
+	) external;
+
+	function createMultipleSideTokens(
+		CreateSideTokenStruct[] calldata createSideTokenStruct
 	) external;
 
 	function getTransactionDataHash(
