@@ -220,7 +220,7 @@ export class Heartbeat {
       const isMember = await fedContract.isMember(from);
       if (!isMember) {
         this.logger.warn(`This Federator addr:${from} is not part of the federation`)
-        return;
+        return false;
       }
 
       this.logger.info(`emitHeartbeat(${fedVersion}, ${fedChainsIds}, ${fedChainsBlocks}, ${fedChainInfo})`);
