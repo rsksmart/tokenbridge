@@ -118,7 +118,7 @@ export default abstract class Federator {
       const sideChainWeb3 = this.getWeb3(sideChainConfig.host);
       const transactionSender = new TransactionSender(sideChainWeb3, this.logger, this.config);
       const federationFactory = new FederationFactory();
-      const fedContract = await federationFactory.createInstance(this.config.mainchain, this.config.privateKey);
+      const fedContract = await federationFactory.createInstance(sideChainConfig, this.config.privateKey);
       const from = await transactionSender.getAddress(this.config.privateKey);
       const isMember = await fedContract.isMember(from);
       if (!isMember) {
