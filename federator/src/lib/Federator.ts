@@ -123,7 +123,7 @@ export default abstract class Federator {
       const isMember = await fedContract.isMember(from);
       if (!isMember) {
         this.logger.warn(`This Federator addr:${from} is not part of the federation. Skipping to next scheduled poll.`)
-        return;
+        return false;
       }
       this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
