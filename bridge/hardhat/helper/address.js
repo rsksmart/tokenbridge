@@ -89,4 +89,7 @@ module.exports = {
   getFederationProxyAddress: getFederationProxyAddress,
   getAllowTokensProxyAddress: getAllowTokensProxyAddress,
   getSideTokenFactoryAddress: getSideTokenFactoryAddress,
+  NULL_ADDRESS: "0x0000000000000000000000000000000000000000",
+  NULL_HASH:
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
 };

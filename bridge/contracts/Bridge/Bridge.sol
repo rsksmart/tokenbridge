@@ -234,14 +234,14 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		require(chainId > 0, "Bridge: ChainId is 0");
 	}
 
-	function createSideToken(
+	function _createSideToken(
 		uint256 _typeId,
 		address _originalTokenAddress,
 		uint8 _originalTokenDecimals,
 		string calldata _tokenSymbol,
 		string calldata _tokenName,
 		uint256 _originChainId
-	) external onlyOwner override {
+	) internal {
 		require(_originalTokenAddress != NULL_ADDRESS, "Bridge: Null token");
 		checkChainId(_originChainId);
 		address sideToken = sideTokenByOriginalToken(_originChainId, _originalTokenAddress);
@@ -261,6 +261,39 @@ contract Bridge is Initializable, IBridge, IERC777Recipient, UpgradablePausable,
 		allowTokens.setToken(sideToken, _typeId);
 
 		emit NewSideToken(sideToken, _originalTokenAddress, _tokenSymbol, granularity, _originChainId);
+	}
+
+	function createSideToken(
+		uint256 _typeId,
+		address _originalTokenAddress,
+		uint8 _originalTokenDecimals,
+		string calldata _tokenSymbol,
+		string calldata _tokenName,
+		uint256 _originChainId
+	) external onlyOwner override {
+		_createSideToken(
+			_typeId,
+			_originalTokenAddress,
+			_originalTokenDecimals,
+			_tokenSymbol,
+			_tokenName,
+			_originChainId
+		);
+	}
+
+	function createMultipleSideTokens(
+		CreateSideTokenStruct[] calldata createSideTokenStruct
+	) external onlyOwner {
+		for(uint256 i = 0; i < createSideTokenStruct.length; i++) {
+			_createSideToken(
+				createSideTokenStruct[i]._typeId,
+				createSideTokenStruct[i]._originalTokenAddress,
+				createSideTokenStruct[i]._originalTokenDecimals,
+				createSideTokenStruct[i]._originalTokenSymbol,
+				createSideTokenStruct[i]._originalTokenName,
+				createSideTokenStruct[i]._originChainId
+			);
+		}
 	}
 
 	function claim(ClaimData calldata _claimData) external override returns (uint256 receivedAmount) {
