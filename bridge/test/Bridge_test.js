@@ -17,6 +17,7 @@ const ONE_DAY = 24*3600;
 const toWei = web3.utils.toWei;
 
 const keccak256 = web3.utils.keccak256;
+const mainTokenName = 'MAIN on Ethereum';
 
 async function getClaimDigest(
     bridge,
@@ -212,7 +213,7 @@ contract('Bridge', async function (accounts) {
                     this.token.address,
                     6,
                     'eMAIN',
-                    'MAIN on Ethereum',
+                    mainTokenName,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
@@ -342,7 +343,7 @@ contract('Bridge', async function (accounts) {
                         _originalTokenAddress: this.token.address,
                         _originalTokenDecimals: 6,
                         _originalTokenSymbol: 'eMAIN',
-                        _originalTokenName: 'MAIN on Ethereum',
+                        _originalTokenName: mainTokenName,
                         _originChainId: chains.HARDHAT_TEST_NET_CHAIN_ID
                     },
                     {
@@ -2819,7 +2820,7 @@ contract('Bridge', async function (accounts) {
                     this.token.address,
                     6,
                     'eMAIN',
-                    'MAIN on Ethereum',
+                    mainTokenName,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     { from: bridgeManager }
                 );
