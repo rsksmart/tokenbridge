@@ -33,9 +33,14 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     tokensToSet.push(formatToken(tokens[token]));
   }
 
-  await allowTokens.methods.setMultipleTokens(tokensToSet).send({from: deployer});
-  log(`AllowTokens Setted Tokens`);
-
+  if(tokensToSet.length > 0 ) {
+    await allowTokens.methods.setMultipleTokens(tokensToSet).send({from: deployer});
+    log(`AllowTokens Setted Tokens`);
+  } else {
+    if(network.live) {
+      log(`Set AllowTokens empty tokens to allow`);
+    }
+  }
   // Set multisig as the owner
   await allowTokens.methods.transferOwnership(multiSigAddress).send({from: deployer});
   log(`AllowTokens Transfered Ownership to MultiSigWallet`);
