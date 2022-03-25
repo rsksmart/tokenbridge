@@ -219,7 +219,8 @@ export class Heartbeat {
       const from = await this.transactionSender.getAddress(this.config.privateKey);
       const isMember = await fedContract.isMember(from);
       if (!isMember) {
-        throw new Error(`This Federator addr:${from} is not part of the federation`);
+        this.logger.warn(`This Federator addr:${from} is not part of the federation`)
+        return;
       }
 
       this.logger.info(`emitHeartbeat(${fedVersion}, ${fedChainsIds}, ${fedChainsBlocks}, ${fedChainInfo})`);
