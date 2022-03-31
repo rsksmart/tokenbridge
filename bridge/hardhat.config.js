@@ -198,7 +198,7 @@ module.exports = {
     //Binance Smart Chain
     bsctestnet: {
       live: true,
-      url: 'https://data-seed-prebsc-1-s1.binance.org:8545/',
+      url: 'https://data-seed-prebsc-2-s2.binance.org:8545/',
       network_id: chains.BSC_TEST_NET_CHAIN_ID,
       token_symbol: 'b',
       gas: 6700000,
@@ -265,6 +265,7 @@ function getProxyAdminAddressesByChainId() {
   proxyAdminAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
   proxyAdminAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x8c35e166d2dea7a8a28aaea11ad7933cdae4b0ab';
   proxyAdminAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6';
+  proxyAdminAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xb37Bf97A42eee6b995732530595E3d16639D9977';
   proxyAdminAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x0b32Ea549AB1F9F7390442B5E9438b58A105cB5f';
   return proxyAdminAddressesByChainId;
 }
@@ -275,6 +276,7 @@ function getAllowTokensProxyAddressesByChainId() {
   allowTokensProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0xcb789036894a83a008a2aa5b3c2dde41d0605a9a';
   allowTokensProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a';
   allowTokensProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x92bf86334583909b60f9b798a9dd7debd899fec4';
+  allowTokensProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0x9a64fc2416EE2157e19DC2C79B5B22D113a9E0C3';
   allowTokensProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xAE3852306015df037D458a65173BBc7527F4680b';
   return allowTokensProxyAddressesByChainId;
 }
@@ -285,6 +287,7 @@ function getBridgeProxyAddressesByChainId() {
   bridgeProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x9d11937e2179dc5270aa86a3f8143232d6da0e69';
   bridgeProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x684a8a976635fb7ad74a0134ace990a6a0fcce84';
   bridgeProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
+  bridgeProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xd9d2f9ee990ddb1147e595ae4f69ec468a0b58d0';
   bridgeProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x7E339118346364d7D86AB67cb0775CBB808E65F7';
   return bridgeProxyAddressesByChainId;
 }
@@ -295,6 +298,7 @@ function getFederationProxyAddressesByChainId() {
   federationProxyAddressesByChainId[chains.RSK_MAIN_NET_CHAIN_ID] = '0x7ecfda6072942577d36f939ad528b366b020004b';
   federationProxyAddressesByChainId[chains.RSK_TEST_NET_CHAIN_ID] = '0x5d663981d930e8ec108280b9d80885658148ab0f';
   federationProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
+  federationProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xD40F8613173E636D570c47dB3A6Ac57EA9ccac83';
   federationProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xBC383764ceBc13b66c04E1abeb36804a0Caaa5C6';
   return federationProxyAddressesByChainId;
 }
