@@ -5,6 +5,6 @@
   "federation": "0xD40F8613173E636D570c47dB3A6Ac57EA9ccac83",
   "allowTokens": "0x9a64fc2416EE2157e19DC2C79B5B22D113a9E0C3",
   "nftConfirmations": 5,
-  "host": "https://data-seed-prebsc-1-s1.binance.org:8545/",
+  "host": "https://data-seed-prebsc-2-s2.binance.org:8545/",
   "fromBlock": 16645932
 }
