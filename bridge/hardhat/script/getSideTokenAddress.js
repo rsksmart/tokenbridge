@@ -1,9 +1,11 @@
-// How to run the script: npx hardhat run ./hardhat/script/getFeeConfig.js --network rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/getSideTokenAddress.js --network rsktestnet
 const hre = require("hardhat");
 
-const { bscTestnet } = require('../../hardhat/helper/tokens');
+const { tokensByChainId } = require('../../hardhat/helper/tokens');
 
 async function main() {
+  const originalChainId = 42
+  const tokens = tokensByChainId(originalChainId);
   const {deployments} = hre;
 
   const Bridge = await deployments.get('Bridge');
@@ -16,9 +18,8 @@ async function main() {
     console.log("_originalChainId", _originalChainId, "_originalTokenAddress", _originalTokenAddress, "sideTokenAddress", sideTokenAddress);
   }
 
-  const originalChainId = 97
-  for(const symbol in bscTestnet) {
-    await sideTokenByOriginalToken(originalChainId, bscTestnet[symbol].address);
+  for (const symbol in tokens) {
+    await sideTokenByOriginalToken(originalChainId, tokens[symbol].address);
   }
 }
 
