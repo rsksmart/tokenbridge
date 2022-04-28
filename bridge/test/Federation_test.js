@@ -6,14 +6,12 @@ const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const truffleAssertions = require('truffle-assertions');
 const utils = require('./utils');
 const chains = require('../hardhat/helper/chains');
-const { createTransactionResult } = require('truffle-assertions');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
 contract('Federation', async function (accounts) {
     const deployer = accounts[0];
     const anAccount = accounts[1];
-    const anotherAccount = accounts[5];
     const federator1 = accounts[2];
     const federator2 = accounts[3];
     const federator3 = accounts[4];
