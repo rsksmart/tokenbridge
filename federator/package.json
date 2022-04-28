@@ -16,7 +16,6 @@
     "start-dev": "npx nodemon",
     "test": "jest --detectOpenHandles test/",
     "integrationTest": "npm run clean && npx ts-node ./integrationTest/integrationTest.js",
-    "nftIntegrationTest": "npm run clean && npx ts-node ./integrationTest/nftIntegrationTest.js",
     "integrationHeartbeatTest": "npm run clean && npx ts-node ./integrationTest/integrationHeartbeatTest.js && rm heartbeat.log federator.log",
     "prettier-format": "prettier --config .prettierrc 'src/**/*.ts' --write",
     "lint": "eslint . --ext .ts",

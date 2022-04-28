@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 pragma abicoder v2;
 
 interface IFederation {
-  enum TokenType{ COIN }
 
   /**
     @notice Current version of the contract
@@ -26,7 +25,6 @@ interface IFederation {
     @param blockHash The block hash in which the transaction with the cross event occurred
     @param transactionHash The transaction in which the cross event occurred
     @param logIndex Index of the event in the logs
-    @param tokenType Is the type of bridge to be used
 		@param originChainId Is chainId of the original chain
 		@param destinationChainId Is chainId of the destination chain
   */
@@ -38,7 +36,6 @@ interface IFederation {
     bytes32 blockHash,
     bytes32 transactionHash,
     uint32 logIndex,
-    TokenType tokenType,
 	  uint256 originChainId,
 	  uint256	destinationChainId
   ) external;

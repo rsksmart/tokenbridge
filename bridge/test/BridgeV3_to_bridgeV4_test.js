@@ -150,7 +150,6 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
         crossEvent.blockHash,
         crossEvent.transactionHash,
         crossEvent.logIndex,
-        utils.tokenType.COIN,
         chains.ETHEREUM_MAIN_NET_CHAIN_ID,
         chains.HARDHAT_TEST_NET_CHAIN_ID,
       ).send({from: federatorMember2});

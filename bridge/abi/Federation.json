@@ -756,11 +756,6 @@
         "type": "uint32"
       },
       {
-        "internalType": "enum IFederation.TokenType",
-        "name": "tokenType",
-        "type": "uint8"
-      },
-      {
         "internalType": "uint256",
         "name": "originChainId",
         "type": "uint256"
