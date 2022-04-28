@@ -164,19 +164,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "bridgeNFT",
-        "type": "address"
-      }
-    ],
-    "name": "NFTBridgeChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -310,19 +297,6 @@
     "outputs": [
       {
         "internalType": "contract IBridge",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bridgeNFT",
-    "outputs": [
-      {
-        "internalType": "contract INFTBridge",
         "name": "",
         "type": "address"
       }
@@ -501,11 +475,6 @@
       {
         "internalType": "address",
         "name": "owner",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_bridgeNFT",
         "type": "address"
       }
     ],
@@ -700,19 +669,6 @@
       }
     ],
     "name": "setBridge",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "_bridgeNFT",
-        "type": "address"
-      }
-    ],
-    "name": "setNFTBridge",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

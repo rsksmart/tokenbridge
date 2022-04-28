@@ -23,10 +23,6 @@ export class IFederationV3 implements IFederation {
     return this.federationContract.methods.isMember(address).call();
   }
 
-  setNFTBridge(address: string, from: string): Promise<any> {
-    return this.federationContract.methods.setNFTBridge(address).call({ from });
-  }
-
   getTransactionId(paramsObj: TransactionIdParams): Promise<any> {
     return this.federationContract.methods
       .getTransactionId(

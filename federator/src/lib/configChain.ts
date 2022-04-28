@@ -10,7 +10,6 @@ export interface ConfigChainParams {
   allowTokens: string;
   federation: string;
   host: string;
-  nftBridge?: string;
   testToken?: string;
   fromBlock?: number;
   blockTimeMs?: number;
@@ -22,7 +21,6 @@ export class ConfigChain {
   bridge: string;
   allowTokens: string;
   federation: string;
-  nftBridge: string;
   testToken: string;
   host: string;
   fromBlock: number;
@@ -36,12 +34,7 @@ export class ConfigChain {
     this.allowTokens = chainConfig.allowTokens;
     this.host = chainConfig.host;
     this.testToken = chainConfig?.testToken;
-    this.nftBridge = chainConfig?.nftBridge;
     this.fromBlock = chainConfig?.fromBlock ?? DEFAULT_FROM_BLOCK;
     this.blockTimeMs = chainConfig?.blockTimeMs ?? DEFAULT_BLOCK_TIME_MS;
-  }
-
-  public validateNft(): boolean {
-    return Web3.utils.isAddress(this.nftBridge);
   }
 }

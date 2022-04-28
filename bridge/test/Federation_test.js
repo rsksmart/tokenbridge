@@ -1,8 +1,6 @@
 const Federation = artifacts.require('Federation');
 const AllowTokens = artifacts.require('./AllowTokens');
 const Bridge = artifacts.require('./Bridge');
-const NftBridge = artifacts.require("./NFTBridge");
-const NFTERC721TestToken = artifacts.require("./NFTERC721TestToken");
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
 const truffleAssertions = require('truffle-assertions');
@@ -20,7 +18,6 @@ contract('Federation', async function (accounts) {
     const federator2 = accounts[3];
     const federator3 = accounts[4];
     const bridge = utils.getRandomAddress();
-    const bridgeNFT = utils.getRandomAddress();
 
     before(async function () {
         await utils.saveState();
@@ -36,33 +33,33 @@ contract('Federation', async function (accounts) {
 
     describe('Initialization', async function() {
         it('should use initialize', async function () {
-            await this.federators.initialize([federator1, federator2], 1, bridge, deployer, bridgeNFT);
+            await this.federators.initialize([federator1, federator2], 1, bridge, deployer);
         });
 
         it('should fail if required is not the same as memebers length', async function () {
             await truffleAssertions.fails(
-                this.federators.initialize([federator1, federator2], 3, bridge, deployer, bridgeNFT),
+                this.federators.initialize([federator1, federator2], 3, bridge, deployer),
                 truffleAssertions.ErrorType.REVERT
             );
         });
 
         it('should fail if repeated memebers', async function () {
             await truffleAssertions.fails(
-                this.federators.initialize([federator1, federator1], 2, bridge, deployer, bridgeNFT),
+                this.federators.initialize([federator1, federator1], 2, bridge, deployer),
                 truffleAssertions.ErrorType.REVERT
             );
         });
 
         it('should fail if null memeber', async function () {
             await truffleAssertions.fails(
-                this.federators.initialize([federator1, utils.NULL_ADDRESS], 2, bridge, deployer, bridgeNFT),
+                this.federators.initialize([federator1, utils.NULL_ADDRESS], 2, bridge, deployer),
                 truffleAssertions.ErrorType.REVERT
             );
         });
 
         it('should fail if null bridge', async function () {
             await truffleAssertions.fails(
-                this.federators.initialize([federator1], 1, utils.NULL_ADDRESS, deployer, bridgeNFT),
+                this.federators.initialize([federator1], 1, utils.NULL_ADDRESS, deployer),
                 truffleAssertions.ErrorType.REVERT
             );
         });
@@ -73,7 +70,7 @@ contract('Federation', async function (accounts) {
                 members[i]=utils.getRandomAddress();
             }
             await truffleAssertions.fails(
-                this.federators.initialize(members, 2, bridge, deployer, bridgeNFT),
+                this.federators.initialize(members, 2, bridge, deployer),
                 truffleAssertions.ErrorType.REVERT
             );
         });
@@ -83,7 +80,7 @@ contract('Federation', async function (accounts) {
             for(let i = 0; i < 50; i++) {
                 members[i]=utils.getRandomAddress();
             }
-            await this.federators.initialize(members, 2, bridge, deployer, bridgeNFT);
+            await this.federators.initialize(members, 2, bridge, deployer);
             const resultMembers = await this.federators.getMembers();
             assert.equal(resultMembers.length, 50);
         });
@@ -93,7 +90,7 @@ contract('Federation', async function (accounts) {
 
         beforeEach(async function () {
             this.members  = [federator1, federator2];
-            await this.federators.initialize(this.members, 1, bridge, deployer, bridgeNFT);
+            await this.federators.initialize(this.members, 1, bridge, deployer);
         });
 
         describe('Members', async function () {
@@ -134,17 +131,6 @@ contract('Federation', async function (accounts) {
                 });
             });
 
-            it('should set NFT bridge correctly', async function() {
-                const receipt = await this.federators.setNFTBridge(bridgeNFT);
-                utils.checkRcpt(receipt)
-
-                const _bridgeNFT = await this.federators.bridgeNFT();
-                assert.equal(_bridgeNFT.toLowerCase(), bridgeNFT.toLowerCase());
-
-                truffleAssertions.eventEmitted(receipt, 'NFTBridgeChanged', (ev) => {
-                    return ev.bridgeNFT === _bridgeNFT;
-                });
-            });
 
             it('setBridge should fail if empty', async function() {
                 await truffleAssertions.fails(
@@ -1395,179 +1381,6 @@ contract('Federation', async function (accounts) {
                 utils.checkRcpt(receipt);
                 hasVotedFederator1 = await this.federators.hasVoted(transactionId, {from: federator1});
                 assert.equal(hasVotedFederator1, true);
-            });
-
-            it('should fail since NFT bridge address is random', async function() {
-              const receipt = await this.federators.voteTransaction(
-                originalTokenAddress,
-                anAccount,
-                anotherAccount,
-                amount,
-                blockHash,
-                transactionHash,
-                logIndex,
-                utils.tokenType.NFT,
-                chains.HARDHAT_TEST_NET_CHAIN_ID,
-                chains.HARDHAT_TEST_NET_CHAIN_ID,
-                { from: federator1 }
-              );
-              utils.checkRcpt(receipt);
-
-              await truffleAssertions.fails(
-                this.federators.voteTransaction(
-                  originalTokenAddress,
-                  anAccount,
-                  anotherAccount,
-                  amount,
-                  blockHash,
-                  transactionHash,
-                  logIndex,
-                  utils.tokenType.NFT,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID,
-                  { from: federator2 }
-                ),
-                truffleAssertions.ErrorType.REVERT,
-                'function call to a non-contract account'
-              );
-            });
-
-            describe('NFTBridge', async function() {
-              const tokenId = new BN(9);
-              const tokenName = "The Drops";
-              const tokenSymbol = "drop";
-              const tokenBaseURI = "ipfs:/";
-              const tokenContractURI = "https://api-mainnet.rarible.com/contractMetadata";
-
-              beforeEach(async function () {
-                this.NFTBridge = await NftBridge.new();
-                await this.NFTBridge.methods[
-                  "initialize(address,address,address,address)"
-                ](
-                  deployer,
-                  this.federators.address,
-                  this.allowTokens.address,
-                  this.sideTokenFactory.address
-                );
-
-                this.NFTtoken = await NFTERC721TestToken.new(tokenName, tokenSymbol, {
-                  from: deployer,
-                });
-                this.NFTtoken.setBaseURI(tokenBaseURI);
-                this.NFTtoken.setContractURI(tokenContractURI);
-
-                await this.federators.setNFTBridge(this.NFTBridge.address);
-              });
-
-              it('should vote successfully', async function() {
-                let receipt = await this.NFTtoken.safeMint(deployer, tokenId, {
-                  from: deployer,
-                });
-                utils.checkRcpt(receipt);
-
-                receipt = await this.NFTtoken.approve(this.NFTBridge.address, tokenId, {
-                  from: deployer,
-                });
-                utils.checkRcpt(receipt);
-
-                receipt = await this.NFTBridge.receiveTokensTo(
-                  this.NFTtoken.address,
-                  anotherAccount,
-                  tokenId,
-                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-                  { from: deployer }
-                );
-                utils.checkRcpt(receipt);
-
-                const transactionId = await this.federators.getTransactionId(
-                  this.NFTtoken.address,
-                  anAccount,
-                  anotherAccount,
-                  tokenId,
-                  blockHash,
-                  transactionHash,
-                  logIndex,
-                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID,
-                );
-                let transactionCount = await this.federators.getTransactionCount(transactionId);
-                assert.equal(transactionCount, 0);
-
-                receipt = await this.federators.voteTransaction(
-                    this.NFTtoken.address,
-                    anAccount,
-                    anotherAccount,
-                    tokenId,
-                    blockHash,
-                    transactionHash,
-                    logIndex,
-                    utils.tokenType.NFT,
-                    chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-                    chains.HARDHAT_TEST_NET_CHAIN_ID,
-                    { from: federator1 }
-                );
-                utils.checkRcpt(receipt);
-
-                truffleAssertions.eventEmitted(receipt, 'Voted', (ev) => {
-                  return ev.federator === federator1
-                    && ev.transactionHash === transactionHash
-                    && ev.transactionId === transactionId
-                    && ev.originalTokenAddress === this.NFTtoken.address
-                    && ev.sender === anAccount
-                    && ev.receiver === anotherAccount
-                    && ev.amount.eq(tokenId)
-                    && ev.blockHash === blockHash
-                    && ev.logIndex.eq(logIndex);
-                });
-
-                let hasVoted = await this.federators.hasVoted(transactionId, { from: federator1 });
-                assert.equal(hasVoted, true);
-
-                receipt = await this.federators.voteTransaction(
-                  this.NFTtoken.address,
-                  anAccount,
-                  anotherAccount,
-                  tokenId,
-                  blockHash,
-                  transactionHash,
-                  logIndex,
-                  utils.tokenType.NFT,
-                  chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-                  chains.HARDHAT_TEST_NET_CHAIN_ID,
-                  { from: federator2 }
-                );
-                utils.checkRcpt(receipt);
-
-                truffleAssertions.eventEmitted(receipt, 'Voted', (ev) => {
-                  return ev.federator === federator2
-                    && ev.transactionHash === transactionHash
-                    && ev.transactionId === transactionId
-                    && ev.originalTokenAddress === this.NFTtoken.address
-                    && ev.sender === anAccount
-                    && ev.receiver === anotherAccount
-                    && ev.amount.eq(tokenId)
-                    && ev.blockHash === blockHash
-                    && ev.logIndex.eq(logIndex);
-                });
-
-                truffleAssertions.eventEmitted(receipt, 'Executed', (ev) => {
-                  return ev.federator === federator2
-                    && ev.transactionHash === transactionHash
-                    && ev.transactionId === transactionId
-                    && ev.originalTokenAddress === this.NFTtoken.address
-                    && ev.sender === anAccount
-                    && ev.receiver === anotherAccount
-                    && ev.amount.eq(tokenId)
-                    && ev.blockHash === blockHash
-                    && ev.logIndex.eq(logIndex);
-                });
-
-                hasVoted = await this.federators.hasVoted(transactionId, { from: federator2 });
-                assert.equal(hasVoted, true);
-
-                transactionCount = await this.federators.getTransactionCount(transactionId);
-                assert.equal(transactionCount, 2);
-              });
             });
         });
 

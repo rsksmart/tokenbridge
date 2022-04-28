@@ -8,7 +8,6 @@ const FederationV2 = artifacts.require('FederationV2');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const FederationProxy = artifacts.require('FederationProxy');
 const AllowTokens = artifacts.require('AllowTokens');
-const NftBridge = artifacts.require('NFTBridge');
 const utils = require("./utils");
 const chains = require('../hardhat/helper/chains');
 const MainToken = artifacts.require('./MainToken');
@@ -31,7 +30,6 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
     this.bridgeV4 = await BridgeV4.new();
     this.allowTokens = await AllowTokens.new();
 
-    this.nftBridge = await NftBridge.new();
     this.federationV2 = await FederationV2.new();
     this.federationV3 = await FederationV3.new();
     this.proxyAdmin = await ProxyAdmin.new();

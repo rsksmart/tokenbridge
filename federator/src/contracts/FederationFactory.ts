@@ -41,7 +41,8 @@ export class FederationFactory extends ContractFactory {
     try {
       return await typescriptUtils.retryNTimes(federationContract.methods.version().call());
     } catch (err) {
-      return 'v1';
+      console.log(err)
+      return 'v2';
     }
   }
 }
