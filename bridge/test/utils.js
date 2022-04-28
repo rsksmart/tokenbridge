@@ -191,10 +191,6 @@ function getRandomHash() {
   return randomHex(HASH_LENGTH);
 }
 
-const tokenType = {
-  COIN: 0,
-};
-
 module.exports = {
   getEtherBalance: getEtherBalance,
   getGasUsedByTx: getGasUsedByTx,
@@ -212,5 +208,4 @@ module.exports = {
   revertState: revertState,
   getRandomAddress: getRandomAddress,
   getRandomHash: getRandomHash,
-  tokenType,
 };

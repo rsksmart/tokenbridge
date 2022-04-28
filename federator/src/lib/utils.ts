@@ -216,10 +216,6 @@ export function increaseTimestamp(web3, increase) {
 export const ZERO_HASH = '0x0000000000000000000000000000000000000000000000000000000000000000';
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
-export const tokenType = {
-  COIN: 0,
-};
-
 export function clone(instance: any): any {
   const copy = new (instance.constructor as { new (): any })();
   Object.assign(copy, instance);

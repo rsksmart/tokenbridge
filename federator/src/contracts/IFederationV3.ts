@@ -57,7 +57,6 @@ export class IFederationV3 implements IFederation {
         paramsObj.blockHash,
         paramsObj.transactionHash,
         paramsObj.logIndex,
-        paramsObj.tokenType,
         paramsObj.originChainId,
         paramsObj.destinationChainId,
       )
