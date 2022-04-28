@@ -4,7 +4,7 @@ const hre = require("hardhat");
 async function main() {
   const {deployments} = hre;
 
-  const Federation = await deployments.get('FederationV2');
+  const Federation = await deployments.get('Federation');
   const FederationProxy = await deployments.get('FederationProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 

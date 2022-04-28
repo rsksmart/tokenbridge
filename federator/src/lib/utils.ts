@@ -218,7 +218,6 @@ export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export const tokenType = {
   COIN: 0,
-  NFT: 1,
 };
 
 export function clone(instance: any): any {

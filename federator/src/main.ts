@@ -2,7 +2,6 @@ import { Config } from './lib/config';
 import * as utils from './lib/utils';
 import Scheduler from './services/Scheduler';
 import Federator from './lib/FederatorERC';
-import FederatorNFT from './lib/FederatorNFT';
 import Heartbeat from './lib/Heartbeat';
 import { MetricCollector } from './lib/MetricCollector';
 import { Endpoint } from './lib/Endpoints';
@@ -12,9 +11,7 @@ import {
   Logs,
   LOGGER_CATEGORY_FEDERATOR,
   LOGGER_CATEGORY_FEDERATOR_MAIN,
-  LOGGER_CATEGORY_FEDERATOR_NFT_MAIN,
   LOGGER_CATEGORY_FEDERATOR_SIDE,
-  LOGGER_CATEGORY_FEDERATOR_NFT_SIDE,
   LOGGER_CATEGORY_HEARTBEAT,
   LOGGER_CATEGORY_ENDPOINT,
 } from './lib/logs';
@@ -24,7 +21,6 @@ export class Main {
   endpoint: any;
   metricCollector: MetricCollector;
   rskFederator: Federator;
-  rskFederatorNFT: FederatorNFT;
   config: Config;
   heartbeat: Heartbeat;
   heartBeatScheduler: Scheduler;
@@ -52,11 +48,6 @@ export class Main {
       Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_MAIN),
       this.metricCollector,
     );
-    this.rskFederatorNFT = new FederatorNFT(
-      this.config,
-      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_MAIN),
-      this.metricCollector,
-    );
   }
 
   async start() {
@@ -69,11 +60,9 @@ export class Main {
     try {
       // TODO uncoment this after tests
       await this.heartbeat.readLogs();
-      await this.runNftRskFederator();
       await this.runErcRskFederator();
 
       for (const sideChainConfig of this.config.sidechain) {
-        await this.runNftOtherChainFederator(sideChainConfig);
         await this.runErcOtherChainFederator(sideChainConfig);
       }
     } catch (err) {
@@ -100,36 +89,6 @@ export class Main {
 
     this.logger.info('Side Host', sideChainConfig.host);
     await sideFederator.runAll();
-  }
-
-  async runNftRskFederator() {
-    if (!this.config.useNft) {
-      return;
-    }
-    if (this.config.mainchain.nftBridge == null) {
-      throw new Error('Main Federator NFT Bridge empty at config.mainchain.nftBridge');
-    }
-    await this.rskFederatorNFT.runAll();
-  }
-
-  async runNftOtherChainFederator(sideChainConfig: ConfigChain) {
-    if (!this.config.useNft) {
-      return;
-    }
-
-    const sideFederatorNFT = new FederatorNFT(
-      {
-        ...this.config,
-        mainchain: sideChainConfig,
-        sidechain: [this.config.mainchain],
-      },
-      Logs.getInstance().getLogger(LOGGER_CATEGORY_FEDERATOR_NFT_SIDE),
-      this.metricCollector,
-    );
-    if (sideChainConfig.nftBridge == null) {
-      throw Error('Side Federator NFT Bridge empty at sideChainConfig');
-    }
-    await sideFederatorNFT.runAll();
   }
 
   async scheduleFederatorProcesses() {
@@ -159,7 +118,10 @@ export class Main {
     this.heartBeatScheduler = new Scheduler(heartBeatPollingInterval, this.logger, {
       run: async () => {
         try {
-          await this.heartbeat.run();
+          const result = await this.heartbeat.run();
+          if (!result) {
+            this.logger.warn("Heartbeat run run was not successful.")
+          }
         } catch (err) {
           this.logger.error('Unhandled Error on runHeartbeat()', err);
           process.exit(1);

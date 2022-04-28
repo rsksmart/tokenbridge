@@ -167,119 +167,8 @@ contract UpgradableOwnable is Initializable, Context {
 }
 
 
-// Dependency file: contracts/nftbridge/INFTBridge.sol
-
-
 // pragma solidity ^0.8.0;
 pragma abicoder v2;
-
-interface INFTBridge {
-
-  struct NFTClaimData {
-    address payable to;
-    address from;
-    uint256 tokenId;
-    address tokenAddress;
-    bytes32 blockHash;
-    bytes32 transactionHash;
-    uint32 logIndex;
-    uint256 originChainId;
-  }
-
-	struct OriginalNft {
-		address nftAddress;
-		uint256 originChainId;
-	}
-
-  function version() external pure returns (string memory);
-
-  function getFixedFee() external view returns (uint256);
-
-  function receiveTokensTo(
-    address tokenAddress,
-    address to,
-    uint256 tokenId,
-    uint256 destinationChainId
-  ) external payable;
-
-  /**
-    * Accepts the transaction from the other chain that was voted and sent by the Federation contract
-    */
-  function acceptTransfer(
-    address _originalTokenAddress,
-    address payable _from,
-    address payable _to,
-    uint256 _tokenId,
-    bytes32 _blockHash,
-    bytes32 _transactionHash,
-    uint32 _logIndex,
-    uint256 _originChainId,
-	  uint256	_destinationChainId
-  ) external;
-
-  /**
-    * Claims the crossed transaction using the hash, this sends the token to the address specified in the claim data
-    */
-  function claim(NFTClaimData calldata _claimData) external;
-
-  function claimFallback(NFTClaimData calldata _claimData) external;
-
-  function getTransactionDataHash(
-    address _to,
-    address _from,
-    uint256 _tokenId,
-    address _tokenAddress,
-    bytes32 _blockHash,
-    bytes32 _transactionHash,
-    uint32 _logIndex,
-    uint256 _originChainId,
-		uint256	_destinationChainId
-  ) external returns (bytes32);
-
-  event Cross(
-    address indexed _originalTokenAddress,
-    address indexed _to,
-    uint256 indexed _destinationChainId,
-    address _from,
-    uint256 _originChainId,
-    address _tokenCreator,
-    uint256 _totalSupply,
-    uint256 _tokenId,
-    string _tokenURI,
-    bytes _userData
-  );
-
-  event NewSideNFTToken(
-    address indexed _newSideNFTTokenAddress,
-    address indexed _originalTokenAddress,
-    string _newSymbol,
-    uint256 originChainId
-  );
-  event AcceptedNFTCrossTransfer(
-    bytes32 indexed _transactionHash,
-    address indexed _originalTokenAddress,
-    address indexed _to,
-    address _from,
-    uint256 _tokenId,
-    bytes32 _blockHash,
-    uint256 _logIndex,
-    uint256 _originChainId,
-	  uint256	_destinationChainId
-  );
-  event FixedFeeNFTChanged(uint256 _amount);
-  event ClaimedNFTToken(
-    bytes32 indexed _transactionHash,
-    address indexed _originalTokenAddress,
-    address indexed _to,
-    address _sender,
-    uint256 _tokenId,
-    bytes32 _blockHash,
-    uint256 _logIndex,
-    address _receiver,
-    uint256 _originChainId,
-	  uint256	_destinationChainId
-  );
-}
 
 
 // Dependency file: contracts/interface/IBridge.sol
@@ -440,7 +329,7 @@ interface IBridge {
 pragma abicoder v2;
 
 interface IFederation {
-  enum TokenType{ COIN, NFT }
+  enum TokenType{ COIN }
 
   /**
     @notice Current version of the contract
@@ -455,17 +344,11 @@ interface IFederation {
   function setBridge(address _bridge) external;
 
   /**
-    @notice Sets a new NFT bridge contract
-    @param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
-  */
-  function setNFTBridge(address _bridgeNFT) external;
-
-  /**
     @notice Vote in a transaction, if it has enough votes it accepts the transfer
     @param originalTokenAddress The address of the token in the origin (main) chain
     @param sender The address who solicited the cross token
     @param receiver Who is going to receive the token in the opposite chain
-    @param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+    @param value Amount
     @param blockHash The block hash in which the transaction with the cross event occurred
     @param transactionHash The transaction in which the cross event occurred
     @param logIndex Index of the event in the logs
@@ -537,7 +420,6 @@ interface IFederation {
   event MemberRemoval(address indexed member);
   event RequirementChange(uint required);
   event BridgeChanged(address bridge);
-  event NFTBridgeChanged(address bridgeNFT);
   event Voted(
     address indexed federator,
     bytes32 indexed transactionHash,
@@ -573,8 +455,6 @@ pragma abicoder v2;
 // Upgradables
 // import "contracts/zeppelin/upgradable/Initializable.sol";
 // import "contracts/zeppelin/upgradable/ownership/UpgradableOwnable.sol";
-
-// import "contracts/nftbridge/INFTBridge.sol";
 // import "contracts/interface/IBridge.sol";
 // import "contracts/interface/IFederation.sol";
 contract Federation is Initializable, UpgradableOwnable, IFederation {
@@ -621,9 +501,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	*/
 	mapping(bytes32 => bool) public processed;
 
-	/** Federator v3 variables */
-	INFTBridge public bridgeNFT;
-
 	modifier onlyMember() {
 		require(isMember[_msgSender()], "Federation: Not Federator");
 		_;
@@ -638,8 +515,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		address[] calldata _members,
 		uint _required,
 		address _bridge,
-		address owner,
-		address _bridgeNFT
+		address owner
 	) public validRequirement(_members.length, _required) initializer {
 		UpgradableOwnable.initialize(owner);
 		require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
@@ -652,7 +528,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		required = _required;
 		emit RequirementChange(required);
 		_setBridge(_bridge);
-		_setNFTBridge(_bridgeNFT);
 	}
 
 	/**
@@ -676,21 +551,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
 		bridge = IBridge(_bridge);
 		emit BridgeChanged(_bridge);
-	}
-
-	/**
-		@notice Sets a new NFT bridge contract
-		@dev Emits NFTBridgeChanged event
-		@param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
-		*/
-	function setNFTBridge(address _bridgeNFT) external onlyOwner override {
-		require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
-		_setNFTBridge(_bridgeNFT);
-	}
-
-	function _setNFTBridge(address _bridgeNFT) internal {
-		bridgeNFT = INFTBridge(_bridgeNFT);
-		emit NFTBridgeChanged(_bridgeNFT);
 	}
 
 	function validateTransaction(bytes32 transactionId, bytes32 transactionIdMultichain) internal view returns(bool) {
@@ -733,7 +593,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@param originalTokenAddress The address of the token in the origin (main) chain
 		@param sender The address who solicited the cross token
 		@param receiver Who is going to receive the token in the opposite chain
-		@param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+		@param value Amount
 		@param blockHash The block hash in which the transaction with the cross event occurred
 		@param transactionHash The transaction in which the cross event occurred
 		@param logIndex Index of the event in the logs
@@ -843,32 +703,17 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	uint256 originChainId,
 	uint256	destinationChainId
   ) internal {
-    if (tokenType == TokenType.NFT) {
-      require(address(bridgeNFT) != NULL_ADDRESS, "Federation: Empty NFTBridge");
-      bridgeNFT.acceptTransfer(
-        originalTokenAddress,
-        sender,
-        receiver,
-        value,
-        blockHash,
-        transactionHash,
-        logIndex,
-		originChainId,
-		destinationChainId
-      );
-    } else {
-	  bridge.acceptTransfer(
-		originalTokenAddress,
-		sender,
-		receiver,
-		value,
-		blockHash,
-		transactionHash,
-		logIndex,
-		originChainId,
-		destinationChainId
-	  );
-	}
+	bridge.acceptTransfer(
+	originalTokenAddress,
+	sender,
+	receiver,
+	value,
+	blockHash,
+	transactionHash,
+	logIndex,
+	originChainId,
+	destinationChainId
+	);
   }
 
   /**

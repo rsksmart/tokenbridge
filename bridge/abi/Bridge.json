@@ -736,6 +736,51 @@
   {
     "inputs": [
       {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "_typeId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "_originalTokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint8",
+            "name": "_originalTokenDecimals",
+            "type": "uint8"
+          },
+          {
+            "internalType": "string",
+            "name": "_originalTokenSymbol",
+            "type": "string"
+          },
+          {
+            "internalType": "string",
+            "name": "_originalTokenName",
+            "type": "string"
+          },
+          {
+            "internalType": "uint256",
+            "name": "_originChainId",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct IBridge.CreateSideTokenStruct[]",
+        "name": "createSideTokenStruct",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "createMultipleSideTokens",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "uint256",
         "name": "_typeId",
         "type": "uint256"

@@ -16,7 +16,7 @@
     "flatten": "npx waffle flatten",
     "deployFromScratchTag": "npx hardhat deploy --tags DeployFromScratch --show-stack-traces --network",
     "deployUpgradeTag": "npx hardhat deploy --tags Upgrade --show-stack-traces --network",
-    "deployIntegrationTag": "npx hardhat deploy --tags IntegrationTest,IntegrationTestNft --show-stack-traces --network",
+    "deployIntegrationTag": "hardhat deploy --tags IntegrationTest --show-stack-traces --network",
     "deployLocalIntegrationTest": "npm run deployIntegrationTag development && npm run deployIntegrationTag mirrorDevelopment",
     "reDeployLocalIntegrationTest": "ps aux | grep ganache-cli | awk '{print $2}' | xargs kill -9 & npm run ganache & npm run ganache-mirror & npm run deployLocalIntegrationTest"
   },
@@ -39,19 +39,19 @@
     "@thinkanddev/hardhat-erc1820-rsk": "^0.1.2",
     "@truffle/compile-common": "^0.7.15",
     "chalk": "^4.1.0",
-    "hardhat": "^2.8.2",
     "hardhat-contract-sizer": "^2.3.0",
     "hardhat-deploy": "^0.9.24",
     "hardhat-gas-reporter": "^1.0.6",
     "npm-force-resolutions": "0.0.10",
     "resolve": "^1.21.0",
     "solhint": "^3.3.6",
-    "solidity-coverage": "^0.7.16",
+    "solidity-coverage": "^0.7.20",
     "truffle-assertions": "^0.9.2"
   },
   "devDependencies": {
     "coveralls": "^3.1.1",
     "ethereum-waffle": "^3.4.0",
+    "hardhat": "^2.9.3",
     "hardhat-abi-exporter": "^2.2.1",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17"

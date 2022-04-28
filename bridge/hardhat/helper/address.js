@@ -33,20 +33,6 @@ async function getBridgeProxyAddress(hre) {
   return bridgeProxyDeployment;
 }
 
-async function getNftBridgeProxyAddress(hre) {
-  const {deployments} = hre;
-  const {nftBridgeProxy} = await getNamedAccountsInstance(hre);
-
-  if (nftBridgeProxy) {
-    return nftBridgeProxy
-  }
-  const nftBridgeProxyDeployment = await deployments.getOrNull('NftBridgeProxy')
-  if (nftBridgeProxyDeployment) {
-    return nftBridgeProxyDeployment.address;
-  }
-  return nftBridgeProxyDeployment;
-}
-
 async function getFederationProxyAddress(hre) {
   const {deployments} = hre;
   const {federationProxy} = await getNamedAccountsInstance(hre);
@@ -85,8 +71,10 @@ module.exports = {
   getProxyAdminAddress: getProxyAdminAddress,
   getMultiSigAddress: getMultiSigAddress,
   getBridgeProxyAddress: getBridgeProxyAddress,
-  getNftBridgeProxyAddress: getNftBridgeProxyAddress,
   getFederationProxyAddress: getFederationProxyAddress,
   getAllowTokensProxyAddress: getAllowTokensProxyAddress,
   getSideTokenFactoryAddress: getSideTokenFactoryAddress,
+  NULL_ADDRESS: "0x0000000000000000000000000000000000000000",
+  NULL_HASH:
+    "0x0000000000000000000000000000000000000000000000000000000000000000",
 };

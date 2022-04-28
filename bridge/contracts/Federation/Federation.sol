@@ -7,7 +7,6 @@ pragma abicoder v2;
 import "../zeppelin/upgradable/Initializable.sol";
 import "../zeppelin/upgradable/ownership/UpgradableOwnable.sol";
 
-import "../nftbridge/INFTBridge.sol";
 import "../interface/IBridge.sol";
 import "../interface/IFederation.sol";
 contract Federation is Initializable, UpgradableOwnable, IFederation {
@@ -54,9 +53,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	*/
 	mapping(bytes32 => bool) public processed;
 
-	/** Federator v3 variables */
-	INFTBridge public bridgeNFT;
-
 	modifier onlyMember() {
 		require(isMember[_msgSender()], "Federation: Not Federator");
 		_;
@@ -71,8 +67,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		address[] calldata _members,
 		uint _required,
 		address _bridge,
-		address owner,
-		address _bridgeNFT
+		address owner
 	) public validRequirement(_members.length, _required) initializer {
 		UpgradableOwnable.initialize(owner);
 		require(_members.length <= MAX_MEMBER_COUNT, "Federation: Too many members");
@@ -85,7 +80,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		required = _required;
 		emit RequirementChange(required);
 		_setBridge(_bridge);
-		_setNFTBridge(_bridgeNFT);
 	}
 
 	/**
@@ -109,21 +103,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		require(_bridge != NULL_ADDRESS, "Federation: Empty bridge");
 		bridge = IBridge(_bridge);
 		emit BridgeChanged(_bridge);
-	}
-
-	/**
-		@notice Sets a new NFT bridge contract
-		@dev Emits NFTBridgeChanged event
-		@param _bridgeNFT the new NFT bridge contract address that should implement the INFTBridge interface
-		*/
-	function setNFTBridge(address _bridgeNFT) external onlyOwner override {
-		require(_bridgeNFT != NULL_ADDRESS, "Federation: Empty NFT bridge");
-		_setNFTBridge(_bridgeNFT);
-	}
-
-	function _setNFTBridge(address _bridgeNFT) internal {
-		bridgeNFT = INFTBridge(_bridgeNFT);
-		emit NFTBridgeChanged(_bridgeNFT);
 	}
 
 	function validateTransaction(bytes32 transactionId, bytes32 transactionIdMultichain) internal view returns(bool) {
@@ -166,7 +145,7 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		@param originalTokenAddress The address of the token in the origin (main) chain
 		@param sender The address who solicited the cross token
 		@param receiver Who is going to receive the token in the opposite chain
-		@param value Could be the amount if tokenType == COIN or the tokenId if tokenType == NFT
+		@param value Amount
 		@param blockHash The block hash in which the transaction with the cross event occurred
 		@param transactionHash The transaction in which the cross event occurred
 		@param logIndex Index of the event in the logs
@@ -276,20 +255,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 	uint256 originChainId,
 	uint256	destinationChainId
   ) internal {
-    if (tokenType == TokenType.NFT) {
-      require(address(bridgeNFT) != NULL_ADDRESS, "Federation: Empty NFTBridge");
-      bridgeNFT.acceptTransfer(
-        originalTokenAddress,
-        sender,
-        receiver,
-        value,
-        blockHash,
-        transactionHash,
-        logIndex,
-		originChainId,
-		destinationChainId
-      );
-    } else {
 	  bridge.acceptTransfer(
 		originalTokenAddress,
 		sender,
@@ -301,7 +266,6 @@ contract Federation is Initializable, UpgradableOwnable, IFederation {
 		originChainId,
 		destinationChainId
 	  );
-	}
   }
 
   /**

@@ -193,7 +193,6 @@ function getRandomHash() {
 
 const tokenType = {
   COIN: 0,
-  NFT: 1
 };
 
 module.exports = {
