@@ -489,7 +489,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -558,7 +557,6 @@ contract('Federation', async function (accounts) {
                         blockHash,
                         transactionHash,
                         logIndex,
-                        utils.tokenType.COIN,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         chains.HARDHAT_TEST_NET_CHAIN_ID,
                         {from: federator1}
@@ -617,7 +615,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -674,7 +671,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -694,7 +690,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -750,7 +745,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -776,7 +770,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -839,7 +832,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -865,7 +857,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -929,7 +920,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -953,7 +943,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -1022,7 +1011,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -1046,7 +1034,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -1111,7 +1098,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -1135,7 +1121,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -1177,7 +1162,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator3}
@@ -1225,7 +1209,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -1249,7 +1232,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator2}
@@ -1282,7 +1264,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator3}
@@ -1321,7 +1302,7 @@ contract('Federation', async function (accounts) {
                 await truffleAssertions.fails(
                     this.federators.voteTransaction(originalTokenAddress,
                         anAccount, anAccount, amount, blockHash, transactionHash, logIndex,
-                        utils.tokenType.COIN, chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID
+                        chains.HARDHAT_TEST_NET_CHAIN_ID, chains.HARDHAT_TEST_NET_CHAIN_ID
                     ),
                     truffleAssertions.ErrorType.REVERT
                 );
@@ -1353,7 +1334,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
@@ -1371,7 +1351,6 @@ contract('Federation', async function (accounts) {
                     blockHash,
                     transactionHash,
                     logIndex,
-                    utils.tokenType.COIN,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     chains.HARDHAT_TEST_NET_CHAIN_ID,
                     {from: federator1}
