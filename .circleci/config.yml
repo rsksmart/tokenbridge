@@ -50,11 +50,6 @@ jobs:
             cd federator
             npm run integrationTest
       - run:
-          name: NFT federator integration tests
-          command: |
-            cd federator
-            npm run nftIntegrationTest
-      - run:
           name: Heartbeat federator integration tests
           command: |
             cd federator
