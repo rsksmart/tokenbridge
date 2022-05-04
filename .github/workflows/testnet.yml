@@ -1,8 +1,7 @@
----
-name: TestNet CC Bridge federator
+name: Deploy TestNet CC Bridge federator
 
 on:
-  release: Deploy TestNet CC Bridge federator
+  release:
     types: [published]
 
 env:
