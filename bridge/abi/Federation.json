@@ -164,19 +164,6 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "internalType": "address",
-        "name": "bridgeNFT",
-        "type": "address"
-      }
-    ],
-    "name": "NFTBridgeChanged",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
         "indexed": true,
         "internalType": "address",
         "name": "previousOwner",
@@ -310,19 +297,6 @@
     "outputs": [
       {
         "internalType": "contract IBridge",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "bridgeNFT",
-    "outputs": [
-      {
-        "internalType": "contract INFTBridge",
         "name": "",
         "type": "address"
       }
@@ -501,11 +475,6 @@
       {
         "internalType": "address",
         "name": "owner",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "_bridgeNFT",
         "type": "address"
       }
     ],
@@ -707,19 +676,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "_bridgeNFT",
-        "type": "address"
-      }
-    ],
-    "name": "setNFTBridge",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "bytes32",
         "name": "transactionId",
         "type": "bytes32"
@@ -798,11 +754,6 @@
         "internalType": "uint32",
         "name": "logIndex",
         "type": "uint32"
-      },
-      {
-        "internalType": "enum IFederation.TokenType",
-        "name": "tokenType",
-        "type": "uint8"
       },
       {
         "internalType": "uint256",

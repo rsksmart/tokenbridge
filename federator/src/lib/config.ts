@@ -1,7 +1,6 @@
 import { ConfigChain, ConfigChainParams } from './configChain';
 import * as jsonConfigDefault from '../../config/config';
 const DEFAULT_RETRIE_TIMES = 3;
-const DEFAULT_NFT_CONFIRMATION = 5; // TODO this value should be acording to the chainId
 const DEFAULT_ENDPOINT_PORT = 5000;
 
 export interface JsonConfigParams {
@@ -13,9 +12,7 @@ export interface JsonConfigParams {
   etherscanApiKey: string;
   runHeartbeatEvery: number;
   endpointsPort?: number;
-  nftConfirmations?: number;
   federatorRetries?: number;
-  useNft?: boolean;
   checkHttps?: boolean;
   explorer?: string;
 }
@@ -29,8 +26,6 @@ export class ConfigData {
   etherscanApiKey: string; // If using ganache can be any string
   runHeartbeatEvery: number; // In hours
   endpointsPort: number; // Server port
-  nftConfirmations: number; // number of block confirmations for the nft bridge
-  useNft: boolean;
   federatorRetries: number;
   checkHttps: boolean;
   explorer?: string;
@@ -50,21 +45,8 @@ export class Config extends ConfigData {
     this.runHeartbeatEvery = jsonConfig.runHeartbeatEvery;
     this.explorer = jsonConfig.explorer;
     this.endpointsPort = jsonConfig.endpointsPort ?? DEFAULT_ENDPOINT_PORT;
-    this.nftConfirmations = jsonConfig.nftConfirmations ?? DEFAULT_NFT_CONFIRMATION;
     this.federatorRetries = jsonConfig.federatorRetries ?? DEFAULT_RETRIE_TIMES;
-    this.useNft = jsonConfig.useNft ?? false;
     this.checkHttps = jsonConfig.checkHttps ?? true;
-    this.validateConfig();
-  }
-
-  private validateConfig() {
-    if (this.useNft) {
-      for (const configChain of this.getConfigs()) {
-        if (!configChain.validateNft()) {
-          throw new Error('Config is using nft, but some config chain didn`t set the nftBridge property');
-        }
-      }
-    }
   }
 
   private getConfigs(): ConfigChain[] {
