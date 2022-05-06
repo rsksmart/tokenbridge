@@ -50,10 +50,7 @@ module.exports = {
       ':MultiSigWallet$',
       ':ProxyAdmin$',
       ':SideToken',
-      ':TransparentUpgradeableProxy$',
-      ':NFTBridge$',
-      ':SideNFTToken',
-      ':NFTERC721TestToken'
+      ':TransparentUpgradeableProxy$'
     ],
   },
   namedAccounts: getNamedAccounts(),
