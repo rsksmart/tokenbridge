@@ -66,6 +66,4 @@ export interface TransactionIdParams {
   destinationChainId: number;
 }
 
-export interface VoteTransactionV3Params extends TransactionIdParams {
-  tokenType: number;
-}
+export type VoteTransactionV3Params = TransactionIdParams;
