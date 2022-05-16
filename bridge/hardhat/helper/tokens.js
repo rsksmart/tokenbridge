@@ -31,16 +31,6 @@ const rskMainnet = {
     rAMLT: {address: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '6', isSideToken: true, decimals: 18, symbol: 'rAMLT'} //rAMLT
 }
 
-const bscMainnet = {
-    BTC: {address: '0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c', typeId: '0', isSideToken: false, decimals: 18, symbol: 'BTC'}, //BTC
-    ETH: {address: '0x250632378E573c6Be1AC2f97Fcdf00515d0Aa91B', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //ETH
-    WBNB: {address: '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c', typeId: '2', isSideToken: false, decimals: 18, symbol: 'BNB'}, //WBNB
-    USDC: {address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDC'}, //USDC
-    USDT: {address: '0x55d398326f99059fF775485246999027B3197955', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDT'}, //USDT
-    BUSD: {address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56', typeId: '4', isSideToken: false, decimals: 18, symbol: 'BUSD'}, //BUSD
-    DAI: {address: '0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
-}
-
 const kovan = {
     WBTC: {address: '0xd1b98b6607330172f1d991521145a22bce793277', typeId: '0', isSideToken: false, decimals: 8, symbol: 'WBTC'}, //WBTC
     renBTC: {address: '0x0a9add98c076448cbcfacf5e457da12ddbef4a8f', typeId: '0', isSideToken: false, decimals: 18, symbol: 'renBTC'}, //renBTC
@@ -74,21 +64,8 @@ const rskTestnet = {
     rKovWBTC: {address: '0xb8aE2CB769255359190fBcE89d3aD38687da5e65', typeId: '0', isSideToken: true, decimals: 18, symbol: 'rKovWBTC'}, //rKovWBTC
 }
 
-const bscTestnet = {
-    BTC: {address: '0x6ce8da28e2f864420840cf74474eff5fd80e65b8', typeId: '0', isSideToken: false, decimals: 18, symbol: 'BTC'}, //BTC
-    ETH: {address: '0x8babbb98678facc7342735486c851abd7a0d17ca', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //ETH
-    WBNB: {address: '0xae13d989dac2f0debff460ac112a837c89baa7cd', typeId: '2', isSideToken: false, decimals: 18, symbol: 'WBNB'}, //WBNB
-    USDC: {address: '0x5d47b6e7edfc82e2ecd481b3db70d0f6600fdef8', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDC'}, //USDC
-    USDT: {address: '0x337610d27c682e347c9cd60bd4b3b107c9d34ddd', typeId: '4', isSideToken: false, decimals: 18, symbol: 'USDT'}, //USDT
-    BUSD: {address: '0x110887fc420292dce51c08504cee377872d0db66', typeId: '4', isSideToken: false, decimals: 18, symbol: 'BUSD'}, //BUSD
-    DAI: {address: '0x13878644c0f2c9c5c8a85da43ebc3bb74bbc05a9', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
-}
-
 const tokensByChainId = (chainId) => {
     switch (chainId) {
-        case chains.BSC_TEST_NET_CHAIN_ID:
-            return bscTestnet;
-    
         case chains.RSK_TEST_NET_CHAIN_ID:
             return rskTestnet;
     
@@ -100,9 +77,6 @@ const tokensByChainId = (chainId) => {
     
         case chains.ETHEREUM_MAIN_NET_CHAIN_ID:
             return ethereum;
-        
-        case chains.BSC_MAIN_NET_CHAIN_ID:
-            return bscMainnet;
 
         default:
             return [];
@@ -114,8 +88,6 @@ module.exports = {
     tokensByChainId,
     ethereum,
     rskMainnet,
-    bscMainnet,
     kovan,
     rskTestnet,
-    bscTestnet
 };
