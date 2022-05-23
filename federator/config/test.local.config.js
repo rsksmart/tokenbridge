@@ -1,9 +1,13 @@
 const fs = require("fs");
+const dotenv = require('dotenv');
+
+dotenv.config();
+
 module.exports = {
   mainchain: require("./development.json"), //the json containing the smart contract addresses in rsk
   sidechain: require("./mirrorDevelopment.json"), //the json containing the smart contract addresses in eth
   runEvery: 2, // In minutes,
-  privateKey: fs.readFileSync(`${__dirname}/test.local.federator.key`, "utf8"),
+  privateKey: process.env.FEDERATOR_KEY || '',
   storagePath: "./db",
   etherscanApiKey: "",
   runHeartbeatEvery: 1, // In hours

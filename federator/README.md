@@ -6,7 +6,7 @@ The federators will be the owners of the contracts willing to allow to cross the
 
 ## Config
 
-Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are using, for example rsktestnet-kovan.json and kovan.json, `make sure to set the host parameter of those files`. Create the file `federator.key` inside the config folder, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
+Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are using, for example rsktestnet-kovan.json and kovan.json, `make sure to set the host parameter of those files`. Add a value to the key `FEDERATOR_KEY` in the .env file, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
 You will also need to add an [etherscan api key](https://etherscan.io/myapikey) in this config file.
 ## Usage
 
@@ -30,7 +30,7 @@ module.exports = {
   sidechain: [require('./kovan.json')],
   runEvery: 1, // In minutes,
   confirmations: 10,// Number of blocks before processing it,
-  privateKey: require('federator.key'),
+  privateKey: process.env.FEDERATOR_KEY || '',
   storagePath: './db',
   etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
   runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
