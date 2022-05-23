@@ -70,5 +70,5 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   
 };
 module.exports.id = 'create_sideTokens_bsc'; // id required to prevent reexecution
-module.exports.tags = ['CreateSideTokensBsc', 'Upgrade'];
+module.exports.tags = ['CreateSideTokensBsc'];
 module.exports.dependencies = [];
