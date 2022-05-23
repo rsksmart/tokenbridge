@@ -52,7 +52,7 @@ See the ['federator'](./federator/README.md) for more information about federati
 
 An integration test is prepared for contracts and federators. To properly run integration test, you need check network config in the `truffle-config.js` and `package.json` in `bridge` folder with your test chains' configuration before run `npm run deployIntegrationTest`.
 
-For testing purposes only, an empty `test.local.federator.key` file is available in `federator/config`, which fulfills the role that a `federator.key` file would have in production.
+For testing purposes only, you can let `env.FEDERATOR_KEY` empty, which fulfills the role that a `FEDERATOR_KEY` key would have in production.
 Also, a `test.local.config.js` configuration is provided in `federator/config` for the same purpose, acting as the `config.js` file would in a productive environment.
 
 1. Check `mnemonic.key` in `bridge`
