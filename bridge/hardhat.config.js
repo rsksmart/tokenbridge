@@ -12,7 +12,6 @@ const fs = require('fs');
 const chains = require('./hardhat/helper/chains');
 const MNEMONIC = fs.existsSync('./mnemonic.key') ? fs.readFileSync('./mnemonic.key', {encoding: 'utf8'}) : ''; // Your metamask's recovery words
 const ETHERESCAN_KEY = fs.existsSync('./etherscan.key') ? fs.readFileSync('./etherscan.key', {encoding: 'utf8'}) : ''; // Your Etherscan API Key to verify the contracts
-const BSCSCAN_KEY = fs.existsSync('./bscscan.key') ? fs.readFileSync('./bscscan.key', {encoding: 'utf8'}) : ''; // Your BscScan API Key to verify the contracts
 const INFURA_PROJECT_ID = fs.existsSync('./infura.key') ? fs.readFileSync('./infura.key', {encoding: 'utf8'}) : ''; //  Your Infura project ID
 
 const DEFAULT_DEPLOYER_ACCOUNT_INDEX = 0;
@@ -62,9 +61,6 @@ module.exports = {
       rinkeby: ETHERESCAN_KEY,
       goerli: ETHERESCAN_KEY,
       kovan: ETHERESCAN_KEY,
-      // binance smart chain
-      bsc: BSCSCAN_KEY,
-      bscTestnet: BSCSCAN_KEY,
     }
   },
   networks: {
@@ -115,33 +111,6 @@ module.exports = {
       },
       tags: ['staging'],
     },
-    // // RSK -> Previous to multichain bridge
-    // rsktestnetbsc: {
-    //   live: true,
-    //   url: 'https://public-node.testnet.rsk.co',
-    //   blockGasLimit: 6800000,
-    //   gasPrice: 68000000, // 0.06 gwei
-    //   network_id: chains.RSK_TEST_NET_CHAIN_ID,
-    //   token_symbol: 'b',
-    //   hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
-    //   accounts: {
-    //     mnemonic: MNEMONIC,
-    //   },
-    //   tags: ['staging'],
-    // },
-    // rsktestnetrinkeby: {
-    //   live: true,
-    //   url: 'https://public-node.testnet.rsk.co',
-    //   blockGasLimit: 6800000,
-    //   gasPrice: 68000000, // 0.06 gwei
-    //   network_id: chains.RSK_TEST_NET_CHAIN_ID,
-    //   token_symbol: 'rRin',
-    //   hardfork: 'istanbul', // London hardfork is incompatible with RSK gasPrice
-    //   accounts: {
-    //     mnemonic: MNEMONIC,
-    //   },
-    //   tags: ['staging'],
-    // },
     rskmainnet: {
       live: true,
       url: 'https://public-node.rsk.co',
@@ -187,29 +156,6 @@ module.exports = {
       token_symbol: 'e',
       gas: 6700000,
       gasPrice: 250000000000,
-      accounts: {
-        mnemonic: MNEMONIC,
-      },
-      tags: ['prod'],
-    },
-    //Binance Smart Chain
-    bsctestnet: {
-      live: true,
-      url: 'https://data-seed-prebsc-2-s2.binance.org:8545/',
-      network_id: chains.BSC_TEST_NET_CHAIN_ID,
-      token_symbol: 'b',
-      gas: 6700000,
-      accounts: {
-        mnemonic: MNEMONIC,
-      },
-      tags: ['staging'],
-    },
-    bscmainnet: {
-      live: true,
-      url: 'https://bsc-dataseed.binance.org/',
-      network_id: chains.BSC_MAIN_NET_CHAIN_ID,
-      token_symbol: 'b',
-      gas: 6700000,
       accounts: {
         mnemonic: MNEMONIC,
       },
