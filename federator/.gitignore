@@ -1,4 +1,5 @@
 config/config.js
+config/federator.key
 rskregtest.json
 development.json
 development_1.json
@@ -7,7 +8,6 @@ mirrorDevelopment.json
 soliditycoverage.json
 test.json
 latestBlock.txt
-config/federator.key
 test/lib/*.txt
 coverage
 manuallyCheck.txt
@@ -18,4 +18,4 @@ heartbeat.log
 federator.log
 /built
 /abis
-/config/test.local.federator.key
+.env
