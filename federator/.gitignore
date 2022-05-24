@@ -1,4 +1,5 @@
 config/config.js
+config/federator.key
 rskregtest.json
 development.json
 development_1.json
