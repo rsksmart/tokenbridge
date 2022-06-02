@@ -5,11 +5,11 @@ on:
     types: [published]
 
 env:
-  AWS_REGION: us-west-2
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   ECR_REPOSITORY: rif-gateways-ccbridge
   ECS_SERVICE: ccbridge_services_testnet         # set this to your Amazon ECS service name
   ECS_CLUSTER: rif-gateways-ccbridge             # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: .aws/task-definition.json # set this to the path to your Amazon ECS task definition
+  ECS_TASK_DEFINITION: .aws/testnet.json         # set this to the path to your Amazon ECS task definition
                                                  # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: rif-gateways-ccbridge-testnet  # set this to the name of the container in the
                                                  # containerDefinitions section of your task definition
