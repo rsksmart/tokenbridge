@@ -8,6 +8,7 @@ import { CustomError } from './CustomError';
 const ESTIMATED_GAS = 250000;
 
 import * as chains from './chainId';
+import { Signer, SignType } from 'rif-cloud-hsm-sdk';
 export class TransactionSender {
   client: any;
   logger: any;
@@ -136,7 +137,7 @@ export class TransactionSender {
       r: 0,
       s: 0,
     };
-    
+
     if (await this.isRsk()) {
       delete rawTx.chainId;
       delete rawTx.r;
@@ -144,7 +145,7 @@ export class TransactionSender {
     }
 
     rawTx.gas = this.numberToHexString(await this.getGasLimit(rawTx));
-    
+
     if (this.debuggingMode) {
       rawTx.gas = this.numberToHexString(100);
       this.logger.warn(`debugging mode enabled, forced rawTx.gas ${rawTx.gas}`);
@@ -208,21 +209,25 @@ export class TransactionSender {
       const from = await this.getAddress(privateKey);
       rawTx = await this.createRawTransaction(from, to, data, value);
       if (privateKey && privateKey.length) {
-        const signedTx = this.signRawTransaction(rawTx, privateKey);
-        const serializedTx = ethUtils.bufferToHex(signedTx.serialize());
-        receipt = await this.client.eth.sendSignedTransaction(serializedTx).once('transactionHash', async (hash) => {
-          txHash = hash;
-          if (chainId === 1) {
-            // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
-            // see  https://github.com/ethereum/go-ethereum/issues/22308
-            const dataProxy = {
-              module: 'proxy',
-              action: 'eth_sendRawTransaction',
-              hex: serializedTx,
-            };
-            await this.useEtherscanApi(dataProxy);
-          }
-        });
+        const signer = Signer[SignType.VAULT].instance();
+
+        const { signed_transaction } = await signer.sign(rawTx, from);
+
+        receipt = await this.client.eth
+          .sendSignedTransaction(signed_transaction)
+          .once('transactionHash', async (hash) => {
+            txHash = hash;
+            if (chainId === 1) {
+              // send a POST request to Etherscan, we broadcast the same transaction as GETH is not working correclty
+              // see  https://github.com/ethereum/go-ethereum/issues/22308
+              const dataProxy = {
+                module: 'proxy',
+                action: 'eth_sendRawTransaction',
+                hex: signed_transaction,
+              };
+              await this.useEtherscanApi(dataProxy);
+            }
+          });
       } else {
         //If no private key provided we use personal (personal is only for testing)
         delete rawTx.r;
