@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet kovan bsctestnet rsktestnet rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet goerly bsctestnet rsktestnet rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {

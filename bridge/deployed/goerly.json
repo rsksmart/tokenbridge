@@ -1,5 +1,5 @@
 {
-    "network": "kovan",
+    "network": "goerly",
     "MultiSig": "0x040007b1804ad78a97f541bebed377dcb60e4138",
     "ProxyAdmin": "0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6",
     "Utils": "0xE18b8fb2942493EA96BfC46a044e4F966f2dFaB6",
