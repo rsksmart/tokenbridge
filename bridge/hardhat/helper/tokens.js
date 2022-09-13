@@ -31,7 +31,7 @@ const rskMainnet = {
     rAMLT: {address: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '6', isSideToken: true, decimals: 18, symbol: 'rAMLT'} //rAMLT
 }
 
-const kovan = {
+const goerly = {
     WBTC: {address: '0xd1b98b6607330172f1d991521145a22bce793277', typeId: '0', isSideToken: false, decimals: 8, symbol: 'WBTC'}, //WBTC
     renBTC: {address: '0x0a9add98c076448cbcfacf5e457da12ddbef4a8f', typeId: '0', isSideToken: false, decimals: 18, symbol: 'renBTC'}, //renBTC
     WETH: {address: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //WETH
@@ -39,7 +39,7 @@ const kovan = {
     DAI: {address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
     TUSD: {address: '0x0000000000085d4780B73119b644AE5ecd22b376', typeId: '4', isSideToken: false, decimals: 18, symbol: 'TUSD'}, //TUSD
     USDC: {address: '0xe22da380ee6B445bb8273C81944ADEB6E8450422', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDC'}, //USDC
-    USDT: {address: '0x13512979ade267ab5100878e2e0f485b568328a4', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
+    USDT: {address: '0x509Ee0d083DdF8AC028f2a56731412edD63223B9', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
     LINK: {address: '0xa36085F69e2889c224210F603D836748e7dC0088', typeId: '3', isSideToken: false, decimals: 18, symbol: 'LINK'}, //LINK
     BUND: {address: '0x8d3e855f3f55109d473735ab76f753218400fe96', typeId: '3', isSideToken: false, decimals: 18, symbol: 'BUND'}, //BUND
     // SideToken
@@ -69,8 +69,8 @@ const tokensByChainId = (chainId) => {
         case chains.RSK_TEST_NET_CHAIN_ID:
             return rskTestnet;
     
-        case chains.KOVAN_TEST_NET_CHAIN_ID:
-            return  kovan;
+        case chains.GOERLY_TEST_NET_CHAIN_ID:
+            return  goerly;
 
         case chains.RSK_MAIN_NET_CHAIN_ID:
             return rskMainnet;
@@ -88,6 +88,6 @@ module.exports = {
     tokensByChainId,
     ethereum,
     rskMainnet,
-    kovan,
+    goerly,
     rskTestnet,
 };

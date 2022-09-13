@@ -39,18 +39,18 @@ Between Rsk Mainnet and Ethereum [https://tokenbridge.rsk.co/](https://tokenbrid
 ## List of Addresses
 
 ### On RSK Testnet
-  - "bridge": [0x684a8a976635fb7ad74a0134ace990a6a0fcce84](https://explorer.testnet.rsk.co/address/0x684a8a976635fb7ad74a0134ace990a6a0fcce84)
-  - "federation": [0x5d663981d930e8ec108280b9d80885658148ab0f](https://explorer.testnet.rsk.co/address/0x5d663981d930e8ec108280b9d80885658148ab0f)
-  - "allowTokens": [0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a](https://explorer.testnet.rsk.co/address/0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a)
-  - "multiSigWallet": [0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a](https://explorer.testnet.rsk.co/address/0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a)
+  - "bridge": [0x684a8a976635fb7ad74a0134ace990a6a0fcce84](https://explorer.testnet.rsk.co/address/0x684a8a976635fb7ad74a0134ace990a6a0fcce84) 
+  - "federation": [0x5d663981d930e8ec108280b9d80885658148ab0f](https://explorer.testnet.rsk.co/address/0x5d663981d930e8ec108280b9d80885658148ab0f) 
+  - "allowTokens": [0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a](https://explorer.testnet.rsk.co/address/0xc65bf0ae75dc1a5fc9e6f4215125692a548c773a) 
+  - "multiSigWallet": [0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a](https://explorer.testnet.rsk.co/address/0x88f6b2bc66f4c31a3669b9b1359524abf79cfc4a) 
   - "tRIF": [0x19f64674d8a5b4e652319f5e239efd3bc969a1fe](https://explorer.testnet.rsk.co/address/0x19f64674d8a5b4e652319f5e239efd3bc969a1fe)
   
-### On Kovan
-  - "bridge": ["0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d"](https://kovan.etherscan.io/address/0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d)
-  - "federation": ["0xa347438BC288f56Cb6083A79133e70DD2d1f6c2d"](https://kovan.etherscan.io/address/0xa347438BC288f56Cb6083A79133e70DD2d1f6c2d)
-  - "allowTokens": [0x92BF86334583909B60F9b798A9Dd7Debd899fEc4](https://kovan.etherscan.io/address/0x92BF86334583909B60F9b798A9Dd7Debd899fEc4)
-  - "multiSigWallet": [0x040007b1804ad78a97f541bebed377dcb60e4138](https://kovan.etherscan.io/address/0x040007b1804ad78a97f541bebed377dcb60e4138)
-  - "etRIF": [0x69f6d4d4813f8e2e618dae7572e04b6d5329e207](https://kovan.etherscan.io/address/0x69f6d4d4813f8e2e618dae7572e04b6d5329e207)
+### On Goerli
+  - "bridge": ["0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d"](https://goerli.etherscan.io/address/0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d) - SHOULD BE UPDATED
+  - "federation": ["0xa347438BC288f56Cb6083A79133e70DD2d1f6c2d"](https://goerli.etherscan.io/address/0xa347438BC288f56Cb6083A79133e70DD2d1f6c2d) - SHOULD BE UPDATED
+  - "allowTokens": [0x92BF86334583909B60F9b798A9Dd7Debd899fEc4](https://goerli.etherscan.io/address/0x92BF86334583909B60F9b798A9Dd7Debd899fEc4) - SHOULD BE UPDATED
+  - "multiSigWallet": [0x040007b1804ad78a97f541bebed377dcb60e4138](https://goerli.etherscan.io/address/0x040007b1804ad78a97f541bebed377dcb60e4138) - SHOULD BE UPDATED
+  - "etRIF": [0x69f6d4d4813f8e2e618dae7572e04b6d5329e207](https://goerli.etherscan.io/address/0x69f6d4d4813f8e2e618dae7572e04b6d5329e207) - SHOULD BE UPDATED
 
 ## RSK Testnet Explorer faucet and stats
 - https://stats.testnet.rsk.co/
@@ -58,10 +58,10 @@ Between Rsk Mainnet and Ethereum [https://tokenbridge.rsk.co/](https://tokenbrid
 - https://faucet.testnet.rsk.co/
 - https://faucet.rifos.org/
 
-## Kovan (Ethereum testnet) Explorer and faucet
-- https://kovan.etherscan.io/
-- https://faucet.kovan.network/
-- https://gitter.im/kovan-testnet/faucet
+## Goerli (Ethereum testnet) Explorer and faucet
+- https://goerli.etherscan.io/
+- https://faucet.goerli.network/
+- https://gitter.im/goerli-testnet/faucet
 
 ## Dapp
-Between Rsk Testnet and Kovan [https://testnet.tokenbridge.rsk.co/](https://testnet.tokenbridge.rsk.co/)
+Between Rsk Testnet and Goerli [https://testnet.tokenbridge.rsk.co/](https://testnet.tokenbridge.rsk.co/)

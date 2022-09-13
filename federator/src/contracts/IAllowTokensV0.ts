@@ -25,8 +25,8 @@ export class IAllowTokensV0 implements IAllowTokens {
 
   async getConfirmations(): Promise<ConfirmationsReturn> {
     let confirmations = 0; //for rsk regtest and ganache
-    if (this.chainId === 31 || this.chainId === 42) {
-      // rsk testnet and kovan
+    if (this.chainId === 31 || this.chainId === 5) {
+      // rsk testnet and goerly TO DO: ASK AUGUSTO ABOUT CONFIRMATIONS.
       confirmations = 10;
     }
     if (this.chainId === 1) {

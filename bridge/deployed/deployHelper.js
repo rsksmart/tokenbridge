@@ -6,7 +6,7 @@ function isMainnet(network) {
 
 function isLocalNetwork(network) {
   return !network.toLowerCase().includes('mainnet')
-    && !network.toLowerCase().includes('kovan')
+    && !network.toLowerCase().includes('goerly')
     && !network.toLowerCase().includes('testnet');
 }
 
