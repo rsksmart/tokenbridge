@@ -1,9 +1,10 @@
 const address = require('../hardhat/helper/address');
 const chains = require("../hardhat/helper/chains");
+const {web3} = require("hardhat");
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {deployments, network} = hre;
-  const {deployer} = await getNamedAccounts();
+  const {deployer} = await hre.getNamedAccounts();
   const {deploy, log} = deployments;
   const BRIDGE_LAST_VERSION = 'v4'
 

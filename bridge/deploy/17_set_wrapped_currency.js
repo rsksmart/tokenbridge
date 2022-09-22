@@ -1,4 +1,5 @@
 const address = require('../hardhat/helper/address');
+const {web3} = require("hardhat");
 
 module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
