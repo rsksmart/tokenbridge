@@ -7,7 +7,7 @@
 
 **OpenZeppelin Contracts is a library for secure smart contract development.** It provides implementations of standards like ERC20 and ERC721 which you can deploy as-is or extend to suit your needs, as well as Solidity components to build custom contracts and more complex decentralized systems.
 
-This fork of OpenZeppelin is set up as a **reusable Ethereum Package**. It is deployed to the goerly, rinkeby, and ropsten test networks, as well as to the main Ethereum network. You can reuse any of the pre-deployed on-chain contracts by simply linking to them using the [OpenZeppelin SDK](https://github.com/openzeppelin/openzeppelin-sdk), or reuse their Solidity source code as with the [vanilla version of OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts).
+This fork of OpenZeppelin is set up as a **reusable Ethereum Package**. It is deployed to the goerli, rinkeby, and ropsten test networks, as well as to the main Ethereum network. You can reuse any of the pre-deployed on-chain contracts by simply linking to them using the [OpenZeppelin SDK](https://github.com/openzeppelin/openzeppelin-sdk), or reuse their Solidity source code as with the [vanilla version of OpenZeppelin Contracts](https://github.com/OpenZeppelin/openzeppelin-contracts).
 
 ## Differences with openzeppelin-contracts
 
@@ -30,7 +30,7 @@ npm install @openzeppelin/contracts-ethereum-package
 
 ## Using via the OpenZeppelin CLI
 
-You can easily create upgradeable instances of any of the logic contracts listed above using the OpenZeppelin CLI. This will rely on the pre-deployed instances in mainnet, goerly, ropsten, or rinkeby, greatly reducing your gas deployment costs. To do this, just [create a new OpenZeppelin SDK project](https://docs.zeppelinos.org/docs/deploying.html) and [link to this package](https://docs.zeppelinos.org/docs/linking.html).
+You can easily create upgradeable instances of any of the logic contracts listed above using the OpenZeppelin CLI. This will rely on the pre-deployed instances in mainnet, goerli, ropsten, or rinkeby, greatly reducing your gas deployment costs. To do this, just [create a new OpenZeppelin SDK project](https://docs.zeppelinos.org/docs/deploying.html) and [link to this package](https://docs.zeppelinos.org/docs/linking.html).
 
 ```bash
 $ npm install -g @openzeppelin/cli

@@ -5,13 +5,14 @@ dotenv.config();
 module.exports = {
   mainchain: require("./rsktestnet.json"), //the json containing the smart contract addresses in rsk
   sidechain: [
-    require("./goerly.json"), //the json containing the smart contract addresses in eth  SHOULD UPDATED bridge federation allowTokens host
+    require("./goerli.json"), //the json containing the smart contract addresses in eth
   ],
   runEvery: 2, // In minutes,
   privateKey: process.env.FEDERATOR_KEY || "",
   storagePath: "./db",
   etherscanApiKey: "",
   runHeartbeatEvery: 1, // In hours
-  endpointsPort: 5000, // Server port
+  endpointsPort: 3000, // Server port
+  useNft: false,
   checkHttps: false,
 };

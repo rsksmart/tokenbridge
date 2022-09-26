@@ -31,21 +31,11 @@ const rskMainnet = {
     rAMLT: {address: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '6', isSideToken: true, decimals: 18, symbol: 'rAMLT'} //rAMLT
 }
 
-const goerly = {
+const goerli = {
     WBTC: {address: '0xd1b98b6607330172f1d991521145a22bce793277', typeId: '0', isSideToken: false, decimals: 8, symbol: 'WBTC'}, //WBTC
-    renBTC: {address: '0x0a9add98c076448cbcfacf5e457da12ddbef4a8f', typeId: '0', isSideToken: false, decimals: 18, symbol: 'renBTC'}, //renBTC
-    WETH: {address: '0xd0A1E359811322d97991E03f863a0C30C2cF029C', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //WETH
-    SAI: {address: '0xc7cc3413f169a027dccfeffe5208ca4f38ef0c40', typeId: '4', isSideToken: false, decimals: 18, symbol: 'SAI'}, //SAI
-    DAI: {address: '0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
-    TUSD: {address: '0x0000000000085d4780B73119b644AE5ecd22b376', typeId: '4', isSideToken: false, decimals: 18, symbol: 'TUSD'}, //TUSD
-    USDC: {address: '0xe22da380ee6B445bb8273C81944ADEB6E8450422', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDC'}, //USDC
+    DAI: {address: '0x73967c6a0904aA032C103b4104747E88c566B1A2', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
     USDT: {address: '0x509Ee0d083DdF8AC028f2a56731412edD63223B9', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
-    LINK: {address: '0xa36085F69e2889c224210F603D836748e7dC0088', typeId: '3', isSideToken: false, decimals: 18, symbol: 'LINK'}, //LINK
-    BUND: {address: '0x8d3e855f3f55109d473735ab76f753218400fe96', typeId: '3', isSideToken: false, decimals: 18, symbol: 'BUND'}, //BUND
-    // SideToken
-    eRIF: {address: '0x69f6d4d4813f8e2e618dae7572e04b6d5329e207', typeId: '5', isSideToken: true, decimals: 18, symbol: 'eRIF'}, //eRIF
-    eDOC: {address: '0x09a8f2041Be23e8eC3c72790C9A92089BC70FbCa', typeId: '4', isSideToken: true, decimals: 18, symbol: 'eDOC'}, //eDOC
-    eBPro: {address: '0xB3c9ec8833bfA0d382a183EcED27aBc079520928', typeId: '0', isSideToken: true, decimals: 18, symbol: 'eBPro'} //eBPro
+    LINK: {address: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB', typeId: '3', isSideToken: false, decimals: 18, symbol: 'LINK'}, //LINK
 }
 
 const rskTestnet = {
@@ -69,8 +59,8 @@ const tokensByChainId = (chainId) => {
         case chains.RSK_TEST_NET_CHAIN_ID:
             return rskTestnet;
     
-        case chains.GOERLY_TEST_NET_CHAIN_ID:
-            return  goerly;
+        case chains.GOERLI_TEST_NET_CHAIN_ID:
+            return  goerli;
 
         case chains.RSK_MAIN_NET_CHAIN_ID:
             return rskMainnet;
@@ -88,6 +78,6 @@ module.exports = {
     tokensByChainId,
     ethereum,
     rskMainnet,
-    goerly,
+    goerli,
     rskTestnet,
 };

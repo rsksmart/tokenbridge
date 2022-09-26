@@ -1,4 +1,4 @@
-// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet goerly bsctestnet rsktestnet rsktestnetbsc
+// How to run the script: npx hardhat run ./hardhat/script/createTokensERC20Rsk.js --network rsktestnet goerli bsctestnet rsktestnet rsktestnetbsc
 const hre = require("hardhat");
 
 async function main() {
@@ -37,7 +37,8 @@ async function main() {
       token.originalTokenAddress,
       tokenDecimals,
       token.symbol,
-      token.name
+      token.name,
+      5
     );
     const result = await methodCallCreateSideToken.call({ from: MultiSigWallet.address});
     console.log("Method call result", result);

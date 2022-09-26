@@ -8,7 +8,7 @@ etherscan.key
 #Truffle
 .openzeppelin/.session
 .openzeppelin/dev-*.json
-.openzeppelin/goerly.json
+.openzeppelin/goerli.json
 .openzeppelin/mainnet.json
 coverage/
 coverage.json

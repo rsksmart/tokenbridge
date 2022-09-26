@@ -22,8 +22,8 @@ quit() {
 
 config() {
     cp $DEST_DIR/federator/config/config.sample.js $DEST_DIR/federator/config/config.js &&
-        sed -i "s|rsktestnet-goerly|rskmainnet|g" $DEST_DIR/federator/config/config.js &&
-        sed -i "s|goerly|ethmainnet|g" $DEST_DIR/federator/config/config.js &&
+        sed -i "s|rsktestnet-goerli|rskmainnet|g" $DEST_DIR/federator/config/config.js &&
+        sed -i "s|goerli|ethmainnet|g" $DEST_DIR/federator/config/config.js &&
         return 0
     quit 1 "There was a problem setting the configuration, please verify."
 }
