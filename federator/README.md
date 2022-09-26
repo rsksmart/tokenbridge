@@ -6,7 +6,7 @@ The federators will be the owners of the contracts willing to allow to cross the
 
 ## Config
 
-Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are using, for example rsktestnet-goerly.json and goerly.json, `make sure to set the host parameter of those files`. Add a value to the key `FEDERATOR_KEY` in the .env file, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
+Go to /federator/config copy `config.sample.js` file and rename it to `config.js` set mainchain and sidechain to point to the json files of the networks you are using, for example rsktestnet-goerli.json and goerli.json, `make sure to set the host parameter of those files`. Add a value to the key `FEDERATOR_KEY` in the .env file, and add the private key of the member of the Federation contract. The members of the federation are controled by the MultiSig contract, same that is owner of the Bridge and AllowedTokens contracts.
 You will also need to add an [etherscan api key](https://etherscan.io/myapikey) in this config file.
 ## Usage
 
@@ -26,8 +26,8 @@ To run the federator using Docker, go to the /federator/config folder and rename
 
 ```js
 module.exports = {
-  mainchain: require('./rsktestnet-goerly.json'),
-  sidechain: [require('./goerly.json')],
+  mainchain: require('./rsktestnet-goerli.json'),
+  sidechain: [require('./goerli.json')],
   runEvery: 1, // In minutes,
   confirmations: 10,// Number of blocks before processing it,
   privateKey: process.env.FEDERATOR_KEY || '',
@@ -38,9 +38,9 @@ module.exports = {
 }
 ```
 
-where the mainchain for example is rsktestnet and the sidechain is goerly, the .json files are in the /federator/config folder and includes the addresses of the contracts in that network and the block number when they where deployed.
+where the mainchain for example is rsktestnet and the sidechain is goerli, the .json files are in the /federator/config folder and includes the addresses of the contracts in that network and the block number when they where deployed.
 The order of sidechain and mainchain is not important is just which one is going to be checked first, as federators are bi directionals.
-Inside the .json files there is also the host to that network, for example this is the rsktestnet-goerly.json
+Inside the .json files there is also the host to that network, for example this is the rsktestnet-goerli.json
 
 ```json
 {

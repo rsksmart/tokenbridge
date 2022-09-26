@@ -4,7 +4,7 @@ const hre = require("hardhat");
 const { tokensByChainId } = require('../../hardhat/helper/tokens');
 
 async function main() {
-  const originalChainId = 42
+  const originalChainId = 5
   const tokens = tokensByChainId(originalChainId);
   const {deployments} = hre;
 
