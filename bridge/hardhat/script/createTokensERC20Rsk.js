@@ -37,8 +37,7 @@ async function main() {
       token.originalTokenAddress,
       tokenDecimals,
       token.symbol,
-      token.name,
-      5
+      token.name
     );
     const result = await methodCallCreateSideToken.call({ from: MultiSigWallet.address});
     console.log("Method call result", result);
