@@ -11,7 +11,10 @@ async function main() {
 
   const bridgeContract = new web3.eth.Contract(Bridge.abi, BridgeProxy.address);
 
-  const transactionHash = "0x77a49edea913f81268cceb4499525cf6c2c8a16233d323ca135e41f79249188f" //"0x5befad2a24647508bf848e8500b9be4f0340efd078631ad3de927b264c723267" // "0xba6a21df7b69fffcf00d39b1da003ad8041b41d07887226c8c935ab106fec7e9"
+  const transactionHash = "0x304d2b4366d3a7c08463bd619aff36940ae5931a4d46ee436561ead2b23a1c20" //"0x5befad2a24647508bf848e8500b9be4f0340efd078631ad3de927b264c723267" // "0xba6a21df7b69fffcf00d39b1da003ad8041b41d07887226c8c935ab106fec7e9"
+
+  const hasCrossed = await bridgeContract.methods.hasCrossed(transactionHash).call();
+  console.log("Has Crossed", hasCrossed);
 
   const hasBeenClaimed = await bridgeContract.methods.hasBeenClaimed(transactionHash).call();
   console.log("Has Been Claimed", hasBeenClaimed);

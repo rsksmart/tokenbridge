@@ -1,5 +1,6 @@
 // How to run the script: npx hardhat run ./hardhat/script/deleteFederatorMemeber.js --network rsktestnetbsc
 const hre = require("hardhat");
+const {getFederation} = require('./utils');
 
 async function main() {
   const {getNamedAccounts, deployments} = hre;
@@ -7,7 +8,7 @@ async function main() {
 
   const oldFederatorAddress = "0x8f397ff074ff190fc650e5cab4da039a8163e12a";
 
-  const Federation = await deployments.get('FederationV2');
+  const Federation = await deployments.get(getFederation(network.name));
   const FederationProxy = await deployments.get('FederationProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 
