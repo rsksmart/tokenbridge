@@ -13,9 +13,8 @@ async function main() {
 
 // -------------------SCRIPT TO MAP TOKEN BETWEEN BRIDGES
 
-  const methodCallAddNewMember = bridge.methods.setSideTokenByOriginalAddressByChain(
-    31, '0x8bbbd80981fe76d44854d8df305e8985c19f0e78', '0x326C977E6efc84E512bB9C30f76E30c160eD06FB'
-
+  const methodCallAddNewMember = bridge.methods.setOriginalTokenBySideTokenByChain(
+    '0x4cfE225cE54c6609a525768b13F7d87432358C57', ['0xC2C527C0CACF457746Bd31B2a698Fe89de2b6d49', 5]
   );
 
   const result = await methodCallAddNewMember.call({ from: MultiSigWallet.address});

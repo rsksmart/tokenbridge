@@ -31,10 +31,10 @@ const rskMainnet = {
     rAMLT: {address: '0xff9ea341d9ea91cb7c54342354377f5104fd403f', typeId: '6', isSideToken: true, decimals: 18, symbol: 'rAMLT'} //rAMLT
 }
 
-const goerli = {
+  const goerli = {
     WBTC: {address: '0xd1b98b6607330172f1d991521145a22bce793277', typeId: '0', isSideToken: false, decimals: 8, symbol: 'WBTC'}, //WBTC
-    DAI: {address: '0x73967c6a0904aA032C103b4104747E88c566B1A2', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
-    USDT: {address: '0x509Ee0d083DdF8AC028f2a56731412edD63223B9', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
+    DAI: {address: '0xDF1742fE5b0bFc12331D8EAec6b478DfDbD31464', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
+    USDT: {address: '0xC2C527C0CACF457746Bd31B2a698Fe89de2b6d49', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
     LINK: {address: '0x326C977E6efc84E512bB9C30f76E30c160eD06FB', typeId: '3', isSideToken: false, decimals: 18, symbol: 'LINK'}, //LINK
 }
 
