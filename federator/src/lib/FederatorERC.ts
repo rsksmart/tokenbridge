@@ -435,6 +435,8 @@ export default class FederatorERC extends Federator {
               transactionHash: voteTransactionParams.transactionHash,
               logIndex: voteTransactionParams.logIndex,
               error: receipt.error,
+              status: receipt.status,
+              receipt: { ...receipt },
             },
           }),
         );
