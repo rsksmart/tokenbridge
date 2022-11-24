@@ -58,7 +58,7 @@ module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'Br
 
 function getFederationConf(deployer, network) {
   const networkName = network.name.toLowerCase();
-  if (networkName.includes('testnet') || networkName.includes('kovan') || networkName.includes('rinkeby')) {
+  if (networkName.includes('testnet') || networkName.includes('goerli') || networkName.includes('rinkeby')) {
     return {
       members: ['0x8f397ff074ff190fc650e5cab4da039a8163e12a'],
       required: 1,

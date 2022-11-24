@@ -1,3 +1,4 @@
+const {web3} = require("hardhat");
 const sideTokenFactoryName = 'SideTokenFactory';
 const bridgeProxyName = 'BridgeProxy';
 const GAS_LIMIT = 4000000;

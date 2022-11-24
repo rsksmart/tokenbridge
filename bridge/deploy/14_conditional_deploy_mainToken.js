@@ -1,3 +1,4 @@
+const {web3} = require("hardhat");
 module.exports = async function ({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
     const {deployer} = await getNamedAccounts()
     const {deploy, log} = deployments

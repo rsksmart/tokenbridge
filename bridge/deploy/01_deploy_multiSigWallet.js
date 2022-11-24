@@ -1,4 +1,5 @@
 const {deploy1820} = require('@thinkanddev/deploy-eip-1820-web3-rsk');
+const {web3} = require("hardhat");
 
 module.exports = async function({getNamedAccounts, deployments, network}) { // HardhatRuntimeEnvironment
   const {deployer, multiSig} = await getNamedAccounts();
