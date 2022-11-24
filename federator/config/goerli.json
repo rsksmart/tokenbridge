@@ -1,0 +1,10 @@
+{
+    "name": "goerli",
+    "bridge": "0xa3acf79aded2dd5e2a8bd2e3d1e9f797e96972d3",
+    "federation": "0xf687a27475b2b7ec363d2705cf94a067aeb248f6",
+    "multiSig": "0x3cf0eb5b86a2b0e58fa6e088c91feefb71aeca2d",
+    "allowTokens": "0x17d4c0debef2f28c3c04ffa953b0e18575f576ed",
+    "chainId": 5,
+    "host": "https://goerli.infura.io/v3/a14a1c6081eb4bf199884b78b99e55e2",
+    "fromBlock": 7664975
+}

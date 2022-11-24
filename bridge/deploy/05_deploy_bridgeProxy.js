@@ -1,5 +1,6 @@
 const chains = require('../hardhat/helper/chains');
 const address = require('../hardhat/helper/address');
+const {web3} = require("hardhat");
 
 module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
@@ -30,19 +31,21 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     methodCall.encodeABI()
   ];
 
-  const deployProxyResult = await deploy('BridgeProxy', {
+  const deployResult = await deploy('BridgeProxy', {
     from: deployer,
     args: constructorArguments,
     log: true,
   });
-  if (deployProxyResult.newlyDeployed) {
-    log(`Contract BridgeProxy deployed at ${deployProxyResult.address} using ${deployProxyResult.receipt.gasUsed.toString()} gas`);
+
+  if (deployResult.newlyDeployed) {
+    log(`Contract BridgeProxy deployed at ${deployResult.address} using ${deployResult.receipt.gasUsed.toString()} gas`);
 
     if(network.live && !chains.isRSK(network)) {
       log(`Startig Verification of ${deployResult.address}`);
       await hre.run("verify:verify", {
         address: deployResult.address,
         constructorArguments: constructorArguments,
+        contract: 'contracts/Proxies.sol:BridgeProxy'
       });
     }
   }

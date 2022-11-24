@@ -1,4 +1,5 @@
 const address = require('../hardhat/helper/address');
+const chains = require("../hardhat/helper/chains");
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments} = hre;
