@@ -1,8 +1,9 @@
 // We are actually gonna use the latest Bridge but truffle only knows the address of the proxy
-const toWei = web3.utils.toWei;
 const deployHelper = require('../deployed/deployHelper');
 const chains = require('../hardhat/helper/chains');
 const address = require('../hardhat/helper/address');
+const {web3} = require("hardhat");
+const toWei = web3.utils.toWei;
 
 module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
