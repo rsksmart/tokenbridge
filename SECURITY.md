@@ -1,10 +1,10 @@
-# RSK's Security Process
+# Rootstock's Security Process
 
 We're committed to conduct our security process in a professional and civil manner. Public shaming, under-reporting or misrepresentation of vulnerabilities will not be tolerated.
 
 ## Responsible Disclosure
 
-For all security related issues, RSK has to main points of contact. Reach us at <security@iovlabs.org> or refer to our [Bug Bounty Program.](https://www.rsk.co/bounty-program/) **Do not open up a GitHub issue if the bug is a security vulnerability.**
+For all security related issues, Rootstock has to main points of contact. Reach us at <security@iovlabs.org> or refer to our [Bug Bounty Program.](https://www.rootstock.io/bounty-program/) **Do not open up a GitHub issue if the bug is a security vulnerability.**
 
 **Ensure the bug was not already reported** by searching on Github under [Issues](https://github.com/rsksmart/tokenbridge/issues).
 
@@ -12,7 +12,7 @@ For all security related issues, RSK has to main points of contact. Reach us at 
 
 ### Response Time
 
-RSK will make a best effort to meet the following response times for reported vulnerabilities:
+Rootstock will make a best effort to meet the following response times for reported vulnerabilities:
 
 * Time to first response (from report submit) - 24 hours
 * Time to triage (from report submit) - 2 business days
@@ -23,9 +23,9 @@ We’ll try to keep you informed about our progress throughout the process.
 ### Disclouse Policy
 
 * Follow HackerOne's [disclosure guidelines](https://www.hackerone.com/disclosure-guidelines).
-* Public disclosure of a vulnerability makes it ineligible for a bounty. If the user reports the vulnerability to other security teams (e.g. Ethereum or ETC) but reports to RSK with considerable delay, then RSK may reduce or cancel the bounty.
+* Public disclosure of a vulnerability makes it ineligible for a bounty. If the user reports the vulnerability to other security teams (e.g. Ethereum or ETC) but reports to Rootstock with considerable delay, then Rootstock may reduce or cancel the bounty.
 
-For more information check RSK bounty program policy at [HackerOne](https://hackerone.com/iovlabs)
+For more information check Rootstock bounty program policy at [HackerOne](https://hackerone.com/iovlabs)
 
 ## Public Keys
 
