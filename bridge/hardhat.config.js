@@ -61,6 +61,7 @@ module.exports = {
       rinkeby: ETHERESCAN_KEY,
       goerli: ETHERESCAN_KEY,
       kovan: ETHERESCAN_KEY,
+      sepolia: ETHERESCAN_KEY,
     }
   },
   networks: {
@@ -129,6 +130,18 @@ module.exports = {
       live: true,
       url: 'https://kovan.infura.io/v3/' + INFURA_PROJECT_ID,
       network_id: chains.KOVAN_TEST_NET_CHAIN_ID,
+      token_symbol: 'e',
+      gas: 6700000,
+      gasPrice: 10000000000,
+      accounts: {
+        mnemonic: MNEMONIC,
+      },
+      tags: ['staging'],
+    },
+    sepolia: {
+      live: true,
+      url: 'https://sepolia.infura.io/v3/' + INFURA_PROJECT_ID,
+      network_id: chains.SEPOLIA_TEST_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
       gasPrice: 10000000000,

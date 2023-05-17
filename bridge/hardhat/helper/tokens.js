@@ -48,6 +48,23 @@ const kovan = {
     eBPro: {address: '0xB3c9ec8833bfA0d382a183EcED27aBc079520928', typeId: '0', isSideToken: true, decimals: 18, symbol: 'eBPro'} //eBPro
 }
 
+const sepolia = {
+    WBTC: {address: '0xf864F011C5A97fD8Da79baEd78ba77b47112935a', typeId: '0', isSideToken: false, decimals: 8, symbol: 'WBTC'}, //WBTC
+    // TODO renBTC: {address: '', typeId: '0', isSideToken: false, decimals: 18, symbol: 'renBTC'}, //renBTC
+    WETH: {address: '0xD0dF82dE051244f04BfF3A8bB1f62E1cD39eED92', typeId: '1', isSideToken: false, decimals: 18, symbol: 'ETH'}, //WETH
+    // TODO SAI: {address: '', typeId: '4', isSideToken: false, decimals: 18, symbol: 'SAI'}, //SAI
+    DAI: {address: '0x68194a729C2450ad26072b3D33ADaCbcef39D574', typeId: '4', isSideToken: false, decimals: 18, symbol: 'DAI'}, //DAI
+    // TODO TUSD: {address: '', typeId: '4', isSideToken: false, decimals: 18, symbol: 'TUSD'}, //TUSD
+    USDC: {address: '0xda9d4f9b69ac6C22e444eD9aF0CfC043b7a7f53f', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDC'}, //USDC
+    USDT: {address: '0x0Bd5F04B456ab34a2aB3e9d556Fe5b3A41A0BC8D', typeId: '4', isSideToken: false, decimals: 6, symbol: 'USDT'}, //USDT
+    LINK: {address: '0x779877A7B0D9E8603169DdbD7836e478b4624789', typeId: '3', isSideToken: false, decimals: 18, symbol: 'LINK'}, //LINK
+    // TODO BUND: {address: '', typeId: '3', isSideToken: false, decimals: 18, symbol: 'BUND'}, //BUND
+    // SideToken
+    // TODO eRIF: {address: '', typeId: '5', isSideToken: true, decimals: 18, symbol: 'eRIF'}, //eRIF
+    // TODO eDOC: {address: '', typeId: '4', isSideToken: true, decimals: 18, symbol: 'eDOC'}, //eDOC
+    // TODO eBPro: {address: '', typeId: '0', isSideToken: true, decimals: 18, symbol: 'eBPro'} //eBPro
+}
+
 const rskTestnet = {
     DOC: {address: '0xcb46c0ddc60d18efeb0e586c17af6ea36452dae0', typeId: '5', isSideToken: false, decimals: 18, symbol: 'DOC'}, //DOC
     RIF: {address: '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe', typeId: '6', isSideToken: false, decimals: 18, symbol: 'RIF'}, //RIF
@@ -72,6 +89,9 @@ const tokensByChainId = (chainId) => {
         case chains.KOVAN_TEST_NET_CHAIN_ID:
             return  kovan;
 
+        case chains.SEPOLIA_TEST_NET_CHAIN_ID:
+            return sepolia;
+
         case chains.RSK_MAIN_NET_CHAIN_ID:
             return rskMainnet;
     
@@ -90,4 +110,5 @@ module.exports = {
     rskMainnet,
     kovan,
     rskTestnet,
+    sepolia
 };
