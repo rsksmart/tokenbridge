@@ -16,4 +16,4 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
   }
 };
 module.exports.id = 'deploy_WRBTC'; // id required to prevent reexecution
-module.exports.tags = ['WRBTC', 'IntegrationTest'];
+module.exports.tags = ['WRBTC', 'DeployFromScratch', 'IntegrationTest'];
