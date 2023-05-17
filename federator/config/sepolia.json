@@ -1,0 +1,11 @@
+{
+    "name": "sepolia",
+    "bridge": "0x1150121bb6d701512221de948d37029b51b80a12",
+    "federation": "0x8a2a192043a835902e5e824eaebc35d8dbd7b34f",
+    "multiSig": "0x2d16c305eb546b6ae9cf320b58c993df3df48b23",
+    "allowTokens": "0xf9510e27ce57f2729953d8276da1f79bf6b7cd26",
+    "chainId": 11155111,
+    "testToken": "0xe21bc895ff273c7a60fda822fc224a393b45ade9",
+    "host": "https://sepolia.infura.io/v3/e94777597cbe42f88de5b0eedf65793f",
+    "fromBlock": 3505806
+}
