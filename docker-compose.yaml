@@ -1,0 +1,22 @@
+version: '3.3'
+services:
+    vault:
+      environment:
+          - VAULT_DEV_ROOT_TOKEN_ID=root
+          - VAULT_DEV_LISTEN_ADDRESS=0.0.0.0:1234
+          - SHA_256=4ed633faa2a9e737bb504bed051496b8d5cf8fd99da7327ab04a7476e4bfa1dc
+      volumes:
+        - ./vault/config:/vault/config
+        - ./vault/policies:/vault/policies
+        - ./vault/data:/vault/data
+        - ./vault/plugins:/vault/plugins
+        - ./vault/script:/vault/script
+      cap_add:
+        - IPC_LOCK
+      ports:
+          - '8200:1234'
+      container_name: poc-vault
+      image: vault
+      command: vault server -dev -config=/vault/config/vault.hcl
+
+        
