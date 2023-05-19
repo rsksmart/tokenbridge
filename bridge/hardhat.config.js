@@ -200,6 +200,7 @@ function getMultiSigAddressesByChainId() {
   multiSigAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x040007b1804ad78a97f541bebed377dcb60e4138';
   multiSigAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xE3848f411587C2C8658A0d6F649e7F1E403873a6';
   multiSigAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x04994d7fF4938c5953A6C8411ad30083C9097348';
+  multiSigAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x2d16c305eB546b6AE9cf320B58c993Df3df48b23';
   return multiSigAddressesByChainId;
 }
 
@@ -212,6 +213,7 @@ function getWrappedCurrencyAddressesByChainId() {
   wrappedCurrencyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xae13d989dac2f0debff460ac112a837c89baa7cd';
   wrappedCurrencyAddressesByChainId[chains.BSC_MAIN_NET_CHAIN_ID] = '0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c';
   wrappedCurrencyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x1664Bd54e994C04bD0f9F7B7e9Ad7CC45d1537B1';
+  wrappedCurrencyAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x6DdAc0e584F70fc6Fa43684edaC2d2FA8EBbaadD';
   return wrappedCurrencyAddressesByChainId;
 }
 
@@ -223,6 +225,7 @@ function getProxyAdminAddressesByChainId() {
   proxyAdminAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6';
   proxyAdminAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xb37Bf97A42eee6b995732530595E3d16639D9977';
   proxyAdminAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x0b32Ea549AB1F9F7390442B5E9438b58A105cB5f';
+  proxyAdminAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x53cd29D248490AE7161bdC8F07B5dB033895d5CD';
   return proxyAdminAddressesByChainId;
 }
 
@@ -234,6 +237,7 @@ function getAllowTokensProxyAddressesByChainId() {
   allowTokensProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x92bf86334583909b60f9b798a9dd7debd899fec4';
   allowTokensProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0x9a64fc2416EE2157e19DC2C79B5B22D113a9E0C3';
   allowTokensProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xAE3852306015df037D458a65173BBc7527F4680b';
+  allowTokensProxyAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0xF9510e27cE57f2729953D8276dA1f79Bf6B7cd26';
   return allowTokensProxyAddressesByChainId;
 }
 
@@ -245,6 +249,7 @@ function getBridgeProxyAddressesByChainId() {
   bridgeProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d';
   bridgeProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xd9d2f9ee990ddb1147e595ae4f69ec468a0b58d0';
   bridgeProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x7E339118346364d7D86AB67cb0775CBB808E65F7';
+  bridgeProxyAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x1150121BB6D701512221De948d37029b51b80a12';
   return bridgeProxyAddressesByChainId;
 }
 
@@ -256,6 +261,7 @@ function getFederationProxyAddressesByChainId() {
   federationProxyAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0xa347438bc288f56cb6083a79133e70dd2d1f6c2d';
   federationProxyAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xD40F8613173E636D570c47dB3A6Ac57EA9ccac83';
   federationProxyAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0xBC383764ceBc13b66c04E1abeb36804a0Caaa5C6';
+  federationProxyAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x8a2A192043A835902e5e824EAEBC35D8Dbd7B34F'
   return federationProxyAddressesByChainId;
 }
 
@@ -267,5 +273,6 @@ function getSideTokenFactoryAddressesByChainId() {
   sideTokenFactoryAddressesByChainId[chains.KOVAN_TEST_NET_CHAIN_ID] = '0x984192ad76A8FFF2edf39C260324d32d8A80512b';
   sideTokenFactoryAddressesByChainId[chains.BSC_TEST_NET_CHAIN_ID] = '0xe2EBFC705d473C3dDd52CB49AF0bdE3132E8831e';
   sideTokenFactoryAddressesByChainId[chains.RINKEBY_TEST_NET_CHAIN_ID] = '0x1CB41Dc4603612A4da692669916e8F4dEF2994dC';
+  sideTokenFactoryAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x77cE45B3b6788D056DFA47557430b70fa2473355';
   return sideTokenFactoryAddressesByChainId;
 }
