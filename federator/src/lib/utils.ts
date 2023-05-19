@@ -1,5 +1,6 @@
 import * as ethUtils from 'ethereumjs-util';
 import Web3 from 'web3';
+import { RetryCounter } from './typescriptUtils';
 
 /**
  * Retry system with async / await
@@ -23,18 +24,19 @@ export async function retry(
     factor: 2,
   },
 ) {
-  const retriesMax = config.retriesMax;
+  const retryCounter = new RetryCounter({ attempts: config.retriesMax });
   let interval = config.interval;
   const exponential = config.exponential;
   const factor = config.factor;
 
-  for (let i = 0; i < retriesMax; i++) {
+  while (retryCounter.hasAttempts()) {
     try {
       if (!config.isCb) {
         return await fn(...args);
       }
     } catch (error) {
-      checkRetriesMax(retriesMax, i, error);
+      retryCounter.useAttempt()
+      checkRetriesMax(retryCounter, error);
 
       interval = exponential ? interval * factor : interval;
       // if interval is set to zero, do not use setTimeout, gain 1 event loop tick
@@ -46,8 +48,8 @@ export async function retry(
   return fn(...args);
 }
 
-function checkRetriesMax(retriesMax: number, i: number, error: any) {
-  if (retriesMax === i + 1 || (Object.prototype.hasOwnProperty.call(error, 'retryable') && !error.retryable)) {
+function checkRetriesMax(retryCounter:RetryCounter, error: any) {
+  if (!retryCounter.hasAttempts() || (Object.prototype.hasOwnProperty.call(error, 'retryable') && !error.retryable)) {
     throw error;
   }
 }
