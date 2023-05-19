@@ -47,9 +47,9 @@ export class Heartbeat {
 
   async run(): Promise<boolean> {
     await this._checkIfRsk();
-    let retries = 3;
+    const retryCounter = new typescriptUtils.RetryCounter({ log: this.logger });
     const sleepAfterRetryMs = 3000;
-    while (retries > 0) {
+    while (retryCounter.hasAttempts()) {
       try {
         const fedChainsId = [];
         const fedChainsBlocks = [];
@@ -68,9 +68,9 @@ export class Heartbeat {
         return await this._emitHeartbeat(currentVersion, fedChainsId, fedChainsBlocks, fedChainInfo);
       } catch (err) {
         this.logger.error(new Error('Exception Running Heartbeat'), err);
-        retries--;
-        this.logger.debug(`Run ${3 - retries} retry`);
-        if (retries > 0) {
+        retryCounter.useAttempt();
+        this.logger.debug(`Run ${retryCounter.initialAttempts - retryCounter.attemptsLeft()} retry`);
+        if (retryCounter.hasAttempts()) {
           await utils.sleep(sleepAfterRetryMs);
         } else {
           process.exit(1);
@@ -137,9 +137,9 @@ export class Heartbeat {
 
   async readLogs() {
     await this._checkIfRsk();
-    let retries = 3;
+    const retryCounter = new typescriptUtils.RetryCounter({ log: this.logger });
     const sleepAfterRetrie = 3000;
-    while (retries > 0) {
+    while (retryCounter.hasAttempts()) {
       try {
         const currentBlock = await this.mainWeb3.eth.getBlockNumber();
         const fedContract = await this.federationFactory.createInstance(this.config.mainchain, this.config.privateKey);
@@ -171,9 +171,9 @@ export class Heartbeat {
         return true;
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
-        retries--;
-        this.logger.debug(`Run ${3 - retries} retrie`);
-        if (retries <= 0) {
+        retryCounter.useAttempt();
+        this.logger.debug(`Run ${retryCounter.initialAttempts - retryCounter.attemptsLeft()} retrie`);
+        if (!retryCounter.hasAttempts()) {
           process.exit(1);
         }
         await utils.sleep(sleepAfterRetrie);
