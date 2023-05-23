@@ -26,8 +26,8 @@ To run the federator using Docker, go to the /federator/config folder and rename
 
 ```js
 module.exports = {
-  mainchain: require('./rsktestnet-kovan.json'),
-  sidechain: [require('./kovan.json')],
+  mainchain: require('./rsktestnet.json'),
+  sidechain: [require('./sepolia.json')],
   runEvery: 1, // In minutes,
   confirmations: 10,// Number of blocks before processing it,
   privateKey: process.env.FEDERATOR_KEY || '',
@@ -35,6 +35,8 @@ module.exports = {
   etherscanApiKey: '<YOUR ETHERSCAN API KEY>',
   runHeartbeatEvery: 1, // Frequency for emitting HeartBeat events
   endpointsPort: 5000, // Server port health status endpoint listens on
+  federatorRetries: 0, // amount of federator retries on error, 0 means infinite
+  checkHttps: false,
 }
 ```
 
