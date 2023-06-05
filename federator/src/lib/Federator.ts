@@ -19,7 +19,7 @@ export default abstract class Federator {
   public chainId: number;
   public sideChain: ConfigChain;
   public web3ByHost: Map<string, web3>;
-  private retryCounter: typescriptUtils.RetryCounter;
+  private numberOfRetries: number;
 
   constructor(config: ConfigData, logger: LogWrapper, metricCollector: MetricCollector) {
     this.config = config;
@@ -34,10 +34,7 @@ export default abstract class Federator {
     }
 
     this.metricCollector = metricCollector;
-    this.retryCounter = new typescriptUtils.RetryCounter({
-      attempts: config.federatorRetries,
-      log: logger
-    });
+    this.numberOfRetries = config.federatorRetries;
     this.web3ByHost = new Map<string, web3>();
     this.checkStoragePath();
   }
@@ -111,7 +108,7 @@ export default abstract class Federator {
   }): Promise<boolean>;
 
   getCurrentRetrie(): number {
-    return this.config.federatorRetries - this.retryCounter.attemptsLeft();
+    return this.config.federatorRetries - this.numberOfRetries;
   }
 
   async runAll(): Promise<boolean> {
@@ -130,7 +127,7 @@ export default abstract class Federator {
       }
       this.logger.upsertContext('Retrie', this.getCurrentRetrie());
       try {
-         while (this.retryCounter.hasAttempts()) {
+         while (this.numberOfRetries > 0) {
           const bridgeFactory = new BridgeFactory();
           const success: boolean = await this.run({
             sideChainConfig,
@@ -146,9 +143,7 @@ export default abstract class Federator {
         }
       } catch (err) {
         this.logger.error(new Error('Exception Running Federator'), err);
-        this.logger.error('[EXTRA] Error message: ' + err.message);
-        this.logger.error(err);
-        this.retryCounter.useAttempt();
+        this.numberOfRetries--;
         this.logger.debug(`Runned ${this.getCurrentRetrie()} retrie`);
         this.checkRetries();
         await utils.sleep(this.config.mainchain.blockTimeMs);
@@ -159,13 +154,13 @@ export default abstract class Federator {
   }
 
   checkRetries() {
-    if (!this.retryCounter.hasAttempts()) {
+    if (this.numberOfRetries < 0) {
       process.exit(1);
     }
   }
 
   private resetRetries() {
-    this.retryCounter.reset();
+    this.numberOfRetries = this.config.federatorRetries;
   }
 
   async checkFederatorIsMember(sideFedContract: IFederation, federatorAddress: string) {
