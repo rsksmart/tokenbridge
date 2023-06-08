@@ -17,7 +17,7 @@ async function main() {
   const methodCallAddNewMember = federator.methods.addMember(
     memberFederatorAddress
   );
-  const result = await methodCallAddNewMember.call({ from: MultiSigWallet.address});
+  const result = await methodCallAddNewMember.send({ from: MultiSigWallet.address});
   console.log("Method call result", result);
 
   const receipt = await multiSigContract.methods.submitTransaction(
