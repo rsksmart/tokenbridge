@@ -15,4 +15,4 @@ WORKDIR ./federator
 RUN npx tsc --build
 
 WORKDIR ./built/federator
-RUN npm run start
+CMD ["npm","run","start"]
