@@ -195,7 +195,7 @@ export class Heartbeat {
         } else {
           // Old heartbeat event (FederationV2)
           const { sender, fedRskBlock, fedEthBlock, federatorVersion, nodeRskInfo, nodeEthInfo } = log.returnValues;
-          const sideChain = this.sideChains.find((x) => x.chainId == 1 || x.chainId == 42);
+          const sideChain = this.sideChains.find((x) => x.chainId);
           this._trackHeartbeatMetrics(
             sender,
             federatorVersion,
