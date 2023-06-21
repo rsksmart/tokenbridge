@@ -4,7 +4,7 @@ const hre = require("hardhat");
 async function main() {
   const {deployments} = hre;
 
-  const Bridge = await deployments.get('Bridge');
+  const Bridge = await deployments.get('BridgeV3');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.get('MultiSigWallet');
 

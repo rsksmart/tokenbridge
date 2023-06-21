@@ -42,7 +42,7 @@ async function getClaimDigest(
     )
 }
 
-contract('Bridge', async function (accounts) {
+contract('BridgeV3', async function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];

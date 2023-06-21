@@ -10,7 +10,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const Bridge = await deployments.get('Bridge');
+  const Bridge = await deployments.get('BridgeV3');
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const sideTokenFactoryAddress = await address.getSideTokenFactoryAddress(hre);
@@ -20,7 +20,8 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     multiSigAddress,
     deployer,
     deployer,
-    sideTokenFactoryAddress
+    sideTokenFactoryAddress,
+    'r'
   );
   await methodCall.call({ from: deployer })
 
@@ -50,4 +51,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'deploy_bridge_proxy'; // id required to prevent reexecution
 module.exports.tags = ['BridgeProxy', 'DeployFromScratch', 'IntegrationTest'];
-module.exports.dependencies = ['Bridge', 'MultiSigWallet', 'ProxyAdmin', 'SideTokenFactory'];
+module.exports.dependencies = ['BridgeV3', 'MultiSigWallet', 'ProxyAdmin', 'SideTokenFactory'];
