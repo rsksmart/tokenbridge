@@ -6,7 +6,7 @@ const BN = web3.utils.BN;
 async function main() {
   const {deployments} = hre;
 
-  const Bridge = await deployments.get('Bridge');
+  const Bridge = await deployments.get('BridgeV3');
   const BridgeProxy = await deployments.get('BridgeProxy');
 
   const bridgeContract = new web3.eth.Contract(Bridge.abi, BridgeProxy.address);

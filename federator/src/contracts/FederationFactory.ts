@@ -1,5 +1,5 @@
 import abiFederationV2 from '../../../bridge/abi/FederationV2.json';
-import abiFederationV3 from '../../../bridge/abi/Federation.json';
+import abiFederationV3 from '../../../bridge/abi/FederationV2.json';
 import { IFederationV2 } from './IFederationV2';
 import { IFederationV3 } from './IFederationV3';
 import * as typescriptUtils from '../lib/typescriptUtils';
