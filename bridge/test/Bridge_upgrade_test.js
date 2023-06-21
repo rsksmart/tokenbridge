@@ -1,6 +1,6 @@
 //Upgradable Contracts
 const BridgeV3 = artifacts.require('BridgeV3');
-const BridgeV4 = artifacts.require('Bridge');
+const BridgeV4 = artifacts.require('BridgeV3');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
