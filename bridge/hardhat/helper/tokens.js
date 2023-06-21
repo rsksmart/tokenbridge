@@ -78,7 +78,6 @@ const rskTestnet = {
     rKovUSDT: {address: '0x4cfE225cE54c6609a525768b13F7d87432358C57', typeId: '4', isSideToken: true, decimals: 18, symbol: 'rKovUSDT'}, //rKovUSDT
     rKovLINK: {address: '0x8bbbd80981fe76d44854d8df305e8985c19f0e78', typeId: '3', isSideToken: true, decimals: 18, symbol: 'rKovLINK'}, //rKovLINK
     rKovBUND: {address: '0xe95afdfec031f7b9cd942eb7e60f053fb605dfcd', typeId: '3', isSideToken: true, decimals: 18, symbol: 'rKovBUND'}, //rKovBUND
-    rKovWBTC: {address: '0xb8aE2CB769255359190fBcE89d3aD38687da5e65', typeId: '0', isSideToken: true, decimals: 18, symbol: 'rKovWBTC'}, //rKovWBTC
 }
 
 const tokensByChainId = (chainId) => {
