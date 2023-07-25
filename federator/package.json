@@ -30,7 +30,7 @@
     "ethereumjs-util": "^7.1.5",
     "express": "^4.18.2",
     "log4js": "^6.9.1",
-    "web3": "^1.10.0",
+    "web3": "^4.0.3",
     "web3-eth-contract": "^1.10.0",
     "web3-utils": "^1.10.0"
   },
