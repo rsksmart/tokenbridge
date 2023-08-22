@@ -1,9 +1,0 @@
-{
-    "name": "rskmainnet",
-    "chainId": 30,
-    "bridge": "0x9d11937e2179dc5270aa86a3f8143232d6da0e69",
-    "federation": "0x7ecfda6072942577d36f939ad528b366b020004b",
-    "allowTokens": "0xcb789036894a83a008a2aa5b3c2dde41d0605a9a",
-    "host": "<YOUR HOST URL AND PORT>",
-    "fromBlock": 4028906
-}
