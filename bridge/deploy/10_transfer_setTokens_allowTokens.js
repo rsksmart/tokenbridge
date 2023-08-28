@@ -14,7 +14,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const AllowTokens = await deployments.getArtifact('AllowTokens');
+  const AllowTokens = await deployments.getArtifact('AllowTokensV1');
   const AllowTokensProxy = await deployments.get('AllowTokensProxy');
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
   const multiSigAddress = await address.getMultiSigAddress(hre);
