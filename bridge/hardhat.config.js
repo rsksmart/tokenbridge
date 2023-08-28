@@ -203,7 +203,7 @@ function getMultiSigAddressesByChainId() {
   multiSigAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0xbee2572941ffcb2ab2e61450fecc8db75321e6c9';
   return multiSigAddressesByChainId;
 }
-/*
+
 function getWrappedCurrencyAddressesByChainId() {
   const wrappedCurrencyAddressesByChainId = {};
   wrappedCurrencyAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
@@ -216,7 +216,7 @@ function getWrappedCurrencyAddressesByChainId() {
   wrappedCurrencyAddressesByChainId[chains.SEPOLIA_TEST_NET_CHAIN_ID] = '0x6DdAc0e584F70fc6Fa43684edaC2d2FA8EBbaadD';
   return wrappedCurrencyAddressesByChainId;
 }
-*/
+
 function getProxyAdminAddressesByChainId() {
   const proxyAdminAddressesByChainId = {};
   proxyAdminAddressesByChainId[chains.ETHEREUM_MAIN_NET_CHAIN_ID] = '0xe4d351911a6d599f91a3db1843e2ecb0f851e7e6';
