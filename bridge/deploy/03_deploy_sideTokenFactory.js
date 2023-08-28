@@ -12,7 +12,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const deployResult = await deploy('SideTokenFactory', {
+  const deployResult = await deploy('SideTokenFactoryV1', {
     from: deployer,
     log: true,
   });
