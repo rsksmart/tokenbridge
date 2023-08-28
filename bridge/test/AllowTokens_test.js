@@ -1,6 +1,6 @@
 
 const MainToken = artifacts.require('./MainToken');
-const AllowTokens = artifacts.require('./AllowTokens');
+const AllowTokens = artifacts.require('./AllowTokensV1.sol');
 const MultiSigWallet = artifacts.require('./MultiSigWallet');
 
 const utils = require('./utils');
@@ -23,7 +23,7 @@ contract('AllowTokens', async function (accounts) {
         await utils.revertState();
     });
 
-    describe('AllowTokens creation', async () => {
+    describe('AllowTokensV1.sol creation', async () => {
         it('should initialize correctly', async () => {
             const smallConfirmations = '100';
             const mediumConfirmations = '200';
@@ -81,7 +81,7 @@ contract('AllowTokens', async function (accounts) {
         });
     });
 
-    describe('After AllowTokens initialization', () => {
+    describe('After AllowTokensV1.sol initialization', () => {
         beforeEach(async function () {
                 this.token = await MainToken.new("MAIN", "MAIN", 18, 10000, { from: tokenDeployer });
                 this.allowTokens = await AllowTokens.new();
@@ -101,7 +101,7 @@ contract('AllowTokens', async function (accounts) {
                 await truffleAssertions.fails(
                     this.allowTokens.setToken(this.token.address, 0, { from: unauthorizedAccount }),
                     truffleAssertions.ErrorType.REVERT,
-                    'AllowTokens: unauthorized sender'
+                    'AllowTokensV1.sol: unauthorized sender'
                 );
             });
 
@@ -110,7 +110,7 @@ contract('AllowTokens', async function (accounts) {
                 await truffleAssertions.fails(
                     this.allowTokens.setToken(this.token.address, currentTypeDescriptionLength + 1, { from: manager }),
                     truffleAssertions.ErrorType.REVERT,
-                    'AllowTokens: typeId does not exist'
+                    'AllowTokensV1.sol: typeId does not exist'
                 );
             });
         });
@@ -122,7 +122,7 @@ contract('AllowTokens', async function (accounts) {
             });
 
             it('fails isTokenAllowed if null address provided', async function() {
-                await truffleAssertions.fails(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS), 
+                await truffleAssertions.fails(this.allowTokens.isTokenAllowed(utils.NULL_ADDRESS),
                     truffleAssertions.ErrorType.REVERT);
             })
 

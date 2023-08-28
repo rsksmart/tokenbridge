@@ -41,7 +41,7 @@ module.exports = {
     clear: true,
     flat: true,
     only: [
-      ':AllowTokens',
+      ':AllowTokensV1.sol',
       ':Bridge',
       ':Federation',
       ':IERC20$',

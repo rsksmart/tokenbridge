@@ -6,7 +6,7 @@ module.exports = {
     'Bridge/IBridgeV3.sol',
     'SideToken/SideTokenV1.sol',
     'Federation/FederationV2.sol',
-    'AllowTokens/AllowTokensOld.sol',
+    'AllowTokensV1.sol/AllowTokensV0.sol.sol',
     'SideTokenFactory/SideTokenFactoryV1.sol',
   ],
   providerOptions: {

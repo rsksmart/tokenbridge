@@ -14,7 +14,7 @@ async function main() {
   const allowTokens = new web3.eth.Contract(AllowTokens.abi, AllowTokensProxy.address);
   const multiSigContract = new web3.eth.Contract(MultiSigWallet.abi, MultiSigWallet.address);
 
-  console.log("\nAllowTokens", AllowTokens.address);
+  console.log("\nAllowTokensV1.sol", AllowTokens.address);
   console.log("\nAllowTokensProxy", AllowTokensProxy.address);
   console.log("\nMultiSigWallet", MultiSigWallet.address);
 
