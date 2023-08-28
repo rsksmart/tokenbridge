@@ -440,7 +440,7 @@ interface IAllowTokens {
 	function updateTokenTransfer(address token, uint256 amount) external;
 }
 
-// Root file: contracts/AllowTokens/AllowTokens.sol
+// Root file: contracts/AllowTokensV1.sol/AllowTokensV1.sol
 
 
 pragma solidity ^0.8.0;
