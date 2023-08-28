@@ -1,5 +1,5 @@
 const Federation = artifacts.require('FederationV2');
-const AllowTokens = artifacts.require('./AllowTokens');
+const AllowTokens = artifacts.require('./AllowTokensV1.sol');
 const Bridge = artifacts.require('./Bridge');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
