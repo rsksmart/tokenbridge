@@ -152,7 +152,7 @@ module.exports = {
     },
     sepolia: {
       live: true,
-      url: 'https://sepolia.infura.io/v3/beab91899d1542b7889c29c4c0a612a7',
+      url: 'https://sepolia.infura.io/v3/' + INFURA_PROJECT_ID,
       network_id: chains.SEPOLIA_TEST_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
