@@ -3,7 +3,7 @@ module.exports = async function ({getNamedAccounts, deployments, network}) { // 
     const {deploy, log} = deployments
 
     if (network.live) {
-      return;
+      //return;
     }
 
     const deployResult = await deploy('MainToken', {
