@@ -2,8 +2,7 @@ const address = require('../hardhat/helper/address');
 
 module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {getNamedAccounts, deployments, network} = hre;
-  const {deployer, bridgeProxy} = await getNamedAccounts();
-
+  const {deployer, wrappedCurrency, bridgeProxy} = await getNamedAccounts();
   const {log} = deployments;
 
   if (bridgeProxy) {
@@ -11,7 +10,6 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   }
 
   const Bridge = await deployments.getArtifact('BridgeV4');
-  const WRBTC = await deployments.getArtifact('WRBTC');
   const BridgeProxy = await deployments.get('BridgeProxy');
   const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
 
@@ -36,7 +34,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     await multiSigContract.methods.submitTransaction(AllowTokensProxy.address, 0, methodCallSetToken.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set token WRBTC in AllowTokens`);
   } else {
-    const methodCallSetWrappedCurrency = bridge.methods.setWrappedCurrency(WRBTC.address);
+    const methodCallSetWrappedCurrency = bridge.methods.setWrappedCurrency(wrappedCurrency);
     await methodCallSetWrappedCurrency.call({ from: multiSigAddress });
     await multiSigContract.methods.submitTransaction(BridgeProxy.address, 0, methodCallSetWrappedCurrency.encodeABI()).send({ from: deployer });
     log(`MultiSig submitTransaction set Wrapped Currency in the Bridge`);
