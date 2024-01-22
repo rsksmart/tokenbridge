@@ -56,3 +56,4 @@ pids
 
 # Script files
 arguments.js
+database.json
