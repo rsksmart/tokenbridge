@@ -104,7 +104,7 @@ contract FederationV3 is Initializable, UpgradableOwnable {
         bytes32 transactionHash,
         uint32 logIndex
     )
-    public onlyMember returns(bool)
+    public onlyMember
     {
         bytes32 transactionId = getTransactionId(
             originalTokenAddress,
@@ -155,10 +155,7 @@ contract FederationV3 is Initializable, UpgradableOwnable {
                 blockHash,
                 logIndex
             );
-            return true;
         }
-
-        return true;
     }
 
     function getTransactionCount(bytes32 transactionId) public view returns(uint) {
