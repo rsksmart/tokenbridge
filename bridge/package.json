@@ -10,7 +10,7 @@
     "start": "npm run lint && npm run migrate && npm run test",
     "lint": "npx solhint  \"contracts/**/*.sol\"",
     "compile": "npx hardhat compile --show-stack-traces",
-    "test": "npx hardhat test --show-stack-traces",
+    "test": "npm run compile && npx hardhat test --show-stack-traces",
     "coverage": "npx hardhat coverage",
     "size": "npx hardhat size-contracts",
     "flatten": "npx waffle flatten",
