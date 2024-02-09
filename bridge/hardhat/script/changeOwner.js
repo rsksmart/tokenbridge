@@ -8,7 +8,7 @@ async function main() {
 
     let newWalletAddress = null;
 
-    switch (network){
+    switch (network) {
         case "rsktestnet":
             newWalletAddress = '0x51591ec8f296ef3e4deebe32c392c706aef42133';
             break;
@@ -18,11 +18,6 @@ async function main() {
         default:
             newWalletAddress = null;
             break;
-    }
-
-    if (newWalletAddress === null) {
-        console.log('No new owner founded');
-        return;
     }
 
     const Bridge = await deployments.get('BridgeV3');
@@ -51,72 +46,59 @@ async function main() {
     console.log('Current Bridge Owner: ', bridgeOwner);
     console.log('List of multisig owners: ', multiSigOwners);
 
-    if(!multiSigOwners.includes(deployer)) {
-        console.log('You should be a owner in the multisig wallet to perform this transaction');
+    if (!multiSigOwners.includes(deployer) || newWalletAddress === null) {
+        console.log('You should be a owner in the multisig wallet to perform this transaction and the new ' +
+            'wallet should exists');
         return;
     }
 
-    if (bridgeOwner === MultiSigWallet.address) {
-        const changeBridgeOwnerMethod = bridge.methods
-            .transferOwnership(newWalletAddress);
-        await changeBridgeOwnerMethod.call({ from: MultiSigWallet.address });
-        await multiSigContract.methods.submitTransaction(
-            BridgeProxy.address,
-            0,
-            changeBridgeOwnerMethod.encodeABI()
-        ).send({ from: deployer, gasLimit: 3000000 });
+    try {
+        if (bridgeOwner === MultiSigWallet.address) {
+            const changeBridgeOwnerMethod = bridge.methods
+                .transferOwnership(newWalletAddress);
+            await changeBridgeOwnerMethod.call({from: MultiSigWallet.address});
+            await multiSigContract.methods.submitTransaction(
+                BridgeProxy.address,
+                0,
+                changeBridgeOwnerMethod.encodeABI()
+            ).send({from: deployer, gasLimit: 3000000});
 
-        const newOwner = await bridge.methods.owner().call();
+            const newOwner = await bridge.methods.owner().call();
 
-        if(newOwner.toLowerCase() === newWalletAddress.toLowerCase()) {
             console.log('Bridge owner changed successfully, the new owner now is: ', newOwner);
-        } else {
-            console.log('Error changing the bridge owner, owner is: ', newOwner);
         }
-    } else {
-        console.log('Multisig is not the bridge owner');
-    }
 
-    if (federationOwner === MultiSigWallet.address) {
-        const changeFederationOwnerMethod = federation.methods
-            .transferOwnership(newWalletAddress);
-        await changeFederationOwnerMethod.call({ from: MultiSigWallet.address });
-        await multiSigContract.methods.submitTransaction(
-            FederationProxy.address,
-            0,
-            changeFederationOwnerMethod.encodeABI()
-        ).send({ from: deployer, gasLimit: 3000000 });
+        if (federationOwner === MultiSigWallet.address) {
+            const changeFederationOwnerMethod = federation.methods
+                .transferOwnership(newWalletAddress);
+            await changeFederationOwnerMethod.call({from: MultiSigWallet.address});
+            await multiSigContract.methods.submitTransaction(
+                FederationProxy.address,
+                0,
+                changeFederationOwnerMethod.encodeABI()
+            ).send({from: deployer, gasLimit: 3000000});
 
-        const newOwner = await federation.methods.owner().call();
+            const newOwner = await federation.methods.owner().call();
 
-        if(newOwner.toLowerCase() === newWalletAddress.toLowerCase()) {
             console.log('Federation owner changed successfully, the new owner now is: ', newOwner);
-        } else {
-            console.log('Error changing the federation owner, owner is: ', newOwner);
         }
-    } else {
-        console.log('Multisig is not the Federation owner');
-    }
 
-    if (allowTokensOwner === MultiSigWallet.address) {
-        const changeAllowTokensOwnerMethod = allowTokens.methods
-            .transferOwnership(newWalletAddress);
-        await changeAllowTokensOwnerMethod.call({ from: MultiSigWallet.address });
-        await multiSigContract.methods.submitTransaction(
-            AllowTokensProxy.address,
-            0,
-            changeAllowTokensOwnerMethod.encodeABI()
-        ).send({ from: deployer, gasLimit: 3000000 });
+        if (allowTokensOwner === MultiSigWallet.address) {
+            const changeAllowTokensOwnerMethod = allowTokens.methods
+                .transferOwnership(newWalletAddress);
+            await changeAllowTokensOwnerMethod.call({from: MultiSigWallet.address});
+            await multiSigContract.methods.submitTransaction(
+                AllowTokensProxy.address,
+                0,
+                changeAllowTokensOwnerMethod.encodeABI()
+            ).send({from: deployer, gasLimit: 3000000});
 
-        const newOwner = await allowTokens.methods.owner().call();
+            const newOwner = await allowTokens.methods.owner().call();
 
-        if(newOwner.toLowerCase() === newWalletAddress.toLowerCase()) {
             console.log('Allow Tokens owner changed successfully, the new owner now is: ', newOwner);
-        } else {
-            console.log('Error changing the Allow Tokens owner, owner is: ', newOwner);
         }
-    } else {
-        console.log('Multisig is not the Allow tokens owner');
+    } catch (err) {
+        throw new Error(err);
     }
 }
 
