@@ -8,11 +8,16 @@ async function main() {
 
     let newWalletAddress = null;
 
-    if(network === "rsktestnet") {
-        newWalletAddress = '0x51591ec8f296ef3e4deebe32c392c706aef42133';
-    }
-    if(network === "sepolia") {
-        newWalletAddress = '0x0d4FC5C4847Eab6e5759656a8e0740Ea64A9582d';
+    switch (network){
+        case "rsktestnet":
+            newWalletAddress = '0x51591ec8f296ef3e4deebe32c392c706aef42133';
+            break;
+        case "sepolia":
+            newWalletAddress = '0x0d4FC5C4847Eab6e5759656a8e0740Ea64A9582d';
+            break;
+        default:
+            newWalletAddress = null;
+            break;
     }
 
     if (newWalletAddress === null) {
