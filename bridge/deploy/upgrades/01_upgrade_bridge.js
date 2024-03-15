@@ -11,7 +11,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 
   const proxyAdminContract = new web3.eth.Contract(proxyAdminArtifact.abi, proxyAdmin);
   const methodCallUpdagradeBridgeDeployment = proxyAdminContract.methods.upgrade(bridgeProxy, bridgeDeployed.address);
-  await methodCallUpdagradeBridgeDeployment.call({ from: multiSig });
+  await methodCallUpdagradeBridgeDeployment.send({ from: multiSig });
 
   const multiSigContract = new web3.eth.Contract(multiSigWalletArtifact.abi, multiSig);
   await multiSigContract.methods.submitTransaction(

@@ -9,7 +9,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const Bridge = await deployments.getArtifact('BridgeV3');
+  const Bridge = await deployments.getArtifact('BridgeV4');
   const MultiSigWallet = await deployments.getArtifact('MultiSigWallet');
 
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
@@ -26,4 +26,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'transfer_federation_to_bridge'; // id required to prevent reexecution
 module.exports.tags = ['TransferFederationToBridge', 'DeployFromScratch', 'IntegrationTest'];
-module.exports.dependencies = ['BridgeV3', 'BridgeProxy', 'FederationProxy', 'MultiSigWallet'];
+module.exports.dependencies = ['BridgeV4', 'BridgeProxy', 'FederationProxy', 'MultiSigWallet'];

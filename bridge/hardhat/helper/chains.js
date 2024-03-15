@@ -1,5 +1,6 @@
 const ETHEREUM_MAIN_NET_CHAIN_ID = 1;
 const RSK_MAIN_NET_CHAIN_ID = 30;
+const RSK_ALPHA_NET_CHAIN_ID = 78;
 const RSK_TEST_NET_CHAIN_ID = 31;
 const KOVAN_TEST_NET_CHAIN_ID = 42;
 const RINKEBY_TEST_NET_CHAIN_ID = 4;
@@ -23,7 +24,7 @@ const SEPOLIA_TEST_NET_CHAIN_ID = 11155111;
 */
 function isRSK(network) {
   const chainID = network.config.network_id;
-  return [RSK_MAIN_NET_CHAIN_ID, RSK_TEST_NET_CHAIN_ID].includes(chainID);
+  return [RSK_MAIN_NET_CHAIN_ID, RSK_TEST_NET_CHAIN_ID, RSK_ALPHA_NET_CHAIN_ID].includes(chainID);
 }
 
 function tokenSymbol(network) {
@@ -32,12 +33,13 @@ function tokenSymbol(network) {
 
 function isMainnet(network) {
   const chainID = network.config.network_id;
-  return [ETHEREUM_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID, BSC_MAIN_NET_CHAIN_ID].includes(chainID);
+  return [ETHEREUM_MAIN_NET_CHAIN_ID, RSK_MAIN_NET_CHAIN_ID, BSC_MAIN_NET_CHAIN_ID, RSK_ALPHA_NET_CHAIN_ID].includes(chainID);
 }
 
 module.exports = {
   ETHEREUM_MAIN_NET_CHAIN_ID: ETHEREUM_MAIN_NET_CHAIN_ID,
   RSK_MAIN_NET_CHAIN_ID: RSK_MAIN_NET_CHAIN_ID,
+  RSK_ALPHA_NET_CHAIN_ID: RSK_ALPHA_NET_CHAIN_ID,
   RSK_TEST_NET_CHAIN_ID: RSK_TEST_NET_CHAIN_ID,
   KOVAN_TEST_NET_CHAIN_ID: KOVAN_TEST_NET_CHAIN_ID,
   RINKEBY_TEST_NET_CHAIN_ID: RINKEBY_TEST_NET_CHAIN_ID,
