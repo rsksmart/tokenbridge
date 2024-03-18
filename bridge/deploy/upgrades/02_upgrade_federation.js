@@ -5,7 +5,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, federationProxy, proxyAdmin, multiSig} = await getNamedAccounts();
   const {log} = deployments;
 
-  const federationDeployed = await deployments.get('FederationV2');
+  const federationDeployed = await deployments.get('FederationV3');
   const proxyAdminArtifact = await deployments.getArtifact('ProxyAdmin');
   const multiSigWalletDeployment = await deployments.getArtifact('MultiSigWallet');
 
@@ -23,4 +23,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'upgrade_federation'; // id required to prevent reexecution
 module.exports.tags = ['UpgradeFederation', 'Upgrade'];
-module.exports.dependencies = ['FederationV2'];
+module.exports.dependencies = ['FederationV3'];
