@@ -140,7 +140,7 @@ contract('Bridge upgrade test', async (accounts) => {
                 const newProxy = new web3.eth.Contract(BridgeV4.abi, this.proxyBridge.options.address);
 
                 result = await newProxy.methods.version().call();
-                assert.equal(result, 'v4');
+                assert.equal(result, 'v3');
 
                 result = await newProxy.methods.owner().call();
                 assert.equal(result,  managerAddress);
@@ -226,7 +226,7 @@ contract('Bridge upgrade test', async (accounts) => {
                     this.sideTokenFactory = await SideTokenFactory.new();
                     await this.sideTokenFactory.transferPrimary(this.proxyBridge.options.address);
                     const result = await this.proxyBridge.methods.version().call();
-                    assert.equal(result, 'v4');
+                    assert.equal(result, 'v3');
                 });
 
                 it('should have new method changeSideTokenFactory', async () => {
@@ -256,15 +256,14 @@ contract('Bridge upgrade test', async (accounts) => {
                         await this.token.transfer(anAccount, amount, { from: deployerAddress });
                         await this.token.approve(this.proxyBridge.options.address, amount, { from: anAccount });
 
-                        const tx = await this.proxyBridge.methods.receiveTokensTo(chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        const tx = await this.proxyBridge.methods.receiveTokensTo(
                             this.token.address, anAccount, amount).send({ from: anAccount, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
                         assert.equal(tx.events.Cross.event, 'Cross');
                         const balance = await this.token.balanceOf(this.proxyBridge.options.address);
                         assert.equal(balance, amount);
-                        const isKnownToken = await this.proxyBridge.methods.knownToken(
-                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        const isKnownToken = await this.proxyBridge.methods.knownTokens(
                             this.token.address
                         ).call();
                         assert.equal(isKnownToken, true);
@@ -277,19 +276,14 @@ contract('Bridge upgrade test', async (accounts) => {
                             18,
                             'rMAIN',
                             'MAIN on RSK',
-                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
                         ).send({from: managerAddress, gas: 4_000_000});
 
-                        const sideTokenAddress = await this.proxyBridge.methods.sideTokenByOriginalToken(
-                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
+                        const sideTokenAddress = await this.proxyBridge.methods.mappedTokens(
                             this.token.address
                         ).call();
                         let sideToken = await SideToken.at(sideTokenAddress);
                         const sideTokenSymbol = await sideToken.symbol();
-                        assert.equal(sideTokenSymbol, "rMAIN");
-
-                        const originalToken = await this.proxyBridge.methods.getOriginalTokenBySideToken(sideTokenAddress).call();
-                        assert.equal(originalToken.tokenAddress, this.token.address);
+                        assert.equal(sideTokenSymbol, "rrMAIN");
 
                         const blockHash = utils.getRandomHash();
                         const txHash = utils.getRandomHash();
@@ -301,9 +295,7 @@ contract('Bridge upgrade test', async (accounts) => {
                             this.amount,
                             blockHash,
                             txHash,
-                            logIndex,
-                            chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-                            chains.HARDHAT_TEST_NET_CHAIN_ID
+                            logIndex
                         ).send({ from: federationAddress, gas: 200_000});
                         assert.equal(Number(tx.status), 1, "Should be a succesful Tx");
 
