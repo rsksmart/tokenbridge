@@ -1,10 +1,10 @@
-# RSK's Security Process
+# Token Bridge's Security Process
 
 We're committed to conduct our security process in a professional and civil manner. Public shaming, under-reporting or misrepresentation of vulnerabilities will not be tolerated.
 
 ## Responsible Disclosure
 
-For all security related issues, RSK has to main points of contact. Reach us at <security@iovlabs.org> or refer to our [Bug Bounty Program.](https://www.rsk.co/bounty-program/) **Do not open up a GitHub issue if the bug is a security vulnerability.**
+For all security related issues, Token Bridge has to main points of contact. Reach us at <security@rootstocklabs.com> or refer to our [Bug Bounty Program.](https://www.rootstocklabs.com/bug-bounty-program/) **Do not open up a GitHub issue if the bug is a security vulnerability.**
 
 **Ensure the bug was not already reported** by searching on Github under [Issues](https://github.com/rsksmart/tokenbridge/issues).
 
@@ -12,10 +12,10 @@ For all security related issues, RSK has to main points of contact. Reach us at 
 
 ### Response Time
 
-RSK will make a best effort to meet the following response times for reported vulnerabilities:
+RootstockLabs will make a best effort to meet the following response times for reported vulnerabilities:
 
-* Time to first response (from report submit) - 24 hours
-* Time to triage (from report submit) - 2 business days
+* Time to first response (from report submit) - 5 business days
+* Time to triage (from report submit) - 7 business days
 * Time to bounty (from triage) - 15 business days
 
 We’ll try to keep you informed about our progress throughout the process.
@@ -23,9 +23,9 @@ We’ll try to keep you informed about our progress throughout the process.
 ### Disclouse Policy
 
 * Follow HackerOne's [disclosure guidelines](https://www.hackerone.com/disclosure-guidelines).
-* Public disclosure of a vulnerability makes it ineligible for a bounty. If the user reports the vulnerability to other security teams (e.g. Ethereum or ETC) but reports to RSK with considerable delay, then RSK may reduce or cancel the bounty.
+* Public disclosure of a vulnerability makes it ineligible for a bounty. 
 
-For more information check RSK bounty program policy at [HackerOne](https://hackerone.com/iovlabs)
+For more information check RootstockLabs bounty program policy at [HackerOne](https://hackerone.com/rootstocklabs)
 
 ## Public Keys
 
