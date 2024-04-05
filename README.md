@@ -4,11 +4,11 @@ Ethereum/RSK Bridge that allows to move ERC20 tokens from one chain to the other
 
 ## Rationale
 
-Cross chain events are very important in the future of crypto. Exchanging tokens between networks allows the token holders to use them in their favorite chain without beeing restricted to the contract owner network choice. Moreover this also allows layer 2 solutions to use the same tokens on different chains, this concept together with stable coins creates a great way of payment with low volatility across networks.
+Cross chain events are very important in the future of crypto. Exchanging tokens between networks allows the token holders to use them in their favorite chain without being restricted to the contract owner network choice. Moreover this also allows layer 2 solutions to use the same tokens on different chains, this concept together with stable coins creates a great way of payment with low volatility across networks.
 
 ## Overview
 
-The smart contract on each network are connected by bridges, a bridge on one chain would receive and lock the ERC20 tokens, this action emits an event that will be served to the bridge on the other chain. This interoperability is achieved using a Federation that sends the event from one contract to the other, once the bridge on the other chain receives the event from the Federation, it mints the tokens on the mirror ERC20 contract.
+The smart contract on each network is connected by bridges, a bridge on one chain would receive and lock the ERC20 tokens, this action emits an event that will be served to the bridge on the other chain. This interoperability is achieved using a Federation that sends the event from one contract to the other, once the bridge on the other chain receives the event from the Federation, it mints the tokens on the mirror ERC20 contract.
 See the [FAQ](https://developers.rsk.co/tools/tokenbridge/faq/) to know more about how it works!
 
 <p align="center">
@@ -50,7 +50,7 @@ See the ['federator'](./federator/README.md) for more information about federati
 
 ### Integration Test
 
-An integration test is prepared for contracts and federators. To properly run integration test, you need check network config in the `truffle-config.js` and `package.json` in `bridge` folder with your test chains' configuration before run `npm run deployIntegrationTest`.
+An integration test is prepared for contracts and federators. To properly run integration test, you need to check network config in the `truffle-config.js` and `package.json` in `bridge` folder with your test chains' configuration before run `npm run deployIntegrationTest`.
 
 For testing purposes only, you can let `env.FEDERATOR_KEY` empty, which fulfills the role that a `FEDERATOR_KEY` key would have in production.
 Also, a `test.local.config.js` configuration is provided in `federator/config` for the same purpose, acting as the `config.js` file would in a productive environment.
