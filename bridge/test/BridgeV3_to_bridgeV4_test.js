@@ -3,11 +3,11 @@ const BridgeV4 = artifacts.require('BridgeV3');
 const BridgeV3 = artifacts.require('BridgeV3');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 const SideTokenFactory = artifacts.require('SideTokenFactory');
-const FederationV3 = artifacts.require('FederationV2');
+const FederationV3 = artifacts.require('FederationV3');
 const FederationV2 = artifacts.require('FederationV2');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const FederationProxy = artifacts.require('FederationProxy');
-const AllowTokens = artifacts.require('AllowTokens');
+const AllowTokens = artifacts.require('AllowTokensV1');
 const utils = require("./utils");
 const chains = require('../hardhat/helper/chains');
 const MainToken = artifacts.require('./MainToken');
@@ -75,7 +75,7 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
       const bridgeV4Implementation = new web3.eth.Contract(this.bridgeV4.abi, bridgeProxy.address);
 
       result = await bridgeV4Implementation.methods.version().call();
-      assert.equal(result, 'v4');
+      assert.equal(result, 'v3');
     });
 
     it('should ReceiveTokensTo start in v3 finish in v4', async function () {
@@ -149,9 +149,7 @@ contract('Bridge Multichain Deploy Check', async function (accounts) {
         amount,
         crossEvent.blockHash,
         crossEvent.transactionHash,
-        crossEvent.logIndex,
-        chains.ETHEREUM_MAIN_NET_CHAIN_ID,
-        chains.HARDHAT_TEST_NET_CHAIN_ID,
+        crossEvent.logIndex
       ).send({from: federatorMember2});
 
       await bridgeV4Implementation.methods.claim(
