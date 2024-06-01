@@ -29,7 +29,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     deployedJson.largeAmountConfirmations ?? '0',
     typesInfo
   );
-  methodCall.call({from: deployer});
+  methodCall.send({from: deployer});
 
   const constructorArguments = [
     AllowTokens.address,
