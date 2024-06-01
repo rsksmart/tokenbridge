@@ -58,6 +58,16 @@ const rskTestnet = {
     rLINK: {address: '0x2d850c8E369F26bc02fF4c9fFbaE2d50107395CB', typeId: '3', isSideToken: true, decimals: 18, symbol: 'rKovLINK'}, //rKovLINK
 }
 
+const rskAlphanet = {
+    DOC: {address: '0xeD8413b2493F27121e4BC1222aB287316ad29716', typeId: '5', isSideToken: false, decimals: 18, symbol: 'DOC'}, //DOC
+    RIF: {address: '0x19f64674d8a5b4e652319f5e239efd3bc969a1fe', typeId: '6', isSideToken: false, decimals: 18, symbol: 'RIF'}, //RIF
+    BPro: {address: '0x6905711e16AFBC51d8cf2a714479D14FB3e03281', typeId: '0', isSideToken: false, decimals: 18, symbol: 'BPro'}, //BPro
+    // Side Tokens
+    rDAI: {address: '0x8384952Dc2A3e413800e9D4EE89d7383FA12Af10', typeId: '4', isSideToken: true, decimals: 18, symbol: 'rKovDAI'}, //rKovDAI
+    rUSDT: {address: '0x52b0108b38Ae80305F92FC461026e4c200ed673E', typeId: '4', isSideToken: true, decimals: 18, symbol: 'rKovUSDT'}, //rKovUSDT
+    rLINK: {address: '0x2d850c8E369F26bc02fF4c9fFbaE2d50107395CB', typeId: '3', isSideToken: true, decimals: 18, symbol: 'rKovLINK'}, //rKovLINK
+}
+
 const tokensByChainId = (chainId) => {
     switch (chainId) {
         case chains.RSK_TEST_NET_CHAIN_ID:
@@ -68,9 +78,12 @@ const tokensByChainId = (chainId) => {
 
         case chains.RSK_MAIN_NET_CHAIN_ID:
             return rskMainnet;
-    
+
         case chains.ETHEREUM_MAIN_NET_CHAIN_ID:
             return ethereum;
+
+        case chains.RSK_ALPHA_NET_CHAIN_ID:
+            return rskAlphanet;
 
         default:
             return [];

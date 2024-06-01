@@ -24,7 +24,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     bridgeProxyAddress,
     multiSigAddress,
   );
-  methodCall.call({from: deployer});
+  methodCall.send({from: deployer});
 
   const constructorArguments = [
     Federation.address,

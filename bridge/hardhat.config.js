@@ -125,6 +125,18 @@ module.exports = {
       },
       tags: ['prod'],
     },
+    alphanet: {
+      live: true,
+      url: '<--Alphanet node URL-->',
+      gas: 6800000,
+      gasPrice: 60000000,
+      network_id: chains.RSK_ALPHA_NET_CHAIN_ID,
+      token_symbol: 'r',
+      accounts: {
+        mnemonic: MNEMONIC,
+      },
+      tags: ['prod'],
+    },
     //Ethereum
     kovan: {
       live: true,
@@ -144,7 +156,7 @@ module.exports = {
       network_id: chains.SEPOLIA_TEST_NET_CHAIN_ID,
       token_symbol: 'e',
       gas: 6700000,
-      gasPrice: 10000000000,
+      gasPrice: 30000000000,
       accounts: {
         mnemonic: MNEMONIC,
       },
