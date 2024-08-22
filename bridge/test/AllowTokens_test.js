@@ -101,7 +101,7 @@ contract('AllowTokens', async function (accounts) {
                 await truffleAssertions.fails(
                     this.allowTokens.setToken(this.token.address, 0, { from: unauthorizedAccount }),
                     truffleAssertions.ErrorType.REVERT,
-                    'AllowTokensV1.sol: unauthorized sender'
+                    'AllowTokens: unauthorized sender'
                 );
             });
 
@@ -110,7 +110,7 @@ contract('AllowTokens', async function (accounts) {
                 await truffleAssertions.fails(
                     this.allowTokens.setToken(this.token.address, currentTypeDescriptionLength + 1, { from: manager }),
                     truffleAssertions.ErrorType.REVERT,
-                    'AllowTokensV1.sol: typeId does not exist'
+                    'AllowTokens: typeId does not exist'
                 );
             });
         });
