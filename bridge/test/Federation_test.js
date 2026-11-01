@@ -1,5 +1,5 @@
-const Federation = artifacts.require('Federation');
-const AllowTokens = artifacts.require('./AllowTokens');
+const Federation = artifacts.require('FederationV2');
+const AllowTokens = artifacts.require('./AllowTokensV1.sol');
 const Bridge = artifacts.require('./Bridge');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 
@@ -9,7 +9,7 @@ const chains = require('../hardhat/helper/chains');
 const BN = web3.utils.BN;
 const toWei = web3.utils.toWei;
 
-contract('Federation', async function (accounts) {
+contract('FederationV2', async function (accounts) {
     const deployer = accounts[0];
     const anAccount = accounts[1];
     const federator1 = accounts[2];

@@ -5,7 +5,7 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
   const {deployer, bridgeProxy, proxyAdmin, multiSig} = await getNamedAccounts();
   const {log} = deployments;
 
-  const bridgeDeployed = await deployments.get('Bridge');
+  const bridgeDeployed = await deployments.get('BridgeV3');
   const proxyAdminArtifact = await deployments.getArtifact('ProxyAdmin');
   const multiSigWalletArtifact = await deployments.getArtifact('MultiSigWallet');
 
@@ -23,4 +23,4 @@ module.exports = async function (hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'upgrade_bridge'; // id required to prevent reexecution
 module.exports.tags = ['UpgradeBridge', 'Upgrade'];
-module.exports.dependencies = ['Bridge'];
+module.exports.dependencies = ['BridgeV3'];

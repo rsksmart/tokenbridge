@@ -11,7 +11,7 @@ import "../zeppelin/upgradable/ownership/UpgradableSecondary.sol";
 
 import "../interface/IAllowTokens.sol";
 
-contract AllowTokens is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
+contract AllowTokensV1 is Initializable, UpgradableOwnable, UpgradableSecondary, IAllowTokens {
 	using SafeMath for uint256;
 
 	address constant private NULL_ADDRESS = address(0);

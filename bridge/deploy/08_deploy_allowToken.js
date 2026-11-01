@@ -17,7 +17,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     }
   }
 
-  const deployResult = await deploy('AllowTokens', {
+  const deployResult = await deploy('AllowTokensV1', {
     from: deployer,
     log: true
   });

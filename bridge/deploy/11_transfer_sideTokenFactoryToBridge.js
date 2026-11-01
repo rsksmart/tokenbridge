@@ -1,4 +1,4 @@
-const sideTokenFactoryName = 'SideTokenFactory';
+const sideTokenFactoryName = 'SideTokenFactoryV1';
 const bridgeProxyName = 'BridgeProxy';
 const GAS_LIMIT = 4000000;
 

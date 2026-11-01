@@ -1,6 +1,6 @@
 //Upgradable Contracts
 const BridgeV3 = artifacts.require('BridgeV3');
-const BridgeV4 = artifacts.require('Bridge');
+const BridgeV4 = artifacts.require('BridgeV3');
 const BridgeProxy = artifacts.require('BridgeProxy');
 const ProxyAdmin = artifacts.require('ProxyAdmin');
 
@@ -8,7 +8,7 @@ const ProxyAdmin = artifacts.require('ProxyAdmin');
 const SideTokenFactoryV1 = artifacts.require('./SideTokenFactoryV1');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const SideToken = artifacts.require('./SideToken');
-const AllowTokensV1 = artifacts.require('./AllowTokens');
+const AllowTokensV1 = artifacts.require('./AllowTokensV1.sol');
 const MainToken = artifacts.require('./MainToken');
 
 const truffleAssertions = require('truffle-assertions');

@@ -64,7 +64,7 @@ async function getAllowTokensProxyAddress(hre) {
 async function getSideTokenFactoryAddress(hre) {
   const {deployments} = hre;
   const {sideTokenFactory} = await getNamedAccountsInstance(hre);
-  return sideTokenFactory ?? (await deployments.get('SideTokenFactory')).address;
+  return sideTokenFactory ?? (await deployments.get('SideTokenFactoryV1')).address;
 }
 
 module.exports = {

@@ -12,7 +12,7 @@ async function main() {
 
   const allowTokensContract = new web3.eth.Contract(AllowTokens.abi, allowTokensProxyAddress);
 
-  console.log("\nAllowTokens Proxy Contract", allowTokensProxyAddress);
+  console.log("\nAllowTokensV1.sol Proxy Contract", allowTokensProxyAddress);
 
   const infoAndLimits = await allowTokensContract.methods.getInfoAndLimits(allowedTokenAddr).call();
   const info = infoAndLimits.info;

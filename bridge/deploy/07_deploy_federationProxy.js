@@ -11,7 +11,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     return;
   }
 
-  const Federation = await deployments.get('Federation');
+  const Federation = await deployments.get('FederationV2');
   const proxyAdminAddress = await address.getProxyAdminAddress(hre);
   const multiSigAddress = await address.getMultiSigAddress(hre);
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
@@ -54,13 +54,13 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
 };
 module.exports.id = 'deploy_federation_proxy'; // id required to prevent reexecution
 module.exports.tags = ['FederationProxy', 'DeployFromScratch', 'IntegrationTest'];
-module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'Federation', 'BridgeProxy'];
+module.exports.dependencies = ['MultiSigWallet', 'ProxyAdmin', 'FederationV2', 'BridgeProxy'];
 
 function getFederationConf(deployer, network) {
   const networkName = network.name.toLowerCase();
-  if (networkName.includes('testnet') || networkName.includes('kovan') || networkName.includes('rinkeby')) {
+  if (networkName.includes('testnet') || networkName.includes('kovan') || networkName.includes('rinkeby') ) {
     return {
-      members: ['0x8f397ff074ff190fc650e5cab4da039a8163e12a'],
+      members: ['0xD1B27867E42E3DE1A32217Ff773B32b48888fb3B'],
       required: 1,
     };
   }

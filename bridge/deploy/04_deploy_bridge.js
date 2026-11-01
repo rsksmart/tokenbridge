@@ -5,11 +5,11 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   const {deployments, network} = hre;
   const {deployer} = await getNamedAccounts();
   const {deploy, log} = deployments;
-  const BRIDGE_LAST_VERSION = 'v4'
+  const BRIDGE_LAST_VERSION = 'v3'
 
   const bridgeProxyAddress = await address.getBridgeProxyAddress(hre);
   if (bridgeProxyAddress) {
-    const Bridge = await deployments.getArtifact('Bridge');
+    const Bridge = await deployments.getArtifact('BridgeV3');
     const bridge = new web3.eth.Contract(Bridge.abi, bridgeProxyAddress);
     const currentBridgeVersion = bridge.methods.version().call();
     if (currentBridgeVersion === BRIDGE_LAST_VERSION) {
@@ -17,7 +17,7 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
     }
   }
 
-  const deployResult = await deploy('Bridge', {
+  const deployResult = await deploy('BridgeV3', {
     from: deployer,
     log: true,
   });
@@ -35,4 +35,4 @@ module.exports = async function(hre) { // HardhatRuntimeEnvironment
   }
 };
 module.exports.id = 'deploy_bridge'; // id required to prevent reexecution
-module.exports.tags = ['Bridge', 'Upgrade', 'DeployFromScratch', 'IntegrationTest'];
+module.exports.tags = ['BridgeV3', 'Upgrade', 'DeployFromScratch', 'IntegrationTest'];

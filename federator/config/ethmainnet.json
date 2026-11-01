@@ -1,9 +1,0 @@
-{
-    "name": "ethmainnet",  
-    "chainId": 1,
-    "bridge": "0x12ed69359919fc775bc2674860e8fe2d2b6a7b5d",
-    "federation": "0x5e29C223d99648C88610519f96E85E627b3ABe17",
-    "allowTokens": "0xA3FC98e0a7a979677BC14d541Be770b2cb0A15F3",
-    "host": "<YOUR HOST URL AND PORT>",
-    "fromBlock": 14065434
-}

@@ -2,7 +2,7 @@ const MainToken = artifacts.require('./MainToken');
 const AlternativeERC20Detailed = artifacts.require('./AlternativeERC20Detailed');
 const SideToken = artifacts.require('./SideToken');
 const Bridge = artifacts.require('./Bridge');
-const AllowTokens = artifacts.require('./AllowTokens');
+const AllowTokens = artifacts.require('./AllowTokensV1.sol');
 const SideTokenFactory = artifacts.require('./SideTokenFactory');
 const mockReceiveTokensCall = artifacts.require('./mockReceiveTokensCall');
 const WRBTC = artifacts.require('./WRBTC');
@@ -42,7 +42,7 @@ async function getClaimDigest(
     )
 }
 
-contract('Bridge', async function (accounts) {
+contract('BridgeV3', async function (accounts) {
     const bridgeOwner = accounts[0];
     const tokenOwner = accounts[1];
     const bridgeManager = accounts[2];
